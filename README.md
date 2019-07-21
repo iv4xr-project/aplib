@@ -1,4 +1,4 @@
-#Aplib: an Agent Programming Library
+# Aplib: an Agent Programming Library
 
 Aplib is a Java library to program multi agent programs. As it is now, Aplib is still under development. 
 
