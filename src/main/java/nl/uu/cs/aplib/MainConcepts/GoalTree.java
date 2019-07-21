@@ -18,12 +18,11 @@ import java.util.* ;
  */
 public class GoalTree {
 	
-	static public enum GoalsCombinator { SEQ, ALT, PRIMITIVE }
+	static public enum GoalsCombinator { SEQ, FIRSTOF, PRIMITIVE }
 	
 	GoalTree parent = null ;
 	List<GoalTree> subgoals ;
 	GoalsCombinator combinator ;
-	PlanScheme plan ;
 	
 	public GoalTree(GoalsCombinator type, GoalTree ... subgoals) {
 		combinator = type ;
@@ -38,9 +37,6 @@ public class GoalTree {
 	public List<GoalTree> getSubgoals() { return subgoals ; }
 	public GoalTree getParent() { return parent ; }
 	
-	public PlanScheme getPlanScheme() { return plan ; }
-	public GoalTree withPlan(PlanScheme plan) { this.plan = plan ; return this ;}
-	
 	public ProgressStatus getStatus() {
 		if (combinator == GoalsCombinator.SEQ) {
 			for (GoalTree g : subgoals) {
@@ -49,7 +45,7 @@ public class GoalTree {
 			}
 			return ProgressStatus.SUCCESS ;
 		}
-		if (combinator == GoalsCombinator.ALT) {
+		if (combinator == GoalsCombinator.FIRSTOF) {
 			for (GoalTree g : subgoals) {
 				ProgressStatus status = g.getStatus() ;
 				if (status != ProgressStatus.FAILED) return status ;
@@ -78,7 +74,7 @@ public class GoalTree {
 				return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
 		}
 		
-		if (parent.combinator == GoalsCombinator.ALT) {
+		if (parent.combinator == GoalsCombinator.FIRSTOF) {
 			if(thisGoalStatus == ProgressStatus.SUCCESS)
 				return parent.getNextPrimitiveGoalWorker(ProgressStatus.SUCCESS) ;
 			// else: so, this goal failed:

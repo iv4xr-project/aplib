@@ -4,7 +4,7 @@ package nl.uu.cs.aplib;
  * Hello world!
  *
  */
-public class App 
+public class JustSomeHelloWorldDumbExampleCreatedByStupidMaven 
 {
     public static void main( String[] args )
     {

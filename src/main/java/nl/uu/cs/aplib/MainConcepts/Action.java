@@ -2,7 +2,7 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.function.*;
 
-public class Plan {
+public class Action {
 	
 	String name ;
 	public String desc ;
@@ -11,11 +11,11 @@ public class Plan {
 	ProgressStatus status = ProgressStatus.INPROGRESS ;
 	
 	Predicate<AbstractState> guard ;
-	Function<AbstractState,Function<Plan,Object>> action ;
+	Function<AbstractState,Function<Action,Object>> action ;
 	
-	public Plan(String name, double budget, 
+	public Action(String name, double budget, 
 			  Predicate<AbstractState> guard,  
-			  Function<AbstractState,Function<Plan,Object>> action) {
+			  Function<AbstractState,Function<Action,Object>> action) {
 		this.name = name ;
 		this.budget = budget ;
 		this.guard = guard ;

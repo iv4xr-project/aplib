@@ -3,15 +3,15 @@ package nl.uu.cs.aplib.MainConcepts;
 import java.util.*;
 
 import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
-import nl.uu.cs.aplib.MainConcepts.PlanScheme.PrimitivePlan;
+import nl.uu.cs.aplib.MainConcepts.Strategy.PrimitiveStrategy;
 
 public abstract class AbstractAgent {
 	
 	AbstractState state ;
 	GoalTree goal ;
 	PrimitiveGoal currentGoal ;
-	PlanScheme planscheme ;
-	PrimitivePlan currentPlan ;
+	Strategy planscheme ;
+	PrimitiveStrategy currentPlan ;
 	long rndseed = 1287821 ; // a prime and a palindrome :D
 	Random rnd = new Random(rndseed) ;
 	
@@ -29,7 +29,7 @@ public abstract class AbstractAgent {
 	 * 
 	 * Override this method to implement more intelligent deliberation.
 	 */
-	protected PrimitivePlan deliberate(List<PrimitivePlan> candidates) {
+	protected PrimitiveStrategy deliberate(List<PrimitiveStrategy> candidates) {
 		return candidates.get(rnd.nextInt(candidates.size())) ;
 	}
 	
