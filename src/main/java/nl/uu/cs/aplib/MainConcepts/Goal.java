@@ -52,7 +52,8 @@ public class Goal {
 		if (status == ProgressStatus.SUCCESS) return proposal ; else return null ;
 	}
 	
-	public void setStatusToFail() { status = ProgressStatus.FAILED ; }
+	public Goal setStatusToFail() { status = ProgressStatus.FAILED ; return this ; }
+	Goal setStatusToSuccess() { status = ProgressStatus.SUCCESS ; return this ; }
 	
 	public void submitProposal(Object proposal) {
 		if (proposal == null) return ;

@@ -7,6 +7,65 @@ import static org.junit.jupiter.api.Assertions.* ;
 
 public class Test_GoalTree {
 	
+	@Test
+	public void test_1_getStatus() {
+		assertTrue(FIRSTof(
+				  lift(goal("")),
+				  lift(goal(""))
+				).getStatus() == ProgressStatus.INPROGRESS) ;
+		
+		assertTrue(FIRSTof(
+				  lift(goal("").setStatusToFail()),
+				  lift(goal(""))
+				).getStatus() == ProgressStatus.INPROGRESS) ;
+		
+		assertTrue(FIRSTof(
+				  lift(goal("").setStatusToFail()),
+				  lift(goal("").setStatusToFail())
+				).getStatus() == ProgressStatus.FAILED) ;
+		
+		assertTrue(FIRSTof(
+				  lift(goal("").setStatusToFail()),
+				  lift(goal("").setStatusToSuccess())
+				).getStatus() == ProgressStatus.SUCCESS) ;
+		
+		assertTrue(FIRSTof(
+				    lift(goal("").setStatusToFail()),
+				    FIRSTof(lift(goal("").setStatusToFail()),
+				    		lift(goal("").setStatusToSuccess()))
+				).getStatus() == ProgressStatus.SUCCESS) ;
+				
+	}
+	
+	@Test
+	public void test_2_getStatus() {
+		assertTrue(SEQ(
+				  lift(goal("")),
+				  lift(goal(""))
+				).getStatus() == ProgressStatus.INPROGRESS) ;
+		
+		assertTrue(SEQ(
+				  lift(goal("").setStatusToFail()),
+				  lift(goal(""))
+				).getStatus() == ProgressStatus.FAILED) ;
+		
+		assertTrue(SEQ(
+				  lift(goal("").setStatusToFail()),
+				  lift(goal("").setStatusToFail())
+				).getStatus() == ProgressStatus.FAILED) ;
+		
+		assertTrue(SEQ(
+				  lift(goal("").setStatusToSuccess()),
+				  lift(goal("").setStatusToSuccess())
+				).getStatus() == ProgressStatus.SUCCESS) ;
+		
+		assertTrue(SEQ(
+				    lift(goal("").setStatusToSuccess()),
+				    FIRSTof(lift(goal("").setStatusToFail()),
+				    		lift(goal("").setStatusToSuccess()))
+				).getStatus() == ProgressStatus.SUCCESS) ;
+				
+	}
 	
 	@Test
 	public void test_getNextPrimitiveGoalWorker() {
@@ -56,6 +115,22 @@ public class Test_GoalTree {
 		System.out.println("" + h6s) ;
 		assertTrue(h6f == null) ;
 		assertTrue(h6s == null) ;
+		
+	}
+	
+	@Test
+	public void test_submitProposal() {
+		var g = goal("")
+				.toSolve(i -> ((Integer) i ) == 0) 
+				.withDistF(i -> 0d+ ((int) i)) ;
+		
+		g.submitProposal((Integer) 1);
+		assertTrue(g.getStatus() == ProgressStatus.INPROGRESS) ;
+		assertTrue(g.distance() == 1d) ;
+		
+		g.submitProposal((Integer) 0);
+		assertTrue(g.getStatus() == ProgressStatus.SUCCESS) ;
+		assertTrue(g.distance() == 0d) ;
 		
 	}
 	

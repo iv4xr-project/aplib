@@ -46,7 +46,9 @@ public abstract class AbstractAgent {
 		if (currentPlan.plan.isCompleted()) {
 			// the current plan is marked as completed, we calculate what's
 			// the most appropriate next plan:
-			currentPlan = getNextPlan() ;
+			
+			//currentPlan = getNextPlan() ;
+			
 			if (currentPlan == null) {
 				// if no next plan can be calculated, the goal is marked as fail
 				
