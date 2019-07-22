@@ -7,65 +7,84 @@ import static org.junit.jupiter.api.Assertions.* ;
 
 public class Test_GoalTree {
 	
+	
+
 	@Test
-	public void test_1_getStatus() {
-		assertTrue(FIRSTof(
-				  lift(goal("")),
-				  lift(goal(""))
-				).getStatus() == ProgressStatus.INPROGRESS) ;
+	public void test_1_status_propagation() {
+
+		var g1 = lift(goal("")) ;
+		var g2 = FIRSTof(g1, lift(goal(""))) ;
+		var g3 = FIRSTof(g2,lift(goal(""))) ;
+		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
+		g1.setStatusToSuccess();
+		assertTrue(g2.getStatus() == ProgressStatus.SUCCESS) ;
+		assertTrue(g3.getStatus() == ProgressStatus.SUCCESS) ;
 		
-		assertTrue(FIRSTof(
-				  lift(goal("").setStatusToFail()),
-				  lift(goal(""))
-				).getStatus() == ProgressStatus.INPROGRESS) ;
+		g1 = lift(goal("")) ;
+		g2 = FIRSTof(g1, lift(goal(""))) ;
+		g3 = FIRSTof(g2,lift(goal(""))) ;
+		g1.setStatusToFail();
+		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
+		assertTrue(g3.getStatus() == ProgressStatus.INPROGRESS) ;
 		
-		assertTrue(FIRSTof(
-				  lift(goal("").setStatusToFail()),
-				  lift(goal("").setStatusToFail())
-				).getStatus() == ProgressStatus.FAILED) ;
 		
-		assertTrue(FIRSTof(
-				  lift(goal("").setStatusToFail()),
-				  lift(goal("").setStatusToSuccess())
-				).getStatus() == ProgressStatus.SUCCESS) ;
+		g1 = lift(goal("")) ;
+		g2 = lift(goal("")) ;
+		g3 = FIRSTof(g1,g2) ;
+		var g4 = FIRSTof(g3,lift(goal(""))) ;
+		g1.setStatusToFail();
+		g2.setStatusToSuccess();
+		assertTrue(g3.getStatus() == ProgressStatus.SUCCESS) ;
+		assertTrue(g4.getStatus() == ProgressStatus.SUCCESS) ;
 		
-		assertTrue(FIRSTof(
-				    lift(goal("").setStatusToFail()),
-				    FIRSTof(lift(goal("").setStatusToFail()),
-				    		lift(goal("").setStatusToSuccess()))
-				).getStatus() == ProgressStatus.SUCCESS) ;
-				
+		g1 = lift(goal("")) ;
+		g2 = lift(goal("")) ;
+		g3 = FIRSTof(g1,g2) ;
+		g4 = FIRSTof(g3,lift(goal(""))) ;
+		g1.setStatusToFail();
+		g2.setStatusToFail();
+		assertTrue(g3.getStatus() == ProgressStatus.FAILED) ;
+		assertTrue(g4.getStatus() == ProgressStatus.INPROGRESS) ;		
+	}
+
+	@Test
+	public void test_2_status_propagation() {
+
+		var g1 = lift(goal("")) ;
+		var g2 = SEQ(g1, lift(goal(""))) ;
+		var g3 = SEQ(g2,lift(goal(""))) ;
+		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
+		g1.setStatusToFail();
+		assertTrue(g2.getStatus() == ProgressStatus.FAILED) ;
+		assertTrue(g3.getStatus() == ProgressStatus.FAILED) ;
+		
+		g1 = lift(goal("")) ;
+		g2 = SEQ(g1, lift(goal(""))) ;
+		g3 = SEQ(g2,lift(goal(""))) ;
+		g1.setStatusToSuccess();
+		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
+		assertTrue(g3.getStatus() == ProgressStatus.INPROGRESS) ;
+		
+		g1 = lift(goal("")) ;
+		g2 = lift(goal("")) ;
+		g3 = SEQ(g1,g2) ;
+		var g4 = SEQ(g3,lift(goal(""))) ;
+		g1.setStatusToSuccess();
+		g2.setStatusToFail();
+		assertTrue(g3.getStatus() == ProgressStatus.FAILED) ;
+		assertTrue(g4.getStatus() == ProgressStatus.FAILED) ;
+		
+		g1 = lift(goal("")) ;
+		g2 = lift(goal("")) ;
+		g3 = SEQ(g1,g2) ;
+		g4 = SEQ(g3,lift(goal(""))) ;
+		g1.setStatusToSuccess();
+		g2.setStatusToSuccess();
+		assertTrue(g3.getStatus() == ProgressStatus.SUCCESS) ;
+		assertTrue(g4.getStatus() == ProgressStatus.INPROGRESS) ;		
+		
 	}
 	
-	@Test
-	public void test_2_getStatus() {
-		assertTrue(SEQ(
-				  lift(goal("")),
-				  lift(goal(""))
-				).getStatus() == ProgressStatus.INPROGRESS) ;
-		
-		assertTrue(SEQ(
-				  lift(goal("").setStatusToFail()),
-				  lift(goal(""))
-				).getStatus() == ProgressStatus.FAILED) ;
-		
-		assertTrue(SEQ(
-				  lift(goal("").setStatusToFail()),
-				  lift(goal("").setStatusToFail())
-				).getStatus() == ProgressStatus.FAILED) ;
-		
-		assertTrue(SEQ(
-				  lift(goal("").setStatusToSuccess()),
-				  lift(goal("").setStatusToSuccess())
-				).getStatus() == ProgressStatus.SUCCESS) ;
-		
-		assertTrue(SEQ(
-				    lift(goal("").setStatusToSuccess()),
-				    FIRSTof(lift(goal("").setStatusToFail()),
-				    		lift(goal("").setStatusToSuccess()))
-				).getStatus() == ProgressStatus.SUCCESS) ;
-				
-	}
 	
 	@Test
 	public void test_getNextPrimitiveGoalWorker() {
@@ -124,11 +143,11 @@ public class Test_GoalTree {
 				.toSolve(i -> ((Integer) i ) == 0) 
 				.withDistF(i -> 0d+ ((int) i)) ;
 		
-		g.submitProposal((Integer) 1);
+		g.propose((Integer) 1);
 		assertTrue(g.getStatus() == ProgressStatus.INPROGRESS) ;
 		assertTrue(g.distance() == 1d) ;
 		
-		g.submitProposal((Integer) 0);
+		g.propose((Integer) 0);
 		assertTrue(g.getStatus() == ProgressStatus.SUCCESS) ;
 		assertTrue(g.distance() == 0d) ;
 		

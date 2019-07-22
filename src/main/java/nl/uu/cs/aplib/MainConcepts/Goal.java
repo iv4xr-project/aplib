@@ -55,7 +55,7 @@ public class Goal {
 	public Goal setStatusToFail() { status = ProgressStatus.FAILED ; return this ; }
 	Goal setStatusToSuccess() { status = ProgressStatus.SUCCESS ; return this ; }
 	
-	public void submitProposal(Object proposal) {
+	public void propose(Object proposal) {
 		if (proposal == null) return ;
 		if(checkPredicate.test(proposal)) status = ProgressStatus.SUCCESS ;
 		if (distFunction != null) distance = distFunction.applyAsDouble(proposal) ;

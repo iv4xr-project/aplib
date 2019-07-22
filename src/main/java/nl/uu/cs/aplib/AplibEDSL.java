@@ -22,9 +22,15 @@ public class AplibEDSL {
 		return new PrimitiveGoal(g) ;
 	}
 	
+	static public Action action(String name) {
+		return new Action(name) ;
+	}
+	
 	static public Strategy FIRSTof(Strategy ... strategies) {
 		return new Strategy(StrategyType.FIRSTOF, strategies) ;
 	}
+	
+	static public Action ABORT() { return new Action.Abort() ; }
 	
 	static public Strategy SEQ(Strategy ... strategies) {
 		return new Strategy(StrategyType.SEQ, strategies) ;
