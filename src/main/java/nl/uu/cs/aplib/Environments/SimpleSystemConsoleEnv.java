@@ -30,6 +30,9 @@ public class SimpleSystemConsoleEnv extends Environment {
 		return (String) sendCommand(null,"readln",null,null) ;
 	}
 	
+	public String ask(String s) {
+		println(s) ; return readln() ;
+	}
 	
 	
 	public static void main(String[] args) {

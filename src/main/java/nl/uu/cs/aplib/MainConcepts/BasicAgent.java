@@ -65,11 +65,11 @@ public class BasicAgent {
 	 */
 	private List<PrimitiveStrategy> getFirstActionCandidates() {
 		List<PrimitiveStrategy> actions = new LinkedList<PrimitiveStrategy>() ;
-		while (goal.getStatus() != ProgressStatus.FAILED && actions.isEmpty()) {
+		while (!goal.getStatus().failed() && actions.isEmpty()) {
 			// get the enabled actions at current goal's strategy's root
 			actions = currentGoal.goal.strategy.getEnabledActions(state) ;
 			if (actions.isEmpty()) {
-				currentGoal.setStatusToFail(); 
+				currentGoal.setStatusToFail("It comes to a state where no action is enabled."); 
 				currentGoal = currentGoal.getNextPrimitiveGoal() ;
 				if (currentGoal == null) {
 					// we have exhausted all goals... return empty:
@@ -133,7 +133,7 @@ public class BasicAgent {
 		
 		// if the action is ABORT:
 		if (currentAction.action instanceof Abort) {
-			goal.setStatusToFail();
+			goal.setStatusToFail("abort() were invoked.");
 			currentGoal = null ;
 			return ;
 		}
@@ -141,9 +141,9 @@ public class BasicAgent {
 		// else execute the action:
 		Object proposal = currentAction.action.exec1(state) ;
 		currentGoal.goal.propose(proposal);
-		if (currentGoal.goal.getStatus() == ProgressStatus.SUCCESS) {
-			currentGoal.setStatusToSuccess();
-			if (goal.getStatus() == ProgressStatus.SUCCESS)  {
+		if (currentGoal.goal.getStatus().sucess()) {
+			currentGoal.setStatusToSuccess("Solved by " + currentAction.action.name);
+			if (goal.getStatus().sucess())  {
 				// the top level goal is solved! Then the agent is done:
 				currentGoal = null ;
 				return ;

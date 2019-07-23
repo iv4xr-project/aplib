@@ -141,7 +141,7 @@ public class Test_GoalTree {
 	@Test
 	public void test_submitProposal() {
 		var g = goal("")
-				.toSolve(i -> ((Integer) i ) == 0) 
+				.toSolve_(i -> ((Integer) i ) == 0) 
 				.withDistF(i -> 0d+ ((int) i)) ;
 		
 		g.propose((Integer) 1);

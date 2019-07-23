@@ -23,7 +23,7 @@ public class GoalTree {
 	GoalTree parent = null ;
 	List<GoalTree> subgoals ;
 	GoalsCombinator combinator ;
-	ProgressStatus status = ProgressStatus.INPROGRESS ;
+	ProgressStatus status = new ProgressStatus() ;
 	
 	public GoalTree(GoalsCombinator type, GoalTree ... subgoals) {
 		combinator = type ;
@@ -42,15 +42,16 @@ public class GoalTree {
 	 * Set the status of this goal to success, and propagating this accordingly
 	 * to its ancestors.
 	 */
-	void setStatusToSuccess() {
-		status = ProgressStatus.SUCCESS ;
+	void setStatusToSuccess(String info) {
+		status.setToSuccess(info) ;
 		if (parent != null) {
-			if (parent.combinator == GoalsCombinator.FIRSTOF)
-				parent.setStatusToSuccess();
-			else if (parent.combinator == GoalsCombinator.SEQ) {
-				int i = parent.subgoals.indexOf(this) ;
-				if (i == parent.subgoals.size()-1)
-					parent.setStatusToSuccess(); 
+			switch(parent.combinator) {
+			   case FIRSTOF : parent.setStatusToSuccess(info); break ;
+			   case SEQ : 
+				    int i = parent.subgoals.indexOf(this) ;
+				    if (i == parent.subgoals.size()-1)
+					  	 parent.setStatusToSuccess(info); 
+				    break ;
 			}
 		}
 	}
@@ -59,15 +60,16 @@ public class GoalTree {
 	 * Set the status of this goal to fail, and propagating this accordingly
 	 * to its ancestors.
 	 */
-	void setStatusToFail() {
-		status = ProgressStatus.FAILED ;
+	void setStatusToFail(String reason) {
+		status.setToFail(reason);
 		if (parent != null) {
-			if (parent.combinator == GoalsCombinator.SEQ)
-				parent.setStatusToFail();
-			else if (parent.combinator == GoalsCombinator.FIRSTOF) {
-				int i = parent.subgoals.indexOf(this) ;
-				if (i == parent.subgoals.size()-1)
-					parent.setStatusToFail(); 
+			switch(parent.combinator) {
+			   case SEQ : parent.setStatusToFail(reason); break;
+			   case FIRSTOF :
+				    int i = parent.subgoals.indexOf(this) ;
+					if (i == parent.subgoals.size()-1)
+						parent.setStatusToFail(reason);
+					break;
 			}
 		}
 	}
@@ -77,7 +79,7 @@ public class GoalTree {
 	 * the way to the root, as fail.
 	 */
 	void abort() {
-		status = ProgressStatus.FAILED ;
+		status.setToFail("abort() is invoked.") ; 
 		if (parent != null) parent.abort() ;
  	}
 	
@@ -89,27 +91,27 @@ public class GoalTree {
 	 * to look for this next goal. If none is found, null is returned.
 	 */
 	public PrimitiveGoal getNextPrimitiveGoal() {
-		if (status == ProgressStatus.INPROGRESS || parent==null) return null ;
-		if (parent.combinator == GoalsCombinator.SEQ) {
-			if(status == ProgressStatus.FAILED)
-				return parent.getNextPrimitiveGoal() ;
-			// else: so, this goal is solved:
-			int k = parent.subgoals.indexOf(this) ;
-			if (k == parent.subgoals.size() - 1 ) 
-				return parent.getNextPrimitiveGoal() ;
-			else
-				return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
-		}
+		if (status.inProgress() || parent==null) return null ;
 		
-		if (parent.combinator == GoalsCombinator.FIRSTOF) {
-			if(status == ProgressStatus.SUCCESS)
-				return parent.getNextPrimitiveGoal() ;
-			// else: so, this goal failed:
-			int k = parent.subgoals.indexOf(this) ;
-			if (k == parent.subgoals.size() - 1 ) 
-				return parent.getNextPrimitiveGoal() ;
-			else
-				return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
+		switch(parent.combinator) {
+		  case SEQ :
+			   if(status.failed())
+				  return parent.getNextPrimitiveGoal() ;
+			   // else: so, this goal is solved:
+			   int k = parent.subgoals.indexOf(this) ;
+			   if (k == parent.subgoals.size() - 1 ) 
+				  return parent.getNextPrimitiveGoal() ;
+			   else
+				  return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
+		  case FIRSTOF :
+			   if(status.sucess())
+				  return parent.getNextPrimitiveGoal() ;
+			   // else: so, this goal failed:
+			   k = parent.subgoals.indexOf(this) ;
+			   if (k == parent.subgoals.size() - 1 ) 
+					return parent.getNextPrimitiveGoal() ;
+			   else
+					return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
 		}
 		// this case should not happen
 		return null ;

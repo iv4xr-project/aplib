@@ -37,58 +37,57 @@ public class GuessNumberGame  {
 	
 	static public void main(String[] args) {
 		
-	  // specifying the goal:	
+	  // specifying the goal to solve:	
       Goal g = goal("the-goal")
-        	   .toSolve(o -> { 
-        	     var status = (String) o ;
-        	     return (status.equals("out of range") || status.equals("y")) ; }) ;	
+        	   .toSolve((String p) -> p.equals("out of range") || p.equals("y")) ;	
 		
-      // specifying the actions for the agent:
-	  Action asklb = action("askLowerBound")
-		.do_(agentstate_ -> actionstate_ -> {
-		  var agentstate = (MyAgentState) agentstate_ ;
-		  agentstate.env().println("Type a number less or equal to your number:");
-		  var o = agentstate.env().readln() ;
+      // defining the actions for the agent:
+	  var asklb = action("askLowerBound")
+		.desc("Ask user to give a number less or equal that his secret number.")
+		.do1_((MyAgentState belief) -> actionstate_ -> {
+		  var o = belief.env().ask("Type a number less or equal to your number:");
 		  var i = toInt(o) ;
+		  // the agent infers and adds new facts:
 		  if (i!=null) {
 			  //System.out.println("## " + i) ;
-              for (int k=0; k<Math.max(0,i); k++)  agentstate.excluded[k] = true ;
+              for (int k=0; k<Math.max(0,i); k++)  belief.excluded[k] = true ;
 		  }
-		  actionstate_.markAsCompleted();
-		  return null ;
-	  }) ;
+		  return "" ;
+	      })
+		.lift() ;
 	  
-      Action guess = action("guess")
-        .do_(agentstate_ -> actionstate_ -> {
-          var agentstate = (MyAgentState) agentstate_ ;	
-          var candidates = agentstate.getPossibilities() ;
+      var guess = action("guess")
+    	.desc("Guessing the secret number and ask the user to confirm if it is right or wrong.")
+        .do1_((MyAgentState belief) -> actionstate_ -> {
+          // the agent performs some inference:
+          var candidates = belief.getPossibilities() ;
           if(candidates.isEmpty()) {
-             agentstate.env().println("Your number is NOT in [0..10]!") ;
+        	 belief.env().println("Your number is NOT in [0..10]!") ;
     		 return "out of range" ;
           }
-          int x = candidates.get(agentstate.rnd.nextInt(candidates.size())) ;
-          agentstate.env().println("Is it " + x + "? (answer y/n)") ;
-          var o = agentstate.env().readln() ;
+          int x = candidates.get(belief.rnd.nextInt(candidates.size())) ;
+          var o = belief.env().ask("Is it " + x + "? (answer y/n)") ;
           // pre-emptively scrapping the guessed number from candidate:
-          agentstate.excluded[x] = true ;
-          actionstate_.markAsCompleted();
+          belief.excluded[x] = true ;
           return o ;	 
-      }) ;
+          })
+        .lift() ;
         
       // specifying the strategy to solve the goal:  
-      Strategy strategy = SEQ(lift(asklb),lift(guess)) ;
+      Strategy strategy = SEQ(asklb,guess) ;
       
       // creating the agent, and configuring it:
       GoalTree topgoal = lift(g.withStrategy(strategy)) ;
-      var state = (MyAgentState) (new MyAgentState() . setEnvironment(new SimpleSystemConsoleEnv())) ;      
-      var agent = new BasicAgent() . attachState(state) . setGoal(topgoal) ;
+      var belief = new MyAgentState() ;
+      belief.setEnvironment(new SimpleSystemConsoleEnv()) ;      
+      var agent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;
 
-      state.env().println("Think a number in the interval [0..10].");
-      while (topgoal.getStatus() == ProgressStatus.INPROGRESS) {
+      // now, run the agent :
+      belief.env().println("Think a secret number in the interval [0..10] ...");
+      while (topgoal.getStatus().inProgress()) {
     	  agent.update(); 
       }
-      if(g.getStatus() == ProgressStatus.SUCCESS) 
-    	  state.env().println("Goal solved!") ;
+      if(g.getStatus().sucess()) belief.env().println("Goal solved!") ;
 
 	}
 

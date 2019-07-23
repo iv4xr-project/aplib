@@ -11,56 +11,54 @@ public class DumbDoctor {
 	static public class DoctorBelief extends SimpleState {
 		Integer patientHappiness = 0 ;
 		
-		void sayToPatient(String s) {
-			var env_ = (SimpleSystemConsoleEnv) env() ;
-			env_.println(s);
-		}
-		void askQuestionToPatient(String s) {
-			var env_ = (SimpleSystemConsoleEnv) env() ;
-			env_.println(s);
-			env_.readln() ; // ignoring the answer...
-		}
+		@Override
+		public SimpleSystemConsoleEnv env() { return (SimpleSystemConsoleEnv) super.env() ; }
 	}
 	
 	static public void main(String[] args) {
-	  // specifying the goal:	
-	  Goal g = goal("the-goal").toSolve(happiness -> ((Integer) happiness) >= 8) ;
+	  // specifying the goal to solve:
+	  Goal g = goal("the-goal").toSolve((Integer happiness) -> happiness >= 5) ;
 	   
-	  // specifying the actions for the agent:
-	  Action opening = action("opening")
-			.do1_(agentstate_ -> actionstate_ -> {
-			  var doctorbelief = (DoctorBelief) agentstate_ ;
-			  doctorbelief.askQuestionToPatient("How do you feel today?");
-			  return ++doctorbelief.patientHappiness ;
+	  // defining few actions for the agent:
+	  var opening = action("opening")
+			.desc("To say an opening question to the patient.")
+			.do1_((DoctorBelief belief) -> actionstate_ -> {
+			  belief.env().ask("How do you feel today?");
+			  return ++belief.patientHappiness ;
 		  })
-		  .on_(agentstate_ -> ((DoctorBelief) agentstate_).patientHappiness == 0)  	
+		  .on_((DoctorBelief belief) -> belief.patientHappiness == 0) 
+		  .lift()
 		  ;
 	
-	  Action a1 = action("a1")
-			.do1_(agentstate_ -> actionstate_ -> {
-			  var doctorbelief = (DoctorBelief) agentstate_ ;
-			  doctorbelief.askQuestionToPatient("Please explain a bit more...");
-			  return ++doctorbelief.patientHappiness ;
-		  }) ;
+	  var a1 = action("a1")
+			.desc("To ask a 'smart' question to the patient :D")
+			.do1_((DoctorBelief belief) -> actionstate_ -> {
+			  belief.env().ask("Please explain a bit more...");
+			  return ++belief.patientHappiness ;
+		       })
+			.lift();
 	
-	  Action a2 = action("a2")
-			.do1_(agentstate_ -> actionstate_ -> {
-			  var doctorbelief = (DoctorBelief) agentstate_ ;
-			  doctorbelief.askQuestionToPatient("I see... And why is that?");
-			  return ++doctorbelief.patientHappiness ;
-		  }) ;
+	  var a2 = action("a2")
+			.desc("Another 'smart' question to pose to the patient ;)")
+			.do1_((DoctorBelief belief) -> actionstate_ -> {
+			  belief.env().ask("I see... And why is that?");
+			  return ++belief.patientHappiness ;
+		      })
+			.lift() ;
 	      
 
       // creating the agent, and configuring it:
-      GoalTree topgoal = lift(g.withStrategy(FIRSTof(lift(opening),ANYof(lift(a1),lift(a2))))) ;
-      var belief = (DoctorBelief) (new DoctorBelief() . setEnvironment(new SimpleSystemConsoleEnv())) ;      
+      GoalTree topgoal = lift(g.withStrategy(FIRSTof(opening,ANYof(a1,a2)))) ;
+      var belief = new DoctorBelief() ;
+      belief.setEnvironment(new SimpleSystemConsoleEnv()) ;      
       var doctorAgent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;
 
-      while (topgoal.getStatus() == ProgressStatus.INPROGRESS) {
+      // run the doctor-agent until it solves its goal:
+      while (topgoal.getStatus().inProgress()) {
     	  doctorAgent.update(); 
       }
-      if(g.getStatus() == ProgressStatus.SUCCESS) 
-    	  belief.sayToPatient("I am glad you are happier now :)");
+      if(g.getStatus().sucess()) 
+    	  belief.env().println("I am glad you are happier now :)");
   
 
 	}

@@ -7,7 +7,7 @@ public class Goal {
 	String name ;
 	public String desc ;
 	public double budget = Integer.MAX_VALUE ;
-	public ProgressStatus status = ProgressStatus.INPROGRESS ;
+	public ProgressStatus status = new ProgressStatus() ;
 	Strategy strategy ;
 	Double distance = null ;
 	Object proposal ;
@@ -28,16 +28,25 @@ public class Goal {
 	/**
 	 * Set the predicate which would serve as the predicate to solve.
 	 */
-	public Goal toSolve(Predicate predicateToSolve) {
+	public Goal toSolve_(Predicate predicateToSolve) {
 		checkPredicate = predicateToSolve ; return this ;
+	}
+	
+	public <Proposal> Goal toSolve(Predicate<Proposal> predicateToSolve) {
+		return toSolve_(p -> predicateToSolve.test((Proposal) p)) ;
 	}
 	
 	/**
 	 * Set the used distance function.
 	 */
-	public Goal withDistF(ToDoubleFunction f) {
+	public Goal withDistF_(ToDoubleFunction f) {
 		distFunction = f ; return this ;
 	}
+
+	public <Proposal> Goal withDistF(ToDoubleFunction<Proposal> f) {
+		return withDistF_(p -> f.applyAsDouble((Proposal) p)) ;
+	}
+
 	
 	/**
 	 * Set the strategy to use to solve this goal.
@@ -49,15 +58,15 @@ public class Goal {
 	public String getName() { return name ; }
 	public Object getProposal() { return proposal ; }
 	public Object getSolution() {
-		if (status == ProgressStatus.SUCCESS) return proposal ; else return null ;
+		if (status.sucess()) return proposal ; else return null ;
 	}
 	
-	public Goal setStatusToFail() { status = ProgressStatus.FAILED ; return this ; }
-	Goal setStatusToSuccess() { status = ProgressStatus.SUCCESS ; return this ; }
+	Goal setStatusToFail(String reason) { status.setToFail(reason) ; return this ; }
+	Goal setStatusToSuccess(String reason) { status.setToSuccess(reason); ; return this ; }
 	
 	public void propose(Object proposal) {
 		if (proposal == null) return ;
-		if(checkPredicate.test(proposal)) status = ProgressStatus.SUCCESS ;
+		if(checkPredicate.test(proposal)) status.setToSuccess(); ;
 		if (distFunction != null) distance = distFunction.applyAsDouble(proposal) ;
 	}
 
