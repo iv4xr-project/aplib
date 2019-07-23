@@ -10,10 +10,10 @@ public class Action {
 	boolean completed = false ;
 	ProgressStatus status = ProgressStatus.INPROGRESS ;
 	
-	Predicate<SimpleState> guard ;
+	Predicate<SimpleState> guard = s -> true;
 	Function<SimpleState,Function<Action,Object>> action ;
 	
-	Action(){}
+	Action(){ }
 	public Action(String name) {this.name = name ; }
 	
 	public Action desc(String desc) { this.desc = desc ; return this ; }
@@ -21,6 +21,15 @@ public class Action {
 	public Action do_(Function<SimpleState,Function<Action,Object>> action) {
 		this.action = action ; return this ;
 	}
+	
+	public Action do1_(Function<SimpleState,Function<Action,Object>> action) {
+		this.action = s -> y -> { 
+			try { return action.apply(s).apply(y) ; }
+			finally { y.completed = true ; }
+		} ;
+		return this ;
+	}
+	
 	public Action withBudget(Double budget) { this.budget = budget ; return this ; }
 	
 	

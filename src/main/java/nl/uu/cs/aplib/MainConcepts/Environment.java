@@ -1,4 +1,6 @@
 package nl.uu.cs.aplib.MainConcepts;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * Imagine a use-case where an agent is analyze or even control an environment.
@@ -16,17 +18,21 @@ package nl.uu.cs.aplib.MainConcepts;
  * @author wish
  *
  */
-public abstract class Environment {
+public class Environment {
 	
 	
 	// you will need to introduce some representation of the actual environment's state here
+	
+	Gson gson = new GsonBuilder().serializeNulls().create();
+	
+	public Environment() { }
 	
 	/**
 	 * Inspect the actual environment and reflects its actual state into this abstract representation.
 	 * 
 	 * @return false if we are sure that there was no change in the abstract state; else true.
 	 */
-	abstract public boolean refresh() ;
+	public boolean refresh() { return true ; }
 	
 	/**
 	 * This will start the actual environment, if it is not started yet, and else it
@@ -34,7 +40,7 @@ public abstract class Environment {
 	 * 
 	 * @return false if the restart fails.
 	 */
-	abstract public boolean restart() ;
+	public boolean restart() {  return true ; }
 	
 	
 	/**
@@ -47,7 +53,15 @@ public abstract class Environment {
 	 * 
 	 * The method may also throws a runtime exception.
 	 */
-	abstract public boolean sendCommand(String id, String command, String[] args) ;
+	protected String sendCommand_(String id, String command, String arg) {
+		throw new UnsupportedOperationException() ;
+	}
+	
+	public Object sendCommand(String id, String command, Object arg, Class classOfReturnObject) {
+		String result = sendCommand_(id,command,gson.toJson(arg)) ;
+		if (classOfReturnObject == null) return null ;
+		return gson.fromJson(result, classOfReturnObject) ;
+	}
 	
 
 }

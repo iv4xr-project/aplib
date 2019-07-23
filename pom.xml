@@ -19,6 +19,14 @@
   </properties>
 
   <dependencies>
+    <!-- Gson for json processing in Java -->
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.8.5</version>
+    </dependency>
+          
+    <!-- dependencies on JUnit-5 for unit testing -->      
     <dependency>
        <groupId>org.junit.jupiter</groupId>
        <artifactId>junit-jupiter-api</artifactId>

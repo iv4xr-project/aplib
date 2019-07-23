@@ -15,10 +15,14 @@ public abstract class SimpleState {
 	
 	Environment env ;
 	
-	public void setEnvironment(Environment env) { this.env = env ; }
+	public SimpleState() { }
+	
+	public SimpleState setEnvironment(Environment env) { this.env = env ; return this ; }
 	
 	public void upateState() {
 		 env.refresh() ;
 	};
+	
+	public Environment env() { return env ; }
 
 }

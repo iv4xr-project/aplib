@@ -104,11 +104,6 @@ public class Strategy {
 			return actions ;
 		}
 		
-		@Override
-		List<PrimitiveStrategy> getNextSetOfEnabledActions(SimpleState agentstate) {
-			return parent.getNextSetOfEnabledActions(agentstate) ;
-		}
-
 	}
 	
 

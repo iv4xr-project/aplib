@@ -16,6 +16,9 @@ public class BasicAgent {
 	Random rnd = new Random(rndseed) ;
 	
 	
+	public BasicAgent() { }
+	
+	
 	/**
 	 * Currently not used.
 	 */
@@ -38,6 +41,10 @@ public class BasicAgent {
 		goal = g ;
 		currentGoal = goal.getDeepestFirstPrimGoal() ;
 		return this ; 
+	}
+	
+	public BasicAgent attachState(SimpleState state) {
+		this.state = state ; return this ;
 	}
 	
 	public void restart() { }
