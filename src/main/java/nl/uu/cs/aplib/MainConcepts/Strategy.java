@@ -2,6 +2,7 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.MainConcepts.GoalTree.GoalsCombinator;
 
@@ -88,7 +89,25 @@ public class Strategy {
 		return null ;
 	}
 	
+	public String showActionsStatistics() {
+		String s = "" ;
+		if (this instanceof PrimitiveStrategy) {
+			var action = ((PrimitiveStrategy) this).action ;
+			s += "   " + action.name 
+				 + "\n     #invoked : " + action.invocationCount 
+				 + "\n     used time: " + action.totalRuntime + " (ms)" ;
+			return s ;
+		}
+		for (Strategy S : substrategies) {
+			s += S.showActionsStatistics() + "\n" ;
+		}
+		return s ;
+	}
 	
+	public void printActionsStatistics() {
+		System.out.println("** Actions statistics:") ;
+		System.out.println(showActionsStatistics()) ;
+	}
 	
 	static public class PrimitiveStrategy extends Strategy {
 		Action action ;
@@ -103,6 +122,13 @@ public class Strategy {
 			if (action.isEnabled(agentstate)) actions.add(this) ;
 			return actions ;
 		}
+
+		// for fluent interface
+		public <AgentSt> PrimitiveStrategy on_(Predicate<AgentSt> guard) { 
+			action.on_(guard) ;
+			return this ;
+		}
+		
 		
 	}
 	

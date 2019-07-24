@@ -20,27 +20,19 @@ import com.google.gson.GsonBuilder;
  */
 public class Environment {
 	
-	
-	// you will need to introduce some representation of the actual environment's state here
-	
-	Gson gson = new GsonBuilder().serializeNulls().create();
-	
+		
 	public Environment() { }
 	
 	/**
 	 * Inspect the actual environment and reflects its actual state into this abstract representation.
-	 * 
-	 * @return false if we are sure that there was no change in the abstract state; else true.
 	 */
-	public boolean refresh() { return true ; }
+	public void refresh() { }
 	
 	/**
 	 * This will start the actual environment, if it is not started yet, and else it
 	 * will restart it (reseting to its initial state).
-	 * 
-	 * @return false if the restart fails.
 	 */
-	public boolean restart() {  return true ; }
+	public void restart() {  }
 	
 	
 	/**
@@ -56,12 +48,6 @@ public class Environment {
 	protected String sendCommand_(String id, String command, String arg) {
 		throw new UnsupportedOperationException() ;
 	}
-	
-	public Object sendCommand(String id, String command, Object arg, Class classOfReturnObject) {
-		String result = sendCommand_(id,command,gson.toJson(arg)) ;
-		if (classOfReturnObject == null) return null ;
-		return gson.fromJson(result, classOfReturnObject) ;
-	}
-	
+		
 
 }

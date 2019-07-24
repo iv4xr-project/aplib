@@ -10,6 +10,8 @@ public class Action {
 	public String desc ;
 	public double budget = Integer.MAX_VALUE ;
 	boolean completed = false ;
+	long totalRuntime = 0 ;
+	int invocationCount = 0 ;
 	
 	Predicate<SimpleState> guard = s -> true;
 	Function<SimpleState,Function<Action,Object>> action ;

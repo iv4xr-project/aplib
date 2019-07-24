@@ -28,4 +28,11 @@ public class ProgressStatus {
 	}
 	public void setToFail() {setToFail(null) ; }
 	
+	@Override
+	public String toString() {
+		String s = "" + status ;
+		if (info != null) s += ". " + info ;
+		return s ;
+	}
+	
 }

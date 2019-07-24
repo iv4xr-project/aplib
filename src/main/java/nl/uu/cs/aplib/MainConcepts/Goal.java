@@ -2,11 +2,13 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.function.*;
 
+import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
+
 public class Goal {
 	
 	String name ;
 	public String desc ;
-	public double budget = Integer.MAX_VALUE ;
+	public Budget demandedMinimumBudget = null ;
 	public ProgressStatus status = new ProgressStatus() ;
 	Strategy strategy ;
 	Double distance = null ;
@@ -19,9 +21,9 @@ public class Goal {
 		this.name = name ;
 	}
 	
-	public Goal withBudget(Double budget) {
-		if (budget<0) throw new IllegalArgumentException() ;
-		this.budget = budget ;
+	public Goal demandMinimumBudget(Double budget) {
+		if (budget<=0) throw new IllegalArgumentException() ;
+		demandedMinimumBudget = new Budget(budget) ;
 		return this ;
 	}
 	
@@ -54,6 +56,7 @@ public class Goal {
 	public Goal withStrategy(Strategy S) {
 		strategy = S ; return this ;
 	}
+	public Strategy getStrategy() { return strategy  ; }
 	
 	public String getName() { return name ; }
 	public Object getProposal() { return proposal ; }
@@ -63,6 +66,11 @@ public class Goal {
 	
 	Goal setStatusToFail(String reason) { status.setToFail(reason) ; return this ; }
 	Goal setStatusToSuccess(String reason) { status.setToSuccess(reason); ; return this ; }
+	
+	// for fluent interface
+	public PrimitiveGoal lift() {
+		return new PrimitiveGoal(this) ;
+	}
 	
 	public void propose(Object proposal) {
 		if (proposal == null) return ;

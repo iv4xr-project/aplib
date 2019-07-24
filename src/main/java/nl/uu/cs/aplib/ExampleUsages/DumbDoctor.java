@@ -2,7 +2,7 @@ package nl.uu.cs.aplib.ExampleUsages;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
 
-import nl.uu.cs.aplib.Environments.SimpleSystemConsoleEnv;
+import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.MainConcepts.*;
 
 
@@ -12,7 +12,7 @@ public class DumbDoctor {
 		Integer patientHappiness = 0 ;
 		
 		@Override
-		public SimpleSystemConsoleEnv env() { return (SimpleSystemConsoleEnv) super.env() ; }
+		public ConsoleEnvironment env() { return (ConsoleEnvironment) super.env() ; }
 	}
 	
 	static public void main(String[] args) {
@@ -26,7 +26,6 @@ public class DumbDoctor {
 			  belief.env().ask("How do you feel today?");
 			  return ++belief.patientHappiness ;
 		  })
-		  .on_((DoctorBelief belief) -> belief.patientHappiness == 0) 
 		  .lift()
 		  ;
 	
@@ -47,10 +46,18 @@ public class DumbDoctor {
 			.lift() ;
 	      
 
-      // creating the agent, and configuring it:
-      GoalTree topgoal = lift(g.withStrategy(FIRSTof(opening,ANYof(a1,a2)))) ;
+      // Specifying a strategy to solve the previously set goal:
+      g.withStrategy(
+    	FIRSTof(
+    		opening.on_((DoctorBelief belief) -> belief.patientHappiness == 0) ,
+    		ANYof(a1,a2)
+    	)) ;    		  
+      // setting g as the top goal:
+      GoalTree topgoal = g.lift() ;
+      
+      // creating a doctor-agent, attaching state to it, and the above topgoal to it:
       var belief = new DoctorBelief() ;
-      belief.setEnvironment(new SimpleSystemConsoleEnv()) ;      
+      belief.setEnvironment(new ConsoleEnvironment()) ;      
       var doctorAgent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;
 
       // run the doctor-agent until it solves its goal:
@@ -59,6 +66,8 @@ public class DumbDoctor {
       }
       if(g.getStatus().sucess()) 
     	  belief.env().println("I am glad you are happier now :)");
+      
+      topgoal.printTreeStatus();
   
 
 	}

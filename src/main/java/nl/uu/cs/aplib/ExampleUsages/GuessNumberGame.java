@@ -1,6 +1,6 @@
 package nl.uu.cs.aplib.ExampleUsages;
 
-import nl.uu.cs.aplib.Environments.SimpleSystemConsoleEnv;
+import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.MainConcepts.*;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
@@ -23,7 +23,7 @@ public class GuessNumberGame  {
 		}
 		
 		@Override
-		public SimpleSystemConsoleEnv env() { return (SimpleSystemConsoleEnv) super.env() ; }
+		public ConsoleEnvironment env() { return (ConsoleEnvironment) super.env() ; }
 		
 	}
 	
@@ -74,20 +74,23 @@ public class GuessNumberGame  {
         .lift() ;
         
       // specifying the strategy to solve the goal:  
-      Strategy strategy = SEQ(asklb,guess) ;
+      g.withStrategy(SEQ(asklb,guess)) ;
       
-      // creating the agent, and configuring it:
-      GoalTree topgoal = lift(g.withStrategy(strategy)) ;
+      // creating an agent, attaching state to it, and the above topgoal to it:
+      GoalTree topgoal = g.lift().withBudget(new Budget(10000)) ;
       var belief = new MyAgentState() ;
-      belief.setEnvironment(new SimpleSystemConsoleEnv()) ;      
+      belief.setEnvironment(new ConsoleEnvironment()) ;      
       var agent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;
 
       // now, run the agent :
       belief.env().println("Think a secret number in the interval [0..10] ...");
       while (topgoal.getStatus().inProgress()) {
+    	  System.err.println("##" + topgoal.getStatus()) ;
     	  agent.update(); 
       }
-      if(g.getStatus().sucess()) belief.env().println("Goal solved!") ;
+      
+      topgoal.printTreeStatus(); 
+      g.getStrategy().printActionsStatistics();
 
 	}
 
