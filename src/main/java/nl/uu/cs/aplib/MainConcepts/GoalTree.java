@@ -194,10 +194,9 @@ public class GoalTree {
 	}
 	
 	private void distributeRemainingBudgetWorker(double budget) {
-		remainingBudget.amount = budget ;
-		remainingBudget.consume(consumedBudget);
-		double available = Math.max(remainingBudget.amount(),0) ;
-		
+		double available = Math.max(budget,0) ;
+		remainingBudget.amount = available ;
+		//System.err.println(">> remaining budget " + remainingBudget.amount) ;
 		var subgoalsWithBudgetDemand = subgoals.stream()
 				                       .filter(g -> g.status.inProgress() &&  g.demandedMinimumBudget()>0d)
 				                       .collect(Collectors.toList()) ;

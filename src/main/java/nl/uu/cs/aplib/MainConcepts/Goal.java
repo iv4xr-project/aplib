@@ -56,6 +56,11 @@ public class Goal {
 	public Goal withStrategy(Strategy S) {
 		strategy = S ; return this ;
 	}
+
+	//public Goal withAction(Action a) {
+	//	return withStrategy(a.lift()) ;
+	//}
+	
 	public Strategy getStrategy() { return strategy  ; }
 	
 	public String getName() { return name ; }

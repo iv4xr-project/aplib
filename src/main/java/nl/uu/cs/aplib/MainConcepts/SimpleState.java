@@ -11,7 +11,7 @@ package nl.uu.cs.aplib.MainConcepts;
  * @author wish
  *
  */
-public abstract class SimpleState {
+public class SimpleState {
 	
 	Environment env ;
 	

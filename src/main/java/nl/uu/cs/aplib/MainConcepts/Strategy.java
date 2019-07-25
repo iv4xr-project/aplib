@@ -44,48 +44,54 @@ public class Strategy {
 	 * which are both eligible for executions and whose guard are true on the
 	 * state.
 	 */
-	List<PrimitiveStrategy> getEnabledActions(SimpleState agentstate) {
+	List<PrimitiveStrategy> getFirstEnabledActions(SimpleState agentstate) {
 		
 		List<PrimitiveStrategy> actions = new LinkedList<PrimitiveStrategy>() ;
-		
-		if (strTy == StrategyType.FIRSTOF) {
-			for (Strategy PT : substrategies) {
-				actions = PT.getEnabledActions(agentstate) ;
-				if (! actions.isEmpty()) return actions ;
-			}
-			return actions ;
-		}
-		
-		if (strTy == StrategyType.ANYOF) {
-			for (Strategy PT : substrategies) {
-				actions.addAll(PT.getEnabledActions(agentstate)) ;
-			}
-			return actions ;
-		}
-		
-		if (strTy == StrategyType.SEQ) {
-			return substrategies.get(0).getEnabledActions(agentstate) ;
+		switch(strTy) {
+		   case FIRSTOF : for (Strategy PT : substrategies) {
+				             actions = PT.getFirstEnabledActions(agentstate) ;
+				             if (! actions.isEmpty()) return actions ;
+			              } 
+			              return actions ;
+		   case ANYOF   : for (Strategy PT : substrategies) {
+				             actions.addAll(PT.getFirstEnabledActions(agentstate)) ;
+			              }
+			              return actions ;
+		   case SEQ : return substrategies.get(0).getFirstEnabledActions(agentstate) ;
+		   case PRIMITIVE : var this_ = (PrimitiveStrategy) this ;
+		                    if (this_.action.isEnabled(agentstate)) actions.add(this_) ;
+			                return actions ;
 		}
 		// should not happen:
 		return null ;
 	}
 	
 	/**
-	 * Suppose this strategy is done/completed. This method calculates the next
-	 * set of enabled actions to choose.
+	 * Suppose this strategy is done/completed. This method calculates the next strategy 
+	 * to execute.
 	 */
-	List<PrimitiveStrategy> getNextSetOfEnabledActions(SimpleState agentstate) {
-		List<PrimitiveStrategy> actions = new LinkedList<PrimitiveStrategy>() ;
-		if (parent == null) return actions ;
-		if (parent.strTy == StrategyType.FIRSTOF) return parent.getEnabledActions(agentstate) ;
-		if (parent.strTy == StrategyType.ANYOF) return parent.getEnabledActions(agentstate) ;
-		if (parent.strTy == StrategyType.SEQ) {
-			int k = parent.substrategies.indexOf(this) ;
-			if (k == parent.substrategies.size() - 1) 
-				return parent.getEnabledActions(agentstate) ;
-			else
-				return parent.substrategies.get(k+1).getEnabledActions(agentstate) ;
-		}
+	Strategy calcNextStrategy(SimpleState agentstate) {
+		
+		if (parent == null)
+			// the root strategy itself cannot have any next-strategy:
+			return null ; 
+		
+	    if (strTy == StrategyType.PRIMITIVE) {
+	    	var this_ = (PrimitiveStrategy) this ;
+	    	// well, if the current action is not completed yet, stay on it:
+	    	if (! this_.action.isCompleted()) return this ; 
+	    }
+		
+	    switch(parent.strTy) {
+	       case FIRSTOF : return parent.calcNextStrategy(agentstate) ;
+	       case ANYOF   : return parent.calcNextStrategy(agentstate) ;
+	       case SEQ     : int k = parent.substrategies.indexOf(this) ;
+			              if (k == parent.substrategies.size() - 1) 
+				              return parent.calcNextStrategy(agentstate) ;
+			              else
+				              return parent.substrategies.get(k+1) ;
+	    }
+        // should not arrive here:
 		return null ;
 	}
 	
@@ -116,13 +122,6 @@ public class Strategy {
 			action = a ; 
 		}
 		
-		@Override
-		List<PrimitiveStrategy> getEnabledActions(SimpleState agentstate) {
-			var actions = new LinkedList<PrimitiveStrategy>() ;
-			if (action.isEnabled(agentstate)) actions.add(this) ;
-			return actions ;
-		}
-
 		// for fluent interface
 		public <AgentSt> PrimitiveStrategy on_(Predicate<AgentSt> guard) { 
 			action.on_(guard) ;

@@ -28,13 +28,6 @@ public class Action {
 	}
 	
 	public Action do__(Function<SimpleState,Function<Action,Object>> action) {
-		this.action = action ; return this ;
-	}
-	public <AgentSt,T> Action do_(Function<AgentSt,Function<Action,T>> action) {
-		return do__(s -> y -> action.apply((AgentSt) s).apply(y)) ;
-	}
-	
-	public Action do1__(Function<SimpleState,Function<Action,Object>> action) {
 		this.action = s -> y -> { 
 			try { return action.apply(s).apply(y) ; }
 			finally { y.completed = true  ;}
@@ -42,9 +35,27 @@ public class Action {
 		return this ;
 	}
 	
-	public <AgentSt,T> Action do1_(Function<AgentSt,Function<Action,T>> action) {
-		return do1__(s -> y -> action.apply((AgentSt) s).apply(y)) ;
+	public <AgentSt,T> Action do_(Function<AgentSt,Function<Action,T>> action) {
+		return do__(s -> y -> action.apply((AgentSt) s).apply(y)) ;
 	}
+	
+	public Action until__(Function<SimpleState,Predicate<Action>> guard) {
+		Function<SimpleState,Function<Action,Object>> a = s -> y -> {
+			var o = action.apply(s).apply(y) ;
+			if (guard.apply(s).test(y)) {
+				y.completed = true ;
+			}
+			else y.completed = false ;
+			return o ;
+		} ;
+		action = a ;
+		return this ;
+	}
+	
+	public <AgentSt> Action until_(Function<AgentSt,Predicate<Action>> guard) {
+		return until__(s -> y -> guard.apply((AgentSt) s).test(y)) ;
+	}
+	
 	
 	public Action withBudget(Double budget) { this.budget = budget ; return this ; }
 	

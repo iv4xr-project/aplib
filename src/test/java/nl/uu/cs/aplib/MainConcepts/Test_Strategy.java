@@ -22,17 +22,17 @@ public class Test_Strategy {
 		var a3 = lift(action("a3").on__(s -> ((IntState) s).i == 3)) ;
 		var a4 = lift(action("a4").on__(s -> ((IntState) s).i == 4)) ;
 		
-		assertFalse(FIRSTof(a0,a1,a2).getEnabledActions(Int(1)).contains(a0)) ;
-		assertTrue(FIRSTof(a0,a1,a2).getEnabledActions(Int(1)).contains(a1)) ;
-		assertFalse(FIRSTof(a0,a1,a2).getEnabledActions(Int(1)).contains(a2)) ;
+		assertFalse(FIRSTof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a0)) ;
+		assertTrue(FIRSTof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a1)) ;
+		assertFalse(FIRSTof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a2)) ;
 		
-		assertFalse(ANYof(a0,a1,a2).getEnabledActions(Int(1)).contains(a0)) ;
-		assertTrue(ANYof(a0,a1,a2).getEnabledActions(Int(1)).contains(a1)) ;
-		assertTrue(ANYof(a0,a1,a2).getEnabledActions(Int(1)).contains(a2)) ;
+		assertFalse(ANYof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a0)) ;
+		assertTrue(ANYof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a1)) ;
+		assertTrue(ANYof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a2)) ;
 		
-		assertFalse(ANYof(a0,a1,a2).getEnabledActions(Int(1)).contains(a0)) ;
-		assertTrue(ANYof(a0,a1,a2).getEnabledActions(Int(1)).contains(a1)) ;
-		assertTrue(ANYof(a0,a1,a2).getEnabledActions(Int(1)).contains(a2)) ;
+		assertFalse(ANYof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a0)) ;
+		assertTrue(ANYof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a1)) ;
+		assertTrue(ANYof(a0,a1,a2).getFirstEnabledActions(Int(1)).contains(a2)) ;
 	}
 
 }

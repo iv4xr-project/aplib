@@ -22,7 +22,7 @@ public class DumbDoctor {
 	  // defining few actions for the agent:
 	  var opening = action("opening")
 			.desc("To say an opening question to the patient.")
-			.do1_((DoctorBelief belief) -> actionstate_ -> {
+			.do_((DoctorBelief belief) -> actionstate_ -> {
 			  belief.env().ask("How do you feel today?");
 			  return ++belief.patientHappiness ;
 		  })
@@ -31,7 +31,7 @@ public class DumbDoctor {
 	
 	  var a1 = action("a1")
 			.desc("To ask a 'smart' question to the patient :D")
-			.do1_((DoctorBelief belief) -> actionstate_ -> {
+			.do_((DoctorBelief belief) -> actionstate_ -> {
 			  belief.env().ask("Please explain a bit more...");
 			  return ++belief.patientHappiness ;
 		       })
@@ -39,7 +39,7 @@ public class DumbDoctor {
 	
 	  var a2 = action("a2")
 			.desc("Another 'smart' question to pose to the patient ;)")
-			.do1_((DoctorBelief belief) -> actionstate_ -> {
+			.do_((DoctorBelief belief) -> actionstate_ -> {
 			  belief.env().ask("I see... And why is that?");
 			  return ++belief.patientHappiness ;
 		      })
@@ -64,7 +64,7 @@ public class DumbDoctor {
       while (topgoal.getStatus().inProgress()) {
     	  doctorAgent.update(); 
       }
-      if(g.getStatus().sucess()) 
+      if(topgoal.getStatus().sucess()) 
     	  belief.env().println("I am glad you are happier now :)");
       
       topgoal.printTreeStatus();

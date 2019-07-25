@@ -44,7 +44,7 @@ public class GuessNumberGame  {
       // defining the actions for the agent:
 	  var asklb = action("askLowerBound")
 		.desc("Ask user to give a number less or equal that his secret number.")
-		.do1_((MyAgentState belief) -> actionstate_ -> {
+		.do_((MyAgentState belief) -> actionstate_ -> {
 		  var o = belief.env().ask("Type a number less or equal to your number:");
 		  var i = toInt(o) ;
 		  // the agent infers and adds new facts:
@@ -58,7 +58,7 @@ public class GuessNumberGame  {
 	  
       var guess = action("guess")
     	.desc("Guessing the secret number and ask the user to confirm if it is right or wrong.")
-        .do1_((MyAgentState belief) -> actionstate_ -> {
+        .do_((MyAgentState belief) -> actionstate_ -> {
           // the agent performs some inference:
           var candidates = belief.getPossibilities() ;
           if(candidates.isEmpty()) {
