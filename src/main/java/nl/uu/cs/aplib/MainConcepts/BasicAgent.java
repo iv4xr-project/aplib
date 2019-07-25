@@ -11,6 +11,9 @@ import nl.uu.cs.aplib.Utils.Time;
 
 public class BasicAgent {
 	
+	String id ;
+	String role ;
+	
 	SimpleState state ;
 	GoalTree goal ;
 	PrimitiveGoal currentGoal ;
