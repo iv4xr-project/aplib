@@ -15,7 +15,7 @@ public class BasicAgent {
 	String role ;
 	
 	SimpleState state ;
-	GoalTree goal ;
+	protected GoalTree goal ;
 	PrimitiveGoal currentGoal ;
 	Strategy currentStrategy ;
 	long rndseed = 1287821 ; // a prime and a palindrome :D
@@ -55,6 +55,11 @@ public class BasicAgent {
 		this.state = state ; return this ;
 	}
 	
+	protected void detachgoal() {
+		goal = null ;
+		currentGoal = null ;
+	}
+	
 	public void restart() { }
 	
 	protected void log(Level level, String s) {
@@ -62,11 +67,23 @@ public class BasicAgent {
 		logger.log(level, s);
 	}
 	
+	protected void setTopGoalToSuccess(String info) {
+		goal.setStatusToSuccess(info);
+	}
+	
+	/** 
+	 * Set top-goal to fail, then detach it.
+	 */
+	protected void setTopGoalToFail(String reason) {
+		goal.setStatusToFail(reason); detachgoal() ;
+	}
+	
 	public void update() {
-		if (currentGoal == null) {
+		if (goal == null) {
 			//System.err.print("x") ;
 			return ;
 		}
+		// if goal is not null, currentGoal should not be null either
 		Time time0 = new Time() ;
 		time0.sample(); 
 		goal.redistributeRemainingBudget();
@@ -77,8 +94,6 @@ public class BasicAgent {
 		}
 	}
 	
-
-	
 	private void updateWorker(Time time) {
 		
 		if (! currentGoal.remainingBudget.isUnlimited() && currentGoal.remainingBudget.amount<= 0d) {
@@ -86,7 +101,7 @@ public class BasicAgent {
 			//System.err.println(">> Running out of budget.") ;
 			currentGoal = currentGoal.getNextPrimitiveGoal() ;
 			if (currentGoal == null) {
-				goal.setStatusToFail("Some subgoal has run out of budget and there is no alternative subgoal towards solving the topgoal.");
+				setTopGoalToFail("Some subgoal has run out of budget and there is no alternative subgoal towards solving the topgoal.");
 				//System.err.println(">> setting topgoal to fail...") ;
 				//System.err.println(">> status topgoal:"  + goal.status) ;
 				return ;
@@ -114,8 +129,7 @@ public class BasicAgent {
 		
 		// if the action is ABORT:
 		if (chosenAction.action instanceof Abort) {
-			goal.setStatusToFail("abort() were invoked.");
-			currentGoal = null ;
+			setTopGoalToFail("abort() were invoked.");
 			return ;
 		}
 		
@@ -129,7 +143,7 @@ public class BasicAgent {
 			currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
 			if (goal.getStatus().sucess())  {
 				// the top level goal is solved! Then the agent is done:
-				currentGoal = null ;
+				detachgoal() ;
 				return ;
 			}
 			currentGoal = currentGoal.getNextPrimitiveGoal() ;
@@ -150,10 +164,5 @@ public class BasicAgent {
 		}
 	}
 	
-	
-	
-	
-	
-	// abstract xxx ;
 
 }
