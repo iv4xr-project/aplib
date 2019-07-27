@@ -4,6 +4,8 @@ import java.util.concurrent.locks.*;
 import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.MainConcepts.*;
+import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
+import nl.uu.cs.aplib.MultiAgentSupport.Message;
 import nl.uu.cs.aplib.Utils.Time;
 
 public class AutonomousBasicAgent extends BasicAgent {
@@ -17,7 +19,27 @@ public class AutonomousBasicAgent extends BasicAgent {
 	static enum Command { PAUSE, STOP }
 	
 	Command cmd = null ;
+	
+	ComNode comNode = null ;
 
+	
+	public synchronized void sendMsgToThisAgent(Message m) {
+		if (cmd == Command.STOP) {
+			// if the agent has been commanded to stop then discard the msg
+			return ;
+		}
+		var msgQueue = getIncomingMsgQueue() ;
+		msgQueue.add(m) ;
+		cmd = null ; // set cmd to resume, in case it was on pause
+		triggerArrived.signal();  // awaken the agent
+	}
+	
+	public AutonomousBasicAgent registerToComNode(ComNode comNode) {
+		this.comNode = comNode ;
+		comNode.register(this) ;
+		return this ;
+	}
+	
 	
 	public void pause() { cmd = Command.PAUSE ; }
 	
@@ -91,9 +113,11 @@ public class AutonomousBasicAgent extends BasicAgent {
 				long sleeptime = samplingInterval - time.elapsedTimeSinceLastSample() ;
 				// if needed, just sleep until it is time to do the next sampling:
 				if (sleeptime>100) {
-					try { Thread.sleep(sleeptime); }
+					try { Thread.sleep(sleeptime); }  // TRICKY... this is not interruptible by condition.wait() !
 					catch(InterruptedException e) {
 						// somebody else interrupts the sleep... well ok, we can just as well resume
+						// Note also that Condition.signal() will not cause this interruption,
+						// since here we are not waiting for any condition.
 					}
 				}
 			}

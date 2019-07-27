@@ -1,5 +1,9 @@
 package nl.uu.cs.aplib.MainConcepts;
 
+import java.util.*;
+
+import nl.uu.cs.aplib.MultiAgentSupport.Message;
+
 /**
  * Representing the agent's state (also called 'belief' in BDI). This has two main
  * elements:
@@ -13,6 +17,7 @@ package nl.uu.cs.aplib.MainConcepts;
  */
 public class SimpleState {
 	
+	List<Message> incomingMsgs = new LinkedList<Message>() ;
 	Environment env ;
 	
 	public SimpleState() { }

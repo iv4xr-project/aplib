@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
 import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
 import nl.uu.cs.aplib.MainConcepts.Strategy.PrimitiveStrategy;
+import nl.uu.cs.aplib.MultiAgentSupport.Message;
 import nl.uu.cs.aplib.Utils.Time;
 
 public class BasicAgent {
@@ -24,12 +25,6 @@ public class BasicAgent {
 	
 	
 	public BasicAgent() { }
-	
-	
-	/**
-	 * Currently not used.
-	 */
-	PriorityQueue<APEvent> q = new PriorityQueue<APEvent>(10,new APEvent.APEventComparator()) ;
 	
 	
 	/**
@@ -51,6 +46,15 @@ public class BasicAgent {
 		return this ; 
 	}
 	
+	public String getId() {
+		return id;
+	}
+
+
+	public String getRole() {
+		return role;
+	}
+	
 	public BasicAgent attachState(SimpleState state) {
 		this.state = state ; return this ;
 	}
@@ -58,6 +62,10 @@ public class BasicAgent {
 	protected void detachgoal() {
 		goal = null ;
 		currentGoal = null ;
+	}
+	
+	protected List<Message> getIncomingMsgQueue() {
+		return state.incomingMsgs ;
 	}
 	
 	public void restart() { }
@@ -163,6 +171,6 @@ public class BasicAgent {
 			}
 		}
 	}
-	
+
 
 }
