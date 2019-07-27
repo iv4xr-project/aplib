@@ -14,9 +14,19 @@ import nl.uu.cs.aplib.MainConcepts.Goal;
 import nl.uu.cs.aplib.MainConcepts.GoalTree;
 import nl.uu.cs.aplib.MainConcepts.SimpleState;
 
+/**
+ * This demo will create an agent whose goal is to guess a magic number (it is the number
+ * 10, but the agent doesn't know that). The agent is not very smart, so it simply repeatedly
+ * proposes a random number until it guesses the right one.
+ * 
+ * Run the method main to run this demo.
+ * 
+ * @author wish
+ *
+ */
 public class MinimalDemo {
 	
-	static public void main(String[] args) throws InterruptedException {
+	static public void main(String[] args) throws InterruptedException { // run this to run the demo
 		  // specifying the goal to solve:
 		  Goal g = goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10) ;
 		  
@@ -29,8 +39,7 @@ public class MinimalDemo {
 					((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
 					return x ;
 					})
-				.lift() 
-			    ;
+				.lift() ;
 		
 		  // attach the action to the goal, and make it a goal-tree:
 		  GoalTree topgoal = g.withStrategy(guessing).lift() ;
@@ -40,15 +49,11 @@ public class MinimalDemo {
                       . attachState(new SimpleState() .setEnvironment(new ConsoleEnvironment())) 
                       . setGoal(topgoal) ;
 	      
-	      
 	      // run the agent until it solves its goal:
 	      while (topgoal.getStatus().inProgress()) {
 	    	  agent.update(); 
 	    	  Thread.sleep(1500);
 	      }
 	      topgoal.printTreeStatus();
-	  
-
 		}
-
 }

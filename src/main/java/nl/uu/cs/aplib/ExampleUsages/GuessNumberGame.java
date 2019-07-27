@@ -6,12 +6,26 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import java.util.*;
 
+/**
+ * In this demo we create an an agent that tries to guess a magic number that the user
+ * has in mind through a series of question/answers :)
+ *
+ * Run the main method to run this demo.
+ * 
+ * @author wish
+ *
+ */
 public class GuessNumberGame  {
 	
+	/**
+	 * We define a custom agent-state to keep track which numbers it knows for sure cannot
+	 * be the user's magic number.
+	 */
 	static public class MyAgentState extends SimpleState {
 		
 		Random rnd = new Random() ;
 		
+		// b[i] = true means  that i cannot be the magic number
 		boolean[] excluded = { false, false, false , false , false,
 	                           false, false, false , false , false, false } ;
 		
@@ -27,6 +41,7 @@ public class GuessNumberGame  {
 		
 	}
 	
+	// just some help method
 	static private Integer toInt(Object o) {
 		try {
 			return Integer.parseInt((String) o) ;
@@ -35,11 +50,11 @@ public class GuessNumberGame  {
 	}
 
 	
-	static public void main(String[] args) {
+	static public void main(String[] args) { // run this to run the demo
 		
 	  // specifying the goal to solve:	
       Goal g = goal("the-goal")
-        	   .toSolve((String p) -> p.equals("out of range") || p.equals("y")) ;	
+        	   .toSolve((String p) -> p.equals("y") || p.equals("out of range")) ;	
 		
       // defining the actions for the agent:
 	  var asklb = action("askLowerBound")
@@ -77,7 +92,7 @@ public class GuessNumberGame  {
       g.withStrategy(SEQ(asklb,guess)) ;
       
       // creating an agent, attaching state to it, and the above topgoal to it:
-      GoalTree topgoal = g.lift().withBudget(new Budget(10000)) ;
+      GoalTree topgoal = g.lift().withBudget(new Budget(30000)) ;
       var belief = new MyAgentState() ;
       belief.setEnvironment(new ConsoleEnvironment()) ;      
       var agent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;
@@ -85,10 +100,9 @@ public class GuessNumberGame  {
       // now, run the agent :
       belief.env().println("Think a secret number in the interval [0..10] ...");
       while (topgoal.getStatus().inProgress()) {
-    	  System.err.println("##" + topgoal.getStatus()) ;
+    	  //System.err.println("##" + topgoal.getStatus()) ;
     	  agent.update(); 
-      }
-      
+      } 
       topgoal.printTreeStatus(); 
       g.getStrategy().printActionsStatistics();
 
