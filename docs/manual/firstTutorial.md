@@ -244,7 +244,7 @@ while (topgoal.getStatus().inProgress()) {
 
 ### The full example
 
-The full code of `agent-X` is below (ok well, below it is called `agent` rather than `agant-X` :D ). You can run the method `main` to run this demo. It will produce output that looks something like this:
+The full code of `agent-X` can be found in [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agant-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
 
 ```
 Proposing 5 ...
