@@ -36,7 +36,7 @@ The method `setGoal(g)` is used to set a 'goal' (more precisely, a 'goal-tree') 
 
 `attachState(s)` and `setGoal(g)` are just  setters, but they are implemented as follows:
 
-```Java
+```java
 class BasicAgent {
   SimpleState state ;
   GoalTree goal ;
@@ -66,20 +66,20 @@ Many APIs in `aplib` can be used in this Fluent Interface style.
 
 An agent state is an instance of `nl.uu.cs.aplib.MainConcepts.SimpleState`. For a start, such an instance does not contain any information other than a place holder an 'environment'. Below is how we can create an instance of an agent state. We will also attach a simple environment called `ConsoleEnvironment` to it:
 
-```Java
+```java
 var belief = new SimpleState() ;
 belief.setEnvironment(new ConsoleEnvironment()) ;
 ```
 Or, in the Fluent Interface style:
 
-```Java
+```java
 var belief = new SimpleState() . setEnvironment(new ConsoleEnvironment()) ;
 ```
 
 For our agent-X, such minimalistic state will do.
 But if for a more sophisticated agent we want to create a state that holds some information, e.g. an integer counter, we can do this by subclassing `SimpleState`:
 
-```Java
+```java
 class MyState extends SimpleState {
   int counter = 0 ;
   public MyState() { super() ; }
@@ -87,7 +87,7 @@ class MyState extends SimpleState {
 ```
 And to create an instance of this:
 
-```Java
+```java
 var belief = new MyState() . setEnvironment(new ConsoleEnvironment()) ;
 ```
 ### Environment
@@ -98,7 +98,7 @@ An environment is an instance of `nl.uu.cs.aplib.MainConcepts.Environment`. This
 
 `ConsoleEnvironment` provides the following APIs:
 
-```Java
+```java
 public void println(String str) { System.out.println(str) ; }
 public String readln() { return  consoleInput.nextLine() ; }
 public String ask(String s) { println(s) ; return readln() ; }
@@ -110,7 +110,7 @@ To make an agent does something, we first need to formulate a *goal*. After sett
 
 Abstractly, a goal is a 'predicate', which is a function from some x to `boolean`. In Java we can construct predicates using lambda-expression. For example:
 
-```Java
+```java
 Predicate<Integer> p1 = x -> x==10 ;
 Predicate<Integer> p2 = x -> x>0 ;
 ```
@@ -119,13 +119,13 @@ Predicate<Integer> p2 = x -> x>0 ;
 
 Technically though, in `aplib` a goal is an instance of `nl.uu.cs.aplib.MainConcepts.Goal`, but we can easily turn a lambda expression such as above to internally become an instance of `Goal`:
 
-```Java
+```java
 var g10 = goal("Guess a the magic number (10)") ; // create a goal g10 with some descriptive name
 g10.toSolve((Integer x) -> x == 10) ; // attach a predicate to the goal
 ```
 Or, in the Fluent Interface style:
 
-```Java
+```java
 var g10 = goal("Guess a the magic number (10)") . toSolve((Integer x) -> x == 10) ;
 ```
 This goal is solved if the agent manage to compute a 'proposal' x that satisfies the predicate attached to it. Note: although simple, the above predicate might not be easy for the agent to solve, especially if it does not know upfront what the solution is.
@@ -146,7 +146,7 @@ An _action_ is a stateful program that operates on the agent state and its own s
 
 Abstractly, we can formulate an action with a lambda-expression. For example, here is an action that generates a random integer between 0..11 and proposes it to solve the agent's current goal:
 
-```Java
+```java
 (SimpleState belief) -> actionstate_ -> rnd.nextInt(11)
 ```
 The lambda-expression does not contain explicit code for checking the goal. When given such an action, under the hood the agent will pass the return value of the lambda-expression to its goal.
@@ -154,7 +154,7 @@ The lambda-expression does not contain explicit code for checking the goal. When
 Suppose that the agent uses the `ConsoleEnvironment` as its environment.
 Suppose, in addition to generating a random number we also want the action to print this number to this console. We can do this, but we will need a bit more coding:
 
-```Java
+```java
 (SimpleState belief) -> actionstate_ -> {
      int x = rnd.nextInt(11) ;
      ((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
@@ -164,7 +164,7 @@ Suppose, in addition to generating a random number we also want the action to pr
 
 Internally though, an action must be an instance of `nl.uu.cs.aplib.MainConcepts.Action`. Using a method called `action(f)` we can turn a lambda expression such as above into an instance of `Action`.
 
-```Java
+```java
 var a0 = action((SimpleState belief) -> actionstate_ -> {
      int x = rnd.nextInt(11) ;
      ... ;
@@ -174,7 +174,7 @@ var a0 = action((SimpleState belief) -> actionstate_ -> {
 
 An action can be guarded too. For example, suppose our state `belief` is of type `MyState`, which has an integer field called `counter`, and we want `a0` above to be only **enabled** (executable) when this counter has an odd value, we can code this as follows:
 
-```Java
+```java
 var a0withCondition = action((MyState belief) -> actionstate_ -> {
      int x = rnd.nextInt(11) ;
      ... ;
@@ -186,7 +186,7 @@ var a0withCondition = action((MyState belief) -> actionstate_ -> {
 
 There is one more technical detail: an agent actually wants to have a strategy rather than an action. A 'strategy' is an instance of `nl.uu.cs.aplib.MainConcepts.Strategy`. Although conceptually a single action is also a strategy, technically we need to wrap it to become a `Strategy`. The method `lift()` will do that.  So... here is the incantation to turn the previous lambda-expression to a `Strategy`:
 
-```Java
+```java
 var guessing = action((SimpleState belief) -> actionstate_ -> {
      int x = rnd.nextInt(11) ;
      ... ;
@@ -200,7 +200,7 @@ var guessing = action((SimpleState belief) -> actionstate_ -> {
 
 Recall that previously we have created a goal called `g10`; here is now how we can attach the strategy `guessing` defined above, and then lift the resulting goal to a goal-tree:
 
-```Java
+```java
 GoalTree topgoal = g10.withStrategy(guessing).lift() ;
 ```
 
@@ -208,7 +208,7 @@ GoalTree topgoal = g10.withStrategy(guessing).lift() ;
 
 Now we have all the ingredients to create a working agent :) Here is the code for our `agent-X`:
 
-```Java
+```java
 // formulate a goal:
 Goal g10 = goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10) ;
 
@@ -235,7 +235,7 @@ An agent has a method `update()`. When invoked, it will search in its current st
 
 The easiest way to run an agent is by repeatedly calling its `update()` until the goal is solved. A goal can also be given a time budget. The goal would then be marked as failed if you have invoked `update()` too many times so that the budget is exhausted. Here is a simple loop, with intentional delay added that will run our `agent-X`:
 
-```Java
+```java
 while (topgoal.getStatus().inProgress()) {
    agentX.update();
    Thread.sleep(1500);
@@ -257,7 +257,7 @@ Proposing 10 ...
    Consumed budget:4.0
 ```
 
-```Java
+```java
 package nl.uu.cs.aplib.ExampleUsages;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
