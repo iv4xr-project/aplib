@@ -1,6 +1,4 @@
 package nl.uu.cs.aplib.MainConcepts;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * Imagine a use-case where an agent is analyze or even control an environment.

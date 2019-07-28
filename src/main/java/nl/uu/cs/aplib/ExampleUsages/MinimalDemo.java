@@ -8,7 +8,6 @@ import static nl.uu.cs.aplib.AplibEDSL.goal;
 import java.util.Random;
 
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.ExampleUsages.DumbDoctor.DoctorBelief;
 import nl.uu.cs.aplib.MainConcepts.BasicAgent;
 import nl.uu.cs.aplib.MainConcepts.Goal;
 import nl.uu.cs.aplib.MainConcepts.GoalTree;
