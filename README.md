@@ -1,9 +1,46 @@
 # Aplib: an Agent Programming Library
 
-Aplib is a Java library to program multi agent programs. As it is now, Aplib is still under development. 
+`Aplib` is a Java library to program multi agent programs.
 
-An _agent_ is essentially a program that is used to influence an environment towards a certain goal. The typical use case is when the environment is _not_ fully under the agent's control (e.g. it may have some autonomous behavior, or there may be other agents influencing its behavior), but nevertheless we are interested in trying to get it to a state that satisfies whatever the goal we have in mind. An agent programming framework likes aplib strives to offer a more declarative way to program such an agent. 
+Note: as it is now, `aplib` is still under development.
 
-A newly created aplib agent does nothing. To make it does something, we give it a _goal_ and a _strategy_ to solve the goal. In the nutshell, a strategy is a collection of _guarded actions_. The _guard_ of a guarded action specifies when the action can be fired. When it is given a goal, the agent will start executing in ticked cycles. At each tick, the agent collects the actions which are enabled (their guards are satisfied); one will then be selected and executed. This may trigger interactions with the environment and change the agent's state. If the new state solves the goal, the agent is done, and else it waits for the next tick. This is repeated until the goal is solved, or until the agent runs out of some computing budget.
+`Aplib` is inspired by [2APL](http://apapl.sourceforge.net/) which is based on [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming. This BDI model has its influence in `aplib`, though we do not try to be a BDI purist either. What is important in `aplib` design is its programmability. There are indeed many dedicated agent programming languages, but most of them do not have enough support to be integrated with real life applications. We therefore intentionally develop `aplib` as a library in Java, knowing that the latter already has large and rich supports in terms of library, software tools, and user base.
 
 
+An _agent_ is essentially a program that is used to influence an environment towards a certain goal. This environment itself may be autonomous and non-deterministic, which makes the task of controlling it even more challenging for the agent.
+
+`Aplib` allows an agent to be programmed by specifying a goal that it has to solve, and a strategy to solve it (these correspond to _desire_ and _intent_ in BDI terminology, whereas _belief_ corresponds to the agent's state ). There are combinators available to compose a complex goal from subgoals, comparable to providing hints for the agent. A strategy can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex strategy from simpler ones.
+
+List of features:
+
+* **Fluent interface** style of APIs.
+* **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
+* **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
+
+Planned features:
+
+* Reinforcement learning
+* Environment for controlling 3D games
+
+Some cone snippets:
+
+* Specifying a goal:
+
+   ```java
+goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
+```
+
+* Creating and configuring an agent in the _fluent interface_ style:
+
+   ```java
+new AutonomousBasicAgent()
+    . attachState(new SimpleState() .setEnvironment(new ConsoleEnvironment()))
+    . setGoal(topgoal)
+    . setSamplingInterval(1000)
+```
+
+* Launching an autonomous agent on a new thread:
+
+   ```java
+new Thread(() -> agent.loop()) . start()
+```
