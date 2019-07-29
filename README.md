@@ -4,8 +4,7 @@
 
 Note: as it is now, `aplib` is still under development.
 
-`Aplib` is inspired by [2APL](http://apapl.sourceforge.net/) which is based on [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming. This BDI model has its influence in `aplib`, though we do not try to be a BDI purist either. What is important in `aplib` design is its programmability. There are indeed many dedicated agent programming languages, but most of them do not have enough support to be integrated with real life applications. We therefore intentionally develop `aplib` as a library in Java, knowing that the latter already has large and rich supports in terms of library, software tools, and user base.
-
+`Aplib` is inspired by [2APL](http://apapl.sourceforge.net/) which is based on [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming. This BDI model has its influence in `aplib`, though we do not try to be a BDI purist either. What is important in `aplib` design is its programmability. There are indeed many dedicated agent programming languages, but most of them do not have enough support to be integrated with real life applications. We therefore intentionally develop `aplib` as a library in Java, knowing that the latter already has large and rich supports in terms of library, software tools, and user base. Compared to e.g. [JADE](https://jade.tilab.com/) (Java Agent Development Framework) `aplib` is of much lighter weight, but on the other than `aplib` tries to exploit features from more recent Java, e.g. lambda expression, to make agent programming cleaner.
 
 An _agent_ is essentially a program that is used to influence an environment towards a certain goal. This environment itself may be autonomous and non-deterministic, which makes the task of controlling it even more challenging for the agent.
 
