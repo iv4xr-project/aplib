@@ -36,11 +36,11 @@ When a tick comes:
 
 3. The guard a is evaluated on A’s state and the newly sampled environment’s state.
 
-  a. If a evaluates to true, the action 𝛼 is said to be **enabled** on the current state. The effect f is then executed. This may change the agent as well as the environment state, and it may produce a proposal x:
+  * If a evaluates to true, the action 𝛼 is said to be **enabled** on the current state. The effect f is then executed. This may change the agent as well as the environment state, and it may produce a proposal x:
 
-      If G(x) is true, the goal is solved and marked as **success**. The solution can be stored within G itself, and then G is detached from the agent.
+      * If G(x) is true, the goal is solved and marked as **success**. The solution can be stored within G itself, and then G is detached from the agent.
 
-  b. If a evaluates to false the agent does nothing. Note that in some future tick, the environment may change enough to cause the “unblocking” of a.
+  * If a evaluates to false the agent does nothing. Note that in some future tick, the environment may change enough to cause the “unblocking” of a.
 
 4. In all cases, before the turn ends, the budget B is subtracted with the time that has elapsed since the tick arrival.
 
