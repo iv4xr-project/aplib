@@ -3,11 +3,13 @@ Author: Wishnu Prasetya
 
 `Aplib` is implemented in Java-11, so you need it.
 
-In a nutshell an agent is just a program. Agents can indeed be programmed to behave intelligently ---the so-called intelligent agents; but let’s for now focus on just plain agents. `Aplib` defines an agent as a stateful program that interacts with an environment with the purpose of solving some problem relevant for the environment. Environment is an important concept in `aplib` programming: without an environment the agent has no purpose.
+In a nutshell an agent is just a program. Agents can indeed be programmed to behave intelligently ---the so-called intelligent agents; but let’s for now focus on just plain agents. `Aplib` defines an agent as a stateful program that interacts with an environment with the purpose of solving some problem relevant for the environment. Environment is an important concept in `aplib` programming: without an environment an agent has no reason to exist, just like an enginner would have no reason to be an engineer if there is no project he/she can work on.
 
 There is however no quick Hello-World example to show you how to use `aplib`. Let me guide you on how to create a minimalistic agent; it won't do anything spectacular, it will do as an example.
 
 Let's see how we can program an agent, let's call it _agent-X_ to guess a secret number. This secret number is the number 10, but the agent does not know that, so it really has to guess. The agent will also interact with the user (you), in this case by simply printing the number it proposes to the console.
+
+If you are **impatient**: the full code of this demo is here: [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java) But it won't explain the underlying concepts.
 
 ### Creating an agent, 1st attempt
 
@@ -19,7 +21,19 @@ var agentX = new BasicAgent()
 
 `nl.uu.cs.aplib.MainConcepts.BasicAgent` is the root class of all agents in `aplib`. That is, all agents are instances of `BasicAgent`. There are other types of agents in `aplib`, but let's not go into that yet.
 
-But ..., the above agent is blank and will not be able to do anything. Let's try to create an agent with something:
+**Intermezzo: the `var` keyword.** Prior to Java-10, when we introduce a variable we must explicitly specify its type. E.g. the above declaration of *agent-X* is written like this before Java-10:
+
+```java
+BasicAgent agentX = new BasicAgent()
+```
+
+Since java-10 we can simply write `var agentX = new BasicAgent()` and Java compiler will infer the right type for `agentX`. This makes the code cleaner.
+
+(end of intermezzo)
+
+
+
+The above agent is however blank. It will not be able to do anything. Let's try to create an agent with something:
 
 ```java
 var agentX = new BasicAgent() ;
@@ -257,46 +271,16 @@ Proposing 10 ...
    Consumed budget:4.0
 ```
 
+### Extra: subservient vs autonomous agent
+
+An agent used as above will not do anything unless we, or the application that contains it, invoke its `update()` method. We call such an agent **subservient agent**. `Aplib` also allows us to create **autonomous agents**. Such an agent calls its own `update()` and controls when it wants to do so. The class `nl.uu.cs.aplib.Agents.AutonomousBasicAgent` is the class of autonomous agents. It is a subclass of `BasicAgent`, so everything that we do in the above example can also be done with `AutonomousBasicAgent`. However, the latter has a method `loop()` that will run forever until someone invokes `stop()`. The method `loop()` waits for someone to invoke `setGoal(g)` to give a goal to the agent. It will then proceed by calling invoke at some regular interval (which you can configure).
+
+To launch an `AutonomousBasicAgent` to run independently (so, on a new thread) we can do:
+
 ```java
-package nl.uu.cs.aplib.ExampleUsages;
-
-import static nl.uu.cs.aplib.AplibEDSL.*;
-import nl.uu.cs.aplib.MainConcepts.*;
-import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-
-import java.util.Random;
-
-public class MinimalDemo {
-  static public void main(String[] args) {
-    Goal g = goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10) ;
-
-    Random rnd = new Random() ;
-
-    // defining a single action as the goal solver:
-    var guessing = action("guessing")
-       .do_((SimpleState belief) -> actionstate_ -> {
-            int x = rnd.nextInt(11) ;
-            ((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
-            return x ;
-            })
-            .lift() ;
-
-    // attach the action to the goal, and make it a goal-tree:
-    GoalTree topgoal = g.withStrategy(guessing).lift() ;
-
-    // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
-    var agent = new BasicAgent()
-                    . attachState(new SimpleState()
-                    . setEnvironment(new ConsoleEnvironment()))
-                    . setGoal(topgoal) ;
-
-    // run the agent until it solves its goal:
-    while (topgoal.getStatus().inProgress()) {
-       agent.update();
-       Thread.sleep(1500);
-     }
-     topgoal.printTreeStatus();
-   }
-}
-
+new Thread(() -> agent.loop()) . start() ;
 ```
+Check the corresponding Java documentation/tutorial on how to fork a thread using `Runnable` or using a lambda-expression.
+
+A minimalistic example of creating an autonomous agent can be found in
+ [`nl.uu.cs.aplib.ExampleUsages.MinimalAutonomousAgent`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalAutonomousAgent.java).
