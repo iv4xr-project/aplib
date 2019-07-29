@@ -26,13 +26,13 @@ Some cone snippets:
 
 * Specifying a goal:
 
-   ```java
+```java
 goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
 ```
 
 * Creating and configuring an agent in the _fluent interface_ style:
 
-   ```java
+```java
 new AutonomousBasicAgent()
     . attachState(new SimpleState() .setEnvironment(new ConsoleEnvironment()))
     . setGoal(topgoal)
@@ -41,6 +41,6 @@ new AutonomousBasicAgent()
 
 * Launching an autonomous agent on a new thread:
 
-   ```java
+```java
 new Thread(() -> agent.loop()) . start()
 ```
