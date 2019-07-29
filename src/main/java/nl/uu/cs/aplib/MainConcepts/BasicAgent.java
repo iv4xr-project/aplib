@@ -1,8 +1,11 @@
 package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
 import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
@@ -12,16 +15,16 @@ import nl.uu.cs.aplib.Utils.Time;
 
 public class BasicAgent {
 	
-	String id ;
-	String role ;
+	protected String id ;
+	protected String role ;
 	
-	SimpleState state ;
+	protected SimpleState state ;
 	protected GoalTree goal ;
-	PrimitiveGoal currentGoal ;
-	Strategy currentStrategy ;
-	long rndseed = 1287821 ; // a prime and a palindrome :D
-	Random rnd = new Random(rndseed) ;
-	Logger logger = null ;
+	protected PrimitiveGoal currentGoal ;
+	protected Strategy currentStrategy ;
+	protected long rndseed = 1287821 ; // a prime and a palindrome :D
+	protected Random rnd = new Random(rndseed) ;
+	protected Logger logger = null ;
 	
 	
 	public BasicAgent() { }
@@ -57,6 +60,35 @@ public class BasicAgent {
 	
 	public BasicAgent attachState(SimpleState state) {
 		this.state = state ; return this ;
+	}
+	
+	public BasicAgent addSystemErrAsLogger() {
+		if (logger == null) logger = Logger.getLogger("APLIBlogger") ;
+		logger.addHandler(new ConsoleHandler());
+		return this ;
+	}
+	
+	/**
+	 * Attach a file specified by the filename to this agent to be used to save its logging
+	 * messages. The filename can include a path to the file.
+	 */
+	public BasicAgent attachLogFile(String filename) {
+		if (logger == null) logger = Logger.getLogger("APLIBlogger") ;
+		try {
+			var fh = new FileHandler(filename);  
+	        logger.addHandler(fh);
+	        var formatter = new SimpleFormatter();  
+	        fh.setFormatter(formatter);  
+		}
+		catch(Exception e) { 
+			// swallow exception....
+		}
+		return this ;
+	}
+	
+	public BasicAgent setLoggingLevel(Level level) {
+		logger.setLevel(level);
+		return this ;
 	}
 	
 	protected void detachgoal() {

@@ -168,6 +168,11 @@ public class GoalTree {
 		if (! isTopGoal()) parent.addConsumedBudget(delta);
 	}
 	
+	
+	public double getBudget() {
+		return allocatedBudget.amount() ;
+	}
+	
 	/**
 	 * Call this at the top goal to reset tracked consumed budget in this goal and its subgoals to
 	 * 0, and then to reset the distribution of the budget accordingly.

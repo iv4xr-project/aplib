@@ -1,7 +1,9 @@
 package nl.uu.cs.aplib.Agents;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 
 import nl.uu.cs.aplib.MainConcepts.*;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
@@ -10,29 +12,18 @@ import nl.uu.cs.aplib.Utils.Time;
 
 public class AutonomousBasicAgent extends BasicAgent {
 	
-	long samplingInterval = 1000 ; // in ms
+	protected long samplingInterval = 1000 ; // in ms
 	
-	final Lock lock = new ReentrantLock();	
-	final Condition triggerArrived = lock.newCondition(); 
-	final Condition goalConcluded  = lock.newCondition(); 
+	public static enum Command { PAUSE, STOP }
 	
-	static enum Command { PAUSE, STOP }
+	protected Command cmd = null ;
 	
-	Command cmd = null ;
+	protected ComNode comNode = null ;
 	
-	ComNode comNode = null ;
-
-	
-	public synchronized void sendMsgToThisAgent(Message m) {
-		if (cmd == Command.STOP) {
-			// if the agent has been commanded to stop then discard the msg
-			return ;
-		}
-		var msgQueue = getIncomingMsgQueue() ;
-		msgQueue.add(m) ;
-		cmd = null ; // set cmd to resume, in case it was on pause
-		triggerArrived.signal();  // awaken the agent
-	}
+	protected final ReentrantLock lock = new ReentrantLock();	
+	protected final Condition triggerArrived = lock.newCondition(); 
+	protected final Condition goalConcluded  = lock.newCondition(); 
+	protected Thread thisAgentThread = null ;
 	
 	public AutonomousBasicAgent registerToComNode(ComNode comNode) {
 		this.comNode = comNode ;
@@ -40,37 +31,118 @@ public class AutonomousBasicAgent extends BasicAgent {
 		return this ;
 	}
 	
-	
-	public void pause() { cmd = Command.PAUSE ; }
-	
-	public void resume() { cmd = null ; triggerArrived.signal(); }
-	
-	public void stop() { cmd = Command.STOP ; }
-	
-	
-	
 	GoalTree shadowg_ ;
 	
-	public BasicAgent setGoal(GoalTree g) {
-		super.setGoal(g) ;
-		shadowg_ = g ;
-		triggerArrived.signal(); 
+	@Override
+	public AutonomousBasicAgent setGoal(GoalTree g) {
+		if (thisAgentThread !=null) {
+			// awaken the agent, if it is sleeping
+			thisAgentThread.interrupt();
+		}
+		lock.lock();
+		try {
+			super.setGoal(g) ;
+			shadowg_ = g ;
+			triggerArrived.signal(); 
+			return this ;
+		}
+		finally { lock.unlock(); }
+	}
+	
+	@Override
+	public AutonomousBasicAgent attachState(SimpleState state) {
+		super.attachState(state) ;
 		return this ;
 	}
 	
+	@Override
+	public AutonomousBasicAgent addSystemErrAsLogger() {
+		super.addSystemErrAsLogger() ; return this ;
+	}
+	
+	@Override
+	public AutonomousBasicAgent attachLogFile(String filename) {
+		super.attachLogFile(filename) ; return this ;		
+	}
+	
+	@Override
+	public AutonomousBasicAgent setLoggingLevel(Level level) {
+		super.setLoggingLevel(level) ; return this ;
+	}
+	
+	/**
+	 * Set the agent sampling interval in ms.
+	 */
+	public AutonomousBasicAgent setSamplingInterval(long interval) {
+		samplingInterval = interval ; return this ;
+	}
+	
+	public void pause() { cmd = Command.PAUSE ; }
+	
+	private void awakeThisAgentFromSleep() {
+		if (thisAgentThread !=null) {
+			// awaken the agent, if it is sleeping
+			thisAgentThread.interrupt();
+		}
+	}
+	
+	public void resume() { 
+		awakeThisAgentFromSleep() ;
+		lock.lock();
+		try {
+			cmd = null ; triggerArrived.signal(); 
+		}
+		finally { lock.unlock(); }
+	}
+	
+	public void stop() { 
+		awakeThisAgentFromSleep() ;
+		cmd = Command.STOP ; 
+	}
+	
+	public void sendMsgToThisAgent(Message m) {
+		awakeThisAgentFromSleep() ;
+		lock.lock();
+		try {
+			if (cmd == Command.STOP) {
+				// if the agent has been commanded to stop then discard the msg
+				return ;
+			}
+			var msgQueue = getIncomingMsgQueue() ;
+			msgQueue.add(m) ;
+			cmd = null ; // set cmd to resume, in case it was on pause
+			triggerArrived.signal();  // awaken the agent
+		}
+		finally { lock.unlock(); }
+	}
 	/**
 	 * When this is called, the calling thread will be paused until the current goal-tree is
 	 * concluded (which can be either with success or as fail). The method will return
 	 * the goal-tree.
 	 */
 	public GoalTree waitUntilTheGoalIsConcluded() {
+		
 		if (shadowg_ == null) return null ;
-		while (shadowg_ == null || shadowg_.getStatus().inProgress()) {
-			try { goalConcluded.await(); }
-			catch(InterruptedException e) { }
+		
+		log(Level.INFO,"Thread " + Thread.currentThread().getId() 
+				       + " is waiting for agent " + id + " to close its current goal.") ;
+		
+		lock.lock();
+		try {
+			while (shadowg_ == null || shadowg_.getStatus().inProgress()) {
+				try { 
+					goalConcluded.await(); 
+				}
+				catch(InterruptedException e) { }
+			}
+			return shadowg_ ;
 		}
-		return shadowg_ ;
+		finally { 
+			log(Level.INFO,"Thread " + Thread.currentThread().getId() + " acquires a closed goal from agent " + id) ;
+			lock.unlock(); 
+		}
 	}
+	
 	
 	/**
 	 * This will run the agent in an infinite loop. The idea is run this in a new thread. 
@@ -87,44 +159,75 @@ public class AutonomousBasicAgent extends BasicAgent {
 	 * There are methods in this class to command the agent to pause, to resume again, and
 	 * to stop all together. 
 	 */
-	public void launch() {
+	public void loop() {
+		
+		thisAgentThread = Thread.currentThread() ;
+		log(Level.INFO,"Agent " + id + " enters its loop on Thread " +  thisAgentThread.getId()) ;
+		
 		Time time = new Time() ;
 
 		//repeat forever:		
 		while(cmd != Command.STOP) {
-			// wait until the goal is not null:
-			while(goal == null) {
-				try { triggerArrived.await(); }
-				catch(InterruptedException e) { }
-			}
-			
-			while(cmd != Command.STOP) {
-				while(cmd == Command.PAUSE) {
+			lock.lock();
+			try {
+				// wait until the goal is not null:
+				while(goal == null && cmd != Command.STOP) {
+					log(Level.INFO,"Agent " + id + " is blocking, waiting for a goal.") ;
 					try { triggerArrived.await(); }
 					catch(InterruptedException e) { }
 				}
-				time.sample(); 
-				update() ;
-				if (goal == null) {
-					// the goal is solved then
-					goalConcluded.signalAll();
-					break ;
-				}
-				long sleeptime = samplingInterval - time.elapsedTimeSinceLastSample() ;
-				// if needed, just sleep until it is time to do the next sampling:
-				if (sleeptime>100) {
-					try { Thread.sleep(sleeptime); }  // TRICKY... this is not interruptible by condition.wait() !
-					catch(InterruptedException e) {
-						// somebody else interrupts the sleep... well ok, we can just as well resume
-						// Note also that Condition.signal() will not cause this interruption,
-						// since here we are not waiting for any condition.
+				if (goal != null) 
+					log(Level.INFO,"Agent " + id + " identifies a goal and starts working on it. Budget: " + goal.getBudget()) ;
+				while(goal != null && cmd != Command.STOP) {
+					while(cmd == Command.PAUSE) {
+						log(Level.INFO,"Agent " + id + " is paused.") ;
+						try { triggerArrived.await(); ; }
+						catch(InterruptedException e) { }
 					}
+					time.sample(); 
+					update() ;
+					if (goal == null) {
+						log(Level.INFO,"Agent " + id + " closed the current goal: " + shadowg_.getStatus() + ".") ;
+						// the goal is solved then
+						goalConcluded.signalAll();
+						break ;
+					}
+					long sleeptime = samplingInterval - time.elapsedTimeSinceLastSample() ;
+					// if needed, just sleep until it is time to do the next sampling:
+					if (sleeptime>100) {
+						try { 
+							//Thread.sleep(sleeptime); 
+							triggerArrived.await(sleeptime, TimeUnit.MILLISECONDS) ;
+						}  
+						catch(InterruptedException e) { }
+					}
+					System.err.println(">>> update time: " + time.elapsedTimeSinceLastSample()) ;
 				}
 			}
+			finally { 
+				//goalConcluded.signalAll();
+				lock.unlock(); 
+			}	
+			// break ;
+			/*
+			try {
+				System.err.println("## starting long sleep...") ;
+				Thread.sleep(3600000);
+			}
+			catch(InterruptedException e) { }
+			*/
 		}
-		if(cmd == Command.STOP && goal != null) {
-			setTopGoalToFail("The agent is stopping") ;		
-		} 
+		log(Level.INFO,"Agent " + id + " is stopping...") ;
+		/*
+		lock.lock();
+		try {
+			if(cmd == Command.STOP && goal != null) {
+				setTopGoalToFail("The agent is stopping") ;	
+				goalConcluded.signalAll();
+			} 
+		}
+		finally { lock.unlock(); }	
+		*/
 	}
 
 }
