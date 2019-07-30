@@ -11,6 +11,16 @@ Let's see how we can program an agent, let's call it _agent-X_ to guess a secret
 
 If you are **impatient**: the full code of this demo is here: [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java) But it won't explain the underlying concepts.
 
+### Computation model
+
+To first give you a top level intuition on agent programming in `aplib`, let me first explain the idea. To do any work, an agent must be given a goal, e.g. to send a number satisfying some non-trivial property to its environment.
+An agent is not a magic box, so it will also require you to supply a _strategy_ for solving a goal. A complex strategy can be formulated, but ultimately a strategy will be composed from so-called _actions_.
+
+`Apsl` agents operate in a _tick-based_ mode. Every agent has a method called `update()`. A 'tick' means that you, or something else, invoke this method, which in turn triggers some behavior from the agent. Between two `update()` invocations the agent does not do anything.
+
+At every tick/update() the agent inspects its (current) strategy to collect actions within the strategy which are executable in the current state. One will be chosen (randomly, or more intelligently depending on whether you have built-in AI in the agent) and executed. This process is repeated every tick, until the goal is solved, or until the agent uses up its computation budget.
+
+
 ### Creating an agent, 1st attempt
 
 To create an agent we do:
@@ -258,7 +268,7 @@ while (topgoal.getStatus().inProgress()) {
 
 ### The full example
 
-The full code of `agent-X` can be found in [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agant-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
+The full code of `agent-X` can be found in [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agent-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
 
 ```
 Proposing 5 ...
