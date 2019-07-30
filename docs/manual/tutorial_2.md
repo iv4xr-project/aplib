@@ -1,4 +1,4 @@
-# Aplib Tutorial: More Advanced Topics
+# Aplib Tutorial 2:  State and Strategy
 Author: Wishnu Prasetya
 
 This tutorial will show you:
