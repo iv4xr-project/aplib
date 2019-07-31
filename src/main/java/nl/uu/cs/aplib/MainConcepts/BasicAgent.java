@@ -136,7 +136,7 @@ public class BasicAgent {
 	
 	private void updateWorker(Time time) {
 		
-		if (! currentGoal.remainingBudget.isUnlimited() && currentGoal.remainingBudget.amount<= 0d) {
+		if (currentGoal.remainingBudget <= 0d) {
 			currentGoal.setStatusToFail("Running out of budget.");
 			//System.err.println(">> Running out of budget.") ;
 			currentGoal = currentGoal.getNextPrimitiveGoal() ;

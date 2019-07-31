@@ -1,6 +1,16 @@
 package nl.uu.cs.aplib.MainConcepts;
 
+/**
+ * A class that can be used to represent rough status of some 'computation'
+ * (whatever this computation is). There are three statuses represented: (1) the
+ * computation is still in progress, (2) the computation has completed
+ * successfully, and (3) the computation has completed in failure.
+ * 
+ * @author wish
+ *
+ */
 public class ProgressStatus {
+
 	static enum ProgressStatus_ {
        INPROGRESS,
        SUCCESS,
@@ -9,23 +19,59 @@ public class ProgressStatus {
 	ProgressStatus_ status = ProgressStatus_.INPROGRESS ;
 	String info ;
 	
+	/**
+	 * Create an instance of this class, with null info and status initialized to INPROGRESS.
+	 */
 	public ProgressStatus() { }
+	
+	/**
+	 * Return the info string stored in this instance. Note that this info can be null.
+	 */
 	public String getInfo() { return info ; }
 	
+	/**
+	 * True if the status represented by this instance is SUCCESS.
+	 */
 	public boolean sucess() { return status == ProgressStatus_.SUCCESS ; }
+	
+	/**
+	 * Trye if the status represented by this instance if FAILED.
+	 */
 	public boolean failed() { return status == ProgressStatus_.FAILED ; }
+	
+	/**
+	 * True if the status represented by this instance is INPROGRESS.
+	 */
 	public boolean inProgress() { return status == ProgressStatus_.INPROGRESS ; }
 	
+	/**
+	 * Set the status represented by this instance to SUCCESS, and set its info to
+	 * the given string.
+	 */
 	public void setToSuccess(String info) { 
 		status = ProgressStatus_.SUCCESS ;
 		this.info = info ; 
 	}
+	
+	/**
+	 * Set the status represented by this instance to SUCCESS, with no info string
+	 * (it is set to null).
+	 */
 	public void setToSuccess() { setToSuccess(null) ; }
 		
+	/**
+	 * Set the status represented by this instance to FAILED, and set its info to
+	 * the given string. You can use the info the describe the reason of the 
+	 * failure.
+	 */
 	public void setToFail(String info) { 
 		status = ProgressStatus_.FAILED ;
 		this.info = info ; 
 	}
+	
+	/**
+	 * Set the status represented by this instance to FAILED.
+	 */
 	public void setToFail() {setToFail(null) ; }
 	
 	@Override

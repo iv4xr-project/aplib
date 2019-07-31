@@ -25,9 +25,9 @@ public class GoalTree {
 	List<GoalTree> subgoals ;
 	GoalsCombinator combinator ;
 	ProgressStatus status = new ProgressStatus() ;
-	Budget allocatedBudget = new Budget() ;
-	Budget consumedBudget = new Budget(0d) ;
-	Budget remainingBudget = new Budget() ;
+	double allocatedBudget = Double.POSITIVE_INFINITY ;
+	double consumedBudget = 0 ;
+	double remainingBudget = Double.POSITIVE_INFINITY ;
 	
 	public GoalTree(GoalsCombinator type, GoalTree ... subgoals) {
 		combinator = type ;
@@ -135,8 +135,8 @@ public class GoalTree {
 	double demandedMinimumBudget() {
 		if (this instanceof PrimitiveGoal) {
 			var b = ((PrimitiveGoal) this).goal.demandedMinimumBudget ;
-			if (b == null) return 0d ;
-			else return b.amount() ;
+			if (b <=0) return 0 ;
+			else return b ;
 		}
 		// for FIRSTOF and SEQ we define the minimum demanded budget to be the sum
 		// of that of the subgoals. For FIRSTOF this is indeed a worst case assumption.
@@ -150,10 +150,10 @@ public class GoalTree {
 	/**
 	 * Allocate budget to this goal. This can only be invoked on the top goal.
 	 */
-	public GoalTree withBudget(Budget budget) {
+	public GoalTree withBudget(double budget) {
 		if (! isTopGoal()) throw new IllegalArgumentException("Can only be called on a top goal") ;
-		if (budget.isUnlimited() || budget.amount() <= 0) throw new IllegalArgumentException() ;
-		if (budget.amount() < demandedMinimumBudget())
+		if (budget <= 0 || ! Double.isFinite(budget)) throw new IllegalArgumentException() ;
+		if (budget < demandedMinimumBudget())
 			throw new IllegalArgumentException("The allocated budget is below the demanded minimum.") ;
 		allocatedBudget = budget ;
 		redistributeRemainingBudget() ;
@@ -164,14 +164,12 @@ public class GoalTree {
 	 * Add delta to the tracked amount of consumed budget.
 	 */
 	void addConsumedBudget(float delta) {
-		consumedBudget.add(delta); 
+		consumedBudget += delta ;
 		if (! isTopGoal()) parent.addConsumedBudget(delta);
 	}
 	
 	
-	public double getBudget() {
-		return allocatedBudget.amount() ;
-	}
+	public double getBudget() { return allocatedBudget ; }
 	
 	/**
 	 * Call this at the top goal to reset tracked consumed budget in this goal and its subgoals to
@@ -184,7 +182,7 @@ public class GoalTree {
 	}
 	
 	private void resetConsumedBudget() {
-		consumedBudget.amount = 0d ;
+		consumedBudget = 0 ;
 		for (GoalTree gt : subgoals) gt.resetConsumedBudget(); 
 	}
 	
@@ -194,13 +192,13 @@ public class GoalTree {
 	 */
 	void redistributeRemainingBudget() {
 		if (! isTopGoal()) throw new IllegalArgumentException() ;
-		if (allocatedBudget.isUnlimited()) return ;
-		distributeRemainingBudgetWorker(allocatedBudget.amount - consumedBudget.amount) ;
+		if (allocatedBudget == Double.POSITIVE_INFINITY) return ;
+		distributeRemainingBudgetWorker(allocatedBudget - consumedBudget) ;
 	}
 	
 	private void distributeRemainingBudgetWorker(double budget) {
 		double available = Math.max(budget,0) ;
-		remainingBudget.amount = available ;
+		remainingBudget = available ;
 		//System.err.println(">> remaining budget " + remainingBudget.amount) ;
 		var subgoalsWithBudgetDemand = subgoals.stream()
 				                       .filter(g -> g.status.inProgress() &&  g.demandedMinimumBudget()>0d)

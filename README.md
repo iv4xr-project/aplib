@@ -8,7 +8,7 @@ Note: as it is now, `aplib` is still under development.
 
 An _agent_ is essentially a program that is used to influence an environment towards a certain goal. This environment itself may be autonomous and non-deterministic, which makes the task of controlling it even more challenging for the agent.
 
-`Aplib` allows an agent to be programmed by specifying a goal that it has to solve, and a strategy to solve it (these correspond to _desire_ and _intent_ in BDI terminology, whereas _belief_ corresponds to the agent's state ). There are combinators available to compose a complex goal from subgoals, comparable to providing hints for the agent. A strategy can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex strategy from simpler ones.
+`Aplib` allows **an agent to be programmed by specifying a goal that it has to solve, and a strategy to solve it** (these correspond to _desire_ and _intent_ in BDI terminology, whereas _belief_ corresponds to the agent's state ). There are combinators available to compose a complex goal from subgoals, comparable to providing hints for the agent. A strategy can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex strategy from simpler ones.
 
 List of features:
 
@@ -16,18 +16,32 @@ List of features:
 * **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
 * **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
 
+Non-features:
+* `aplib` has no Prolog backend to facilitate reasoning. We are not believers that Prolog is suitable to solve problems in complex domains :heart_eyes:, but of course nothing preventing you from implementing your own Prolog integration.
+
 Planned features:
 
 * Reinforcement learning
+* Search algorithms for solving goals
 * Environment for controlling 3D games
 
-Some cone snippets:
+
+#### Some code snippets:
 
 * Specifying a goal:
 
 ```java
 goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
 ```
+* Specifying a strategy:
+
+```java
+FIRSTof(guessLowerbound.on_((Belief belief) -> ! belief.feelingVeryLucky() ,
+        ANYof(speculate1,
+              speculate2,
+              ...)
+```        
+
 
 * Creating and configuring an agent in the _fluent interface_ style:
 

@@ -2,8 +2,9 @@ package nl.uu.cs.aplib.MainConcepts;
 
 /**
  * 
- * In aplib, agents are used to interact and control an environment. This class
- * is a root class for representing this environment. This class is meant to be
+ * In aplib, agents (instances of {@link SimpleAgent or its subclasses) are used
+ * to interact and control an environment. This class is a root class for
+ * representing this environment. This class is meant to be
  * <b>extended/subclassed</b>. For a minimalistic example implementation, see
  * the class {@link nl.uu.cs.aplib.Environments.ConsoleEnvironment}.
  * 
@@ -14,9 +15,9 @@ package nl.uu.cs.aplib.MainConcepts;
  * information. Instead, you only need to provide information that is relevant
  * for the logic of your agents. You also need to provide methods to allow your
  * agents to send commands to the actual environment. This class suggests one
- * method called {@link sendCommand_} that you can use as the primitive to
+ * method called {@code sendCommand_} that you can use as the primitive to
  * implement your own set of methods to command the actual environment.
- * Implementing {@link sendCommand_} is not mandatory; it is only a suggestion.
+ * Implementing {@code sendCommand_} is not mandatory; it is only a suggestion.
  * Any set of methods are fine, as long as your agents can access them.
  * 
  * @author wish

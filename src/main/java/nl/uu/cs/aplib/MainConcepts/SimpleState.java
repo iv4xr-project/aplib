@@ -5,9 +5,10 @@ import java.util.*;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
 
 /**
- * This class is the root class for representing agents' states. For most uses,
- * you will need to <b>extend/subclass</b> this class to enable your agents to
- * track whatever domain specific information that your agents need to track.
+ * This class is the root class for representing agents' states (an 'agent' is
+ * an instance of {@link SimpleAgent} or its subclasses). For most uses, you
+ * will need to <b>extend/subclass</b> this class to enable your agents to track
+ * whatever domain specific information that your agents need to track.
  * 
  * <p>
  * An instance of this class represents the semantical part of an agent's state.
@@ -16,7 +17,6 @@ import nl.uu.cs.aplib.MultiAgentSupport.Message;
  * this class do not expose information relevant only for the agent's internal
  * control of its execution. The latter information is, and should be, hidden
  * from you.
- * 
  * 
  * <p>
  * As the root class, an instance of this class actually contains no domain
@@ -29,8 +29,9 @@ import nl.uu.cs.aplib.MultiAgentSupport.Message;
  * this class does get the following:
  * 
  * <ol>
- * <li>A message queue containing incoming messages for the agent that owns S.
- * The queue itself is not exposed. Instead, the agent can access it through a
+ * <li>A message queue containing incoming messages (instances of
+ * {@link nl.uu.cs.aplib.MultiAgentSupport}) for the agent that owns S. The
+ * queue itself is not exposed. Instead, the agent can access it through a
  * number of exposed methods, e.g. to check if a message of a certain type is
  * present in the queue and to pop it out.
  * 
@@ -52,14 +53,14 @@ public class SimpleState {
 	List<Message> incomingMsgs = new LinkedList<Message>() ;
 	
 	/**
-	 * A pointer to the Environment associated to the agent that owns this state.
+	 * A pointer to the {@link Environment} associated to the agent that owns this state.
 	 */
 	Environment env ;
 	
 	public SimpleState() { }
 	
 	/**
-	 * Every instance of this class requires an instance to the Environment that is
+	 * Every instance of this class requires an instance to the {@link Environment} that is
 	 * used by the agent that owns this state. This methods allows you to set this
 	 * state's pointer to the given environment.
 	 * 
@@ -71,12 +72,15 @@ public class SimpleState {
 	
 	
 	/**
-	 * This will ask the Environment associated with this state to update itself.
+	 * This will ask the {@link Environment} associated with this state to update itself.
 	 */
 	public void upateState() {
 		 env.refresh() ;
 	};
 	
+	/**
+	 * Return the {@link Environment} associated with the state.
+	 */
 	public Environment env() { return env ; }
 
 }
