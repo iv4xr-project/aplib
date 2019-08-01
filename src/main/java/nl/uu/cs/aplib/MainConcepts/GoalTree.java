@@ -4,21 +4,36 @@ import java.util.* ;
 import java.util.stream.Collectors;
 
 /**
- * A GoalTree represents a series of goals for an agent to solve. It can take
- * one of the following forms:
+ * A GoalTree is a generalization of a {@link Goal}. As the name suggests, it is a tree
+ * that conceptually represents a more complex goal. The simplest GoalTree is an object
+ * of type {@link PrimitiveGoal}. A {@link PrimitiveGoal} itself is a subclass
+ * of GoalTree. Such a GoalTree represents a single leaf, containing a single instance of {@link Goal},
+ * which is the concrete goal represented by this leaf.
  * 
- *    (1) a primitive goal
- *    (2) SEQ g1,g2,... representing a series of goals that all have to be solved,
+ * <p>
+ * More complex GoalTree can be constructed by combining subtrees/subgoals. There are two types
+ * of nodes available to combine sub-GoalTrees: the <b>SEQ</b> and <b>FIRSTOF</b> nodes:
+ * 
+ * <ol>
+ *    <li> SEQ g1,g2,... represents a series of goals that all have to be solved,
  *       and solved in the order as they are listed.
- *    (3) ALT g1,g2,... representing a series of alternative goals. They will be
+ *    <li> FIRSTof g1,g2,... represents a series of alternative goals. They will be
  *        tried one at a time, starting from g1. If one is solved, the entire ALT
  *        is solved. If all subgoals fail, the ALT fails.
+ * </ol>       
  *        
  * @author wish
  *
  */
 public class GoalTree {
 	
+	/**
+	 * Represent the available types of {@link GoalTree}. There are three types: SEQ, FIRSTOF, and
+	 * PRIMITIVE. If a GoalTree is marked as PRIMITIVE, then it is a leaf (in other words, it is
+	 * a {@link PrimitiveGoal}). If a GoalTree h is marked as SEQ, it represents a tree of the form
+	 * SEQ g1,g2,... where g1,g2,... are h' subgoals. If h is marked as FIRSTOF, it represents a
+	 * tree of the form FIRSTof g1,g2,....
+	 */
 	static public enum GoalsCombinator { SEQ, FIRSTOF, PRIMITIVE }
 	
 	GoalTree parent = null ;
@@ -29,6 +44,10 @@ public class GoalTree {
 	double consumedBudget = 0 ;
 	double remainingBudget = Double.POSITIVE_INFINITY ;
 	
+	/**
+	 * Construct a new GoalTree with the specified type of node (SEQ, FIRSTOFF, or PRIMITIVE)
+	 * and the given subgoals.
+	 */
 	public GoalTree(GoalsCombinator type, GoalTree ... subgoals) {
 		combinator = type ;
 		this.subgoals = new LinkedList<GoalTree>() ;
@@ -38,10 +57,21 @@ public class GoalTree {
 		}
 	}
 	
+	/**
+	 * Return the type of this GoalTree (SEQ, FIRSTOF, or PRIMITIVE).
+	 */
 	public GoalsCombinator getCombinatorType() { return combinator ; }
+	
 	public List<GoalTree> getSubgoals() { return subgoals ; }
+	
+	/**
+	 * Return the parent of this GoalTree. It returns null if it has no parent.
+	 */
 	public GoalTree getParent() { return parent ; }
 	
+	/**
+	 * True is this goal has no parent.
+	 */
 	public boolean isTopGoal() { return parent == null ; }
 	
 	/**
@@ -89,12 +119,18 @@ public class GoalTree {
 		if (! isTopGoal()) parent.abort() ;
  	}
 	
+	/**
+	 * Get the status of this GoalTree. The status is INPROGRESS if the GoalTree is
+	 * not solved or failed yet. It is SUCCESS if the GoalTree was solved, and
+	 * FAILED if the GoalTree has been marked as such.
+	 */
 	public ProgressStatus getStatus() { return status ; }
 	
 	/**
-	 * Assuming this goal is solved or failed, the method will return the next primitive goal
-	 * to solve. The method will traverse up through the parent of this goal tree
-	 * to look for this next goal. If none is found, null is returned.
+	 * Assuming this goal is closed (that is, it has been solved or failed), this
+	 * method will return the next {@link PrimitiveGoal} to solve. The method will traverse
+	 * up through the parent of this goal tree to look for this next goal. If none
+	 * is found, null is returned.
 	 */
 	public PrimitiveGoal getNextPrimitiveGoal() {
 		if (status.inProgress() || isTopGoal()) return null ;
@@ -130,7 +166,7 @@ public class GoalTree {
 	
 	
 	/**
-	 * Calculate the demanded minimum budget for this goal, if any specified.
+	 * Calculate the estimated demanded minimum budget for this goal, if any specified.
 	 */
 	double demandedMinimumBudget() {
 		if (this instanceof PrimitiveGoal) {
@@ -149,6 +185,7 @@ public class GoalTree {
 	
 	/**
 	 * Allocate budget to this goal. This can only be invoked on the top goal.
+	 * The allocated budget should finite and positive.
 	 */
 	public GoalTree withBudget(double budget) {
 		if (! isTopGoal()) throw new IllegalArgumentException("Can only be called on a top goal") ;
@@ -169,6 +206,9 @@ public class GoalTree {
 	}
 	
 	
+	/**
+	 * Return the budget allocated for this GoalTree.
+	 */
 	public double getBudget() { return allocatedBudget ; }
 	
 	/**
@@ -238,6 +278,7 @@ public class GoalTree {
 	}
 	
 	private String space(int k) { String s = "" ; for(int i=0; i<k; i++) s += " " ; return s ; }
+	
 	String showTreeStatusWorker(int level) {
 		String indent =  space(3*(level+1)) ;
 		String s = "" ;
@@ -255,15 +296,29 @@ public class GoalTree {
 		return s ;
 	}
 	
+	/**
+	 * Format a summary of the state of this GoalTree to a readable string.
+	 */
 	public String showTreeStatus() { return showTreeStatusWorker(0) ; }
+	
+	/**
+	 * Print a summary of the state of this GoalTree.
+	 */
 	public void printTreeStatus() { 
 		System.out.println("\n** Goal status:") ;
 		System.out.println(showTreeStatus()) ; 
 	}
 	
-	
+	/**
+	 * A special subclass of {@link GoalTree} to represent a leaf, wrapping around
+	 * an instance of {@link Goal}.
+	 */
 	static public class PrimitiveGoal extends GoalTree {
 		Goal goal ;
+		
+		/**
+		 * Create an instance of PrimitiveGoal, wrapping around the given {@link Goal}.
+		 */
 		public PrimitiveGoal(Goal g) { 
 			super(GoalsCombinator.PRIMITIVE) ;
 			goal = g ; 
