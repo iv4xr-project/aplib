@@ -9,27 +9,51 @@ import nl.uu.cs.aplib.MainConcepts.GoalTree.GoalsCombinator;
 
 /**
  * 
- *    (1) s = FIRSTOF(s1,s2) is enabled in the current state of either s1 or s2 is
- *        enabled. If s1 is enabled, the set of actions of s is that of s1, else
- *        that of s2.
- *        
- *    (2) s = ANYOF(s1,s2) is enabled if either s1 or s2 is enabled.  The set 
- *        of actions of s is the union of that of s1 and s2.
- *        
- *    (3) s = SEQ(s1,s2) is enabled is s1 is enabled.   
+ * A Strategy is needed to solve a {@link Goal}. There are the following
+ * types of strategies:
  * 
- * @author iswbprasetya
+ * <ol>
+ *    <li> A PRIMITIVE strategy, consist of just a single {@link Action}.
+ *    If invoked, this strategy will execute the Action, if the latter is
+ *    enabled in the current agent's state.
+ * 
+ *    <li> A strategy s of the type FIRSTOF(s1,s2,...) where s1,s2,.. are
+ *    strategies. Executing s will execute <b>the first</b> sub-strategy (so, s1 or
+ *    s2 or ...) in the given order that has an enabled action to be executed
+ *    in the current state.
+ *         
+ *    <li> A strategy s of the type ANYOF(s1,s2,...) where s1,s2,.. are
+ *    strategies. Executing s will execute one of the sub-strategy
+ *    that has an enabled action to be executed
+ *    in the current state.
+ *        
+ *    <li>  A strategy s of the type SEQ(s1,s2,s3,...) where s1,s2,.. are
+ *    strategies. Executing s will execute the sub-strategies in sequence.
+ *    Note however that an agent (instance of {@link SimpleAgent}) execute
+ *    a strategy always one action per tick. For example, if s1 is a SEQ and three
+ *    Actions, and s2 is an ANYOF two actions, and s3 is a single action,
+ *    s2 will execute at the 4th tick, and s3 at the 5th tick.
+ *    
+ * </ol>   
+ * 
+ * @author Wish
  *
  */
 
 public class Strategy {
 	
+	/**
+	 * Four types of {@link Strategy}. {@see Strategy}.
+	 */
 	static public enum StrategyType { FIRSTOF, ANYOF, SEQ, PRIMITIVE } 
 	
 	Strategy parent = null ;
 	List<Strategy> substrategies ;
 	StrategyType strTy ;
 	
+	/**
+	 * Construct a new Strategy of the given type, with the given sub-strategies.
+	 */
 	public Strategy(StrategyType type, Strategy ... substrategies) {
 		strTy = type ;
 		this.substrategies = new LinkedList<Strategy>() ;
@@ -95,6 +119,11 @@ public class Strategy {
 		return null ;
 	}
 	
+	/**
+	 * Write some basic statistics of this Strategy (e.g. the number of times
+	 * each Action in this Strategy has been invoked, and its total running time)
+	 * to a String.
+	 */
 	public String showActionsStatistics() {
 		String s = "" ;
 		if (this instanceof PrimitiveStrategy) {
@@ -110,19 +139,36 @@ public class Strategy {
 		return s ;
 	}
 	
+	/**
+	 * Print some basic statistics of this Strategy (e.g. the number of times
+	 * each Action in this Strategy has been invoked, and its total running time)
+	 * to the console.
+	 */
 	public void printActionsStatistics() {
 		System.out.println("** Actions statistics:") ;
 		System.out.println(showActionsStatistics()) ;
 	}
 	
+	/**
+	 * A subclass of {@link Strategy} representing a single {@link Action}. It bassically
+	 * just wraps the Action.
+	 */
 	static public class PrimitiveStrategy extends Strategy {
 		Action action ;
+		
+		/**
+		 * Construct a PrimitiveStrategy by wrapping around the given {@link Action}.
+		 */
 		public PrimitiveStrategy(Action a) { 
 			super(StrategyType.PRIMITIVE) ;
 			action = a ; 
 		}
 		
-		// for fluent interface
+		/**
+		 * Set the given predicate as the guard of the Action that underlies this
+		 * PrimitiveStrategy. The method returns this instance of PrimitiveStrategy
+		 * so that it can be used in the Fluent Interface style.
+		 */
 		public <AgentSt> PrimitiveStrategy on_(Predicate<AgentSt> guard) { 
 			action.on_(guard) ;
 			return this ;
