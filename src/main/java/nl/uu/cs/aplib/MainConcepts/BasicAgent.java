@@ -10,7 +10,9 @@ import java.util.logging.SimpleFormatter;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
 import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
 import nl.uu.cs.aplib.MainConcepts.Strategy.PrimitiveStrategy;
+import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
+import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
 import nl.uu.cs.aplib.Utils.Time;
 
 public class BasicAgent {
@@ -94,10 +96,6 @@ public class BasicAgent {
 	protected void detachgoal() {
 		goal = null ;
 		currentGoal = null ;
-	}
-	
-	protected List<Message> getIncomingMsgQueue() {
-		return state.incomingMsgs ;
 	}
 	
 	public void restart() { }

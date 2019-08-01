@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import nl.uu.cs.aplib.MainConcepts.*;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
+import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
 import nl.uu.cs.aplib.Utils.Time;
 
 public class AutonomousBasicAgent extends BasicAgent {
@@ -25,9 +26,15 @@ public class AutonomousBasicAgent extends BasicAgent {
 	protected final Condition goalConcluded  = lock.newCondition(); 
 	protected Thread thisAgentThread = null ;
 	
-	public AutonomousBasicAgent registerToComNode(ComNode comNode) {
-		this.comNode = comNode ;
-		comNode.register(this) ;
+	Messenger messenger() {
+		return ((StateWithMessanger) state).messenger ;
+	}
+	
+	public BasicAgent registerTo(ComNode comNode) {
+		if (state == null) throw new IllegalArgumentException() ;
+		if (! (state instanceof StateWithMessanger)) throw new IllegalArgumentException() ;
+		messenger().attachCommuniationNode(comNode);
+		comNode.register(this);
 		return this ;
 	}
 	
@@ -51,6 +58,11 @@ public class AutonomousBasicAgent extends BasicAgent {
 	
 	@Override
 	public AutonomousBasicAgent attachState(SimpleState state) {
+		super.attachState(state) ;
+		return this ;
+	}
+	
+	public AutonomousBasicAgent attachState(StateWithMessanger state) {
 		super.attachState(state) ;
 		return this ;
 	}
@@ -108,8 +120,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 				// if the agent has been commanded to stop then discard the msg
 				return ;
 			}
-			var msgQueue = getIncomingMsgQueue() ;
-			msgQueue.add(m) ;
+			messenger().put(m);
 			cmd = null ; // set cmd to resume, in case it was on pause
 			triggerArrived.signal();  // awaken the agent
 		}

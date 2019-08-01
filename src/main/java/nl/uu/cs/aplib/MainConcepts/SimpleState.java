@@ -2,7 +2,6 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.*;
 
-import nl.uu.cs.aplib.MultiAgentSupport.Message;
 
 /**
  * This class is the root class for representing agents' states (an 'agent' is
@@ -46,12 +45,7 @@ import nl.uu.cs.aplib.MultiAgentSupport.Message;
  *
  */
 public class SimpleState {
-	
-	/**
-	 * Queue of incoming messages for the agent that owns this state.
-	 */
-	List<Message> incomingMsgs = new LinkedList<Message>() ;
-	
+		
 	/**
 	 * A pointer to the {@link Environment} associated to the agent that owns this state.
 	 */
@@ -82,5 +76,5 @@ public class SimpleState {
 	 * Return the {@link Environment} associated with the state.
 	 */
 	public Environment env() { return env ; }
-
+	
 }
