@@ -38,7 +38,7 @@ public class AplibEDSL {
 	/**
 	 * Lift a Goal to become a {@link nl.uu.cs.aplib.MainConcepts.GoalTree}.
 	 */
-	static public GoalTree lift(Goal g) {
+	static public PrimitiveGoal lift(Goal g) {
 		return new PrimitiveGoal(g) ;
 	}
 	

@@ -15,7 +15,7 @@ public class Test_Strategy {
 	static IntState Int(int x) { return new IntState(x) ; }
 	
 	@Test
-	public void test_getEnabledActions() {
+	public void test_getFirstEnabledActions() {
 		var a0 = lift(action("a0").on__(s -> ((IntState) s).i == 0)) ;
 		var a1 = lift(action("a1").on__(s -> ((IntState) s).i == 1)) ;
 		var a2 = lift(action("a2").on__(s -> ((IntState) s).i == 1)) ;

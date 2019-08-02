@@ -233,12 +233,38 @@ public class GoalTree {
 	void redistributeRemainingBudget() {
 		if (! isTopGoal()) throw new IllegalArgumentException() ;
 		if (allocatedBudget == Double.POSITIVE_INFINITY) return ;
+		// if the topgoal is already closed:
+		if (!status.inProgress()) {
+			this.remainingBudget = 0 ;
+			return ;
+		}
 		distributeRemainingBudgetWorker(allocatedBudget - consumedBudget) ;
 	}
 	
+	private int numberOfOpenPrimitiveGoals() {
+		if (! status.inProgress()) return 0 ;
+		if (combinator == GoalsCombinator.PRIMITIVE) return 1 ;
+		return subgoals.stream().collect(Collectors.summingInt(G -> G.numberOfOpenPrimitiveGoals())) ;
+	}
+	
+	private void giveZeroBudget() {
+		this.remainingBudget = 0 ;
+		for (GoalTree gt : subgoals) gt.giveZeroBudget();
+	}
+	
 	private void distributeRemainingBudgetWorker(double budget) {
+		
+		// NOT needed; this is handled in below
+		//if (! status.inProgress()) {
+		//	System.out.println(">>> zeroing") ;
+		//	giveZeroBudget() ; return ;
+		//}
+		
 		double available = Math.max(budget,0) ;
-		remainingBudget = available ;
+		this.remainingBudget = available ;
+		
+		if (combinator == GoalsCombinator.PRIMITIVE) return ;
+		
 		//System.err.println(">> remaining budget " + remainingBudget.amount) ;
 		var subgoalsWithBudgetDemand = subgoals.stream()
 				                       .filter(g -> g.status.inProgress() &&  g.demandedMinimumBudget()>0d)
@@ -247,9 +273,17 @@ public class GoalTree {
 				                       .filter(g -> g.status.inProgress() && ! (g.demandedMinimumBudget()>0d))
 				                       .collect(Collectors.toList()) ;
 		
-		int K = subgoalsWithBudgetDemand.size() + subgoalsWithNOBudgetDemand.size() ;
+		var closedSubgoals = subgoals.stream()
+                .filter(g -> ! g.status.inProgress())
+                .collect(Collectors.toList()) ;
 		
+		// set budget for closed subgoals to zero first:
+		for (GoalTree gt : closedSubgoals) gt.giveZeroBudget();
+		
+		//int K = subgoalsWithBudgetDemand.size() + subgoalsWithNOBudgetDemand.size() ;
+		int K = numberOfOpenPrimitiveGoals() ;
 		if (K == 0) return ;
+		double avrg_perPrimGoal = available / K ;
 		
 		for (GoalTree gt : subgoalsWithBudgetDemand) {
 			if (available <= 0) {
@@ -257,22 +291,27 @@ public class GoalTree {
 			}
 			else {
 				double demanded = gt.demandedMinimumBudget() ;
-				double toAllocate = available/K ;
+				double toAllocate = avrg_perPrimGoal * gt.numberOfOpenPrimitiveGoals() ;
 				if (toAllocate < demanded) toAllocate = Math.min(demanded,available) ;
 				gt.distributeRemainingBudgetWorker(toAllocate);
 				available = available - toAllocate ;
+				//System.out.println("## allocating = " + toAllocate + ", available = " + available) ;
 			}
-			K-- ;
 		}
+		
+		K = subgoalsWithNOBudgetDemand.stream().collect(Collectors.summingInt(G -> G.numberOfOpenPrimitiveGoals())) ;
+		
 		if (K==0) return ;
-		double avrg = available/K ;
+		//System.out.println("## available = " + available + ", K = " + K) ;
+		avrg_perPrimGoal = available/K ;
 		for (GoalTree gt : subgoalsWithNOBudgetDemand) {
 			if (available <= 0) {
 				gt.distributeRemainingBudgetWorker(0); 
 			}
 			else {
-				gt.distributeRemainingBudgetWorker(avrg);
-				available = available - avrg ;
+				double toAllocate = avrg_perPrimGoal * gt.numberOfOpenPrimitiveGoals() ;
+				gt.distributeRemainingBudgetWorker(toAllocate);
+				available = available - toAllocate ;
 			}
 		}
 	}
