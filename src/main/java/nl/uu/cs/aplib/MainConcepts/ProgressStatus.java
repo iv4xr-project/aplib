@@ -46,9 +46,10 @@ public class ProgressStatus {
 	
 	/**
 	 * Set the status represented by this instance to SUCCESS, and set its info to
-	 * the given string.
+	 * the given string. Don't open this to public to prevent user to freely
+	 * mark a goal as success.
 	 */
-	public void setToSuccess(String info) { 
+	void setToSuccess(String info) { 
 		status = ProgressStatus_.SUCCESS ;
 		this.info = info ; 
 	}
@@ -64,7 +65,7 @@ public class ProgressStatus {
 	 * the given string. You can use the info the describe the reason of the 
 	 * failure.
 	 */
-	public void setToFail(String info) { 
+	void setToFail(String info) { 
 		status = ProgressStatus_.FAILED ;
 		this.info = info ; 
 	}
@@ -72,7 +73,7 @@ public class ProgressStatus {
 	/**
 	 * Set the status represented by this instance to FAILED.
 	 */
-	public void setToFail() {setToFail(null) ; }
+	void setToFail() {setToFail(null) ; }
 	
 	@Override
 	public String toString() {

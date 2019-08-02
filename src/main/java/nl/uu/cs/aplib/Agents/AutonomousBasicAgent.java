@@ -26,6 +26,10 @@ public class AutonomousBasicAgent extends BasicAgent {
 	protected final Condition goalConcluded  = lock.newCondition(); 
 	protected Thread thisAgentThread = null ;
 	
+	public AutonomousBasicAgent() {
+		super() ;
+	}
+	
 	public AutonomousBasicAgent(String id, String role) {
 		super(id,role) ;
 	}

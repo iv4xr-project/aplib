@@ -15,36 +15,36 @@ public class Test_GoalTree {
 		var g1 = lift(goal("")) ;
 		var g2 = FIRSTof(g1, lift(goal(""))) ;
 		var g3 = FIRSTof(g2,lift(goal(""))) ;
-		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
-		g1.setStatusToSuccess();
-		assertTrue(g2.getStatus() == ProgressStatus.SUCCESS) ;
-		assertTrue(g3.getStatus() == ProgressStatus.SUCCESS) ;
+		assertTrue(g2.getStatus().inProgress()) ;
+		g1.setStatusToSuccess("");
+		assertTrue(g2.getStatus().sucess()) ;
+		assertTrue(g3.getStatus().sucess()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = FIRSTof(g1, lift(goal(""))) ;
 		g3 = FIRSTof(g2,lift(goal(""))) ;
-		g1.setStatusToFail();
-		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
-		assertTrue(g3.getStatus() == ProgressStatus.INPROGRESS) ;
+		g1.setStatusToFail("");
+		assertTrue(g2.getStatus().inProgress()) ;
+		assertTrue(g3.getStatus().inProgress()) ;
 		
 		
 		g1 = lift(goal("")) ;
 		g2 = lift(goal("")) ;
 		g3 = FIRSTof(g1,g2) ;
 		var g4 = FIRSTof(g3,lift(goal(""))) ;
-		g1.setStatusToFail();
-		g2.setStatusToSuccess();
-		assertTrue(g3.getStatus() == ProgressStatus.SUCCESS) ;
-		assertTrue(g4.getStatus() == ProgressStatus.SUCCESS) ;
+		g1.setStatusToFail("");
+		g2.setStatusToSuccess("");
+		assertTrue(g3.getStatus().sucess()) ;
+		assertTrue(g4.getStatus().sucess()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = lift(goal("")) ;
 		g3 = FIRSTof(g1,g2) ;
 		g4 = FIRSTof(g3,lift(goal(""))) ;
-		g1.setStatusToFail();
-		g2.setStatusToFail();
-		assertTrue(g3.getStatus() == ProgressStatus.FAILED) ;
-		assertTrue(g4.getStatus() == ProgressStatus.INPROGRESS) ;		
+		g1.setStatusToFail("");
+		g2.setStatusToFail("");
+		assertTrue(g3.getStatus().failed()) ;
+		assertTrue(g4.getStatus().inProgress()) ;	
 	}
 
 	@Test
@@ -53,89 +53,104 @@ public class Test_GoalTree {
 		var g1 = lift(goal("")) ;
 		var g2 = SEQ(g1, lift(goal(""))) ;
 		var g3 = SEQ(g2,lift(goal(""))) ;
-		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
-		g1.setStatusToFail();
-		assertTrue(g2.getStatus() == ProgressStatus.FAILED) ;
-		assertTrue(g3.getStatus() == ProgressStatus.FAILED) ;
+		assertTrue(g2.getStatus().inProgress()) ;
+		g1.setStatusToFail("");
+		assertTrue(g2.getStatus().failed()) ;
+		assertTrue(g3.getStatus().failed()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = SEQ(g1, lift(goal(""))) ;
 		g3 = SEQ(g2,lift(goal(""))) ;
-		g1.setStatusToSuccess();
-		assertTrue(g2.getStatus() == ProgressStatus.INPROGRESS) ;
-		assertTrue(g3.getStatus() == ProgressStatus.INPROGRESS) ;
+		g1.setStatusToSuccess("");
+		assertTrue(g2.getStatus().inProgress()) ;
+		assertTrue(g3.getStatus().inProgress()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = lift(goal("")) ;
 		g3 = SEQ(g1,g2) ;
 		var g4 = SEQ(g3,lift(goal(""))) ;
-		g1.setStatusToSuccess();
-		g2.setStatusToFail();
-		assertTrue(g3.getStatus() == ProgressStatus.FAILED) ;
-		assertTrue(g4.getStatus() == ProgressStatus.FAILED) ;
+		g1.setStatusToSuccess("");
+		g2.setStatusToFail("");
+		assertTrue(g3.getStatus().failed()) ;
+		assertTrue(g4.getStatus().failed()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = lift(goal("")) ;
 		g3 = SEQ(g1,g2) ;
 		g4 = SEQ(g3,lift(goal(""))) ;
-		g1.setStatusToSuccess();
-		g2.setStatusToSuccess();
-		assertTrue(g3.getStatus() == ProgressStatus.SUCCESS) ;
-		assertTrue(g4.getStatus() == ProgressStatus.INPROGRESS) ;			
+		g1.setStatusToSuccess("");
+		g2.setStatusToSuccess("");
+		assertTrue(g3.getStatus().sucess()) ;
+		assertTrue(g4.getStatus().inProgress()) ;	
+		
 	}
 	
+	GoalTree g1 ;
+	GoalTree g2 ;
+	GoalTree g3 ;
+	GoalTree g4 ;
+	GoalTree g5 ;
+	GoalTree g6 ;
+	GoalTree a ;
+	GoalTree b ;
+	GoalTree c ;
+	GoalTree d ;
+
+	void setup() {
+		g1 = lift(goal("g1")) ;
+		g2 = lift(goal("g2")) ;
+		g3 = lift(goal("g3")) ;
+		g4 = lift(goal("g4")) ;
+		g5 = lift(goal("g5")) ;
+		g6 = lift(goal("g6")) ;
+		a = FIRSTof(g1,g2) ;
+		b = FIRSTof(g3,g4) ;
+		c = SEQ(a,b,g5) ;
+		d = FIRSTof(c,g6) ;
+	}
 	
 	@Test
 	public void test_getNextPrimitiveGoalWorker() {
+		setup() ;
+		g1.setStatusToFail("");
+		var h = g1.getNextPrimitiveGoal() ;
+		//System.out.println(h.goal.getName()) ;
+		assertTrue(h == g2) ;
 		
-		var g1 = lift(goal("g1")) ;
-		var g2 = lift(goal("g2")) ;
-		var g3 = lift(goal("g3")) ;
-		var g4 = lift(goal("g4")) ;
-		var g5 = lift(goal("g5")) ;
-		var g6 = lift(goal("g6")) ;
-		var a = FIRSTof(g1,g2) ;
-		var b = FIRSTof(g3,g4) ;
-		var c = SEQ(a,b,g5) ;
-		var d = FIRSTof(c,g6) ;
+		setup() ;
+		g1.setStatusToSuccess("");
+		h = g1.getNextPrimitiveGoal() ;
+		//System.out.println(h.goal.getName()) ;
+		assertTrue(h == g3) ;
 		
-		/*
-		var h1f = g1.getNextPrimitiveGoal(ProgressStatus.FAILED) ;
-		var h1s = g1.getNextPrimitiveGoal(ProgressStatus.SUCCESS) ;
-		System.out.println(h1f.goal.getName()) ;
-		System.out.println(h1s.goal.getName()) ;
-		assertTrue(h1f == g2) ;
-		assertTrue(h1s == g3) ;
+		setup() ;
+		g2.setStatusToFail("");
+		assertTrue(g2.getNextPrimitiveGoal() == g6) ;
+
+		setup() ;
+		g2.setStatusToSuccess("");
+		assertTrue(g2.getNextPrimitiveGoal() == g3) ;
 		
-		var h2f = g2.getNextPrimitiveGoal(ProgressStatus.FAILED) ;
-		var h2s = g2.getNextPrimitiveGoal(ProgressStatus.SUCCESS) ;
-		System.out.println(h2f.goal.getName()) ;
-		System.out.println(h2s.goal.getName()) ;
-		assertTrue(h2f == g6) ;
-		assertTrue(h2s == g3) ;
-		
-		var h3f = g3.getNextPrimitiveGoal(ProgressStatus.FAILED) ;
-		var h3s = g3.getNextPrimitiveGoal(ProgressStatus.SUCCESS) ;
-		System.out.println(h3f.goal.getName()) ;
-		System.out.println(h3s.goal.getName()) ;
-		assertTrue(h3f == g4) ;
-		assertTrue(h3s == g5) ;
-				
-		var h5f = g5.getNextPrimitiveGoal(ProgressStatus.FAILED) ;
-		var h5s = g5.getNextPrimitiveGoal(ProgressStatus.SUCCESS) ;
-		System.out.println(h5f.goal.getName()) ;
-		System.out.println("" + h5s) ;
-		assertTrue(h5f == g6) ;
-		assertTrue(h5s == null) ;
-		
-		var h6f = g6.getNextPrimitiveGoal(ProgressStatus.FAILED) ;
-		var h6s = g6.getNextPrimitiveGoal(ProgressStatus.SUCCESS) ;
-		System.out.println("" + h6f) ;
-		System.out.println("" + h6s) ;
-		assertTrue(h6f == null) ;
-		assertTrue(h6s == null) ;
-		*/
-		
+		setup() ;
+		g3.setStatusToFail("");
+		assertTrue(g3.getNextPrimitiveGoal() == g4) ;
+		setup() ;
+		g3.setStatusToSuccess("");
+		assertTrue(g3.getNextPrimitiveGoal() == g5) ;
+
+		setup() ;
+		g5.setStatusToFail("");
+		assertTrue(g5.getNextPrimitiveGoal() == g6) ;
+		setup() ;
+		g5.setStatusToSuccess("");
+		assertTrue(g5.getNextPrimitiveGoal() == null) ;
+
+		setup() ;
+		g6.setStatusToFail("");
+		assertTrue(g6.getNextPrimitiveGoal() == null) ;
+		setup() ;
+		g6.setStatusToSuccess("");
+		assertTrue(g6.getNextPrimitiveGoal() == null) ;
 	}
 	
 	@Test
@@ -145,11 +160,11 @@ public class Test_GoalTree {
 				.withDistF(i -> 0d+ ((int) i)) ;
 		
 		g.propose((Integer) 1);
-		assertTrue(g.getStatus() == ProgressStatus.INPROGRESS) ;
+		assertTrue(g.getStatus().inProgress()) ;
 		assertTrue(g.distance() == 1d) ;
 		
 		g.propose((Integer) 0);
-		assertTrue(g.getStatus() == ProgressStatus.SUCCESS) ;
+		assertTrue(g.getStatus().sucess()) ;
 		assertTrue(g.distance() == 0d) ;
 		
 	}
