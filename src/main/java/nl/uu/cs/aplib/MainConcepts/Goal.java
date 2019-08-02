@@ -159,12 +159,12 @@ public class Goal {
 	public String getName() { return name ; }
 	
 	/**
-	 * Return the last non-null proposal that was tested by this goal (see the method {@link Goal#proposse(Object)}).
+	 * Return the last non-null proposal that was tested by this goal (see the method {@link Goal#propose(Object)}).
 	 */
 	public Object getProposal() { return proposal ; }
 
 	/**
-	 * Return the last proposal that was tested by this goal (see the method {@link Goal#proposse(Object)})
+	 * Return the last proposal that was tested by this goal (see the method {@link Goal#propose(Object)})
 	 * that turned out to be a solution. If there was none, null is returned.
 	 */
 	public Object getSolution() {

@@ -1,6 +1,8 @@
 package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -51,6 +53,13 @@ public class SimpleState {
 	 */
 	Environment env ;
 	
+	/**
+	 * A logger. Don't set this logger yourself. When you attach this state to an agent,
+	 * the method {@link BasicAgent#attachState(SimpleState) will set this to the right
+	 * logger.
+	 */
+	Logger logger ;
+	
 	public SimpleState() { }
 	
 	/**
@@ -76,5 +85,13 @@ public class SimpleState {
 	 * Return the {@link Environment} associated with the state.
 	 */
 	public Environment env() { return env ; }
+	
+	/**
+	 * Write the string to the logger attached to this state, with the specified logging level.
+	 */
+	protected void log(Level level, String s) {
+		if (logger == null) return ;
+		logger.log(level, s);
+	}
 	
 }

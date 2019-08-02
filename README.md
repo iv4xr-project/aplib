@@ -1,8 +1,9 @@
 # Aplib: an Agent Programming Library
 
-`Aplib` is a Java library to program multi agent programs.
+`Aplib` is a Java library to program multi agent programs. Essentially, it provides an architecture and a design pattern for programming agents. With these, you can program agents more abstractly in terms of goals and strategies. You will have to program the strategies yourself, but you do not have to worry about programming the underlying infrastructure such as strategy execution and inter-agent communication support; these are provided by the library. `Aplib` also tries to offer high level APIs, so that you can program
+your agents as cleanly as possible, with least possible boilerplate code.
 
-Note: as it is now, `aplib` is still under development.
+Note: as it is now, `aplib` is still under development. As we go, we will add more supports to integrate AI into your agents.
 
 `Aplib` is inspired by [2APL](http://apapl.sourceforge.net/) which is based on [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming. This BDI model has its influence in `aplib`, though we do not try to be a BDI purist either. What is important in `aplib` design is its programmability. There are indeed many dedicated agent programming languages, but most of them do not have enough support to be integrated with real life applications. We therefore intentionally develop `aplib` as a library in Java, knowing that the latter already has large and rich supports in terms of library, software tools, and user base. Compared to e.g. [JADE](https://jade.tilab.com/) (Java Agent Development Framework) `aplib` is of much lighter weight, but on the other than `aplib` tries to exploit features from more recent Java, e.g. lambda expression, to make agent programming cleaner.
 
@@ -16,11 +17,12 @@ List of features:
 * **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
 * **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
 
-Non-features:
-* `aplib` has no Prolog backend to facilitate reasoning. We are not believers that Prolog is suitable to solve problems in complex domains :heart_eyes:, but of course nothing preventing you from implementing your own Prolog integration.
 
 Planned features:
 
+* Prolog reasoning. It may be the case, that some action needs to do _reasoning/inference_ over the given current state to make its decision. By _reasoning_ we mean employing implicative rules of the form
+  _p ⇒ q_. Such rules can be implemented as plain Java methods, but it might be more convenient, abstract, and more flexible, to employ Prolog to do this, especially if we have more of such rules.
+  
 * Reinforcement learning
 * Search algorithms for solving goals
 * Environment for controlling 3D games
@@ -33,6 +35,7 @@ Planned features:
 ```java
 goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
 ```
+
 * Specifying a strategy:
 
 ```java
@@ -41,7 +44,6 @@ FIRSTof(guessLowerbound.on_((Belief belief) -> ! belief.feelingVeryLucky() ,
               speculate2,
               ...)
 ```        
-
 
 * Creating and configuring an agent in the _fluent interface_ style:
 
