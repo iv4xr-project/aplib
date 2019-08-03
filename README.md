@@ -66,6 +66,7 @@ You can run `mvn` (Maven) at the project root to do the things listed below. Mav
 * To compile the project: `mvn compile`
 * To run the project's unit tests: `mvn test`
 * To produce a jar of the project: `mvn package`. This will invoke `compile` and `test`, and then produce a jar containing the whole project. This is the jar you want to use if you want to include in your own project if you want to use `aplib`.
+* To generate the javadoc APIs documentation: `mvn javadoc:javadoc`. The resulting documentations can be found in `./target/site/apicdocs`.
 * To clean `./target`: `mvn clean`
 
 #### Projects dir. structure
