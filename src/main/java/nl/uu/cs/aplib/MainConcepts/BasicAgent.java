@@ -193,6 +193,9 @@ public class BasicAgent {
 		currentGoal = null ;
 	}
 	
+	/**
+	 * Currently unimplemented.
+	 */
 	public void restart() { }
 	
 	/**

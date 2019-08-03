@@ -4,8 +4,8 @@ import nl.uu.cs.aplib.MainConcepts.SimpleState;
 import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
 
 /**
- * A version of {@link nl.uu.cs.aplib.MainConcepts.SimpleState} that also has a
- * {@link nl.uu.cs.aplib.MultiAgentSupport.Messenger}. Through this Messenger,
+ * An extension of {@link nl.uu.cs.aplib.MainConcepts.SimpleState} that also has
+ * a {@link nl.uu.cs.aplib.MultiAgentSupport.Messenger}. Through this Messenger,
  * an agent that owns this state can send and receive messages to/from other
  * agents.
  * 

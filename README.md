@@ -21,8 +21,7 @@ List of features:
 Planned features:
 
 * Prolog reasoning. It may be the case, that some action needs to do _reasoning/inference_ over the given current state to make its decision. By _reasoning_ we mean employing implicative rules of the form
-  _p ⇒ q_. Such rules can be implemented as plain Java methods, but it might be more convenient, abstract, and more flexible, to employ Prolog to do this, especially if we have more of such rules.
-  
+  _p ⇒ q_. Such rules can be implemented as plain Java methods, but it might be more convenient, abstract, and more flexible, to employ Prolog to do this, especially if we have more of such rules. 
 * Reinforcement learning
 * Search algorithms for solving goals
 * Environment for controlling 3D games
