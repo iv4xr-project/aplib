@@ -64,7 +64,7 @@ public class Messenger {
 	 * Send out this message to the {@link ComNode} associated to this Messenger.
 	 */
 	public Acknowledgement send(Message m) {
-		return comNode.send(m) ;
+		return comNode.send(m.timestamp()) ;
 	}
 	
 }

@@ -5,7 +5,9 @@ import static nl.uu.cs.aplib.AplibEDSL.goal;
 
 import java.util.Random;
 
+import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.Agents.StateWithMessanger;
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.MainConcepts.BasicAgent;
 import nl.uu.cs.aplib.MainConcepts.Goal;
@@ -34,13 +36,15 @@ public class MinimalAutonomousAgent {
 		  GoalTree topgoal = g.withStrategy(guessing).lift() ;
 		  
 		  System.err.println("** Main thread " + Thread.currentThread().getId()) ;
+		  
+		  // configure logging:
+		  Logging.addSystemErrAsLogger();
 
 	      // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 		  var agent = new AutonomousBasicAgent()
-                    . attachState(new SimpleState() .setEnvironment(new ConsoleEnvironment())) 
+                    . attachState(new StateWithMessanger() .setEnvironment(new ConsoleEnvironment())) 
                     . setGoal(topgoal) 
                     . setSamplingInterval(1000) 
-                    . addSystemErrAsLogger()
                     ;
 		  
 		  // run the agent, autonously on its own thread:

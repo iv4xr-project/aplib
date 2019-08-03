@@ -78,21 +78,6 @@ public class AutonomousBasicAgent extends BasicAgent {
 		return this ;
 	}
 	
-	@Override
-	public AutonomousBasicAgent addSystemErrAsLogger() {
-		super.addSystemErrAsLogger() ; return this ;
-	}
-	
-	@Override
-	public AutonomousBasicAgent attachLogFile(String filename) {
-		super.attachLogFile(filename) ; return this ;		
-	}
-	
-	@Override
-	public AutonomousBasicAgent setLoggingLevel(Level level) {
-		super.setLoggingLevel(level) ; return this ;
-	}
-	
 	/**
 	 * Set the agent sampling interval in ms.
 	 */
