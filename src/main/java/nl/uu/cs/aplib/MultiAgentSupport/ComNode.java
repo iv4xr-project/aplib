@@ -5,14 +5,48 @@ import java.util.* ;
 import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.MultiAgentSupport.Acknowledgement.AckType;
 
+/**
+ * This class provides a 'communication node' for agents. It provides a simple
+ * message routing between agents. To use it, agents first need to register
+ * themselves to a ComNode. The ComNode maintains an address book that maps
+ * agents' names to pointers to these agents. A plain
+ * {@link nl.uu.cs.aplib.MainConcepts.SimpleAgent} has no method to register to
+ * ComNode. However, {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent} can
+ * register to a ComNode, but keep in mind that an AutonomousBasicAgent can only
+ * be a member of at most one ComNode. Access to this ComNode is provided
+ * through its agent state.
+ * 
+ * <p>
+ * When an agent A wants to send a message to agent B, A only needs to know B's
+ * name. A would then send the message to its ComNode, and the ComNode will take
+ * care that the message is delivered to B. Note that without a ComNode every
+ * agent will have to know the pointers to every other agents it needs to send
+ * messages to. Furthermore, a ComNode allows a convenient way for an agent to
+ * broadcast a message to all other agents (which are registered to the same
+ * ComNode), or to all other agents with the same role.
+ * 
+ * @author Wish
+ *
+ */
+
 public class ComNode {
 	
+	/**
+	 * Maping agents' names to their references/pointers.
+	 */
 	Map<String,AutonomousBasicAgent> idMap = new HashMap<String,AutonomousBasicAgent>() ;
+	
+	/**
+	 * Mapping role-names to the set of agents with the same role.
+	 */
 	Map<String,Set<AutonomousBasicAgent>> roleMap = new HashMap<String,Set<AutonomousBasicAgent>>() ;
 	
 	public ComNode() {
 	}
 	
+	/**
+	 * Register the agent to this ComNode.
+	 */
 	synchronized public void register(AutonomousBasicAgent agent) {
 		idMap.put(agent.getId(), agent) ;
 		var role = agent.getRole() ;
@@ -26,6 +60,32 @@ public class ComNode {
 		brothers.add(agent) ;
 	}
 	
+	/**
+	 * Remove the agent from this ComNode.
+	 */
+	synchronized public void deregister(AutonomousBasicAgent agent) {
+		idMap.remove(agent) ;
+		var role = agent.getRole() ;
+		var brothers = roleMap.get(role) ;
+		if (brothers == null) return ;
+		brothers.remove(agent) ;
+	}
+	
+	/**
+	 * This is invoked by an agent to send a message to other agent(s), depending on
+	 * the message type. If the type is SINGLECAST this ComNode will forward it to
+	 * its specified target agent (just one can be targetted in a SINGLECAST). If it
+	 * is a BROADCAST the message will be forwarded to all agents registered to this
+	 * ComNode. If it is a ROLECAST the message will be forwarded to all agents with
+	 * the same role as the target role specified in the message.
+	 * 
+	 * @param msg The message to send.
+	 * @return An {@link nl.uu.cs.aplib.MultiAgentSupport.Acknowledgement}. It is a
+	 *         negative acknowledgement (REJECTED) if the message is a SINGLECAST
+	 *         and its target does not exists. In all other cases the
+	 *         acknowledgement should be positive (SUCCESS).
+	 * 
+	 */
 	public Acknowledgement send(Message msg) {
 		String senderId = msg.idSource ;
 		var sender = idMap.get(senderId) ;

@@ -38,10 +38,11 @@ public class AutonomousBasicAgent extends BasicAgent {
 		return ((StateWithMessanger) state).messenger ;
 	}
 	
-	public BasicAgent registerTo(ComNode comNode) {
+	public AutonomousBasicAgent registerTo(ComNode comNode) {
 		if (state == null) throw new IllegalArgumentException() ;
 		if (! (state instanceof StateWithMessanger)) throw new IllegalArgumentException() ;
 		messenger().attachCommuniationNode(comNode);
+		this.comNode = comNode ;
 		comNode.register(this);
 		return this ;
 	}
@@ -66,6 +67,8 @@ public class AutonomousBasicAgent extends BasicAgent {
 	
 	@Override
 	public AutonomousBasicAgent attachState(SimpleState state) {
+		if (! (state instanceof StateWithMessanger)) 
+			throw new IllegalArgumentException("You need an instance of StateWithMessanger") ;
 		super.attachState(state) ;
 		return this ;
 	}
@@ -179,6 +182,16 @@ public class AutonomousBasicAgent extends BasicAgent {
 	 * to stop all together. 
 	 */
 	public void loop() {
+		try {
+			loopWorker() ;
+		}
+		catch(Throwable t) {
+			log(Level.WARNING,"Agent " + id + " abort its loop due to exception " +  t) ;		
+		}
+		finally { }
+	}
+	
+	private void loopWorker() {
 		
 		thisAgentThread = Thread.currentThread() ;
 		log(Level.INFO,"Agent " + id + " enters its loop on Thread " +  thisAgentThread.getId()) ;

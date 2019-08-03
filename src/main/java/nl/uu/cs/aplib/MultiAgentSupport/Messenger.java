@@ -22,6 +22,11 @@ public class Messenger {
 		this.comNode = comNode ;
 	}
 	
+	/**
+	 * Find a message in this Messenger's input queue that satisfies the predicate
+	 * p. It returns the first one that satisfies it. The message is not removed
+	 * from the queue. If none is found, null is returned.
+	 */
 	synchronized public Message find(Predicate<Message> p) {
 		for (Message m : incomingMsgs) {
 			if (p.test(m)) return m ;
@@ -29,10 +34,19 @@ public class Messenger {
 		return null ;
 	}
 	
+	/**
+	 * Check this Messenger's input queue if it contains a message satisfying the
+	 * predicate p. It returns the first one that satisfies it. 
+	 */
 	synchronized public boolean test(Predicate<Message> p) {
 		return find(p) != null ;
 	}
 	
+	/**
+	 * Find a message in this Messenger's input queue that satisfies the predicate
+	 * p. It returns the first one that satisfies it <b>and removes</b> it from the
+	 * queue. If none is found, null is returned.
+	 */
 	synchronized public Message findOneAndRetrieve(Predicate<Message> p) {
 		Message m = find(p) ;
 		if (m != null) incomingMsgs.remove(m) ;
