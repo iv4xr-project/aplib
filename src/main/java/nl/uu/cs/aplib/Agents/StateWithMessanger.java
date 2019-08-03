@@ -22,6 +22,7 @@ public class StateWithMessanger extends SimpleState {
 	 */
 	Messenger messenger = new Messenger() ;
 
+	public StateWithMessanger() { super() ; }
 	
 	/**
 	 * Return the messenger associated to this state.

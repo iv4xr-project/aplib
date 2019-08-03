@@ -12,9 +12,9 @@ import nl.uu.cs.aplib.MainConcepts.BasicAgent;
  * Define aplib logging. Use {@link #getAPLIBlogger()} to get aplib's logger.
  * This is a single logger accessible from anywhere. Use
  * {@link #setLoggingLevel(Level)} to globally set the logging level of this
- * logger. Use e.g. {@link #addSystemErrAsLogger()} or {@link #attachLogFile(String)}
- * to attach listeners to this logger. Messages sent to the logger will be 
- * echoed to its listerners. 
+ * logger. Use e.g. {@link #addSystemErrAsLogger()} or
+ * {@link #attachLogFile(String)} to attach listeners to this logger. Messages
+ * sent to the logger will be echoed to its listerners.
  */
 public class Logging {
 	
