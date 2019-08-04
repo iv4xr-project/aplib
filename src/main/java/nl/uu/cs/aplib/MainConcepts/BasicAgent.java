@@ -295,9 +295,9 @@ public class BasicAgent {
 		chosenAction.action.invocationCount++ ;
 		chosenAction.action.totalRuntime += time.elapsedTimeSinceLastSample() ;
 		
-		if (currentGoal.goal.getStatus().sucess()) {
+		if (currentGoal.goal.getStatus().success()) {
 			currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
-			if (goal.getStatus().sucess())  {
+			if (goal.getStatus().success())  {
 				// the top level goal is solved! Then the agent is done:
 				detachgoal() ;
 				return ;

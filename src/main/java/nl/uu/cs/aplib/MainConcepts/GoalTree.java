@@ -146,7 +146,7 @@ public class GoalTree {
 			   else
 				  return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
 		  case FIRSTOF :
-			   if(status.sucess())
+			   if(status.success())
 				  return parent.getNextPrimitiveGoal() ;
 			   // else: so, this goal failed:
 			   k = parent.subgoals.indexOf(this) ;

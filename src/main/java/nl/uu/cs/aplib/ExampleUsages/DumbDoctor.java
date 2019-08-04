@@ -64,7 +64,7 @@ public class DumbDoctor {
       while (topgoal.getStatus().inProgress()) {
     	  doctorAgent.update(); 
       }
-      if(topgoal.getStatus().sucess()) 
+      if(topgoal.getStatus().success()) 
     	  belief.env().println("I am glad you are happier now :)");
       
       topgoal.printTreeStatus();

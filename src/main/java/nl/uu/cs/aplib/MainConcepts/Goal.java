@@ -168,7 +168,7 @@ public class Goal {
 	 * that turned out to be a solution. If there was none, null is returned.
 	 */
 	public Object getSolution() {
-		if (status.sucess()) return proposal ; else return null ;
+		if (status.success()) return proposal ; else return null ;
 	}
 	
 	Goal setStatusToFail(String reason) { status.setToFail(reason) ; return this ; }

@@ -32,7 +32,7 @@ public class ProgressStatus {
 	/**
 	 * True if the status represented by this instance is SUCCESS.
 	 */
-	public boolean sucess() { return status == ProgressStatus_.SUCCESS ; }
+	public boolean success() { return status == ProgressStatus_.SUCCESS ; }
 	
 	/**
 	 * Trye if the status represented by this instance if FAILED.

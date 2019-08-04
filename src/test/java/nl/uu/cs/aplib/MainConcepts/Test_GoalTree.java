@@ -21,7 +21,7 @@ public class Test_GoalTree {
 		assertTrue(g.distance() == 1d) ;
 		
 		g.propose((Integer) 0);
-		assertTrue(g.getStatus().sucess()) ;
+		assertTrue(g.getStatus().success()) ;
 		assertTrue(g.distance() == 0d) ;
 		
 	}
@@ -34,8 +34,8 @@ public class Test_GoalTree {
 		var g3 = FIRSTof(g2,lift(goal(""))) ;
 		assertTrue(g2.getStatus().inProgress()) ;
 		g1.setStatusToSuccess("");
-		assertTrue(g2.getStatus().sucess()) ;
-		assertTrue(g3.getStatus().sucess()) ;
+		assertTrue(g2.getStatus().success()) ;
+		assertTrue(g3.getStatus().success()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = FIRSTof(g1, lift(goal(""))) ;
@@ -51,8 +51,8 @@ public class Test_GoalTree {
 		var g4 = FIRSTof(g3,lift(goal(""))) ;
 		g1.setStatusToFail("");
 		g2.setStatusToSuccess("");
-		assertTrue(g3.getStatus().sucess()) ;
-		assertTrue(g4.getStatus().sucess()) ;
+		assertTrue(g3.getStatus().success()) ;
+		assertTrue(g4.getStatus().success()) ;
 		
 		g1 = lift(goal("")) ;
 		g2 = lift(goal("")) ;
@@ -97,7 +97,7 @@ public class Test_GoalTree {
 		g4 = SEQ(g3,lift(goal(""))) ;
 		g1.setStatusToSuccess("");
 		g2.setStatusToSuccess("");
-		assertTrue(g3.getStatus().sucess()) ;
+		assertTrue(g3.getStatus().success()) ;
 		assertTrue(g4.getStatus().inProgress()) ;	
 		
 	}
