@@ -310,7 +310,7 @@ public class BasicAgent {
 		// goal is not completed; update the currentStrategy for the next tick:
 		else {
 			if(chosenAction.action.isCompleted()) {
-				currentStrategy = chosenAction.calcNextStrategy(state) ;
+				currentStrategy = chosenAction.calcNextStrategy() ;
 				// if no strategy can be found, reset it to the root strategty of the goal:
 				if (currentStrategy == null) currentStrategy = currentGoal.goal.getStrategy() ;
 			}

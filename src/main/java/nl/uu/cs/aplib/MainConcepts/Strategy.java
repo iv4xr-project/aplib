@@ -91,10 +91,13 @@ public class Strategy {
 	}
 	
 	/**
-	 * Suppose this strategy is done/completed. This method calculates the next strategy 
-	 * to execute.
+	 * Suppose this strategy is done/completed. This method calculates the next
+	 * strategy to execute. If the top strategy consists of only FIRSTof and ANYof
+	 * nodes, and no actions are persistent, this should return null. Else the next
+	 * Strategy is determined by the presence of SEQ and uncompleted persistent
+	 * actions.
 	 */
-	Strategy calcNextStrategy(SimpleState agentstate) {
+	Strategy calcNextStrategy() {
 		
 		if (parent == null)
 			// the root strategy itself cannot have any next-strategy:
@@ -107,11 +110,11 @@ public class Strategy {
 	    }
 		
 	    switch(parent.strTy) {
-	       case FIRSTOF : return parent.calcNextStrategy(agentstate) ;
-	       case ANYOF   : return parent.calcNextStrategy(agentstate) ;
+	       case FIRSTOF : return parent.calcNextStrategy() ;
+	       case ANYOF   : return parent.calcNextStrategy() ;
 	       case SEQ     : int k = parent.substrategies.indexOf(this) ;
 			              if (k == parent.substrategies.size() - 1) 
-				              return parent.calcNextStrategy(agentstate) ;
+				              return parent.calcNextStrategy() ;
 			              else
 				              return parent.substrategies.get(k+1) ;
 	    }

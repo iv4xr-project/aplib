@@ -77,9 +77,9 @@ public class AplibEDSL {
 
 	/**
 	 * Lift an {@link nl.uu.cs.aplib.MainConcepts.Action} to become a
-	 * {@link nl.uu.cs.aplib.MainConcepts.Strategy}.
+	 * {@link nl.uu.cs.aplib.MainConcepts.PrimitiveStrategy}.
 	 */
-	static public Strategy lift(Action a) {
+	static public PrimitiveStrategy lift(Action a) {
 		return new PrimitiveStrategy(a) ;
 	}
 }
