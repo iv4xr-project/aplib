@@ -64,6 +64,8 @@ new Thread(() -> agent.loop()) . start()
 
 #### Building with Maven
 
+You need Java-11 or higher.
+
 You can run `mvn` (Maven) at the project root to do the things listed below. Maven will put artifacts it produces under the directory `./target` in the project root.
 
 * To compile the project: `mvn compile`
@@ -77,13 +79,14 @@ You can run `mvn` (Maven) at the project root to do the things listed below. Mav
 * `./src/main/java` : the root of `aplib` Java source code.
 * `./src/test/java` : the root of Java source code of `aplib` unit tests.
 * `./docs/manual` : contain some tutorials and documentations.
+* `./libs` : external jars provided for convenience. You should not need these jars if you build using Maven. They are needed if you want to work on aplib itself and want to just link the jars immediately.
 
 #### License
 
 Copyright (c) 2019, Utrecht University.
 
 `Aplib` is an open source software. It can be used and distributed under the
-[BSD 3-Clause License](./LICENSE).
+[LGPL version 3 license](./lgpl-3.0.md).
 
 #### Credits
 

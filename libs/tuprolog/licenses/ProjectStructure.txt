@@ -1,0 +1,30 @@
+Structure of the project:
+2p
+|---ant					Ant tasks and properties file
+|---build					
+	|---archives		Jar files of the application						[08.package - 08.package.debug]
+		|---net			.NET files of the application (exe, libs, test)		[09.build.NET]
+	|---classes			Application’s .class files							[05.build]
+	|---reports			Reports of the tests								[06.unit.test.report - 07.fit.test]
+		|---fit
+		|---unit
+	|---tests			Tests’ .class files									[05.build.tests]			
+|---doc					Documentation (guide + javadoc)						[10.javadoc]
+|---lib				
+|---release				Package ready for distribution (folder and zip)		[11.release.bin]	
+|---src
+|---test
+	|---fit
+	|---unit
+|---tmp					Temporary directory used during the compilation
+
+Details:
+- "build":				the subdirectories of this one will be filled only when a build or test target is used.
+- "build/archives": 	this directory will be filled only when a build target is used in ant,
+						if the target is the build via ikvm the sub directory "net" will be also created.
+						Note: since other projects dependes on 2p, in the tags folder in the repository you will find
+						2p.jar and tuprolog.jar inside this directory.
+- "release":		in this directory, if the target "11.release.bin" is used, will be created the package of 2p 
+						ready to be distributed in two forms: folder and zip file.
+						The package contains the binaries of 2p (2p.jar and tuprolog.jar), the javadoc, the guide and 
+						the results of tests (unit and acceptance).

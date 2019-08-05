@@ -19,6 +19,13 @@
   </properties>
 
   <dependencies>
+    <!-- tuprolog -->
+    <dependency>
+        <groupId>it.unibo.alice.tuprolog</groupId>
+        <artifactId>tuprolog</artifactId>
+        <version>3.3.0</version>
+    </dependency>
+      
     <!-- Gson for json processing in Java -->
     <dependency>
         <groupId>com.google.code.gson</groupId>
