@@ -59,7 +59,13 @@ public class AplibEDSL {
 	/**
 	 * Creating an Abort action ({@see nl.uu.cs.aplib.MainConcepts.Action.Abort})
 	 */
-	static public Action ABORT() { return new Action.Abort() ; }
+	static public Action Abort() { return new Action.Abort() ; }
+	
+	/**
+	 * Creating a {@link nl.uu.cs.aplib.MainConcepts.PrimitiveStrategy} that
+	 * wraps over an Abort action.
+	 */
+	static public PrimitiveStrategy ABORT() { return lift(new Action.Abort()) ; }
 	
 	/**
 	 * To construct a SEQ {@link nl.uu.cs.aplib.MainConcepts.Strategy}.

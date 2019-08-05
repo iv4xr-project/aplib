@@ -15,6 +15,7 @@ comparable to providing a hint for the agent). A strategy can be composed declar
 **Features:**
 
 * **Fluent interface** style of APIs.
+* Combinators for **high level goal and strategy programming**.
 * **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
 * **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
 * **Prolog binding**: allowing agents to do prolog-based reasoning.
@@ -22,6 +23,8 @@ comparable to providing a hint for the agent). A strategy can be composed declar
 
 Planned features:
 
+* LTL logic (which can be easily built around agents' `update()`
+ method) and runtime verification.
 * Reinforcement learning
 * Search algorithms for solving goals
 * Environment for controlling 3D games
