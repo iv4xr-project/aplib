@@ -243,10 +243,9 @@ public class BasicAgent {
 		Time time0 = new Time() ;
 		time0.sample(); 
 		goal.redistributeRemainingBudget();
-		var goalWhoseBudget_tobeTracked =  currentGoal ;
 		try { updateWorker(time0) ; } 
 		finally {
-			goalWhoseBudget_tobeTracked.addConsumedBudget(time0.elapsedTimeSinceLastSample());
+			// currently nothing to do here..
 		}
 	}
 	
@@ -293,7 +292,10 @@ public class BasicAgent {
 		Object proposal = chosenAction.action.exec1(state) ;
 		currentGoal.goal.propose(proposal);
 		chosenAction.action.invocationCount++ ;
-		chosenAction.action.totalRuntime += time.elapsedTimeSinceLastSample() ;
+		var elapsed = time.elapsedTimeSinceLastSample() ;
+		System.out.println("### elapsed: " + elapsed) ;
+		chosenAction.action.totalRuntime += elapsed ;
+		currentGoal.addConsumedBudget(elapsed);
 		
 		if (currentGoal.goal.getStatus().success()) {
 			currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
