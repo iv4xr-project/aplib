@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import nl.uu.cs.aplib.MultiAgentSupport.Message.MsgCastType;
+
 /**
  * Providing incoming message queue for agents, methods to inspect and retrieve messages
  * from this queue, and also methods to send out messages to a ComNode.
@@ -42,6 +44,14 @@ public class Messenger {
 		return find(p) != null ;
 	}
 	
+	synchronized public boolean empty() {
+		return incomingMsgs.isEmpty() ;
+	}
+	
+	synchronized public int size() {
+		return incomingMsgs.size() ;
+	}
+	
 	/**
 	 * Find a message in this Messenger's input queue that satisfies the predicate
 	 * p. It returns the first one that satisfies it <b>and removes</b> it from the
@@ -67,4 +77,8 @@ public class Messenger {
 		return comNode.send(m.timestamp()) ;
 	}
 	
+	public Acknowledgement send(String idSource, int priority, MsgCastType castType, String idTarget, String msgName, Object ... args) {
+		var m = new Message(idSource,priority,castType,idTarget,msgName,args) ;
+		return send(m) ;
+	}
 }
