@@ -198,10 +198,11 @@ public class GoalTree {
 	}
 	
 	/**
-	 * Add delta to the tracked amount of consumed budget.
+	 * Register that the agent has consumed the given amount of budget.
 	 */
 	void addConsumedBudget(float delta) {
 		consumedBudget += delta ;
+		remainingBudget -= delta ;
 		if (! isTopGoal()) parent.addConsumedBudget(delta);
 	}
 	

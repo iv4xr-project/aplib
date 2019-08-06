@@ -242,7 +242,7 @@ public class BasicAgent {
 		// if goal is not null, currentGoal should not be null either
 		Time time0 = new Time() ;
 		time0.sample(); 
-		goal.redistributeRemainingBudget();
+		//goal.redistributeRemainingBudget();
 		try { updateWorker(time0) ; } 
 		finally {
 			// currently nothing to do here..
@@ -250,21 +250,6 @@ public class BasicAgent {
 	}
 	
 	private void updateWorker(Time time) {
-		
-		if (currentGoal.remainingBudget <= 0d) {
-			currentGoal.setStatusToFail("Running out of budget.");
-			//System.err.println(">> Running out of budget.") ;
-			currentGoal = currentGoal.getNextPrimitiveGoal() ;
-			if (currentGoal == null) {
-				setTopGoalToFail("Some subgoal has run out of budget and there is no alternative subgoal towards solving the topgoal.");
-				//System.err.println(">> setting topgoal to fail...") ;
-				//System.err.println(">> status topgoal:"  + goal.status) ;
-				return ;
-			}
-		 	else {
-				currentStrategy = currentGoal.goal.getStrategy() ;
-			}
-		}
 		
 		// update the agent's state:
 		state.upateState() ;
@@ -293,10 +278,10 @@ public class BasicAgent {
 		currentGoal.goal.propose(proposal);
 		chosenAction.action.invocationCount++ ;
 		var elapsed = time.elapsedTimeSinceLastSample() ;
-		System.out.println("### elapsed: " + elapsed) ;
+		//System.out.println("### elapsed: " + elapsed) ;
 		chosenAction.action.totalRuntime += elapsed ;
 		currentGoal.addConsumedBudget(elapsed);
-		
+				
 		if (currentGoal.goal.getStatus().success()) {
 			currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
 			if (goal.getStatus().success())  {
@@ -306,18 +291,36 @@ public class BasicAgent {
 			}
 			currentGoal = currentGoal.getNextPrimitiveGoal() ;
 			if (currentGoal != null) currentStrategy = currentGoal.goal.getStrategy() ;
+			goal.redistributeRemainingBudget();
 			return ;
 		}
-		
-		// goal is not completed; update the currentStrategy for the next tick:
 		else {
-			if(chosenAction.action.isCompleted()) {
-				currentStrategy = chosenAction.calcNextStrategy() ;
-				// if no strategy can be found, reset it to the root strategty of the goal:
-				if (currentStrategy == null) currentStrategy = currentGoal.goal.getStrategy() ;
-			}
+			// else the goal is not solved yet; check first if its budget is exhausted:
+			if (currentGoal.remainingBudget <= 0d) {
+				currentGoal.setStatusToFail("Running out of budget.");
+				System.out.println("## Running out of budget.") ;
+				goal.redistributeRemainingBudget();
+				currentGoal = currentGoal.getNextPrimitiveGoal() ;
+				if (currentGoal == null) {
+					setTopGoalToFail("Some subgoal has run out of budget and there is no alternative subgoal towards solving the topgoal.");
+					//System.err.println(">> setting topgoal to fail...") ;
+					//System.err.println(">> status topgoal:"  + goal.status) ;
+					return ;
+				}
+			 	else {
+					currentStrategy = currentGoal.goal.getStrategy() ;
+				}
+			}	
 			else {
-				currentStrategy = chosenAction ;
+				// the budget is not exhausted; then update the currentStrategy for the next tick:	
+				if(chosenAction.action.isCompleted()) {
+					currentStrategy = chosenAction.calcNextStrategy() ;
+					// if no strategy can be found, reset it to the root strategty of the goal:
+					if (currentStrategy == null) currentStrategy = currentGoal.goal.getStrategy() ;
+				}
+				else {
+					currentStrategy = chosenAction ;
+				}
 			}
 		}
 	}

@@ -23,10 +23,13 @@ public class Test_BasicAgent_budgeting {
 	}
 	
 	@Test
-	public void test1() {
+	public void test_simplescenario() {
+		// test with a single action and one simple goal, with the action exhausting the budget.
+		
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
 	   
+		
 	    // an action that thinks too long:
 	    var a0 = action("a0").do_((MyState S)->actionstate-> {
 	    	      S.counter++ ; 
@@ -37,14 +40,97 @@ public class Test_BasicAgent_budgeting {
 				      .withBudget(100); 
 		
 		agent.setGoal(topgoal) ;
-		// this agent will time out, but this won't be detected in the first update
-		agent.update();
-        assertTrue(topgoal.getStatus().inProgress()) ;
+		//System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+
 		agent.update();
         assertTrue(topgoal.getStatus().failed()) ;
-	    assertTrue(agent.goal == null) ;
-	    assertTrue(agent.currentGoal == null) ;
-				      
+		assertTrue(agent.goal == null) ;
+	    assertTrue(agent.currentGoal == null) ;			      
+	}
+	
+	@Test
+	public void test_exhaustingbudget_on_multiplegoals() {
+		// a goal of the form FIRSTof(g1,g2), where g1 exhausts its budget
+		
+		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
+		var agent = new BasicAgent() .attachState(state);
+	   
+		
+	    // an action that thinks too long:
+	    var a0 = action("a0").do_((MyState S)->actionstate-> {
+	    	      S.counter = 5 ; 
+	    	      sleepx(800); 
+	    	      return S.counter ; }) ;
+	    
+	    var a1 = action("a1").do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
+	    
+	    var g1 = lift(goal("g1").toSolve((Integer k) -> k==6) . withStrategy(lift(a0))) ;
+	    var g2 = lift(goal("g2").toSolve((Integer k) -> k==7) . withStrategy(lift(a1))) ;
+	    var topgoal = FIRSTof(g1,g2).withBudget(1000) ;
+	    
+	    agent.setGoal(topgoal) ;
+	    System.out.println("===x 0 state:" + state.counter) ;
+		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
+		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
+		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
+		System.out.println(">>> used budget g1 " + g1.consumedBudget) ;
+		System.out.println(">>> used budget g2 " + g2.consumedBudget) ;
+		System.out.println(">>> status top " + topgoal.getStatus()) ;
+		System.out.println(">>> status g1 " + g1.getStatus()) ;
+		System.out.println(">>> status g2 " + g2.getStatus()) ;
+		assertTrue(agent.currentGoal == g1) ;
+
+	    agent.update();
+	    System.out.println("=== 1 state:" + state.counter) ;
+		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
+		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
+		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
+		System.out.println(">>> used budget g1 " + g1.consumedBudget) ;
+		System.out.println(">>> used budget g2 " + g2.consumedBudget) ;
+		System.out.println(">>> status top " + topgoal.getStatus()) ;
+		System.out.println(">>> status g1 " + g1.getStatus()) ;
+		System.out.println(">>> status g2 " + g2.getStatus()) ;
+		assertTrue(agent.currentGoal == g2) ;
+		assertTrue(state.counter == 5) ;
+	    assertTrue(g1.getStatus().failed()) ;
+		assertTrue(topgoal.getStatus().inProgress()) ;
+		
+		
+		agent.update();
+	    System.out.println("=== 2 state:" + state.counter) ;
+		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
+		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
+		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
+		System.out.println(">>> used budget g1 " + g1.consumedBudget) ;
+		System.out.println(">>> used budget g2 " + g2.consumedBudget) ;
+		System.out.println(">>> status top " + topgoal.getStatus()) ;
+		System.out.println(">>> status g1 " + g1.getStatus()) ;
+		System.out.println(">>> status g2 " + g2.getStatus()) ;
+		assertTrue(agent.currentGoal == g2) ;
+		assertTrue(state.counter == 6) ;
+	    assertTrue(g1.getStatus().failed()) ;
+		assertTrue(topgoal.getStatus().inProgress()) ;
+		
+
+		agent.update() ;
+		System.out.println("=== 3 state:" + state.counter) ;
+		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
+		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
+		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
+		System.out.println(">>> used budget g1 " + g1.consumedBudget) ;
+		System.out.println(">>> used budget g2 " + g2.consumedBudget) ;
+		System.out.println(">>> status top " + topgoal.getStatus()) ;
+		System.out.println(">>> status g1 " + g1.getStatus()) ;
+		System.out.println(">>> status g2 " + g2.getStatus()) ;
+		assertTrue(state.counter == 7) ;
+	    assertTrue(g1.getStatus().failed()) ;
+		assertTrue(topgoal.getStatus().success()) ;
+		assertTrue(agent.currentGoal == null) ;
+		
 	}
 
 }
