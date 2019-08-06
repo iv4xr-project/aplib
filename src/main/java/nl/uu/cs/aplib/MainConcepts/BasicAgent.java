@@ -109,6 +109,12 @@ public class BasicAgent {
 	
 	protected Logger logger = Logging.getAPLIBlogger() ;
 	
+	/**
+	 * A time tracker used to calculated the agent's actions' execution time for the purpose
+	 * of budget calculation. This is declared as an explicit field so that it can be
+	 * conveniently mocked during testing (you have to test from the same package).
+	 */
+	protected Time mytime = new Time() ;
 	
 	/**
 	 * Create a blank agent. You will need to at least attach a {@link SimpleState} and 
@@ -240,16 +246,15 @@ public class BasicAgent {
 			return ;
 		}
 		// if goal is not null, currentGoal should not be null either
-		Time time0 = new Time() ;
-		time0.sample(); 
+		mytime.sample(); 
 		//goal.redistributeRemainingBudget();
-		try { updateWorker(time0) ; } 
+		try { updateWorker() ; } 
 		finally {
 			// currently nothing to do here..
 		}
 	}
 	
-	private void updateWorker(Time time) {
+	private void updateWorker() {
 		
 		// update the agent's state:
 		state.upateState() ;
@@ -277,7 +282,7 @@ public class BasicAgent {
 		Object proposal = chosenAction.action.exec1(state) ;
 		currentGoal.goal.propose(proposal);
 		chosenAction.action.invocationCount++ ;
-		var elapsed = time.elapsedTimeSinceLastSample() ;
+		var elapsed = mytime.elapsedTimeSinceLastSample() ;
 		//System.out.println("### elapsed: " + elapsed) ;
 		chosenAction.action.totalRuntime += elapsed ;
 		currentGoal.addConsumedBudget(elapsed);
@@ -298,7 +303,7 @@ public class BasicAgent {
 			// else the goal is not solved yet; check first if its budget is exhausted:
 			if (currentGoal.remainingBudget <= 0d) {
 				currentGoal.setStatusToFail("Running out of budget.");
-				System.out.println("## Running out of budget.") ;
+				//System.out.println("## Running out of budget.") ;
 				goal.redistributeRemainingBudget();
 				currentGoal = currentGoal.getNextPrimitiveGoal() ;
 				if (currentGoal == null) {

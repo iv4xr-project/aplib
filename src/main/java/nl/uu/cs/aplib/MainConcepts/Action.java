@@ -115,9 +115,10 @@ public class Action {
 	 * Interface style.
 	 */
 	public Action until__(Function<SimpleState,Predicate<Action>> guard) {
-		if (action == null) throw new IllegalArgumentException("the action is null") ;
+		if (this.action == null) throw new IllegalArgumentException("the action is null") ;
+		var action_ = this.action ;
 		Function<SimpleState,Function<Action,Object>> a = s -> y -> {
-			var o = action.apply(s).apply(y) ;
+			var o = action_.apply(s).apply(y) ;
 			if (guard.apply(s).test(y)) {
 				y.completed = true ;
 			}

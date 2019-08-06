@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.* ;
 
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.MainConcepts.GoalTree.*;
+import nl.uu.cs.aplib.Utils.Time;
 
 
 
@@ -126,6 +127,41 @@ public class Test_BasicAgent {
 	    assertTrue(g1.getStatus().success()) ;					
 	    assertTrue(g2.getStatus().success()) ;	
 	    assertTrue(g3.getStatus().inProgress()) ;			
+	}
+	
+	@Test
+	public void test_persistentAction() {
+		// testing of action that insist on multiple ticks to execute
+		
+		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
+		var agent = new BasicAgent() .attachState(state);
+		var a0 = action("a0")
+				 .do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+				 .until_((MyState S)->actionstate-> S.counter == 2)
+				 .lift() ;
+		
+		var a1 = action("a1")
+				 .do_((MyState S)->actionstate-> {S.counter = -1 ; return S.counter ; }) 
+				 .lift();
+		
+		var topgoal = lift(goal("g").toSolve((Integer k) -> k==-1) 
+				      . withStrategy(SEQ(a0,a1))) ;
+		
+		agent .setGoal(topgoal);
+		
+	    agent.update() ;  
+	    assertTrue(state.counter == 1) ;
+		assertTrue(topgoal.getStatus().inProgress()) ;
+		
+	    agent.update() ;  
+	    assertTrue(state.counter == 2) ;
+		assertTrue(topgoal.getStatus().inProgress()) ;	
+		
+		agent.update() ;  
+	    assertTrue(state.counter == -1) ;
+		assertTrue(topgoal.getStatus().success()) ;	
+		
+		
 	}
 
 }
