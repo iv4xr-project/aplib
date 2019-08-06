@@ -185,9 +185,11 @@ public class Action {
 	
 	/**
 	 * A special Action. When an agent executes this Action from within a
-	 * {@link Strategy}, it will cause the entire Strategy (all the way to the root
-	 * Strategy) to be aborted, and whatever the top-level Goal the agent is
-	 * currently work on is marked as failed.
+	 * {@link Strategy}, it will cause the current goal to be considered as
+	 * being failed. Note that this only fails the current goal. This does
+	 * not necessarily mean that the top-goal will fail as well. E.g if
+	 * g = FIRSTof(g1,g2); if g1 fails, g2 might still succeed, hence solving
+	 * g.
 	 */
 	static public class Abort extends Action {
 		public Abort() { }

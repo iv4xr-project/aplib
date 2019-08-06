@@ -137,8 +137,7 @@ Choosing one action from a set of candidates in step-3 is called  **deliberation
 
 ### Abort action
 
-Sometimes it is better to just give up on a goal, rather than wasting computing budget on it. To allow this, a strategy can include a special action called abort (which can also be guarded). If invoked, it will mark the top-level goal-tree as failed. The goal is the detached from then agent.
-
+Sometimes it is better to just give up on a goal, rather than wasting computing budget on it. To allow this, a strategy can include a special action called abort (which can also be guarded). If invoked, it will mark the current goal as being failed. Note that this does not necessarily mean that the topgoal will fail as well. E.g. if the topgoal is g = **FIRSTof**(g1,g2), if g1 fails, g2 might still succeed and hence still solving g.
 
 ### Persistent action
 

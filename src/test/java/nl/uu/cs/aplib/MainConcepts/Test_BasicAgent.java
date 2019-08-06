@@ -30,8 +30,13 @@ public class Test_BasicAgent {
 	    assertTrue(agent.currentGoal == null) ;
 	    
 	    // ok let's now give a goal:
-	    var a0 = action("a0").do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
-		var topgoal = lift(goal("g").toSolve((Integer k) -> k==2) . withStrategy(lift(a0))) ;
+	    var a0 = action("a0")
+	    		 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+	    		 . lift() ;
+		var topgoal = goal("g").toSolve((Integer k) -> k==2) 
+				      . withStrategy(a0) 
+				      . lift() ;
+		
 	    agent .setGoal(topgoal);
 	    agent.update() ;    
 	    assertTrue(state.counter == 1) ;
@@ -48,13 +53,17 @@ public class Test_BasicAgent {
 	public void test_abort() {
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
+		
+		// scenario with just a single goal, which is aborted:
 		var a0 = action("a0")
-				 .do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
+				 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+				 . lift() ;
 		
-		var topgoal = lift(goal("g").toSolve((Integer k) -> k==2) 
-			          . withStrategy(SEQ(lift(a0), ABORT() ))) ;
+		var topgoal =  goal("g").toSolve((Integer k) -> k==2) 
+			          . withStrategy(SEQ(a0, ABORT() )) 
+			          . lift() ;
 		
-		agent .setGoal(topgoal);
+		agent.setGoal(topgoal);
 		agent.update() ;    
 		assertTrue(state.counter == 1) ;
 		assertTrue(topgoal.getStatus().inProgress()) ;
@@ -63,22 +72,47 @@ public class Test_BasicAgent {
 		assertTrue(topgoal.getStatus().failed()) ;
 		assertTrue(agent.goal == null) ;
 		assertTrue(agent.currentGoal == null) ; 
+		
+		
+		// a scenario FIRSTof(g1,g2) ... g1 is aborted
+		state.counter = 0 ;
+		var g1 = goal("g1").toSolve((Integer k) -> true).withStrategy(ABORT()).lift() ;
+		var g2 = goal("g2").toSolve((Integer k) -> k==1).withStrategy(a0).lift() ;
+		var topgoal2 = FIRSTof(g1,g2) ;
+		
+		agent.setGoal(topgoal2);
+		
+		agent.update() ;    
+		assertTrue(state.counter == 0) ;
+		assertTrue(g1.getStatus().failed()) ;
+		assertTrue(topgoal2.getStatus().inProgress()) ;
+		
+		agent.update();
+		assertTrue(state.counter == 1) ;
+		assertTrue(g1.getStatus().failed()) ;
+		assertTrue(g2.getStatus().success()) ;	
+		assertTrue(topgoal2.getStatus().success()) ;	
 	}
+	
 	
 	@Test
 	public void test_with_multipleActions() {
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
 		var a0 = action("a0")
-				 .do_((MyState S)->actionstate-> {S.counter++ ; S.last = "a0" ; return S.counter ; })
-				 .on_((MyState S) -> S.counter % 2 == 0) ;
+				 . do_((MyState S)->actionstate-> {S.counter++ ; S.last = "a0" ; return S.counter ; })
+				 . on_((MyState S) -> S.counter % 2 == 0) 
+				 . lift() ;
+		
 		var a1 = action("a1")
-				.do_((MyState S)->actionstate-> {S.counter++ ; S.last = "a1" ; return S.counter ; })
-				.on_((MyState S) -> S.counter % 2 == 1) ;
+				. do_((MyState S)->actionstate-> {S.counter++ ; S.last = "a1" ; return S.counter ; })
+				. on_((MyState S) -> S.counter % 2 == 1) 
+				. lift() ;	
 		
+		var topgoal = goal("g").toSolve((Integer k) -> k==2) 
+				      . withStrategy(FIRSTof(a0,a1))
+				      . lift() ;
 		
-		var topgoal = lift(goal("g").toSolve((Integer k) -> k==2) 
-				      . withStrategy(FIRSTof(lift(a0),lift(a1)))) ;
 		agent .setGoal(topgoal);
 	    agent.update() ;    
 	    assertTrue(state.counter == 1) ;
@@ -90,8 +124,9 @@ public class Test_BasicAgent {
 	    assertTrue(topgoal.getStatus().success()) ;
 	    
 	    state.counter = 1 ;
-	    topgoal = lift(goal("g").toSolve((Integer k) -> k==2) 
-				  . withStrategy(SEQ(lift(a0),lift(a1)))) ;
+	    topgoal = goal("g").toSolve((Integer k) -> k==2) 
+				  . withStrategy(SEQ(a0,a1))
+				  . lift() ;
 		agent .setGoal(topgoal);
 	    agent.update() ;  
 	    assertTrue(state.counter == 1) ;
@@ -104,12 +139,12 @@ public class Test_BasicAgent {
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
 		var a0 = action("a0")
-				 .do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
-		
-		
-		var g1 = lift(goal("g1").toSolve((Integer k) -> k==1) . withStrategy(lift(a0))) ;
-		var g2 = lift(goal("g2").toSolve((Integer k) -> k==2) . withStrategy(lift(a0))) ;
-		var g3 = lift(goal("g3").toSolve((Integer k) -> k==3) . withStrategy(lift(a0))) ;
+				 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+				 . lift();
+			
+		var g1 = goal("g1").toSolve((Integer k) -> k==1) . withStrategy(a0) . lift() ;
+		var g2 = goal("g2").toSolve((Integer k) -> k==2) . withStrategy(a0) . lift()  ;
+		var g3 = goal("g3").toSolve((Integer k) -> k==3) . withStrategy(a0) . lift()  ;
 
 		var topgoal = FIRSTof(SEQ(g1,g2), g3) ;
 			
@@ -144,8 +179,9 @@ public class Test_BasicAgent {
 				 .do_((MyState S)->actionstate-> {S.counter = -1 ; return S.counter ; }) 
 				 .lift();
 		
-		var topgoal = lift(goal("g").toSolve((Integer k) -> k==-1) 
-				      . withStrategy(SEQ(a0,a1))) ;
+		var topgoal = goal("g").toSolve((Integer k) -> k==-1) 
+				      . withStrategy(SEQ(a0,a1))
+				      . lift() ;
 		
 		agent .setGoal(topgoal);
 		
@@ -160,8 +196,6 @@ public class Test_BasicAgent {
 		agent.update() ;  
 	    assertTrue(state.counter == -1) ;
 		assertTrue(topgoal.getStatus().success()) ;	
-		
-		
 	}
 
 }
