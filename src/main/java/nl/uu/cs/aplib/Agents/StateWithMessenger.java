@@ -12,7 +12,7 @@ import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
  * @author Wish
  *
  */
-public class StateWithMessanger extends SimpleState {
+public class StateWithMessenger extends SimpleState {
 	
 	/**
 	 * A {@link nl.uu.cs.aplib.MultiAgentSupport.Messenger} buffers incoming
@@ -22,11 +22,10 @@ public class StateWithMessanger extends SimpleState {
 	 */
 	Messenger messenger = new Messenger() ;
 
-	public StateWithMessanger() { super() ; }
+	public StateWithMessenger() { super() ; }
 	
 	/**
 	 * Return the messenger associated to this state.
-	 * @return
 	 */
-	public Messenger messanger() {return messenger ; }
+	public Messenger messenger() {return messenger ; }
 }

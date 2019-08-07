@@ -40,7 +40,7 @@ public class Messenger {
 	 * Check this Messenger's input queue if it contains a message satisfying the
 	 * predicate p. It returns the first one that satisfies it. 
 	 */
-	synchronized public boolean test(Predicate<Message> p) {
+	synchronized public boolean has(Predicate<Message> p) {
 		return find(p) != null ;
 	}
 	
@@ -57,7 +57,7 @@ public class Messenger {
 	 * p. It returns the first one that satisfies it <b>and removes</b> it from the
 	 * queue. If none is found, null is returned.
 	 */
-	synchronized public Message findOneAndRetrieve(Predicate<Message> p) {
+	synchronized public Message retrieve(Predicate<Message> p) {
 		Message m = find(p) ;
 		if (m != null) incomingMsgs.remove(m) ;
 		return m ;

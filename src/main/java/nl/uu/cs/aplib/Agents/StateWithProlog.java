@@ -8,7 +8,7 @@ import alice.tuprolog.Struct;
 import alice.tuprolog.Term;
 import alice.tuprolog.Theory;
 
-public class StateWithProlog extends StateWithMessanger {
+public class StateWithProlog extends StateWithMessenger {
 	
 	Prolog prolog = new Prolog() ;
 	
