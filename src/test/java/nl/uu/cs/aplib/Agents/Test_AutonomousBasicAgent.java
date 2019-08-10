@@ -16,6 +16,7 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.Agents.Test_InterAgentCommunication.MyState;
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.Environments.NullEnvironment;
 import nl.uu.cs.aplib.MainConcepts.*;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
@@ -38,6 +39,10 @@ public class Test_AutonomousBasicAgent {
 		catch(Exception e) { return null ; }
 	}
 	
+	static void deleteLogFile(String file) {
+		try { Files.delete(Paths.get(file)); }
+		catch(Exception e) { }
+	}
 	
 	@Test
 	public void test_pause_resume_stop(){
@@ -49,7 +54,7 @@ public class Test_AutonomousBasicAgent {
 		
 		Logging.attachLogFile("mylog.txt");
 		
-		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
 		var agent = new AutonomousBasicAgent("agent","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(100)
@@ -90,8 +95,7 @@ public class Test_AutonomousBasicAgent {
 		assertTrue(log.contains("agent is stopping")) ;
 		
 		// clean up
-		try { Files.delete(Paths.get("mylog.txt")); }
-		catch(Exception e) { }
+		deleteLogFile("mylog.txt") ;
 	}
 	
 	@Test
@@ -100,14 +104,14 @@ public class Test_AutonomousBasicAgent {
 		Logging.attachLogFile("mylog1.txt");
 		
 		var comNode = new ComNode() ;
-		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
 		var agent1 = new AutonomousBasicAgent("agent1","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(100)
 				    . registerTo(comNode) ;
 		
 		var agent2 = new AutonomousBasicAgent("neo","programmer") 
-				     .attachState(new MyState().setEnvironment(new ConsoleEnvironment())) 
+				     .attachState(new MyState().setEnvironment(new NullEnvironment())) 
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")
@@ -119,13 +123,13 @@ public class Test_AutonomousBasicAgent {
 		agent1.setGoal(g) ;
 		
 		// run the agent autonomously:
-				new Thread(() -> agent1.loop()) . start() ;
-				while(state.counter == 0) {
-					try {
-						Thread.sleep(100);
-					}
-					catch(Exception e) { }
-				}
+		new Thread(() -> agent1.loop()) . start() ;
+		while(state.counter == 0) {
+			try {
+				Thread.sleep(100);
+			}
+			catch(Exception e) { }
+		}
 				
 		// command the agent to pause, then awaken it with msg
 		agent1.pause() ; sleepx(1000) ;
@@ -144,8 +148,103 @@ public class Test_AutonomousBasicAgent {
 		assertTrue(log.contains("agent1 is stopping")) ;
 		
 		// clean up
-		try { Files.delete(Paths.get("mylog1.txt")); }
-		catch(Exception e) { }
+		deleteLogFile("mylog1.txt") ;
 	}
-
+	
+	@Test
+	public void test_setgoal_awaken_suspendedAgent() {
+		// test that an agent that is suspended because it has no goal will indeed be awaken
+		// by setgoal
+        Logging.attachLogFile("mylog2.txt");
+		
+		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var agent = new AutonomousBasicAgent("agent","sentinel") 
+				    . attachState(state) 
+				    . setSamplingInterval(100)
+				    ;
+		
+		var a0 = action("a0")
+				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . lift() ;
+		
+		var g = goal("g").toSolve((Integer x) -> false).withStrategy(a0) . lift() ;
+		
+		// run the agent autonomously:
+		new Thread(() -> agent.loop()) . start() ;
+		
+		sleepx(1000) ;
+		agent.setGoal(g) ;
+		sleepx(1000) ;
+		agent.stop() ; 
+		sleepx(1000) ;
+		
+		String log = readTxtFile("mylog2.txt") ;
+		assertTrue(log.contains("agent identifies a goal")) ;
+		assertTrue(log.contains("agent is stopping")) ;
+		
+		// cleanup
+		deleteLogFile("mylog2.txt") ;
+	}
+	
+	@Test
+	public void test_waitUntilTheGoalIsConcluded() {
+		
+		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var agent = new AutonomousBasicAgent("agent","sentinel") 
+				    . attachState(state) 
+				    . setSamplingInterval(100)
+				    ;
+		
+		var a0 = action("a0")
+				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . lift() ;
+		
+		var g = goal("g").toSolve((Integer x) -> x==10).withStrategy(a0) . lift() ;
+		
+		// run the agent autonomously:
+		new Thread(() -> agent.loop()) . start() ;
+		
+		agent.setGoal(g) ;
+		
+		agent.waitUntilTheGoalIsConcluded() ;
+		assertTrue(g.getStatus().success()) ;
+		agent.stop() ; 
+						
+	}
+	
+	@Test
+	public void test_awakening_betweenTicksSleep() {
+		// test that when an agent sleeps between ticks, a msg will awaken it
+		
+		var comNode = new ComNode() ;
+		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var agent1 = new AutonomousBasicAgent("agent1","sentinel") 
+				    . attachState(state) 
+				    . setSamplingInterval(60000) // set a very long between-ticks sleep
+				    . registerTo(comNode) ;
+		
+		var agent2 = new AutonomousBasicAgent("neo","programmer") 
+				     .attachState(new MyState().setEnvironment(new NullEnvironment())) 
+				     .registerTo(comNode) ;
+		
+		var a0 = action("a0")
+				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . lift() ;
+		
+		var g = goal("g").toSolve((Integer x) -> x==2).withStrategy(a0) . lift() ;
+		
+		agent1.setGoal(g) ;
+		
+		// run the agent autonomously, it should enter a long sleep at the end of the first update()
+		new Thread(() -> agent1.loop()) . start() ;
+		sleepx(1000) ;
+		// now test if a msg awaken it:
+		agent2.messenger().send("neo",0, MsgCastType.SINGLECAST, "agent1","blabla") ;
+		// agent1 should now be awaken, does its 2nd update(), and solve the goal
+		sleepx(1000) ;
+		assertTrue(g.getStatus().success()) ;
+		
+		agent1.stop();
+	}
+	
 }

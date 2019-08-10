@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.* ;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.Environments.NullEnvironment;
 import nl.uu.cs.aplib.MainConcepts.*;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
@@ -27,11 +28,10 @@ public class Test_InterAgentCommunication {
 		// test for simple sending and recieving, in a system of three agents. We will
 		// set them as subservient.
 		
-		var env = new ConsoleEnvironment() ;
 		var comNode = new ComNode() ;
 		
 		// agent-1 will be sending 3x messages, 1x singlecase, 1x broadcase, and 1x rolecast:
-		var state1 = new MyState().setEnvironment(env) ;
+		var state1 = new MyState().setEnvironment(new NullEnvironment()) ;
 		var agent1 = new AutonomousBasicAgent("D1","teacher")
 				    . attachState(state1)
 				    . registerTo(comNode) ;
@@ -61,7 +61,7 @@ public class Test_InterAgentCommunication {
 		agent1.setGoal(g1) ;
 		
 		// agent 2 will receive 1x, of category BC:
-		var state2 = new MyState().setEnvironment(env) ;	
+		var state2 = new MyState().setEnvironment(new NullEnvironment()) ;	
 		var agent2 = new AutonomousBasicAgent("P1","student")
 				     . attachState(state2)
 				     . registerTo(comNode) ;
@@ -76,7 +76,7 @@ public class Test_InterAgentCommunication {
 		
 		// agent 3 does nothing, though it will still register to the comNode, hence receiving
 		// messages:
-		var state3 = new MyState().setEnvironment(env) ;	
+		var state3 = new MyState().setEnvironment(new NullEnvironment()) ;	
 		var agent3 = new AutonomousBasicAgent("P2","unknown")
 				     . attachState(state3)
 				     . registerTo(comNode) ;
@@ -111,4 +111,24 @@ public class Test_InterAgentCommunication {
 		assertFalse(state3.messenger.has(M -> M.getMsgName().equals("RC"))) ;
 	}
 
+	@Test
+	public void test_rejectedSend() {
+		//test that when an agent A tries to send a single-cast msg to an agent that is
+		// not registered to A's comNode, this should be rejected
+		var comNode = new ComNode() ;
+		
+		// agent-1 will be sending 3x messages, 1x singlecase, 1x broadcase, and 1x rolecast:
+		var state1 = new MyState().setEnvironment(new NullEnvironment()) ;
+		var agent1 = new AutonomousBasicAgent("D1","teacher")
+				    . attachState(state1)
+				    . registerTo(comNode) ;
+		
+		// create agent-2, NOT registered to the comNode
+		var state2 = new MyState().setEnvironment(new NullEnvironment()) ;	
+		var agent2 = new AutonomousBasicAgent("P1","student")
+				     . attachState(state2) ;
+		
+		var ack = agent1.messenger().send("D1",0,MsgCastType.SINGLECAST,"P1","blabla") ;
+		assertFalse(ack.success()) ;
+	}
 }

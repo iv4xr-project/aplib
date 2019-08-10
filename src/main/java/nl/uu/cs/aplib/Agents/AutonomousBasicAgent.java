@@ -247,7 +247,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 			loopWorker() ;
 		}
 		catch(Throwable t) {
-			log(Level.WARNING,"Agent " + id + " abort its loop due to exception " +  t) ;		
+			log(Level.WARNING,"Agent " + id + " aborts its loop due to exception " +  t) ;		
 		}
 		finally { }
 	}
