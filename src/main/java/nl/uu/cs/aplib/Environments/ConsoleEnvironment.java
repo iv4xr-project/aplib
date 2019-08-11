@@ -22,14 +22,14 @@ public class ConsoleEnvironment extends Environment {
 	/**
 	 * Write a string to the console.
 	 */
-	public void println(String str) {
+	public synchronized void println(String str) {
 		System.out.println(str) ;
 	}
 	
 	/**
 	 * Read a line from the console.
 	 */
-	public String readln() {
+	public synchronized String readln() {
 		return  consoleInput.nextLine() ;
 	}
 	
@@ -37,7 +37,7 @@ public class ConsoleEnvironment extends Environment {
 	 * Write the string s to the console (e.g. it could formulate a question), and
 	 * then read a line from the console.
 	 */
-	public String ask(String s) {
+	public synchronized String ask(String s) {
 		println(s) ; return readln() ;
 	}
 	

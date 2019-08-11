@@ -7,7 +7,7 @@ _Note:_ as it is now, `aplib` is still under development. As we go, we will add 
 
 `Aplib` is inspired by the [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming, though it does not try to be a BDI purist approach. What is important in `aplib` design is its programmability. There are indeed many dedicated agent programming languages, but most of them do not have enough support to be integrated with real life applications. We therefore intentionally develop `aplib` as a library in Java, knowing that the latter already has large and rich supports in terms of library, software tools, and user base. Compared to e.g. [JADE](https://jade.tilab.com/) (Java Agent Development Framework) `aplib` is of much lighter weight, but on the other hand `aplib` tries to exploit features from more recent Java, e.g. lambda expression, to make agent programming cleaner.
 
-An **agent** is essentially a program that is used to influence an environment towards a certain goal. This environment itself may be autonomous and non-deterministic, which makes the task of controlling it even more challenging for the agent.
+An **agent** is essentially a program that is used to influence an environment towards a certain goal. This 'environment' can be another program, or some hardware, or a human user interacting through some interface. While some environment may be passive, completely controlled by the agent, some others may be autonomous and non-deterministic, which makes the task of controlling it indeed more challenging for the agent.
 
 `Aplib` allows **an agent to be programmed by specifying a goal that it has to solve, and a strategy to solve it** (these correspond to _desire_ and _intent_ in BDI terminology, whereas _belief_ corresponds to the agent's state ). There are 'combinators' (constructors) available to compose a complex goal from subgoals (or in other words, to break a complex goal into subgoals; providing a subgoal is
 comparable to providing a hint for the agent). A strategy can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex strategy from simpler ones.
@@ -23,8 +23,8 @@ comparable to providing a hint for the agent). A strategy can be composed declar
 
 Planned features:
 
-* LTL logic (which can be easily built around agents' `update()`
- method) and runtime verification.
+* LTL logic (which can be easily built around the environment's `sendcommand()`
+ method) for runtime verification and model checking (through subservient mode).
 * Reinforcement learning
 * Search algorithms for solving goals
 * Environment for controlling 3D games

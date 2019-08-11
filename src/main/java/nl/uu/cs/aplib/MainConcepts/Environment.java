@@ -61,7 +61,7 @@ public class Environment {
 	 * 
 	 *         The method may also throws a runtime exception.
 	 */
-	protected String sendCommand_(String id, String command, String arg) {
+	protected synchronized String sendCommand_(String id, String command, String arg) {
 		throw new UnsupportedOperationException() ;
 	}
 		

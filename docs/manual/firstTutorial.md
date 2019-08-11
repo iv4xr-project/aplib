@@ -3,7 +3,9 @@ Author: Wishnu Prasetya
 
 `Aplib` is implemented in Java-11, so you need it.
 
-In a nutshell an agent is just a program. Agents can indeed be programmed to behave intelligently ---the so-called intelligent agents; but let’s for now focus on just plain agents. `Aplib` defines an agent as a stateful program that interacts with an environment with the purpose of solving some problem relevant for the environment. Environment is an important concept in `aplib` programming: without an environment an agent has no reason to exist, just like an enginner would have no reason to be an engineer if there is no project he/she can work on.
+In a nutshell an agent is just a program. Agents can indeed be programmed to behave intelligently ---the so-called intelligent agents; but let’s for now focus on just plain agents. `Aplib` defines an agent as a stateful program that interacts with an environment with the purpose of solving some problem relevant for the environment.
+This 'environment' can be another program, or some hardware, or a human user interacting through some interface. While some environment may be passive, completely controlled by the agent, some others may be autonomous and non-deterministic, which makes the task of controlling it indeed more challenging for the agent.
+Environment is an important concept in `aplib` programming: without an environment an agent has no reason to exist, just like an enginner would have no reason to be an engineer if there is no project he/she can work on. 
 
 There is however no quick Hello-World example to show you how to use `aplib`. Let me guide you on how to create a minimalistic agent; it won't do anything spectacular, it will do as an example.
 

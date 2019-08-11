@@ -5,7 +5,9 @@ Author: Wishnu Prasetya, Utrecht University, 2019
 
 ### Agent
 
-We define an **agent**, in the nutshell, as a stateful program that interacts with an **environment**. The environment itself is also a stateful program that runs autonomously. The purpose of an agent is to solve some problem over the environment.
+We define an **agent-based system** as a system consisting of an **environment** and one or more agents trying to control the environment. This environment can be a physical device, or another software, or humans connected to the agents through some interface. Conceptually, such an environment can be regarded as an **stateful** and **autonomous** program ('autonomous' means that it can at anytime change its state on its own decision). It may even be non-deterministic.
+
+An **agent**, in the nutshell, as a stateful program that interacts with an environment. The purpose of an agent is to solve some problem over the environment.
 
 The initial state of the agent is its state when it is created. At this point, it is assumed the environment already exists.
 
@@ -149,16 +151,28 @@ The action f **until** a is always enabled. When executed, the effect f is execu
 
 ### Intelligent agents
 
-Our concept of strategy allows some degree of declarativeness when programming a goal solver. By using guarded actions we 'only' need to specify when an action are executable, without having to program the specific order in which the actions have to be invoked. However, inevitably we will be confronted by problems that would require lengthy
-strategies to solve. Sidestepping the philosophical question what 'artificial intelligence' is, agents with built-in behavior, that would make the task of formulating strategies for them easier, because we do not need to spell out every little detail, can at least be called **useful**, may be even intelligent.
+`aplib` does not provide any built-in AI (this would require [Artificial General Intelligence](https://en.wikipedia.org/wiki/Artificial_general_intelligence)/AGI which Science is still far from). Instead, `aplib` provides some design patterns where you can build intelligence into your agents:
 
-Here I just want to note that there are at least two possibilities to put AI in our agents:
+* **Action level.** Actions can access Prolog through the class ``StateWithProlog``, allowing them to do Prolog-based inference on their state/belief.
 
-  * By building intelligent actions, e.g. one that can learn to adjust its effect.
+* **Declarative strategy programming.** Our concept of strategy allows some degree of declarativeness when programming a goal solver. By using guarded actions we 'only' need to specify when an action are executable, without having to program the specific order in which the actions have to be invoked.
 
-  * By building more intelligent deliberation in the agent itself. One way to improve the agent’s skill in deliberating is use machine learning (e.g. RL comes to mind…).
-
+* **Deliberation.** A strategy is essentially a set of actions where you declaratively specify when each action can be executed. You can shift more responsibility to the agent by letting it more space to make the decision of which action to do at each current state, rather than that it always follow your strict programming. The root class ``BasicAgent`` has a method called ``deliberate()`` whose task is to choose which action to execute at the agent's current state when more than one is possible. ``BasicAgent`` just randomly selects one, but you can override this method to implement a smarter deliberation process, e.g. to make it trainable with machine learning (e.g. with RL).
 
 ### Multi agent
 
-(to come)
+In a multi agent setup we have mutiple agents operating on the same shared environment. To facilitate cooperation between these agents, `aplib` allows agents to **asynchronously** send messages to each other. To facilitate message routing, `aplib` uses a so-called _communication node_. To be able to send and receive a message an agent need to register to such a node. Each agent should have a unique ID too, and a role. Three modes of messaging are available:
+
+* **Singlecast** is for sending a message to a single target agent.
+* **Broadcase** is to send a message to all agents registered to the same communication node.
+* **Rolecast** is to send a message to all agents registered to the same communication node, and sharing a specified role.
+
+### Verifying correctness
+
+The semantic of an agent-based system can be defined in terms of how the state of its environment evolves. For example if we assume that this environment only allows its state to be changed through a set of _atomic_ primitives ('atomic' here means that during the invocation of such a primitive it can assume to have exclusive access to the environment, that no other primitive can in the mean time changes the environment state), then we can use LTL to express the correctness of an agent-based system. With proper instrumentation on the environment, the following verification methods are thinkable, all would require at least three-valued LTL (with judgement of valid, invalid, and inconclusive):
+
+* Runtime verification of LTL properties, wrapped around the environment.
+
+* Using LTL properties as oracles during testing (with the extra challenge of searching for executions that would elimnate 'inconclusive' judgement).
+
+* Bounded model checking. `aplib` allows autonomous agents to be deployed as subservient agents, and hence be ticked under the full control of a model checker. If we can also control the pace of the environment, we can basically do model checking.
