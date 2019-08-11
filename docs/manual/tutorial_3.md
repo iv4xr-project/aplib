@@ -51,8 +51,9 @@ If the agent has no goal, it will sleep until it is given a goal. Invoking `resu
 At the end of a tick (at the end of `update()`), if the agent calculates that the next tick is still far away, it will sleep until the next tick.  Invoking `resume()` or `stop()` will awaken the agent. An incoming message will also do this.
 
 
+### Multi-agent
 
-### Inter-agent communication
+Recall that `apsl` defines an agent-based system as an environment with one or more agents trying to control the same environment. So, once you have more than one agent that share the same environment you have a multi-agent system. It is thinkable, that you want to program your agents to work together. To do so, you need a way for the agents to communicate to each other.
 
 To coordinate their work, agents can send messages to each other. To use this feature there are three requirements:
 
