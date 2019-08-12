@@ -1,5 +1,8 @@
 package nl.uu.cs.aplib.Agents;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import alice.tuprolog.InvalidTheoryException;
 import alice.tuprolog.NoSolutionException;
 import alice.tuprolog.Prolog;
@@ -8,25 +11,88 @@ import alice.tuprolog.Struct;
 import alice.tuprolog.Term;
 import alice.tuprolog.Theory;
 
+
 public class StateWithProlog extends StateWithMessenger {
 	
 	Prolog prolog = new Prolog() ;
 	
 	public StateWithProlog() { super() ; }
 	
-	static public Term term(String s) {
+	
+	public static class AplibPrologClause {
+		String head ;
+		List<String> body = new LinkedList<String>() ;
+		AplibPrologClause(String head) { this.head = head ; }
+		
+		public AplibPrologClause IMPby(String term) {
+			body.add(term) ; return this ;
+		}
+		
+		public AplibPrologClause and(String term) {
+			body.add(term) ; return this ;
+		}
+		
+		@Override
+		public String toString() {
+			String s = head  + " :- " ;
+			int i = 0 ;
+			for (String t : body) {
+				if (i>0) s += " , " ;
+				s += t ;
+				i++ ;
+			}
+			return s ;
+		}
+	}
+	
+	static public AplibPrologClause clause(String head) {
+		return new AplibPrologClause(head) ;
+	}
+	
+	
+	static public String not(String t) { return "not(" + t + ")" ; }
+	static public String or(String ... args) {
+		String s = "(" ;
+		for (int i=0; i<args.length; i++) {
+			if (i>0) s += " ; " ;
+			s += args[i] ;
+		}
+		s += ")" ;
+		return s ;
+	}
+	
+	static public String and(String ... args) {
+		String s = "(" ;
+		for (int i=0; i<args.length; i++) {
+			if (i>0) s += " , " ;
+			s += args[i] ;
+		}
+		s += ")" ;
+		return s ;
+	}
+	
+	static public String mkPredString(String name, String ... args) {
+		name += "(" ;
+		for (int i=0; i<args.length; i++) {
+		    if (i>0) name += "," ;
+		    name += args[i] ;
+		}
+		name += ")" ; return name ;
+	}
+	
+	static Term term(String s) {
 		return Term.createTerm(s) ;
 	}
 	
-	static public Struct fact(String s) {
+	static Struct fact(String s) {
 		return (Struct) Term.createTerm(s + " :- true" ) ;
 	}
 	
-	static public Struct rule(String s) {
+	static Struct rule(String s) {
 		return (Struct) Term.createTerm(s) ;
 	}
 	
-	static public Theory theory(Struct ... structs) throws InvalidTheoryException {
+	static Theory theory(Struct ... structs) throws InvalidTheoryException {
 		Struct r = new Struct() ;
 		int k = structs.length ;
 		while (k>0) {
@@ -36,6 +102,7 @@ public class StateWithProlog extends StateWithMessenger {
 		return new Theory(r) ;
 	}
 	
+
 	public StateWithProlog addFacts(String ... facts) throws InvalidTheoryException {
 		Struct[] facts_ = new Struct[facts.length] ;
 		for (int k=0; k<facts.length; k++) facts_[k] = fact(facts[k]) ;
@@ -45,19 +112,44 @@ public class StateWithProlog extends StateWithMessenger {
 	
 	public StateWithProlog addRules(String ... rules) throws InvalidTheoryException {
 		Struct[] rules_ = new Struct[rules.length] ;
-		for (int k=0; k<rules.length; k++) rules_[k] = fact(rules[k]) ;
+		for (int k=0; k<rules.length; k++) rules_[k] = rule(rules[k]) ;
 		prolog.addTheory(theory(rules_));
 		return this ;	
 	}
 	
-	public Term[] query(String queryterm, String ... vars) throws NoSolutionException {
-		SolveInfo info = prolog.solve(term(queryterm));
-		if (! info.isSuccess()) return null ;
-		Term[] solutions = new Term[vars.length] ;
-		for (int k=0; k<vars.length; k++) {
-			solutions[k] = info.getVarValue(vars[k]) ;
+	public StateWithProlog addRules(AplibPrologClause ... rules) throws InvalidTheoryException {
+		String[] rules_ = new String[rules.length] ;
+		for (int k=0; k<rules.length; k++) rules_[k] = rules[k].toString() ;
+		addRules(rules_) ;
+		return this ;
+	}
+	
+	public Term[] query(String queryterm, String ... vars) {
+		try {
+			var q = term(queryterm) ;
+			SolveInfo info = prolog.solve(q);
+			//System.out.println("## " + q + " --> " + info) ;
+			if (! info.isSuccess()) return null ;
+			Term[] solutions = new Term[vars.length] ;
+			for (int k=0; k<vars.length; k++) {
+				solutions[k] = info.getVarValue(vars[k]) ;
+			}
+			return solutions ;
 		}
-		return solutions ;
+		catch(NoSolutionException e) { return null ; }
+	}
+	
+	public boolean test(String queryterm) {
+		try {
+			var q = term(queryterm) ;
+			SolveInfo info = prolog.solve(q);
+			return info.isSuccess() ;
+		}
+		catch(Exception e) { return false ; }
+	}
+	
+	public String showTheory() {
+		return prolog.getTheory().toString() ;
 	}
 	
 	static public int intval(Term t) {

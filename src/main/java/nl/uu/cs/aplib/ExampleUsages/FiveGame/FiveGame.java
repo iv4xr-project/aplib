@@ -22,10 +22,20 @@ public class FiveGame {
 	static public enum SQUARE { EMPTY, CIRCLE, CROSS , BLOCKED } 
 	static public enum GAMESTATUS { UNFINISHED, TIE, CIRCLEWON, CROSSWON }
 	
+	static public class Square_{
+		public int x ;
+		public int y ;
+		public SQUARE sq ;
+		public Square_(SQUARE sq, int x, int y) {
+			this.sq = sq ; this.x = x ; this.y = y ;
+		}
+	}
+	
 	Random rnd = new Random() ;
 	
 	int boardsize  ;
 	SQUARE[][] board ;
+	Square_ lastmove ;
 	
 	/**
 	 * Construct an instance of FiveGame of the specified size x size.
@@ -121,8 +131,14 @@ public class FiveGame {
 		if (x<0 || x>=boardsize || y<0 || y>=boardsize) throw new IllegalArgumentException() ;
 		if (ty != SQUARE.CROSS && ty != SQUARE.CIRCLE) throw new IllegalArgumentException() ;
 		if (board[x][y] != SQUARE.EMPTY) return false ;
+		if (lastmove == null) lastmove = new Square_(ty,x,y) ;
+		else {
+			lastmove.sq = ty ; lastmove.x = x ; lastmove.y = y ;
+		}
 		board[x][y] = ty ; return true ;
 	}
+	
+	public Square_ getLastmove() { return lastmove ; }
 	
 	@Override
 	/**

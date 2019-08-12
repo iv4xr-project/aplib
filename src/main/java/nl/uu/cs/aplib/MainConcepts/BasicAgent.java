@@ -257,7 +257,7 @@ public class BasicAgent {
 	private void updateWorker() {
 		
 		// update the agent's state:
-		state.upateState() ;
+		state.updateState() ;
 		
 		var candidates = currentStrategy.getFirstEnabledActions(state) ;
 		if (candidates.isEmpty()) {
