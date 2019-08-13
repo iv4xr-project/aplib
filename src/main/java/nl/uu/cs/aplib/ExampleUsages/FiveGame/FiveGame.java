@@ -10,8 +10,10 @@ import java.util.Random;
  * are called "circles", that of player-2 are "crosses". A piece is placed on an
  * empty square. Some squares may be blocked; these are randomly determined when the
  * board was created.
+ * 
  * A player wins if she can make a horizontal, vertical, or diagonal connected segment
- * consisting of only her pieces.
+ * of length 5, consisting of only her pieces.
+ * 
  * The game ends in tie if the board is full, and no player wins.
  * 
  * @author wish
@@ -78,7 +80,7 @@ public class FiveGame {
 		return copy ;
 	}
 	
-	private boolean winningRow(SQUARE ty, int x, int y) {
+	private boolean winningColumn(SQUARE ty, int x, int y) {
 		if (y>boardsize - 5) return false ;
 		for (int k=0; k<5; k++) {
 			if (board[x][y+k] != ty) return false ;
@@ -86,7 +88,7 @@ public class FiveGame {
 		return true ;
 	}
 	
-	private boolean winningColumn(SQUARE ty, int x, int y) {
+	private boolean winningRow(SQUARE ty, int x, int y) {
 		if (x>boardsize - 5) return false ;
 		for (int k=0; k<5; k++) {
 			if (board[x+k][y] != ty) return false ;
@@ -94,10 +96,18 @@ public class FiveGame {
 		return true ;
 	}
 	
-	private boolean winningDiagonal(SQUARE ty, int x, int y) {
+	private boolean winningDiagonal1(SQUARE ty, int x, int y) {
 		if (x>boardsize - 5 || y>boardsize - 5) return false ;
 		for (int k=0; k<5; k++) {
 			if (board[x+k][y+k] != ty) return false ;
+		}
+		return true ;
+	}
+	
+	private boolean winningDiagonal2(SQUARE ty, int x, int y) {
+		if (x>boardsize - 5 || y<4) return false ;
+		for (int k=0; k<5; k++) {
+			if (board[x+k][y-k] != ty) return false ;
 		}
 		return true ;
 	}
@@ -109,11 +119,13 @@ public class FiveGame {
 		boolean hasEmpty = false ;
 		for (int x = 0 ; x<boardsize; x++)
 			for(int y=0; y<boardsize; y++) {
-				if (winningRow(SQUARE.CROSS,x,y) 
-						|| winningColumn(SQUARE.CROSS,x,y) || winningDiagonal(SQUARE.CROSS,x,y)) 
+				if (winningColumn(SQUARE.CROSS,x,y) 
+						|| winningRow(SQUARE.CROSS,x,y) 
+						|| winningDiagonal1(SQUARE.CROSS,x,y) || winningDiagonal2(SQUARE.CROSS,x,y)) 
 					return GAMESTATUS.CROSSWON ;
-				if (winningRow(SQUARE.CIRCLE,x,y) 
-						|| winningColumn(SQUARE.CIRCLE,x,y) || winningDiagonal(SQUARE.CIRCLE,x,y)) 
+				if (winningColumn(SQUARE.CIRCLE,x,y) 
+						|| winningRow(SQUARE.CIRCLE,x,y) 
+						|| winningDiagonal1(SQUARE.CIRCLE,x,y) || winningDiagonal2(SQUARE.CIRCLE,x,y)) 
 					return GAMESTATUS.CIRCLEWON ;
 				if (board[x][y] == SQUARE.EMPTY) hasEmpty = true ;
 			}
