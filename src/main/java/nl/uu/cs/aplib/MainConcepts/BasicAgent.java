@@ -227,6 +227,25 @@ public class BasicAgent {
 	}
 	
 	/**
+	 * You should not need to use this, unless you want to implement your own Agent
+	 * by overriding this class, and you need your own custom way to lock and unlock
+	 * access to the Environment.
+	 */
+	protected void lockEnvironment() {
+		state.env.lock.lock(); 
+	}
+	
+	/**
+	 * You should not need to use this, unless you want to implement your own Agent
+	 * by overriding this class, and you need your own custom way to lock and unlock
+	 * access to the Environment.
+	 */
+	protected void unlockEnvironment() {
+		state.env.lock.unlock(); 
+	}
+
+	
+	/**
 	 * Look for enabled actions within the current strategy that would be enabled on
 	 * the current agent state. If there are none, the method returns. If there are
 	 * multiple, the method {@link #deliberate(List)} is used to choose one. The
@@ -247,10 +266,13 @@ public class BasicAgent {
 		}
 		// if goal is not null, currentGoal should not be null either
 		mytime.sample(); 
+		// We need to lock the environment since there may be multiple agents
+		// sharing the same environment:
+		lockEnvironment() ;
 		//goal.redistributeRemainingBudget();
 		try { updateWorker() ; } 
 		finally {
-			// currently nothing to do here..
+			unlockEnvironment() ;
 		}
 	}
 	

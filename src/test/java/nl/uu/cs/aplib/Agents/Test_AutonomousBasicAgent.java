@@ -16,7 +16,6 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.Agents.Test_InterAgentCommunication.MyState;
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.Environments.NullEnvironment;
 import nl.uu.cs.aplib.MainConcepts.*;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
@@ -54,7 +53,7 @@ public class Test_AutonomousBasicAgent {
 		
 		Logging.attachLogFile("mylog.txt");
 		
-		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent = new AutonomousBasicAgent("agent","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(100)
@@ -104,14 +103,14 @@ public class Test_AutonomousBasicAgent {
 		Logging.attachLogFile("mylog1.txt");
 		
 		var comNode = new ComNode() ;
-		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent1 = new AutonomousBasicAgent("agent1","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(100)
 				    . registerTo(comNode) ;
 		
 		var agent2 = new AutonomousBasicAgent("neo","programmer") 
-				     .attachState(new MyState().setEnvironment(new NullEnvironment())) 
+				     .attachState(new MyState().setEnvironment(new Environment())) 
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")
@@ -157,7 +156,7 @@ public class Test_AutonomousBasicAgent {
 		// by setgoal
         Logging.attachLogFile("mylog2.txt");
 		
-		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent = new AutonomousBasicAgent("agent","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(100)
@@ -189,7 +188,7 @@ public class Test_AutonomousBasicAgent {
 	@Test
 	public void test_waitUntilTheGoalIsConcluded() {
 		
-		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent = new AutonomousBasicAgent("agent","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(100)
@@ -217,14 +216,14 @@ public class Test_AutonomousBasicAgent {
 		// test that when an agent sleeps between ticks, a msg will awaken it
 		
 		var comNode = new ComNode() ;
-		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment())) ;
+		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent1 = new AutonomousBasicAgent("agent1","sentinel") 
 				    . attachState(state) 
 				    . setSamplingInterval(60000) // set a very long between-ticks sleep
 				    . registerTo(comNode) ;
 		
 		var agent2 = new AutonomousBasicAgent("neo","programmer") 
-				     .attachState(new MyState().setEnvironment(new NullEnvironment())) 
+				     .attachState(new MyState().setEnvironment(new Environment())) 
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")

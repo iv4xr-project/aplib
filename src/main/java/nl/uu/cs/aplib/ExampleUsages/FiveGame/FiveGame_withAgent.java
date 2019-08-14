@@ -19,12 +19,9 @@ import static nl.uu.cs.aplib.Agents.StateWithProlog.* ;
 public class FiveGame_withAgent {
 	
 	static class MyState extends StateWithProlog {
-		
-		int boardsize ;
-		SQUARE[][] board ;
+			
 		
 		MyState() { super() ; }
-
 
         // defining bunch of predicates we will need
 		
@@ -51,10 +48,10 @@ public class FiveGame_withAgent {
 		
 
 		void markBlockedSquares() throws InvalidTheoryException {
-			for (int x=0; x<boardsize; x++) {
-				for (int y=0; y<boardsize; y++) {
+			for (int x=0; x < env().boardsize; x++) {
+				for (int y=0; y < env().boardsize; y++) {
 					//System.out.println(">>>") ;
-					if (board[x][y] == SQUARE.BLOCKED) {
+					if (env().board[x][y] == SQUARE.BLOCKED) {
 						//System.out.println(">>>==") ;
 						addFacts(occupied(blocked(),x,y)) ;
 					}
@@ -85,7 +82,7 @@ public class FiveGame_withAgent {
 	               . and(eastNeighbor(cross(),"B","C","Y")) 
 	               . and(eastNeighbor(cross(),"C","D","Y")) 
 	               . and("E is (D+1)") 
-	               . and("E < " + boardsize)
+	               . and("E < " + env().boardsize)
 	               . and(not(occupied("O","E","Y"))) 
 	               . and("X is E") 
 	               . toString()
@@ -113,7 +110,7 @@ public class FiveGame_withAgent {
 	               . and(northNeighbor(cross(),"X","B","C")) 
 	               . and(northNeighbor(cross(),"X","C","D")) 
 	               . and("E is (D+1)")
-	               . and("E < " + boardsize)
+	               . and("E < " + env().boardsize)
 	               . and(not(occupied(cross(),"X","E"))) 
 	               . and("Y is E") 
 	               . toString()
@@ -128,7 +125,7 @@ public class FiveGame_withAgent {
 			  . and(eastNeighbor(circle(),"C","D","Y"))
 			  . and(eastNeighbor(circle(),"D","E","Y"))
 			  . and(or(and(not(occupied("O","A","Y")), "X is A"),
-					   and("F is (E+1)", "F < " + boardsize, not(occupied("O","F","Y")), "X is F")
+					   and("F is (E+1)", "F < " + env().boardsize, not(occupied("O","F","Y")), "X is F")
 					  ))
 			  .toString() 
 			  ;
@@ -142,7 +139,7 @@ public class FiveGame_withAgent {
 			  . and(northNeighbor(circle(),"X","C","D"))
 			  . and(northNeighbor(circle(),"X","D","E"))
 			  . and(or(and(not(occupied("O","X","A")), "Y is A"),
-					   and("F is (E+1)", "F < " + boardsize, not(occupied("O","X","F")), "Y is F")
+					   and("F is (E+1)", "F < " + env().boardsize, not(occupied("O","X","F")), "Y is F")
 					  ))
 			  .toString() 
 			  ;
@@ -155,11 +152,11 @@ public class FiveGame_withAgent {
 	               . and(eastNeighbor(cross(),"B","C","Y")) 
 	               . and(eastNeighbor(cross(),"C","D","Y")) 
 	               . and("E is (D+1)")
-	               . and("E < " + boardsize)
+	               . and("E < " + env().boardsize)
 	               . and(not(occupied("O","A","Y")))
 	               . and(not(occupied("P","E","Y"))) 
 	               . and(or(and("0 < A", "X is A"), 
-	            		    and("(E+1) < " + boardsize, "X is E"))) 
+	            		    and("(E+1) < " + env().boardsize, "X is E"))) 
 	               . toString()
 	               ;
 	    }
@@ -171,11 +168,11 @@ public class FiveGame_withAgent {
 	               . and(northNeighbor(cross(),"X","B","C")) 
 	               . and(northNeighbor(cross(),"X","C","D")) 
 	               . and("E is (D+1)")
-	               . and("E < " + boardsize)
+	               . and("E < " + env().boardsize)
 	               . and(not(occupied("O","X","A")))
 	               . and(not(occupied("P","X","E"))) 
 	               . and(or(and("0 < A", "Y is A"), 
-	            		    and("(E+1) < " + boardsize , "Y is E"))) 
+	            		    and("(E+1) < " + env().boardsize , "Y is E"))) 
 	               . toString()
 	               ;
 	    }
@@ -201,8 +198,6 @@ public class FiveGame_withAgent {
 		@Override
 		public MyState setEnvironment(Environment env)  {
 			super.setEnvironment(env) ;
-			board = env().thegame.getState() ;
-			boardsize = env().thegame.boardsize ;
 			try {
 				createInitialTheory() ;
 			}
@@ -213,9 +208,10 @@ public class FiveGame_withAgent {
 		@Override
 		public void updateState() {
 			super.updateState();
-			var lastmove = env().thegame.lastmove ;
+			var lastmove = env().lastmove ;
 			if (lastmove != null) {
 				try {
+					
 					markMove_(lastmove.sq,lastmove.x,lastmove.y) ;
 				}
 				catch(Exception e) { }
@@ -245,28 +241,28 @@ public class FiveGame_withAgent {
 		}
 		
 		void markMove_(SQUARE sq, int x, int y) throws InvalidTheoryException {
-			board[x][y] = sq ;
+			env().board[x][y] = sq ;
 			addFacts(occupied(sqtype(sq),x,y)) ;
 
 			if (x>0) {
 				addFacts(eastNeighbor(sqtype(sq),x-1,x,y)) ; 
 			}
-			if (x<boardsize-1 && board[x+1][y] != SQUARE.EMPTY) {
-				addFacts(eastNeighbor(sqtype(board[x+1][y]), x, x+1, y)) ; 
+			if (x<env().boardsize-1 && env().board[x+1][y] != SQUARE.EMPTY) {
+				addFacts(eastNeighbor(sqtype(env().board[x+1][y]), x, x+1, y)) ; 
 			}
 			if (y>0) {
 				addFacts(northNeighbor(sqtype(sq),x,y-1,y)) ;
 			}
-			if (y<boardsize-1 && board[x][y+1] != SQUARE.EMPTY) {
-				addFacts(northNeighbor(sqtype(board[x][y+1]), x, y, y+1)) ;
+			if (y<env().boardsize-1 && env().board[x][y+1] != SQUARE.EMPTY) {
+				addFacts(northNeighbor(sqtype(env().board[x][y+1]), x, y, y+1)) ;
 			}
 		}
 		
 		List<Square_> getEmptySquares() {
 			var r = new LinkedList<Square_>() ;
-			for (int x=0; x<boardsize; x++)
-				for (int y=0; y<boardsize; y++) {
-					if (board[x][y] == SQUARE.EMPTY) {
+			for (int x=0; x<env().boardsize; x++)
+				for (int y=0; y<env().boardsize; y++) {
+					if (env().board[x][y] == SQUARE.EMPTY) {
 						r.add(new Square_(SQUARE.EMPTY,x,y)) ;
 					}
 				}
@@ -274,10 +270,10 @@ public class FiveGame_withAgent {
 		}
 		
 		boolean hasHVCrossNeighbor(int x, int y) {
-			if (x>0 && board[x-1][y] == SQUARE.CROSS) return true ;
-			if (x+1<boardsize && board[x+1][y] == SQUARE.CROSS) return true ;
-			if (y>0 && board[x][y-1] == SQUARE.CROSS) return true ;
-			if (y+1<boardsize && board[x][y+1] == SQUARE.CROSS) return true ;
+			if (x>0 && env().board[x-1][y] == SQUARE.CROSS) return true ;
+			if (x+1<env().boardsize && env().board[x+1][y] == SQUARE.CROSS) return true ;
+			if (y>0 && env().board[x][y-1] == SQUARE.CROSS) return true ;
+			if (y+1<env().boardsize && env().board[x][y+1] == SQUARE.CROSS) return true ;
 			return false ;
 		}
 		
@@ -292,11 +288,11 @@ public class FiveGame_withAgent {
 	static private void test() throws InvalidTheoryException {
 		var state = new MyState() ;
 		int N = 8 ;
-		state.boardsize = N ;
-		state.board = new SQUARE[N][N] ;
+		state.env().boardsize = N ;
+		state.env().board = new SQUARE[N][N] ;
 		for (int x=0; x<N; x++)
 			for (int y=0; y<N; y++)
-				state.board[x][y] = SQUARE.EMPTY ;
+				state.env().board[x][y] = SQUARE.EMPTY ;
 		
         //		state.board[0][0] = SQUARE.BLOCKED ;
 		state.createInitialTheory()  ;
