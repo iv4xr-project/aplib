@@ -20,12 +20,12 @@ comparable to providing a hint for the agent). A strategy can be composed declar
 * **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
 * **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
 * **Prolog binding**: allowing agents to do prolog-based reasoning.
+* **Bounded LTL** for automated property based testing.
 
 
 Planned features:
 
-* LTL logic (which can be easily built around the environment's `sendcommand()`
- method) for runtime verification and model checking (through subservient mode).
+* Bounded model checking and runtime verification.
 * Reinforcement learning
 * Search algorithms for solving goals
 * Environment for controlling 3D games

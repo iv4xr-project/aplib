@@ -104,8 +104,6 @@ public class BasicAgent {
 	 */
 	protected Strategy currentStrategy ;
 	
-	protected long rndseed = 1287821 ; // a prime and a palindrome :D
-	protected Random rnd = new Random(rndseed) ;
 	
 	protected Logger logger = Logging.getAPLIBlogger() ;
 	
@@ -115,6 +113,12 @@ public class BasicAgent {
 	 * conveniently mocked during testing (you have to test from the same package).
 	 */
 	protected Time mytime = new Time() ;
+	
+	/**
+	 * An instance of Deliberation is responsible for, as the name says, executing
+	 * a deliberation process for this agent. {@see Deliberation}.
+	 */
+	protected Deliberation deliberation = new Deliberation() ;
 	
 	/**
 	 * Create a blank agent. You will need to at least attach a {@link SimpleState} and 
@@ -137,18 +141,7 @@ public class BasicAgent {
 		this.id = id ; this.role = role ;
 	}
 	
-	/**
-	 * When the agent has multiple candidate plans which are enabled on its current
-	 * state, this method decides which one to take. In this default implementation,
-	 * it will just choose randomly.
-	 * 
-	 * Override this method if you want to implement more intelligent deliberation.
-	 */
-	protected PrimitiveStrategy deliberate(List<PrimitiveStrategy> candidates) {
-		return candidates.get(rnd.nextInt(candidates.size())) ;
-	}
-	
-   
+
 	/**
 	 * Set a goal for this agent. The method returns the agent itself so that this
 	 * method can be used in the Fluent Interface style.
@@ -184,10 +177,15 @@ public class BasicAgent {
 		return this ;
 	}
 	
-
-	
-
-	
+	/**
+	 * Replace the agent's deliberation module with the one given to this method.
+	 * The method returns the agent itself so that this method can be used in the
+	 * Fluent Interface style.
+	 */
+	public BasicAgent useDeliberation(Deliberation delib) {
+		this.deliberation = delib ;
+		return this ;
+	}
 
 	
 	/**
@@ -291,7 +289,7 @@ public class BasicAgent {
 		}
 		// we have at least one enabled actions to choose from; use deliberation
 		// to decide:
-		var chosenAction = deliberate(candidates) ;
+		var chosenAction = deliberation.deliberate(state,candidates) ;
 		
 		
 		if (chosenAction.action instanceof Abort) {
