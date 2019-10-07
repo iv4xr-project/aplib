@@ -3,7 +3,7 @@ package nl.uu.cs.aplib.MainConcepts;
 import java.util.List;
 import java.util.Random;
 
-import nl.uu.cs.aplib.MainConcepts.Strategy.PrimitiveStrategy;
+import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
 
 /**
  * This class implements a deliberation process for agents. Agent deliberation
@@ -25,7 +25,7 @@ public class Deliberation {
 	
 	public Deliberation() { }
 	
-	public PrimitiveStrategy deliberate(SimpleState currentstate, List<PrimitiveStrategy> candidates) {
+	public PrimitiveTactic deliberate(SimpleState currentstate, List<PrimitiveTactic> candidates) {
 		return candidates.get(rnd.nextInt(candidates.size())) ;
 	}
 

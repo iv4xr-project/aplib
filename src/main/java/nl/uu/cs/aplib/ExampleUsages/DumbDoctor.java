@@ -46,14 +46,14 @@ public class DumbDoctor {
 			.lift() ;
 	      
 
-      // Specifying a strategy to solve the previously set goal:
-      g.withStrategy(
+      // Specifying a tactic to solve the previously set goal:
+      g.withTactic(
     	FIRSTof(
     		opening.on_((DoctorBelief belief) -> belief.patientHappiness == 0) ,
     		ANYof(a1,a2)
     	)) ;    		  
       // setting g as the top goal:
-      GoalTree topgoal = g.lift() ;
+      GoalStructure topgoal = g.lift() ;
       
       // creating a doctor-agent, attaching state to it, and the above topgoal to it:
       var belief = new DoctorBelief() ;
@@ -67,7 +67,7 @@ public class DumbDoctor {
       if(topgoal.getStatus().success()) 
     	  belief.env().println("I am glad you are happier now :)");
       
-      topgoal.printTreeStatus();
+      topgoal.printGoalStructureStatus();
   
 
 	}

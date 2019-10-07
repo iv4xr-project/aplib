@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.* ;
 
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.GoalTree.*;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.*;
 import nl.uu.cs.aplib.MainConcepts.Test_BasicAgent.MyState;
 import nl.uu.cs.aplib.Utils.Time;
 
@@ -48,7 +48,7 @@ public class Test_BasicAgent_budgeting {
 		// slightly over budget scenario:
 	    var a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
-		var topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withStrategy(lift(a0)))
+		var topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withTactic(lift(a0)))
 				      .withBudget(100); 
 		
 		agent.mytime = new MockedTime(0,101) ;
@@ -63,7 +63,7 @@ public class Test_BasicAgent_budgeting {
 	    state.counter = 0 ;
         a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
-		topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withStrategy(lift(a0)))
+		topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withTactic(lift(a0)))
 				  .withBudget(100); 
 		
 		agent.mytime = new MockedTime(0,99) ;
@@ -75,7 +75,7 @@ public class Test_BasicAgent_budgeting {
 	    state.counter = 0 ;
         a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
-		topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withStrategy(lift(a0)))
+		topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withTactic(lift(a0)))
 				  .withBudget(100); 
 		
 		agent.mytime = new MockedTime(0,100) ;
@@ -86,7 +86,7 @@ public class Test_BasicAgent_budgeting {
         // budget is exceeded, but the goal is solved scenario:
         a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
-		topgoal = lift(goal("g").toSolve((Integer k) -> true) . withStrategy(lift(a0)))
+		topgoal = lift(goal("g").toSolve((Integer k) -> true) . withTactic(lift(a0)))
 				  .withBudget(100); 
 		
 		agent.mytime = new MockedTime(0,200) ;
@@ -108,8 +108,8 @@ public class Test_BasicAgent_budgeting {
 	    
 	    var a1 = action("a1").do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
 	    
-	    var g1 = lift(goal("g1").toSolve((Integer k) -> k==6) . withStrategy(lift(a0))) ;
-	    var g2 = lift(goal("g2").toSolve((Integer k) -> k==7) . withStrategy(lift(a1))) ;
+	    var g1 = lift(goal("g1").toSolve((Integer k) -> k==6) . withTactic(lift(a0))) ;
+	    var g2 = lift(goal("g2").toSolve((Integer k) -> k==7) . withTactic(lift(a1))) ;
 	    var topgoal = FIRSTof(g1,g2).withBudget(1000) ;
 	    
 	    agent.setGoal(topgoal) ;

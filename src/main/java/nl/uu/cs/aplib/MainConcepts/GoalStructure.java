@@ -4,15 +4,15 @@ import java.util.* ;
 import java.util.stream.Collectors;
 
 /**
- * A GoalTree is a generalization of a {@link Goal}. As the name suggests, it is a tree
- * that conceptually represents a more complex goal. The simplest GoalTree is an object
+ * A GoalStructure is a generalization of a {@link Goal}. It is a tree-shaped structure
+ * that conceptually represents a more complex goal. The simplest GoalStructure is an object
  * of type {@link PrimitiveGoal}. A {@link PrimitiveGoal} itself is a subclass
- * of GoalTree. Such a GoalTree represents a single leaf, containing a single instance of {@link Goal},
+ * of GoalTree. Such a GoalStructure represents a single leaf, containing a single instance of {@link Goal},
  * which is the concrete goal represented by this leaf.
  * 
  * <p>
- * More complex GoalTree can be constructed by combining subtrees/subgoals. There are two types
- * of nodes available to combine sub-GoalTrees: the <b>SEQ</b> and <b>FIRSTOF</b> nodes:
+ * More complex GoalStructure can be constructed by combining subgoals. There are two types
+ * of nodes available to combine sub-GoalStructure: the <b>SEQ</b> and <b>FIRSTOF</b> nodes:
  * 
  * <ol>
  *    <li> SEQ g1,g2,... represents a series of goals that all have to be solved,
@@ -25,19 +25,19 @@ import java.util.stream.Collectors;
  * @author wish
  *
  */
-public class GoalTree {
+public class GoalStructure {
 	
 	/**
-	 * Represent the available types of {@link GoalTree}. There are three types: SEQ, FIRSTOF, and
-	 * PRIMITIVE. If a GoalTree is marked as PRIMITIVE, then it is a leaf (in other words, it is
-	 * a {@link PrimitiveGoal}). If a GoalTree h is marked as SEQ, it represents a tree of the form
+	 * Represent the available types of {@link GoalStructure}. There are three types: SEQ, FIRSTOF, and
+	 * PRIMITIVE. If a GoalStructure is marked as PRIMITIVE, then it is a leaf (in other words, it is
+	 * a {@link PrimitiveGoal}). If a GoalStructure h is marked as SEQ, it represents a tree of the form
 	 * SEQ g1,g2,... where g1,g2,... are h' subgoals. If h is marked as FIRSTOF, it represents a
 	 * tree of the form FIRSTof g1,g2,....
 	 */
 	static public enum GoalsCombinator { SEQ, FIRSTOF, PRIMITIVE }
 	
-	GoalTree parent = null ;
-	List<GoalTree> subgoals ;
+	GoalStructure parent = null ;
+	List<GoalStructure> subgoals ;
 	GoalsCombinator combinator ;
 	ProgressStatus status = new ProgressStatus() ;
 	double allocatedBudget = Double.POSITIVE_INFINITY ;
@@ -45,29 +45,29 @@ public class GoalTree {
 	double remainingBudget = Double.POSITIVE_INFINITY ;
 	
 	/**
-	 * Construct a new GoalTree with the specified type of node (SEQ, FIRSTOFF, or PRIMITIVE)
+	 * Construct a new GoalStructure with the specified type of node (SEQ, FIRSTOFF, or PRIMITIVE)
 	 * and the given subgoals.
 	 */
-	public GoalTree(GoalsCombinator type, GoalTree ... subgoals) {
+	public GoalStructure(GoalsCombinator type, GoalStructure ... subgoals) {
 		combinator = type ;
-		this.subgoals = new LinkedList<GoalTree>() ;
-		for (GoalTree g : subgoals) {
+		this.subgoals = new LinkedList<GoalStructure>() ;
+		for (GoalStructure g : subgoals) {
 			this.subgoals.add(g) ;
 			g.parent = this ;
 		}
 	}
 	
 	/**
-	 * Return the type of this GoalTree (SEQ, FIRSTOF, or PRIMITIVE).
+	 * Return the type of this GoalStructure (SEQ, FIRSTOF, or PRIMITIVE).
 	 */
 	public GoalsCombinator getCombinatorType() { return combinator ; }
 	
-	public List<GoalTree> getSubgoals() { return subgoals ; }
+	public List<GoalStructure> getSubgoals() { return subgoals ; }
 	
 	/**
-	 * Return the parent of this GoalTree. It returns null if it has no parent.
+	 * Return the parent of this GoalStructure. It returns null if it has no parent.
 	 */
-	public GoalTree getParent() { return parent ; }
+	public GoalStructure getParent() { return parent ; }
 	
 	/**
 	 * True is this goal has no parent.
@@ -120,16 +120,16 @@ public class GoalTree {
  	}
 	
 	/**
-	 * Get the status of this GoalTree. The status is INPROGRESS if the GoalTree is
-	 * not solved or failed yet. It is SUCCESS if the GoalTree was solved, and
-	 * FAILED if the GoalTree has been marked as such.
+	 * Get the status of this GoalStructure. The status is INPROGRESS if the GoalStructure is
+	 * not solved or failed yet. It is SUCCESS if the GoalStructure was solved, and
+	 * FAILED if the GoalStructure has been marked as such.
 	 */
 	public ProgressStatus getStatus() { return status ; }
 	
 	/**
 	 * Assuming this goal is closed (that is, it has been solved or failed), this
 	 * method will return the next {@link PrimitiveGoal} to solve. The method will traverse
-	 * up through the parent of this goal tree to look for this next goal. If none
+	 * up through the parent of this GoalStructure to look for this next goal. If none
 	 * is found, null is returned.
 	 */
 	public PrimitiveGoal getNextPrimitiveGoal() {
@@ -177,7 +177,7 @@ public class GoalTree {
 		// for FIRSTOF and SEQ we define the minimum demanded budget to be the sum
 		// of that of the subgoals. For FIRSTOF this is indeed a worst case assumption.
 		double sum = 0 ;
-		for (GoalTree gt : subgoals) {
+		for (GoalStructure gt : subgoals) {
 			sum += gt.demandedMinimumBudget() ;
 		}
 		return sum ;
@@ -187,7 +187,7 @@ public class GoalTree {
 	 * Allocate budget to this goal. This can only be invoked on the top goal.
 	 * The allocated budget should finite and positive.
 	 */
-	public GoalTree withBudget(double budget) {
+	public GoalStructure withBudget(double budget) {
 		if (! isTopGoal()) throw new IllegalArgumentException("Can only be called on a top goal") ;
 		if (budget <= 0 || ! Double.isFinite(budget)) throw new IllegalArgumentException() ;
 		if (budget < demandedMinimumBudget())
@@ -224,7 +224,7 @@ public class GoalTree {
 	
 	private void resetConsumedBudget() {
 		consumedBudget = 0 ;
-		for (GoalTree gt : subgoals) gt.resetConsumedBudget(); 
+		for (GoalStructure gt : subgoals) gt.resetConsumedBudget(); 
 	}
 	
 	/**
@@ -250,7 +250,7 @@ public class GoalTree {
 	
 	private void giveZeroBudget() {
 		this.remainingBudget = 0 ;
-		for (GoalTree gt : subgoals) gt.giveZeroBudget();
+		for (GoalStructure gt : subgoals) gt.giveZeroBudget();
 	}
 	
 	private void distributeRemainingBudgetWorker(double budget) {
@@ -279,14 +279,14 @@ public class GoalTree {
                 .collect(Collectors.toList()) ;
 		
 		// set budget for closed subgoals to zero first:
-		for (GoalTree gt : closedSubgoals) gt.giveZeroBudget();
+		for (GoalStructure gt : closedSubgoals) gt.giveZeroBudget();
 		
 		//int K = subgoalsWithBudgetDemand.size() + subgoalsWithNOBudgetDemand.size() ;
 		int K = numberOfOpenPrimitiveGoals() ;
 		if (K == 0) return ;
 		double avrg_perPrimGoal = available / K ;
 		
-		for (GoalTree gt : subgoalsWithBudgetDemand) {
+		for (GoalStructure gt : subgoalsWithBudgetDemand) {
 			if (available <= 0) {
 				gt.distributeRemainingBudgetWorker(0); 
 			}
@@ -305,7 +305,7 @@ public class GoalTree {
 		if (K==0) return ;
 		//System.out.println("## available = " + available + ", K = " + K) ;
 		avrg_perPrimGoal = available/K ;
-		for (GoalTree gt : subgoalsWithNOBudgetDemand) {
+		for (GoalStructure gt : subgoalsWithNOBudgetDemand) {
 			if (available <= 0) {
 				gt.distributeRemainingBudgetWorker(0); 
 			}
@@ -319,7 +319,7 @@ public class GoalTree {
 	
 	private String space(int k) { String s = "" ; for(int i=0; i<k; i++) s += " " ; return s ; }
 	
-	String showTreeStatusWorker(int level) {
+	String showGoalStructureStatusWorker(int level) {
 		String indent =  space(3*(level+1)) ;
 		String s = "" ;
 		if (this instanceof PrimitiveGoal) {
@@ -332,28 +332,28 @@ public class GoalTree {
 		s += indent + combinator + ": " + status ; 
 		if (isTopGoal()) s += "\n" + indent + "Budget:" + allocatedBudget ;
 		s += "\n" + indent + "Consumed budget:" + consumedBudget + "\n" ;
-		for (GoalTree gt : subgoals) s += gt.showTreeStatusWorker(level+1) + "\n" ;
+		for (GoalStructure gt : subgoals) s += gt.showGoalStructureStatusWorker(level+1) + "\n" ;
 		return s ;
 	}
 	
 	/**
-	 * Format a summary of the state of this GoalTree to a readable string.
+	 * Format a summary of the state of this GoalStructure to a readable string.
 	 */
-	public String showTreeStatus() { return showTreeStatusWorker(0) ; }
+	public String showGoalStructureStatus() { return showGoalStructureStatusWorker(0) ; }
 	
 	/**
-	 * Print a summary of the state of this GoalTree.
+	 * Print a summary of the state of this GoalStructure.
 	 */
-	public void printTreeStatus() { 
+	public void printGoalStructureStatus() { 
 		System.out.println("\n** Goal status:") ;
-		System.out.println(showTreeStatus()) ; 
+		System.out.println(showGoalStructureStatus()) ; 
 	}
 	
 	/**
-	 * A special subclass of {@link GoalTree} to represent a leaf, wrapping around
+	 * A special subclass of {@link GoalStructure} to represent a leaf, wrapping around
 	 * an instance of {@link Goal}.
 	 */
-	static public class PrimitiveGoal extends GoalTree {
+	static public class PrimitiveGoal extends GoalStructure {
 		Goal goal ;
 		
 		/**

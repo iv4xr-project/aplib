@@ -10,7 +10,7 @@ import java.util.Random;
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.MainConcepts.BasicAgent;
 import nl.uu.cs.aplib.MainConcepts.Goal;
-import nl.uu.cs.aplib.MainConcepts.GoalTree;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure;
 import nl.uu.cs.aplib.MainConcepts.SimpleState;
 
 /**
@@ -40,8 +40,8 @@ public class MinimalDemo {
 					})
 				.lift() ;
 		
-		  // attach the action to the goal, and make it a goal-tree:
-		  GoalTree topgoal = g.withStrategy(guessing).lift() ;
+		  // attach the action to the goal, and make it a goal-structure:
+		  GoalStructure topgoal = g.withTactic(guessing).lift() ;
   
 	      // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 	      var agent = new BasicAgent()
@@ -53,6 +53,6 @@ public class MinimalDemo {
 	    	  agent.update(); 
 	    	  Thread.sleep(1500);
 	      }
-	      topgoal.printTreeStatus();
+	      topgoal.printGoalStructureStatus();
 		}
 }

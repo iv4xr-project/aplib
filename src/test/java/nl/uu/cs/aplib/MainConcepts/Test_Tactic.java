@@ -5,7 +5,7 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.* ;
 
-public class Test_Strategy {
+public class Test_Tactic {
 	
 	static class IntState extends SimpleState {
 		int i ;
@@ -40,7 +40,7 @@ public class Test_Strategy {
 	}
 
 	@Test
-	public void test_calcNextStrategy() {
+	public void test_calcNextTactic() {
 		var a0 = lift(action("a0")) ;
 		var a1 = lift(action("a1")) ;
 		var a2 = lift(action("a2")) ;
@@ -52,30 +52,30 @@ public class Test_Strategy {
         var s2 = ANYof(s1,a2) ;
         
         a0.action.completed = false ;
-        assertTrue(a0.calcNextStrategy() == a0) ;
+        assertTrue(a0.calcNextTactic() == a0) ;
 
         a0.action.completed = true ;
-        assertTrue(a0.calcNextStrategy() == null) ;
+        assertTrue(a0.calcNextTactic() == null) ;
         a1.action.completed = true ;
-        assertTrue(a1.calcNextStrategy() == null) ;
+        assertTrue(a1.calcNextTactic() == null) ;
         a2.action.completed = true ;
-        assertTrue(a2.calcNextStrategy() == null) ;
+        assertTrue(a2.calcNextTactic() == null) ;
         
         var s3 = ANYof(a3,a4) ;
         var s4 = SEQ(s2,s3,a5) ;
-        assertTrue(a2.calcNextStrategy() == s3) ;
-        assertTrue(s2.calcNextStrategy() == s3) ;
+        assertTrue(a2.calcNextTactic() == s3) ;
+        assertTrue(s2.calcNextTactic() == s3) ;
         
         a3.action.completed = true ;
-        assertTrue(a3.calcNextStrategy() == a5) ;
-        assertTrue(s3.calcNextStrategy() == a5) ;
+        assertTrue(a3.calcNextTactic() == a5) ;
+        assertTrue(s3.calcNextTactic() == a5) ;
         
         var s5 = SEQ(a0,a1) ;
         var s6 = SEQ(s5,a2) ;
         a1.action.completed = true ;
-        assertTrue(a1.calcNextStrategy() == a2) ;
+        assertTrue(a1.calcNextTactic() == a2) ;
         a2.action.completed = true ;
-        assertTrue(a2.calcNextStrategy() == null) ;
+        assertTrue(a2.calcNextTactic() == null) ;
         
 		
 		

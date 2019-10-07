@@ -84,10 +84,10 @@ public class AutonomousBasicAgent extends BasicAgent {
 		return this ;
 	}
 	
-	GoalTree shadowg_ ;
+	GoalStructure shadowg_ ;
 	
 	@Override
-	public AutonomousBasicAgent setGoal(GoalTree g) {
+	public AutonomousBasicAgent setGoal(GoalStructure g) {
 		if (thisAgentThread !=null) {
 			// awaken the agent, if it is sleeping
 			thisAgentThread.interrupt();
@@ -193,7 +193,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 	 * goal-tree is concluded (which can be either with success or as fail). The
 	 * method will return the goal-tree.
 	 */
-	public GoalTree waitUntilTheGoalIsConcluded() {
+	public GoalStructure waitUntilTheGoalIsConcluded() {
 		
 		if (shadowg_ == null) return null ;
 		

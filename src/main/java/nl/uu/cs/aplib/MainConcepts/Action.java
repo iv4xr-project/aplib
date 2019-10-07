@@ -2,12 +2,12 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.function.*;
 
-import nl.uu.cs.aplib.MainConcepts.Strategy.PrimitiveStrategy;
+import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
 
 /**
- * Actions are the building blocks for to build a {@link Strategy}. To solve a
- * {@link Goal} an agent would need a {@link Strategy}. An Action is the
- * simplest form of {@link Strategy}. Multiple Actions can be combined to form a
+ * Actions are the building blocks for to build a {@link Tactic}. To solve a
+ * {@link Goal} an agent would need a {@link Tactic}. An Action is the
+ * simplest form of {@link Tactic}. Multiple Actions can be combined to form a
  * more complex strategy. When a Strategy is given to an agent to solve a Goal,
  * we say that the strategy is bound to the agent. Likewise, all Actions in the
  * Strategy are then bound to this agent. Each Action is essentially a stateful
@@ -148,10 +148,10 @@ public class Action {
 	
 	
 	/**
-	 * Wrap this Action to become a {@link PrimitiveStrategy}.
+	 * Wrap this Action to become a {@link PrimitiveTactic}.
 	 */
-	public PrimitiveStrategy lift() {
-		return new PrimitiveStrategy(this) ;
+	public PrimitiveTactic lift() {
+		return new PrimitiveTactic(this) ;
 	}
 	
 	// === fluent interface end
@@ -185,7 +185,7 @@ public class Action {
 	
 	/**
 	 * A special Action. When an agent executes this Action from within a
-	 * {@link Strategy}, it will cause the current goal to be considered as
+	 * {@link Tactic}, it will cause the current goal to be considered as
 	 * being failed. Note that this only fails the current goal. This does
 	 * not necessarily mean that the top-goal will fail as well. E.g if
 	 * g = FIRSTof(g1,g2); if g1 fails, g2 might still succeed, hence solving
