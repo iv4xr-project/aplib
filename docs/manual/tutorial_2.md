@@ -1,10 +1,10 @@
-# Aplib Tutorial 2:  State and Strategy
+# Aplib Tutorial 2:  State and tactic
 Author: Wishnu Prasetya
 
 This tutorial will show you:
 
 * how to create a customized state for your agent
-* how to create a more complex strategy
+* how to create a more complex tactic
 
 Imagine a 'doctor' agent that asks questions to its patient about how he/she feels.
 The agent's goal is to make the patient happy. In this tutorial our goal is not
@@ -51,7 +51,7 @@ static public class DoctorBelief extends SimpleState {
 
 ### Actions
 
-Before we formulate our strategy to solve the previously formulated goal, below is a number of actions that would be the building blocks for this strategy. For example, the action below ask a question to the patient:
+Before we formulate our tactic to solve the previously formulated goal, below is a number of actions that would be the building blocks for this tactic. For example, the action below ask a question to the patient:
 
 ```java  
 var q1 = action("q1")
@@ -90,9 +90,9 @@ We can add few more actions, e.g. variations of `q1` :
 			.lift() ;
 ```
 
-### strategy
+### Tactic
 
-The strategy below would apply the `opening` action, if it is enabled, and else one of the question-actions `q1` ... `qn`. The question-actions have no conditions, and are thus always enabled. On the other hand, the action `opening` does have a condition, namely that `patientHappiness` must be 0 (and consequently it is only enabled on the agent's first tick).
+The tactic below would apply the `opening` action, if it is enabled, and else one of the question-actions `q1` ... `qn`. The question-actions have no conditions, and are thus always enabled. On the other hand, the action `opening` does have a condition, namely that `patientHappiness` must be 0 (and consequently it is only enabled on the agent's first tick).
 
 ```java
 var S = FIRSTof(
@@ -101,10 +101,10 @@ var S = FIRSTof(
     	)) ;  
 ```
 
-And now we can attach this strategy to our goal, and lift it to make a goal-tree:
+And now we can attach this tactic to our goal, and lift it to make a goal-tree:
 
 ```
-var topgoal = g.withStrategy(S).lift()
+var topgoal = g.withTactic(S).lift()
 ```
 
 ### Creating and running the doctor agent

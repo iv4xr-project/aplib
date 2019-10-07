@@ -63,15 +63,15 @@ var asklb = action("askLowerBound")
       ...
 ```
 
-#### Strategy to solve the goal
+#### Tactic to solve the goal
 
-To solve the previously given goal (or any goal), the agent will need a strategy. The following strategy will first ask a hint from the user (in the form of a lower bound for x), and then it will make a guess:
+To solve the previously given goal (or any goal), the agent will need a tactic. The following tactic will first ask a hint from the user (in the form of a lower bound for x), and then it will make a guess:
 
 ```java
 SEQ(asklb,guess)
 ```
 
-If after the `guess` action the goal is not solved, the agent will implicitly repeat the above strategy at the next tick, on and on, until the goal is solved.
+If after the `guess` action the goal is not solved, the agent will implicitly repeat the above tactic at the next tick, on and on, until the goal is solved.
 
 #### Full code
 

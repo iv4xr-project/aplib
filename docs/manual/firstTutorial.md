@@ -5,7 +5,7 @@ Author: Wishnu Prasetya
 
 In a nutshell an agent is just a program. Agents can indeed be programmed to behave intelligently ---the so-called intelligent agents; but let’s for now focus on just plain agents. `Aplib` defines an agent as a stateful program that interacts with an environment with the purpose of solving some problem relevant for the environment.
 This 'environment' can be another program, or some hardware, or a human user interacting through some interface. While some environment may be passive, completely controlled by the agent, some others may be autonomous and non-deterministic, which makes the task of controlling it indeed more challenging for the agent.
-Environment is an important concept in `aplib` programming: without an environment an agent has no reason to exist, just like an enginner would have no reason to be an engineer if there is no project he/she can work on. 
+Environment is an important concept in `aplib` programming: without an environment an agent has no reason to exist, just like an enginner would have no reason to be an engineer if there is no project he/she can work on.
 
 There is however no quick Hello-World example to show you how to use `aplib`. Let me guide you on how to create a minimalistic agent; it won't do anything spectacular, it will do as an example.
 
@@ -16,11 +16,11 @@ If you are **impatient**: the full code of this demo is here: [`nl.uu.cs.aplib.E
 ### Computation model
 
 To first give you a top level intuition on agent programming in `aplib`, let me first explain the idea. To do any work, an agent must be given a goal, e.g. to send a number satisfying some non-trivial property to its environment.
-An agent is not a magic box, so it will also require you to supply a _strategy_ for solving a goal. A complex strategy can be formulated, but ultimately a strategy will be composed from so-called _actions_.
+An agent is not a magic box, so it will also require you to supply a _tactic_ for solving a goal. A complex tactic can be formulated, but ultimately a tactic will be composed from so-called _actions_.
 
 `Apsl` agents operate in a _tick-based_ mode. Every agent has a method called `update()`. A 'tick' means that you, or something else, invoke this method, which in turn triggers some behavior from the agent. Between two `update()` invocations the agent does not do anything.
 
-At every tick/update() the agent inspects its (current) strategy to collect actions within the strategy which are executable in the current state. One will be chosen (randomly, or more intelligently depending on whether you have built-in AI in the agent) and executed. This process is repeated every tick, until the goal is solved, or until the agent uses up its computation budget.
+At every tick/update() the agent inspects its (current) tactic to collect actions within the tactic which are executable in the current state. One will be chosen (randomly, or more intelligently depending on whether you have built-in AI in the agent) and executed. This process is repeated every tick, until the goal is solved, or until the agent uses up its computation budget.
 
 
 ### Creating an agent, 1st attempt
@@ -160,13 +160,13 @@ This goal is solved if the agent manage to compute a 'proposal' x that satisfies
 
 To be more precise, an agent actually expects a `GoalTree` rather than a `Goal`. A `GoalTree` allows a complex goal such as `SEQ(g1,g2,g3)` to be expressed. Let's not discuss this now. For now it is sufficient to know that a `Goal` can be lifted to a `GoalTree`. If `g` is a `Goal`, `g.lift()` will construct a `GoalTree` that contains `g` as its only element.
 
-### Action and strategy
+### Action and tactic
 
 A `BasicAgent` does not however have any knowledge how to solve any goal. We will need to program it to solve a goal. Of course, we can write a more sophisticated type of agents some built-in intelligence to make the task of programming them easier. But for now let's stick with `BasicAgent`.
 
-When we specify a goal, we need to supply the corresponding 'strategy' to solve it. Note: when we have a goal-tree instead of just a single goal, every goal (leaf) in the tree requires a strategy.
+When we specify a goal, we need to supply the corresponding 'tactic' to solve it. Note: when we have a goal-tree instead of just a single goal, every goal (leaf) in the tree requires a tactic.
 
-A _strategy_ is composed from one or more _actions_. In the simple case, a strategy consists of just a single action.
+A _tactic_ is composed from one or more _actions_. In the simple case, a tactic consists of just a single action.
 
 An _action_ is a stateful program that operates on the agent state and its own state. It may produce a proposal to be passed on to the agent's goal to see if that solves the goal. The action may also change the state of the agent as well as its own state. Because the action has access to the agent's state, it can thus access the Environment through the agent's state.
 
@@ -210,7 +210,7 @@ var a0withCondition = action((MyState belief) -> actionstate_ -> {
 ```
 
 
-There is one more technical detail: an agent actually wants to have a strategy rather than an action. A 'strategy' is an instance of `nl.uu.cs.aplib.MainConcepts.Strategy`. Although conceptually a single action is also a strategy, technically we need to wrap it to become a `Strategy`. The method `lift()` will do that.  So... here is the incantation to turn the previous lambda-expression to a `Strategy`:
+There is one more technical detail: an agent actually wants to have a tactic rather than an action. A 'tactic' is an instance of `nl.uu.cs.aplib.MainConcepts.Tactic`. Although conceptually a single action is also a Tactic, technically we need to wrap it to become a `tactic`. The method `lift()` will do that.  So... here is the incantation to turn the previous lambda-expression to a `Tactic`:
 
 ```java
 var guessing = action((SimpleState belief) -> actionstate_ -> {
@@ -222,12 +222,12 @@ var guessing = action((SimpleState belief) -> actionstate_ -> {
 ```
 
 
-#### Attaching a strategy to a Goal
+#### Attaching a tactic to a Goal
 
-Recall that previously we have created a goal called `g10`; here is now how we can attach the strategy `guessing` defined above, and then lift the resulting goal to a goal-tree:
+Recall that previously we have created a goal called `g10`; here is now how we can attach the tactic `guessing` defined above, and then lift the resulting goal to a goal-tree:
 
 ```java
-GoalTree topgoal = g10.withStrategy(guessing).lift() ;
+GoalTree topgoal = g10.withTactic(guessing).lift() ;
 ```
 
 ### Creating an agent, 2nd attempt
@@ -238,7 +238,7 @@ Now we have all the ingredients to create a working agent :) Here is the code fo
 // formulate a goal:
 Goal g10 = goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10) ;
 
-// defining a strategy as the goal solver:
+// defining a tactic as the goal solver:
 var guessing = action("guessing")
    .do_((SimpleState belief) -> actionstate_ -> {
         int x = rnd.nextInt(11) ;
@@ -247,8 +247,8 @@ var guessing = action("guessing")
         })
         .lift() ;
 
-// attach the strategy to the goal, and make it a goal-tree:
-GoalTree topgoal = g10.withStrategy(guessing).lift() ;
+// attach the tactic to the goal, and make it a goal-tree:
+GoalTree topgoal = g10.withTactic(guessing).lift() ;
 
 // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 var agentX = new BasicAgent()

@@ -1,7 +1,11 @@
 # Aplib: an Agent Programming Library
 
-`Aplib` is a Java library to program multi agent programs. It provides an architecture and a design pattern for programming agents, enabling you to program agents more abstractly, in terms of goals and strategies. You will have to program the strategies yourself, but you do not have to worry about the underlying infrastructure such as strategy execution and support for inter-agent communication; these are provided by `aplib`. `Aplib` also tries to offer high level APIs, so that you can program
+`Aplib` is a Java library to program multi agent programs.
+`Aplib` is inspired by the popular [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming (e.g. `aplib` agents have 'goals' and run so-called 'deliberation' cycles).
+`Aplib` provides an architecture and a design pattern for programming agents, enabling you to program agents more abstractly, in terms of goals and tactics. You will have to program the tactics yourself, but you do not have to worry about the underlying infrastructure such as tactic execution and support for inter-agent communication; these are provided by `aplib`. `Aplib` also tries to offer high level APIs, so that you can program
 your agents as cleanly as possible, with least possible boilerplate code.
+
+
 
 _Note:_ as it is now, `aplib` is still under development. As we go, we will add more supports to integrate AI into your agents.
 
@@ -9,16 +13,15 @@ There are indeed many dedicated agent programming languages, but most of them do
 
 `Aplib` views an agent system as a system consisting of an '_environment_' where one or more agents operate to influence this environment towards certain goals. This _environment_ can be another program, or some hardware, or a human user interacting through some interface. While some environment may be passive, completely controlled by the agents, some others may be autonomous and non-deterministic, which makes the task of controlling it indeed more challenging for the agents.
 
-`Aplib` allows **an agent to be programmed by specifying a goal that it has to solve, and a strategy to solve it**. There are 'combinators' (constructors) available to compose a complex goal from subgoals (or in other words, to break a complex goal into subgoals; providing a subgoal is
-comparable to providing a hint for the agent). A strategy can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex strategy from simpler ones.
+`Aplib` allows **an agent to be programmed by specifying a goal that it has to solve, and a tactic to solve it**. There are 'combinators' (constructors) available to compose a complex goal from subgoals (or in other words, to break a complex goal into subgoals; providing a subgoal is
+comparable to providing a hint for the agent). A tactic can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex tactic from simpler ones.
 
-`Aplib` is inspired by the popular [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming (e.g. `aplib` agents have 'goals' and run so-called 'deliberation' cycles). However, we decide not to implement a BDI logic to favor simplicity and programmability. You will not lose expressiveness (Java aside, `aplib` is Turing complete).
 
 
 **Features:**
 
 * **Fluent interface** style of APIs.
-* Combinators for **high level goal and strategy programming**.
+* Combinators for **high level goal and tactical programming**.
 * **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
 * **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
 * **Prolog binding**: allowing agents to do prolog-based reasoning.
@@ -41,7 +44,7 @@ Planned features:
 goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
 ```
 
-* Specifying a strategy:
+* Specifying a tactic:
 
 ```java
 FIRSTof(guessLowerbound.on_((Belief belief) -> ! belief.feelingVeryLucky() ,

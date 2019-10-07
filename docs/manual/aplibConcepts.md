@@ -24,9 +24,9 @@ An agent can be given a goal. Without a goal, the agent will not do anything. A 
 
 For example a goal `(𝜆x → x=99)` is a goal that is solved only if the agent proposes 99. A goal `(𝜆x → isPrime(x))` is solved if the agent proposes a prime number.
 
-When created, agents are in principle blank: they have no behavior, so they wouldn’t have a clue how to solve even a simple goal. When giving a goal G to an agent, we will require G to be accompanied by a “strategy” that acts as a solver. This strategy will be invoked at every tick until the goal is solved. We can also specify a time budget for solving G; when this budget is used up, the agent will stop trying and the goal is marked as failed. The goal is said to be **closed** if it is either solved or failed.
+When created, agents are in principle blank: they have no behavior, so they wouldn’t have a clue how to solve even a simple goal. When giving a goal G to an agent, we will require G to be accompanied by a “tactic” that acts as a solver. This tactic will be invoked at every tick until the goal is solved. We can also specify a time budget for solving G; when this budget is used up, the agent will stop trying and the goal is marked as failed. The goal is said to be **closed** if it is either solved or failed.
 
-The simplest form of a strategy is called **action**. An action 𝛼 is a pair a → f where a is called the **guard** of 𝛼, and f specifies the **effect** of the action. Let’s first consider a simple setup. An agent A is given a goal G with action a → f as the strategy to solve G, and time budget B. The execution of A goes as follows.
+The simplest form of a tactic is called **action**. An action 𝛼 is a pair a → f where a is called the **guard** of 𝛼, and f specifies the **effect** of the action. Let’s first consider a simple setup. An agent A is given a goal G with action a → f as the tactic to solve G, and time budget B. The execution of A goes as follows.
 
  ##### algorithm _actionExec_(𝛼), where 𝛼 = a → f
 
@@ -46,105 +46,110 @@ When a tick comes:
 
 4. In all cases, before the turn ends, the budget B is subtracted with the time that has elapsed since the tick arrival.
 
-### Complex goal (goal-tree)
+### Complex goal (goal-structure)
 
-Inevitably, there will be goals which are too difficult to solve with typical strategies. To mitigate this, we will allow the user to split a goal into smaller chunks, which at the lowest level are, hopefully, feasible to solve. To support this concept, we generalize the concept of goal to goal-tree. A **goal-tree** is conceptually is just a goal, but it has so-called _combinators_ to construct it from smaller goal-trees.
+Inevitably, there will be goals which are too difficult to solve with typical tactics. To mitigate this, we will allow the user to split a goal into smaller chunks, which at the lowest level are, hopefully, feasible to solve. To support this concept, we generalize the concept of goal to goal-structure. A **goal-structure** is conceptually is just a goal, but it has so-called _combinators_ to construct it from smaller goal-structures.
 
-There are three combinators for building a goal-tree:
+There are three combinators for building a goal-structure:
 
-1. If G is a goal, **lift**(G) is a goal-tree, consisting of a single leaf, namely G. This goal-tree is solved/failed is G is solved/failed.
+1. If G is a goal, **lift**(G) is a goal-structure, consisting of a single leaf, namely G. This goal-structure is solved/failed is G is solved/failed.
 
-2. If h0, h1, ... are goal-trees, then 𝛨 = **SEQ**(h0,h1,...) is also a goal-tree. 𝛨 is solved if all h0, h1, ... are solved, and are moreover solved in that specific order. If one of them fails, 𝛨 fails.
+2. If h0, h1, ... are goal-structures, then 𝛨 = **SEQ**(h0,h1,...) is also a goal-structure. 𝛨 is solved if all h0, h1, ... are solved, and are moreover solved in that specific order. If one of them fails, 𝛨 fails.
 
-3. If h0, h1, ... are goal-trees, then 𝛨 = **FIRSTof**(h0,h1,...) is also a goal-tree. The subgoal h0, h1, ... are tried sequentially in that order. 𝛨 is solved if one of h0, h1, … is solved. 𝛨 fails of all the subgoals h0, h1, … fail.
+3. If h0, h1, ... are goal-structures, then 𝛨 = **FIRSTof**(h0,h1,...) is also a goal-structure. The subgoal h0, h1, ... are tried sequentially in that order. 𝛨 is solved if one of h0, h1, … is solved. 𝛨 fails of all the subgoals h0, h1, … fail.
 
 
-So, a goal-tree 𝛨 would have goals as leaves, each would require an action to be specified as its “solver”. To emphasize the distinction between leaf and non-leaf goal-tree, those goals in the leaves are also called **primitive goals**.
+So, a goal-structure 𝛨 would have goals as leaves, each would require an action to be specified as its “solver”. To emphasize the distinction between leaf and non-leaf goal-structure, those goals in the leaves are also called **primitive goals**.
 
-Rather than giving a goal to an agent, we now give a goal-tree. The goal-tree that is given to an agent is called **top-level** goal-tree (or simply top-level goal).
+Rather than giving a goal to an agent, we now give a goal-structure. The goal-structure that is given to an agent is called **top-level** goal-structure (or simply top-level goal).
 
-Note that only primitive goals of a top-level goal-tree will trigger computation by the agent (in the sense of executing some strategies). Not all primitive goals will eventually be tried (e.g. when a subgoal in a **SEQ** fails, the **SEQ** node fails; the remaining subgoals of the same **SEQ** node does not have to be inspected). However, when a primitive goal is picked up by the agent, the previously defined execution model of (primitive) goals insists that the agent stays on this goal over multiple ticks if needed, until either the primitive goal is solved, or until the allocated budget for that goal runs out, or until the agent executes an abort action (will be explained later). In other words, the execution of a goal cannot be interrupted by another goal.
+Note that only primitive goals of a top-level goal-structure will trigger computation by the agent (in the sense of executing some tactics). Not all primitive goals will eventually be tried (e.g. when a subgoal in a **SEQ** fails, the **SEQ** node fails; the remaining subgoals of the same **SEQ** node does not have to be inspected). However, when a primitive goal is picked up by the agent, the previously defined execution model of (primitive) goals insists that the agent stays on this goal over multiple ticks if needed, until either the primitive goal is solved, or until the allocated budget for that goal runs out, or until the agent executes an abort action (will be explained later). In other words, the execution of a goal cannot be interrupted by another goal.
 
 
 ### Budgeting
 
-When specifying a top-level goal-tree, the user can also specify a time budget B that is available for the agent to solve the goal-tree. This is specified at the top level only. On the other hand, each primitive goal can specify minimum budget that it would ideally require. It is up to the agent to regulate how it distributes the starting budget it receives at the top level down to every subgoal.
+When specifying a top-level goal-structure, the user can also specify a time budget B that is available for the agent to solve the goal-structure. This is specified at the top level only. On the other hand, each primitive goal can specify minimum budget that it would ideally require. It is up to the agent to regulate how it distributes the starting budget it receives at the top level down to every subgoal.
 
 Regardless of how the agent distributes the budget, when a primitive goal G is picked up by the agent, the agent must decide how much fraction of B it will give to G. Suppose a budget B’ ≤ B is given to G. If this B’ is less than the minimum demanded by G, the agent decides whether to still try G, or to declare G as failed. If the agent decides to do G anyway, it will then start solving G, which can potentially takes multiple ticks to do. The execution time of every tick will be subtracted from B’ and B. If B’ is exhausted, the goal G is marked as failed, and the agent will switch to another primitive goal, if there is any left.
 
-### Strategy
+### Tactic
 
-Recall that each primitive goal must be accompanied by a 'strategy'. The simplest type of strategy consists of only one action. We have discussed this before. A more powerful strategy can be written by composing smaller strategies. The following are combinators to construct strategies:
+Recall that each primitive goal must be accompanied by a 'tactic'. The simplest type of tactic consists of only one action. We have discussed this before. A more powerful tactic can be written by composing smaller tactics. The following are combinators to construct tactics:
 
-1. If 𝛼 = a → f is an action, **lift**(𝛼) is a strategy.
+1. If 𝛼 = a → f is an action, **lift**(𝛼) is a tactic.
 
-2. If S0, S1, ... are strategies, T = **SEQ**(S0,S1,...) is also a strategy.
+2. If T0, T1, ... are tactics, T = **SEQ**(T0,T1,...) is also a tactic.
 
-3. **FIRSTof**(S0,S1,...) is also a strategy.
+3. **FIRSTof**(T0,T1,...) is also a tactic.
 
-4. **ANYof**(S0,S1,...) is also a strategy.
-
-
-To solve a primitive goal, we can now use a strategy rather than just an action.
-
-Informally, **SEQ**(S0,S1,...) is a strategy that invokes the substrategies S0,S1,... in sequence; so after Sk is “completed”, the agent will continue with Sk+1. T = **FIRSTof**(S0,S1,...) is also a strategy that first evaluates its sub-strategies in the current state. They will be evaluated in the order as they appear, so S0,S1,... and so on. (And they will only be evaluated first, not executed). T will execute **the first** Sk that is enabled in the current state (has an action that is enabled in the current state). In contrast, T = **ANYof**(S0,S1,...) will choose **any** of the sub-strategies which are enabled.
-
-Just like action, a strategy is executed repeatedly until the goal is solved, or until its budget runs out. Due to the presence of SEQs in a strategy, its execution may require multiple actions to be executed over multiple ticks. When such an intra-strategy sequence reaches its end, we say that the strategy has executed one “iteration”. If this does not solve the goal, at the next tick the agent will reset the sequence, and starts a new iteration. Defining strategy execution more precisely requires a bit more technicalities. We will first introduce some auxiliary concepts.  
-
-Consider a strategy _Troot_ is given to the agent to solve some primitive goal G. If S is some sub-strategy of _Troot_ that the agent is just worked on, and managed to complete it. Let’s define **next**(S) specifying which strategy within _Troot_ the agent should execute next. It is defined as follows:
-
-1. **If** S is a **leaf** strategy, so it is of the form lift(𝛼) where 𝛼 is an action, and furthermore 𝛼 is not marked as **completed**, **next**(S) = S. By default, when an action is executed in the current tick, at the end of the tick the action is considered as “completed”. An exception will be explained later, to make it possible to let a single action to run repetitively over multiple ticks.
-
-2. **Otherwise** (so, S is either a non-leaf, or it is a leaf and marked as completed), we have the following cases:
-
-   * If S is a child of T = **FIRSTof**(...) or T = **ANYof**(...), then **next**(S) = **next**(T).
-
-   * If S is a child of T = **SEQ**(...), we have two subcases: (a) S is a k-th child, and **not** the last child of T, then **next**(S) = the k+1th child of T; and (b) S is the **last child** of T, then **next**(S) = **next**(T).
-
-   * S = _Troot_ (so it has no parent); then **next**(S) = null.
+4. **ANYof**(T0,T1,...) is also a tactic.
 
 
-Let’s write **first**(S,u) to denote the set of actions (the leaves) under S which can be executed as S’s first actions, and are moreover **enabled** on the current state u. We define it as follows:
+To solve a primitive goal, we can now use a tactic rather than just an action.
+
+Informally, **SEQ**(T0,T1,...) is a tactic that invokes the subtactics T0,T1,... in sequence; so after T<sub>k</sub> is “completed”, the agent will continue with T<sub>k+1</sub>. T = **FIRSTof**(T0,T1,...) is also a tactic that first evaluates its sub-tactics in the current state. They will be evaluated in the order as they appear, so T0,T1,... and so on. (And they will only be evaluated first, not executed). T will execute **the first** T<sub>k</sub> that is enabled in the current state (has an action that is enabled in the current state). In contrast, T = **ANYof**(T0,T1,...) will choose **any** of the sub-tactics which are enabled.
+
+Just like action, a tactic is executed repeatedly until the goal is solved, or until its budget runs out. Due to the presence of SEQs in a tactic, its execution may require multiple actions to be executed over multiple ticks. When such an intra-tactic sequence reaches its end, we say that the tactic has executed one “iteration”. If this does not solve the goal, at the next tick the agent will reset the sequence, and starts a new iteration. Defining tactic execution more precisely requires a bit more technicalities. We will first introduce some auxiliary concepts.  
+
+Consider a tactic _Troot_ is given to the agent to solve some primitive goal G. If T is some sub-tactic of _Troot_ that the agent is just worked on, and managed to complete it, we need to define **next**(T), which should be the tactic within _Troot_ that the agent should execute next. This is defined as follows:
+
+
+1. T is **not** a leaf.
+
+   * If T is a child of U = **FIRSTof**(...) or U = **ANYof**(...), then **next**(T) = **next**(U).
+
+   * If T is a child of U = **SEQ**(...), we have two subcases: (a) T is a k-th child, and **not** the last child of U, then **next**(T) = the k+1th child of U; and (b) T is the **last child** of U, then **next**(T) = **next**(U).
+
+   * T = _Troot_ (so it has no parent); then **next**(T) = null.
+
+1. **If** T is a **leaf** tactic, so it is of the form lift(𝛼) where 𝛼 is an action. By default, when an action is executed in the current tick, at the end of the tick the action is considered as “completed”. But there is an exception that will be explained later, that will make it possible to let a single action to run repetitively over multiple ticks. So we have two subcases:
+
+  * 𝛼 is marked as completed. Then **next**(T) is defined the same as case 1 above, when T is not a leaf.
+
+  * 𝛼 is **not** marked as **completed**. Then **next**(T) = T.
+
+
+Let’s write **first**(T,u) to denote the set of actions (the leaves) under T which can be executed as T’s first actions, and are moreover **enabled** on the current state u. We define it as follows:
 
 1. **first**(**lift**(𝛼),u) = { 𝛼 } if 𝛼 is enabled on u, else it is ∅.
 
-2. **first**(SEQ(S0,...),u) = **first**(S0,u).
+2. **first**(SEQ(T0,...),u) = **first**(T0,u).
 
-3. **first**(**ANYof**(S0,S1,...),u) = **first**(S0,u) ∪ **first**(S1,u) ∪ ...
+3. **first**(**ANYof**(T0,T1,...),u) = **first**(T0,u) ∪ **first**(T1,u) ∪ ...
 
-4. If T = **FIRSTof**(S0,S1,...), **first**(T) = **first**(S0,u), if it is non-empty, else it is  **first**(S1,u), if it is non-empty, etc. If the **first** of all Sk is empty,  then **first**(T) is also empty.
-
-
-Now we can define the execution of _Troot_ as follows. We will maintain a variable called _currentStrategy_ to point to the current node/sub-strategy of Troot the agent is currently using.
+4. If T = **FIRSTof**(T0,T1,...), **first**(T) = **first**(T0,u), if it is non-empty, else it is  **first**(T1,u), if it is non-empty, etc. If the **first** of all S<sub>k</sub> is empty,  then **first**(T) is also empty.
 
 
-##### Algorithm _strategy-dispacther_(Troot)
+Now we can define the execution of _Troot_ as follows. We will maintain a variable called _currentTactic_ to point to the current node/sub-tactic of Troot the agent is currently using.
 
-Initially: _currentStrategy = Troot_
+
+##### Algorithm _tactic-dispacther_(Troot)
+
+Initially: _currentTactic = Troot_
 
 When a tick arrives:
 
-1. Let _candidates_ := **first**(_currentStrategy_)
+1. Let _candidates_ := **first**(_currentTactic_)
 
 2. **if** _candidates_ is empty, the tick is done.
 
 3. **Otherwise**, the agent chooses one action 𝛼 from _candidates_ and executes it according to the algorithm _actionExec_(𝛼).
-Before the tick is done, we update _currentStrategy_ as follows:
+Before the tick is done, we update _currentTactic_ as follows:
 
-   * **if** 𝛼 is marked as **completed**, then _currentStrategy_ := **next**(𝛼), **else** _currentStrategy_ = 𝛼.
+   * **if** 𝛼 is marked as **completed**, then _currentTactic_ := **next**(𝛼), **else** _currentTactic_ = 𝛼.
 
-   * if _currentStrategy = null_, we cycle back to _currentStrategy_ := _Troot_.
+   * if _currentTactic = null_, we cycle back to _currentTactic_ := _Troot_.
 
 Choosing one action from a set of candidates in step-3 is called  **deliberation**. The easiest deliberation method is to just choose randomly, but indeed it would be interesting to explore more intelligent deliberation.
 
 ### Abort action
 
-Sometimes it is better to just give up on a goal, rather than wasting computing budget on it. To allow this, a strategy can include a special action called abort (which can also be guarded). If invoked, it will mark the current goal as being failed. Note that this does not necessarily mean that the topgoal will fail as well. E.g. if the topgoal is g = **FIRSTof**(g1,g2), if g1 fails, g2 might still succeed and hence still solving g.
+Sometimes it is better to just give up on a goal, rather than wasting computing budget on it. To allow this, a tactic can include a special action called abort (which can also be guarded). If invoked, it will mark the current goal as being failed. Note that this does not necessarily mean that the topgoal will fail as well. E.g. if the topgoal is G = **FIRSTof**(g1,g2), if g1 fails, g2 might still succeed and hence still solving G.
 
 ### Persistent action
 
-Other than the top-level implicit iterative execution of a strategy, so far we have no means to program a strategy that requires an inner loop. We can still write **SEQ**(S,S,..) that will do S k number of times, but this k must be known upfront. So far there is no direct way to have a strategy that repeatedly does S until some condition holds, and then T.
-To facilitate such a strategy we will add one more construct: if f is an effect and a is a predicate, f **until** a specifies an action.
+Other than the top-level implicit iterative execution of a tactic, so far we have no means to program a tactic that requires an inner loop. We can still write **SEQ**(T,T,..) that will do T k number of times, but this k must be known upfront. So far there is no direct way to have a tactic that repeatedly does T until some condition holds, and then to continue with another tactic, say, U.
+To facilitate such a tactic we will add one more construct: if f is an effect and a is a predicate, f **until** a specifies an action.
 
 The action f **until** a is always enabled. When executed, the effect f is executed. After that, just before the tick ends, the guard a is tested. If it is true, the action is marked as **completed**, and else it is considered as incomplete. While it is still incomplete, at the next tick the agent will persist on executing it again.
 
@@ -155,9 +160,9 @@ The action f **until** a is always enabled. When executed, the effect f is execu
 
 * **Action level.** Actions can access Prolog through the class ``StateWithProlog``, allowing them to do Prolog-based inference on their state/belief.
 
-* **Declarative strategy programming.** Our concept of strategy allows some degree of declarativeness when programming a goal solver. By using guarded actions we 'only' need to specify when an action are executable, without having to program the specific order in which the actions have to be invoked.
+* **Declarative tactic programming.** Our concept of tactic allows some degree of declarativeness when programming a goal solver. By using guarded actions we 'only' need to specify when an action are executable, without having to program the specific order in which the actions have to be invoked.
 
-* **Deliberation.** A strategy is essentially a set of actions where you declaratively specify when each action can be executed. You can shift more responsibility to the agent by letting it more space to make the decision of which action to do at each current state, rather than that it always follow your strict programming. `Aplib` agents delegate the deliberation process to an instance of a class called `Deliberation`. The standard implementation is to just choose actions randomly, if there are indeed multiple actions enabled in the current state. Each agent has by default an instance of `Deliberation`, but you can reconfigure it uses your own implementation of `Deliberation`, e.g. a subclass that implements a smarter deliberating process, e.g. to make the decisions trainable with machine learning (e.g. with RL).
+* **Deliberation.** A tactic is essentially a set of actions where you declaratively specify when each action can be executed. You can shift more responsibility to the agent by letting it more space to make the decision of which action to do at each current state, rather than that it always follow your strict programming. `Aplib` agents delegate the deliberation process to an instance of a class called `Deliberation`. The standard implementation is to just choose actions randomly, if there are indeed multiple actions enabled in the current state. Each agent has by default an instance of `Deliberation`, but you can reconfigure it uses your own implementation of `Deliberation`, e.g. a subclass that implements a smarter deliberating process, e.g. to make the decisions trainable with machine learning (e.g. with RL).
 
 ### Multi agent
 
