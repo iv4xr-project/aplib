@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import nl.uu.cs.aplib.MainConcepts.GoalTree.GoalsCombinator;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.GoalsCombinator;
 
 
 /**

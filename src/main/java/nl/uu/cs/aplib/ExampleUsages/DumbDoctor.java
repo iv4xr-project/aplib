@@ -53,7 +53,7 @@ public class DumbDoctor {
     		ANYof(a1,a2)
     	)) ;    		  
       // setting g as the top goal:
-      GoalTree topgoal = g.lift() ;
+      GoalStructure topgoal = g.lift() ;
       
       // creating a doctor-agent, attaching state to it, and the above topgoal to it:
       var belief = new DoctorBelief() ;
@@ -67,7 +67,7 @@ public class DumbDoctor {
       if(topgoal.getStatus().success()) 
     	  belief.env().println("I am glad you are happier now :)");
       
-      topgoal.printTreeStatus();
+      topgoal.printGoalStructureStatus();
   
 
 	}

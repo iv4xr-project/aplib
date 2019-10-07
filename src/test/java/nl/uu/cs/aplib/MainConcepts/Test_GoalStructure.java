@@ -4,11 +4,11 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import org.junit.jupiter.api.Test;
 
-import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
 
 import static org.junit.jupiter.api.Assertions.* ;
 
-public class Test_GoalTree {
+public class Test_GoalStructure {
 	
 	@Test
 	public void test_submitProposal() {
@@ -108,10 +108,10 @@ public class Test_GoalTree {
 	PrimitiveGoal g4 ;
 	PrimitiveGoal g5 ;
 	PrimitiveGoal g6 ;
-	GoalTree a ;
-	GoalTree b ;
-	GoalTree c ;
-	GoalTree d ;
+	GoalStructure a ;
+	GoalStructure b ;
+	GoalStructure c ;
+	GoalStructure d ;
 
 	void setup() {
 		g1 = lift(goal("g1")) ;

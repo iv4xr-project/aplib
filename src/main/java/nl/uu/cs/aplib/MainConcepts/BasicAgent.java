@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
-import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
@@ -19,7 +19,7 @@ import nl.uu.cs.aplib.Utils.Time;
  * This is the root class of all agents in aplib. As the name suggests, this
  * class provides you with basic but working agents. An instance of BasicAgent
  * is an agent. You can give it a goal (to be more precise, an instance of
- * {@link GoalTree}. Assuming a strategy has been supplied along with the goal,
+ * {@link GoalStructure}. Assuming a strategy has been supplied along with the goal,
  * you can then execute the agent, which in turn will execute the strategy
  * towards solving the goal. A BasicAgent uses a very simplistic
  * <i>deliberation</i> scheme. When in the current state (of the agent) the
@@ -49,7 +49,7 @@ import nl.uu.cs.aplib.Utils.Time;
  * is ready to do work for you.
  * 
  * <p>
- * Use the method {@link #setGoal(GoalTree)} to give a goal to a BasicAgent. It
+ * Use the method {@link #setGoal(GoalStructure)} to give a goal to a BasicAgent. It
  * is assumed, that when you provide a goal, you also attach a {@link Tactic}
  * to it that the agent can use to solve the goal. To execute this strategy you
  * can invoke the method {@link #update()}, which will execute the strategy for
@@ -90,7 +90,7 @@ public class BasicAgent {
 	/**
 	 * The current topgoal the agent has.
 	 */
-	protected GoalTree goal ;
+	protected GoalStructure goal ;
 	
 	/**
 	 * A topgoal may consists of multiple subgoals, which the agent will work on
@@ -122,13 +122,13 @@ public class BasicAgent {
 	
 	/**
 	 * Create a blank agent. You will need to at least attach a {@link SimpleState} and 
-	 * a {@link GoalTree} to it before it can be used to do something.
+	 * a {@link GoalStructure} to it before it can be used to do something.
 	 */
 	public BasicAgent() { }
 	
 	/**
 	 * Create a blank agent with the given id and role. You will need to at least
-	 * attach a {@link SimpleState} and a {@link GoalTree} to it before it can be
+	 * attach a {@link SimpleState} and a {@link GoalStructure} to it before it can be
 	 * used to do something.
 	 * 
 	 * The id should be unique. Multiple agents can have the same role. For
@@ -146,7 +146,7 @@ public class BasicAgent {
 	 * Set a goal for this agent. The method returns the agent itself so that this
 	 * method can be used in the Fluent Interface style.
 	 */
-	public BasicAgent setGoal(GoalTree g) {
+	public BasicAgent setGoal(GoalStructure g) {
 		goal = g ;
 		currentGoal = goal.getDeepestFirstPrimGoal() ;
 		currentStrategy = currentGoal.goal.getStrategy() ;

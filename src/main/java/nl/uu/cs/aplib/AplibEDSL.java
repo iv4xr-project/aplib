@@ -1,12 +1,12 @@
 package nl.uu.cs.aplib;
 
 import nl.uu.cs.aplib.MainConcepts.*;
-import nl.uu.cs.aplib.MainConcepts.GoalTree.*;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.*;
 import nl.uu.cs.aplib.MainConcepts.Tactic.*;
 
 /**
  * Provide a set of convenience static methods to be used as operators/combinators for constructing
- * {@link nl.uu.cs.aplib.MainConcepts.GoalTree} and§  {@link nl.uu.cs.aplib.MainConcepts.Tactic}. 
+ * {@link nl.uu.cs.aplib.MainConcepts.GoalStructure} and§  {@link nl.uu.cs.aplib.MainConcepts.Tactic}. 
  * 
  * @author wish
  *
@@ -15,17 +15,17 @@ public class AplibEDSL {
 	
 	
 	/**
-	 * Create a SEQ type {@link nl.uu.cs.aplib.MainConcepts.GoalTree}.
+	 * Create a SEQ type {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
-	static public GoalTree SEQ(GoalTree ... subgoals) {
-		return new GoalTree(GoalsCombinator.SEQ, subgoals) ;
+	static public GoalStructure SEQ(GoalStructure ... subgoals) {
+		return new GoalStructure(GoalsCombinator.SEQ, subgoals) ;
 	}
 
 	/**
-	 * Create a FIRSTof type {@link nl.uu.cs.aplib.MainConcepts.GoalTree}.
+	 * Create a FIRSTof type {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
-	static public GoalTree FIRSTof(GoalTree ... subgoals) {
-		return new GoalTree(GoalsCombinator.FIRSTOF, subgoals) ;
+	static public GoalStructure FIRSTof(GoalStructure ... subgoals) {
+		return new GoalStructure(GoalsCombinator.FIRSTOF, subgoals) ;
 	}
 	
 	/**
@@ -36,7 +36,7 @@ public class AplibEDSL {
 	}
 	
 	/**
-	 * Lift a Goal to become a {@link nl.uu.cs.aplib.MainConcepts.GoalTree}.
+	 * Lift a Goal to become a {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
 	static public PrimitiveGoal lift(Goal g) {
 		return new PrimitiveGoal(g) ;

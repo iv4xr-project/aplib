@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.* ;
 
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.GoalTree.*;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.*;
 import nl.uu.cs.aplib.Utils.Time;
 
 

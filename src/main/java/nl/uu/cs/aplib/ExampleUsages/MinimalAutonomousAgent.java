@@ -11,7 +11,7 @@ import nl.uu.cs.aplib.Agents.StateWithMessenger;
 import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.MainConcepts.BasicAgent;
 import nl.uu.cs.aplib.MainConcepts.Goal;
-import nl.uu.cs.aplib.MainConcepts.GoalTree;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure;
 import nl.uu.cs.aplib.MainConcepts.SimpleState;
 
 public class MinimalAutonomousAgent {
@@ -33,7 +33,7 @@ public class MinimalAutonomousAgent {
 				.lift() ;
 		
 		  // attach the action to the goal, and make it a goal-tree:
-		  GoalTree topgoal = g.withStrategy(guessing).lift() ;
+		  GoalStructure topgoal = g.withStrategy(guessing).lift() ;
 		  
 		  System.err.println("** Main thread " + Thread.currentThread().getId()) ;
 		  
@@ -52,7 +52,7 @@ public class MinimalAutonomousAgent {
 		  
 		  // while this main thread waits until the goal is concluded:
 		  var gt = agent.waitUntilTheGoalIsConcluded() ;
-		  gt.printTreeStatus();
+		  gt.printGoalStructureStatus();
 		  agent.stop();
 		
 	}
