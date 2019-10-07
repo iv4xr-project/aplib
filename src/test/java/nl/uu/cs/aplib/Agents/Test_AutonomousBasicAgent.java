@@ -63,7 +63,7 @@ public class Test_AutonomousBasicAgent {
 				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
-		var g = goal("g").toSolve((Integer x) -> false).withStrategy(a0) . lift() ;
+		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
 		
 		agent.setGoal(g) ;
 		
@@ -117,7 +117,7 @@ public class Test_AutonomousBasicAgent {
 				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
-		var g = goal("g").toSolve((Integer x) -> false).withStrategy(a0) . lift() ;
+		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
 		
 		agent1.setGoal(g) ;
 		
@@ -166,7 +166,7 @@ public class Test_AutonomousBasicAgent {
 				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
-		var g = goal("g").toSolve((Integer x) -> false).withStrategy(a0) . lift() ;
+		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
 		
 		// run the agent autonomously:
 		new Thread(() -> agent.loop()) . start() ;
@@ -198,7 +198,7 @@ public class Test_AutonomousBasicAgent {
 				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
-		var g = goal("g").toSolve((Integer x) -> x==10).withStrategy(a0) . lift() ;
+		var g = goal("g").toSolve((Integer x) -> x==10).withTactic(a0) . lift() ;
 		
 		// run the agent autonomously:
 		new Thread(() -> agent.loop()) . start() ;
@@ -230,7 +230,7 @@ public class Test_AutonomousBasicAgent {
 				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
-		var g = goal("g").toSolve((Integer x) -> x==2).withStrategy(a0) . lift() ;
+		var g = goal("g").toSolve((Integer x) -> x==2).withTactic(a0) . lift() ;
 		
 		agent1.setGoal(g) ;
 		

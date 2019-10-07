@@ -384,10 +384,10 @@ public class FiveGame_withAgent {
 				. on_((MyState st) -> st.test(st.set4Move("X","Y")) ) 
 				. lift() ;
 		
-		// define a goal and specify a strategy:
+		// define a goal and specify a tactic:
 		var g = goal("goal")
 				. toSolve((GAMESTATUS st) -> st == GAMESTATUS.CROSSWON)
-				. withStrategy(FIRSTof(winningmove,block,smartmove,besideHV))
+				. withTactic(FIRSTof(winningmove,block,smartmove,besideHV))
 				. lift()
 				;
 		

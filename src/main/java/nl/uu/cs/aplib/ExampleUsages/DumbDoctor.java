@@ -46,8 +46,8 @@ public class DumbDoctor {
 			.lift() ;
 	      
 
-      // Specifying a strategy to solve the previously set goal:
-      g.withStrategy(
+      // Specifying a tactic to solve the previously set goal:
+      g.withTactic(
     	FIRSTof(
     		opening.on_((DoctorBelief belief) -> belief.patientHappiness == 0) ,
     		ANYof(a1,a2)

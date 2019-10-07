@@ -47,7 +47,7 @@ public class Goal {
 	public String desc ;
 	double demandedMinimumBudget = 0 ;
 	ProgressStatus status = new ProgressStatus() ;
-	Tactic strategy ;
+	Tactic tactic ;
 	Double distance = null ;
 	Object proposal ;
 	
@@ -133,11 +133,11 @@ public class Goal {
 	 * Set the strategy to that a solving agent can use to solve this goal.
 	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
 	 */
-	public Goal withStrategy(Tactic S) {
-		strategy = S ; return this ;
+	public Goal withTactic(Tactic S) {
+		tactic = S ; return this ;
 	}
 
-	public Tactic getStrategy() { return strategy  ; }
+	public Tactic getTactic() { return tactic  ; }
 
 	//public Goal withAction(Action a) {
 	//	return withStrategy(a.lift()) ;

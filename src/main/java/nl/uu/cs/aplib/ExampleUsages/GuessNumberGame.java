@@ -88,8 +88,8 @@ public class GuessNumberGame  {
           })
         .lift() ;
         
-      // specifying the strategy to solve the goal:  
-      g.withStrategy(SEQ(asklb,guess)) ;
+      // specifying the tactic to solve the goal:  
+      g.withTactic(SEQ(asklb,guess)) ;
       
       // creating an agent, attaching state to it, and the above topgoal to it:
       GoalStructure topgoal = g.lift().withBudget(30000) ;
@@ -104,7 +104,7 @@ public class GuessNumberGame  {
     	  agent.update(); 
       } 
       topgoal.printGoalStructureStatus(); 
-      g.getStrategy().printActionsStatistics();
+      g.getTactic().printActionsStatistics();
 
 	}
 

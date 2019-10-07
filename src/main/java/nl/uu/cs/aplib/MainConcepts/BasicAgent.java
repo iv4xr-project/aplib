@@ -149,7 +149,7 @@ public class BasicAgent {
 	public BasicAgent setGoal(GoalStructure g) {
 		goal = g ;
 		currentGoal = goal.getDeepestFirstPrimGoal() ;
-		currentStrategy = currentGoal.goal.getStrategy() ;
+		currentStrategy = currentGoal.goal.getTactic() ;
 		return this ; 
 	}
 	
@@ -328,7 +328,7 @@ public class BasicAgent {
 			// to find another goal to solve:
 			currentGoal = currentGoal.getNextPrimitiveGoal() ;
 			if (currentGoal != null) {
-				currentStrategy = currentGoal.goal.getStrategy() ;
+				currentStrategy = currentGoal.goal.getTactic() ;
 				goal.redistributeRemainingBudget();
 			}
 			else {
@@ -344,7 +344,7 @@ public class BasicAgent {
 				currentStrategy = chosenAction.calcNextTactic() ;
 				// if no strategy can be found, reset it to the root strategty of the goal:
 				if (currentStrategy == null) 
-					currentStrategy = currentGoal.goal.getStrategy() ;
+					currentStrategy = currentGoal.goal.getTactic() ;
 			}
 			else {
 				currentStrategy = chosenAction ;

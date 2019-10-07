@@ -56,7 +56,7 @@ public class Test_InterAgentCommunication {
 				 . lift() ;
 		
 		
-		var g1 = goal("g1").toSolve((Integer x) -> false).withStrategy(SEQ(a0,a1,a2)) . lift() ;
+		var g1 = goal("g1").toSolve((Integer x) -> false).withTactic(SEQ(a0,a1,a2)) . lift() ;
 		agent1.setGoal(g1) ;
 		
 		// agent 2 will receive 1x, of category BC:
@@ -70,7 +70,7 @@ public class Test_InterAgentCommunication {
 				 . on_((MyState S) -> S.messenger().has(M -> M.getMsgName().equals("BC")))
 				 . lift() ;
 		
-		var g2 = goal("g2").toSolve((Message M) -> M.getMsgName().equals("BC")).withStrategy(b1) . lift() ;
+		var g2 = goal("g2").toSolve((Message M) -> M.getMsgName().equals("BC")).withTactic(b1) . lift() ;
 		agent2.setGoal(g2) ;
 		
 		// agent 3 does nothing, though it will still register to the comNode, hence receiving

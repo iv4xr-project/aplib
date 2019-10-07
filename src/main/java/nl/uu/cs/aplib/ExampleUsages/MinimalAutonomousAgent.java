@@ -33,7 +33,7 @@ public class MinimalAutonomousAgent {
 				.lift() ;
 		
 		  // attach the action to the goal, and make it a goal-tree:
-		  GoalStructure topgoal = g.withStrategy(guessing).lift() ;
+		  GoalStructure topgoal = g.withTactic(guessing).lift() ;
 		  
 		  System.err.println("** Main thread " + Thread.currentThread().getId()) ;
 		  

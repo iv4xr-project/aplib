@@ -34,7 +34,7 @@ public class Test_BasicAgent {
 	    		 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
 	    		 . lift() ;
 		var topgoal = goal("g").toSolve((Integer k) -> k==2) 
-				      . withStrategy(a0) 
+				      . withTactic(a0) 
 				      . lift() ;
 		
 	    agent .setGoal(topgoal);
@@ -60,7 +60,7 @@ public class Test_BasicAgent {
 				 . lift() ;
 		
 		var topgoal =  goal("g").toSolve((Integer k) -> k==2) 
-			          . withStrategy(SEQ(a0, ABORT() )) 
+			          . withTactic(SEQ(a0, ABORT() )) 
 			          . lift() ;
 		
 		agent.setGoal(topgoal);
@@ -76,8 +76,8 @@ public class Test_BasicAgent {
 		
 		// a scenario FIRSTof(g1,g2) ... g1 is aborted
 		state.counter = 0 ;
-		var g1 = goal("g1").toSolve((Integer k) -> true).withStrategy(ABORT()).lift() ;
-		var g2 = goal("g2").toSolve((Integer k) -> k==1).withStrategy(a0).lift() ;
+		var g1 = goal("g1").toSolve((Integer k) -> true).withTactic(ABORT()).lift() ;
+		var g2 = goal("g2").toSolve((Integer k) -> k==1).withTactic(a0).lift() ;
 		var topgoal2 = FIRSTof(g1,g2) ;
 		
 		agent.setGoal(topgoal2);
@@ -110,7 +110,7 @@ public class Test_BasicAgent {
 				. lift() ;	
 		
 		var topgoal = goal("g").toSolve((Integer k) -> k==2) 
-				      . withStrategy(FIRSTof(a0,a1))
+				      . withTactic(FIRSTof(a0,a1))
 				      . lift() ;
 		
 		agent .setGoal(topgoal);
@@ -125,7 +125,7 @@ public class Test_BasicAgent {
 	    
 	    state.counter = 1 ;
 	    topgoal = goal("g").toSolve((Integer k) -> k==2) 
-				  . withStrategy(SEQ(a0,a1))
+				  . withTactic(SEQ(a0,a1))
 				  . lift() ;
 		agent .setGoal(topgoal);
 	    agent.update() ;  
@@ -142,9 +142,9 @@ public class Test_BasicAgent {
 				 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
 				 . lift();
 			
-		var g1 = goal("g1").toSolve((Integer k) -> k==1) . withStrategy(a0) . lift() ;
-		var g2 = goal("g2").toSolve((Integer k) -> k==2) . withStrategy(a0) . lift()  ;
-		var g3 = goal("g3").toSolve((Integer k) -> k==3) . withStrategy(a0) . lift()  ;
+		var g1 = goal("g1").toSolve((Integer k) -> k==1) . withTactic(a0) . lift() ;
+		var g2 = goal("g2").toSolve((Integer k) -> k==2) . withTactic(a0) . lift()  ;
+		var g3 = goal("g3").toSolve((Integer k) -> k==3) . withTactic(a0) . lift()  ;
 
 		var topgoal = FIRSTof(SEQ(g1,g2), g3) ;
 			
@@ -180,7 +180,7 @@ public class Test_BasicAgent {
 				 .lift();
 		
 		var topgoal = goal("g").toSolve((Integer k) -> k==-1) 
-				      . withStrategy(SEQ(a0,a1))
+				      . withTactic(SEQ(a0,a1))
 				      . lift() ;
 		
 		agent .setGoal(topgoal);

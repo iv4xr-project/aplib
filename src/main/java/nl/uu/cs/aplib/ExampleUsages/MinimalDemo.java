@@ -40,8 +40,8 @@ public class MinimalDemo {
 					})
 				.lift() ;
 		
-		  // attach the action to the goal, and make it a goal-tree:
-		  GoalStructure topgoal = g.withStrategy(guessing).lift() ;
+		  // attach the action to the goal, and make it a goal-structure:
+		  GoalStructure topgoal = g.withTactic(guessing).lift() ;
   
 	      // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 	      var agent = new BasicAgent()
