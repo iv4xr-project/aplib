@@ -2,11 +2,11 @@ package nl.uu.cs.aplib;
 
 import nl.uu.cs.aplib.MainConcepts.*;
 import nl.uu.cs.aplib.MainConcepts.GoalTree.*;
-import nl.uu.cs.aplib.MainConcepts.Strategy.*;
+import nl.uu.cs.aplib.MainConcepts.Tactic.*;
 
 /**
  * Provide a set of convenience static methods to be used as operators/combinators for constructing
- * {@link nl.uu.cs.aplib.MainConcepts.GoalTree} and§  {@link nl.uu.cs.aplib.MainConcepts.Strategy}. 
+ * {@link nl.uu.cs.aplib.MainConcepts.GoalTree} and§  {@link nl.uu.cs.aplib.MainConcepts.Tactic}. 
  * 
  * @author wish
  *
@@ -50,10 +50,10 @@ public class AplibEDSL {
 	}
 	
 	/**
-	 * To construct a FIRSTof {@link nl.uu.cs.aplib.MainConcepts.Strategy}.
+	 * To construct a FIRSTof {@link nl.uu.cs.aplib.MainConcepts.Tactic}.
 	 */
-	static public Strategy FIRSTof(Strategy ... strategies) {
-		return new Strategy(StrategyType.FIRSTOF, strategies) ;
+	static public Tactic FIRSTof(Tactic ... strategies) {
+		return new Tactic(TacticType.FIRSTOF, strategies) ;
 	}
 	
 	/**
@@ -62,30 +62,30 @@ public class AplibEDSL {
 	static public Action Abort() { return new Action.Abort() ; }
 	
 	/**
-	 * Creating a {@link nl.uu.cs.aplib.MainConcepts.PrimitiveStrategy} that
+	 * Creating a {@link nl.uu.cs.aplib.MainConcepts.PrimitiveTactic} that
 	 * wraps over an Abort action.
 	 */
-	static public PrimitiveStrategy ABORT() { return lift(new Action.Abort()) ; }
+	static public PrimitiveTactic ABORT() { return lift(new Action.Abort()) ; }
 	
 	/**
-	 * To construct a SEQ {@link nl.uu.cs.aplib.MainConcepts.Strategy}.
+	 * To construct a SEQ {@link nl.uu.cs.aplib.MainConcepts.Tactic}.
 	 */
-	static public Strategy SEQ(Strategy ... strategies) {
-		return new Strategy(StrategyType.SEQ, strategies) ;
+	static public Tactic SEQ(Tactic ... strategies) {
+		return new Tactic(TacticType.SEQ, strategies) ;
 	}
 	
 	/**
-	 * To construct a ANYof {@link nl.uu.cs.aplib.MainConcepts.Strategy}.
+	 * To construct a ANYof {@link nl.uu.cs.aplib.MainConcepts.Tactic}.
 	 */
-	static public Strategy ANYof(Strategy ... strategies) {
-		return new Strategy(StrategyType.ANYOF, strategies) ;
+	static public Tactic ANYof(Tactic ... strategies) {
+		return new Tactic(TacticType.ANYOF, strategies) ;
 	}
 
 	/**
 	 * Lift an {@link nl.uu.cs.aplib.MainConcepts.Action} to become a
-	 * {@link nl.uu.cs.aplib.MainConcepts.PrimitiveStrategy}.
+	 * {@link nl.uu.cs.aplib.MainConcepts.PrimitiveTactic}.
 	 */
-	static public PrimitiveStrategy lift(Action a) {
-		return new PrimitiveStrategy(a) ;
+	static public PrimitiveTactic lift(Action a) {
+		return new PrimitiveTactic(a) ;
 	}
 }

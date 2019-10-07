@@ -10,8 +10,8 @@ import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
  * agent expects a {@link GoalTree}, and a {@code Goal} is the
  * simplest/primitive form a {@link GoalTree}. Note that when a {@code Goal} is
  * given to an agent, the agent will expect the the goal to be accompanied with
- * a {@link Strategy} which the agent will then use to solve the goal. Use the
- * method {@code withStrategy} to attach a {@link Strategy} to a {@code Goal}.
+ * a {@link Tactic} which the agent will then use to solve the goal. Use the
+ * method {@code withStrategy} to attach a {@link Tactic} to a {@code Goal}.
  * 
  * <p>
  * A {@code Goal} is essentially a predicate over some domain. You can imagine
@@ -47,7 +47,7 @@ public class Goal {
 	public String desc ;
 	double demandedMinimumBudget = 0 ;
 	ProgressStatus status = new ProgressStatus() ;
-	Strategy strategy ;
+	Tactic strategy ;
 	Double distance = null ;
 	Object proposal ;
 	
@@ -133,11 +133,11 @@ public class Goal {
 	 * Set the strategy to that a solving agent can use to solve this goal.
 	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
 	 */
-	public Goal withStrategy(Strategy S) {
+	public Goal withStrategy(Tactic S) {
 		strategy = S ; return this ;
 	}
 
-	public Strategy getStrategy() { return strategy  ; }
+	public Tactic getStrategy() { return strategy  ; }
 
 	//public Goal withAction(Action a) {
 	//	return withStrategy(a.lift()) ;

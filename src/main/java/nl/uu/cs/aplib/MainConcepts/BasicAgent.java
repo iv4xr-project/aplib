@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
 import nl.uu.cs.aplib.MainConcepts.GoalTree.PrimitiveGoal;
-import nl.uu.cs.aplib.MainConcepts.Strategy.PrimitiveStrategy;
+import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
 import nl.uu.cs.aplib.MultiAgentSupport.Message;
 import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
@@ -50,7 +50,7 @@ import nl.uu.cs.aplib.Utils.Time;
  * 
  * <p>
  * Use the method {@link #setGoal(GoalTree)} to give a goal to a BasicAgent. It
- * is assumed, that when you provide a goal, you also attach a {@link Strategy}
+ * is assumed, that when you provide a goal, you also attach a {@link Tactic}
  * to it that the agent can use to solve the goal. To execute this strategy you
  * can invoke the method {@link #update()}, which will execute the strategy for
  * a single tick. Call the method repeatedly until the goal is solved, or until
@@ -102,7 +102,7 @@ public class BasicAgent {
 	/**
 	 * The strategy the agent is currently using to solve its currentGoal.
 	 */
-	protected Strategy currentStrategy ;
+	protected Tactic currentStrategy ;
 	
 	
 	protected Logger logger = Logging.getAPLIBlogger() ;
@@ -341,7 +341,7 @@ public class BasicAgent {
 		else {
 			// else the currentgoal is still in-progress
 			if(chosenAction.action.isCompleted()) {
-				currentStrategy = chosenAction.calcNextStrategy() ;
+				currentStrategy = chosenAction.calcNextTactic() ;
 				// if no strategy can be found, reset it to the root strategty of the goal:
 				if (currentStrategy == null) 
 					currentStrategy = currentGoal.goal.getStrategy() ;
