@@ -47,7 +47,7 @@ public class MinimalAutonomousAgent {
                     . setSamplingInterval(1000) 
                     ;
 		  
-		  // run the agent, autonously on its own thread:
+		  // run the agent, autonomously on its own thread:
 		  new Thread(() -> agent.loop()) . start();
 		  
 		  // while this main thread waits until the goal is concluded:

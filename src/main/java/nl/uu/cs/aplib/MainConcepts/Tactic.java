@@ -174,8 +174,8 @@ public class Tactic {
 		 * PrimitiveTactic. The method returns this instance of PrimitiveTactic
 		 * so that it can be used in the Fluent Interface style.
 		 */
-		public <AgentSt> PrimitiveTactic on_(Predicate<AgentSt> guard) { 
-			action.on_(guard) ;
+		public <AgentSt> PrimitiveTactic on__(Predicate<AgentSt> guard) { 
+			action.on__(guard) ;
 			return this ;
 		}
 		

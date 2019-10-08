@@ -11,7 +11,7 @@ import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
  * simplest/primitive form a {@link GoalStructure}. Note that when a {@code Goal} is
  * given to an agent, the agent will expect the the goal to be accompanied with
  * a {@link Tactic} which the agent will then use to solve the goal. Use the
- * method {@code withStrategy} to attach a {@link Tactic} to a {@code Goal}.
+ * method {@code withTactic} to attach a {@link Tactic} to a {@code Goal}.
  * 
  * <p>
  * A {@code Goal} is essentially a predicate over some domain. You can imagine
