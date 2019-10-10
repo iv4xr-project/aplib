@@ -103,7 +103,7 @@ As an example, consider now the following action that we will attach to `agent1`
 
 ```java
 var a0 = action("a0")
-         . do_((MyState S)->actionState-> {
+         . do1((MyState S)-> {
              S.messenger().send("A1",0, MsgCastType.SINGLECAST, "A2","blabla") ;
              return ++S.counter ;
          })
@@ -127,7 +127,7 @@ For example, here is an action that we will assign to `agent2`. It checks in the
 
 ```java
 var b1 = action("b1")
-         . do_((MyState S)->actionState-> {
+         . do1((MyState S)-> {
                 S.messenger().retrieve(M -> M.getMsgName().equals("blabla")) ;
                 return ++S.counter ;
           })
@@ -149,13 +149,13 @@ At every call to `update()`, `agent2` will check if there is a message named "bl
 Recall that an action is basically a function from the agent's state and its own state to solution. To construct an agent we do:
 
 ```java
-action("name").do_(f)
+action("name").do1(f)
 ```
 
 Where the function `f` is a λ-expression of the form:
 
 ```java
-agentstate -> actionstate -> {
+agentstate -> {
   // do something
   // then return a proposed solution
 }

@@ -46,6 +46,11 @@ When a tick comes:
 
 4. In all cases, before the turn ends, the budget B is subtracted with the time that has elapsed since the tick arrival.
 
+### Query guarded action
+
+Rather than having an action guarded by a predicate, we will also allow actions of the form 𝛼 = q → f where q is a query on the agent state. q is a function that can be evaluated on the agent state. The action 𝛼 is enabled if the the evaluation of q results
+in something (a non-null value), say some r. Its effect part, f, can then be executed. When f is executed, it also has access to r that it can use to calculate its effect. 
+
 ### Complex goal (goal-structure)
 
 Inevitably, there will be goals which are too difficult to solve with typical tactics. To mitigate this, we will allow the user to split a goal into smaller chunks, which at the lowest level are, hopefully, feasible to solve. To support this concept, we generalize the concept of goal to goal-structure. A **goal-structure** is conceptually is just a goal, but it has so-called _combinators_ to construct it from smaller goal-structures.

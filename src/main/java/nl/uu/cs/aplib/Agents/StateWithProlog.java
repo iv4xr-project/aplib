@@ -138,6 +138,17 @@ public class StateWithProlog extends StateWithMessenger {
 			}			
 		}
 		
+		public String str_(String varname) {
+			try {
+				Term t = info.getVarValue(varname) ;
+				if (!t.isAtom()) throw new IllegalArgumentException() ;
+				return ((Struct) t).getName() ;		
+			}
+			catch(NoSolutionException e) {
+				return null ;
+			}	
+		}
+		
 	}
 	
 	public QueryResult query(String queryterm) {
