@@ -33,7 +33,7 @@ public class MinimalDemo {
 		   
 		  // defining a single action as the goal solver:
 		  var guessing = action("guessing")
-				.do_((SimpleState belief) -> actionstate_ -> { 
+				.do1((SimpleState belief) -> { 
 					int x = rnd.nextInt(11) ;
 					((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
 					return x ;

@@ -60,7 +60,7 @@ public class Test_AutonomousBasicAgent {
 				    ;
 		
 		var a0 = action("a0")
-				 . do__((MyState S)-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
@@ -114,7 +114,7 @@ public class Test_AutonomousBasicAgent {
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")
-				 . do__((MyState S)-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
@@ -163,7 +163,7 @@ public class Test_AutonomousBasicAgent {
 				    ;
 		
 		var a0 = action("a0")
-				 . do__((MyState S)-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
@@ -195,7 +195,7 @@ public class Test_AutonomousBasicAgent {
 				    ;
 		
 		var a0 = action("a0")
-				 . do__((MyState S)-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> x==10).withTactic(a0) . lift() ;
@@ -227,7 +227,7 @@ public class Test_AutonomousBasicAgent {
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")
-				 . do__((MyState S)-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> x==2).withTactic(a0) . lift() ;

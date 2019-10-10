@@ -46,7 +46,7 @@ public class Test_BasicAgent_budgeting {
 		var agent = new BasicAgent() .attachState(state);   
 		
 		// slightly over budget scenario:
-	    var a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
+	    var a0 = action("a0").do2((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
 		var topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withTactic(lift(a0)))
 				      .withBudget(100); 
@@ -61,7 +61,7 @@ public class Test_BasicAgent_budgeting {
 	    
 	    // just under the budget scenario:
 	    state.counter = 0 ;
-        a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
+        a0 = action("a0").do2((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
 		topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withTactic(lift(a0)))
 				  .withBudget(100); 
@@ -73,7 +73,7 @@ public class Test_BasicAgent_budgeting {
         
         // exactly at budget scenario:
 	    state.counter = 0 ;
-        a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
+        a0 = action("a0").do2((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
 		topgoal = lift(goal("g").toSolve((Integer k) -> k==3) . withTactic(lift(a0)))
 				  .withBudget(100); 
@@ -84,7 +84,7 @@ public class Test_BasicAgent_budgeting {
         assertTrue(topgoal.getStatus().failed()) ;
         
         // budget is exceeded, but the goal is solved scenario:
-        a0 = action("a0").do_((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
+        a0 = action("a0").do2((MyState S)->actionstate-> { S.counter++ ; return S.counter ; }) ;
 	    
 		topgoal = lift(goal("g").toSolve((Integer k) -> true) . withTactic(lift(a0)))
 				  .withBudget(100); 
@@ -104,9 +104,9 @@ public class Test_BasicAgent_budgeting {
 	   
 		
 	    // an action that thinks too long:
-	    var a0 = action("a0").do_((MyState S)->actionstate-> {S.counter = 5 ; return S.counter ; }) ;
+	    var a0 = action("a0").do2((MyState S)->actionstate-> {S.counter = 5 ; return S.counter ; }) ;
 	    
-	    var a1 = action("a1").do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
+	    var a1 = action("a1").do2((MyState S)->actionstate-> {S.counter++ ; return S.counter ; }) ;
 	    
 	    var g1 = lift(goal("g1").toSolve((Integer k) -> k==6) . withTactic(lift(a0))) ;
 	    var g2 = lift(goal("g2").toSolve((Integer k) -> k==7) . withTactic(lift(a1))) ;

@@ -90,7 +90,7 @@ public class Action {
 	 * Set the given predicate as the guard of this Action. The method returns the
 	 * Action itself so that it can be used in the Fluent Interface style.
 	 */
-	public <AgentSt> Action on__(Predicate<AgentSt> guard) { 
+	public <AgentSt> Action on_(Predicate<AgentSt> guard) { 
 		this.guard = st -> { if (guard.test((AgentSt) st))return true_ ; else return null ; } ;
 		return this ;
 	}
@@ -99,7 +99,7 @@ public class Action {
 	 * Set the given query function as the guard of this Action. The method returns the
 	 * Action itself so that it can be used in the Fluent Interface style.
 	 */
-	public <AgentSt,QueryResult> Action on_xx(Function<AgentSt,QueryResult> myguard) { 
+	public <AgentSt,QueryResult> Action on(Function<AgentSt,QueryResult> myguard) { 
 		this.guard = st -> myguard.apply((AgentSt) st) ;
 		return this ;
 	}
@@ -108,7 +108,7 @@ public class Action {
 	 * Set the given function as the effect-part of this Action. The method returns
 	 * the Action itself so that it can be used in the Fluent Interface style.
 	 */
-	public Action effect(Function<SimpleState,Function<Object,Object>> action) {
+	Action do__(Function<SimpleState,Function<Object,Object>> action) {
 		this.effect = s -> y -> { 
 			try { return action.apply(s).apply(y) ; }
 			finally { completed = true  ;}
@@ -117,15 +117,26 @@ public class Action {
 	}
 	
 	/**
-	 * Set the given function as the effect-part of this Action. The method returns
+	 * Set the given function as the effect-part of this Action. This effect function
+	 * takes two arguments: the state of the agent, and the value which was the result
+	 * of this action's guard execution/query.
+	 * 
+	 * <p> The method returns
 	 * the Action itself so that it can be used in the Fluent Interface style.
 	 */
-	public <AgentSt,QueryResult,T> Action do_(Function<AgentSt,Function<QueryResult,T>> action) {
-		return effect(s -> y -> action.apply((AgentSt) s).apply((QueryResult) y)) ;
+	public <AgentSt,QueryResult,T> Action do2(Function<AgentSt,Function<QueryResult,T>> action) {
+		return do__(s -> y -> action.apply((AgentSt) s).apply((QueryResult) y)) ;
 	}
 	
-	public <AgentSt,T> Action do__(Function<AgentSt,T> action) {
-		return effect(s -> y -> action.apply((AgentSt) s)) ;
+	/**
+	 * Set the given function as the effect-part of this Action. This effect function
+	 * takes one argument: the state of the agent.
+	 * 
+	 * <p> The method returns
+	 * the Action itself so that it can be used in the Fluent Interface style.
+	 */
+	public <AgentSt,T> Action do1(Function<AgentSt,T> action) {
+		return do__(s -> y -> action.apply((AgentSt) s)) ;
 	}
 	
 	/**
@@ -140,7 +151,7 @@ public class Action {
 	 * The method returns the Action itself so that it can be used in the Fluent
 	 * Interface style.
 	 */
-	public Action until__(Predicate<SimpleState> myguard) {
+	Action until__(Predicate<SimpleState> myguard) {
 		if (this.effect == null) throw new IllegalArgumentException("the action is null") ;
 		var action_ = this.effect ;
 		Function<SimpleState,Function<Object,Object>> a = s -> y -> {
@@ -168,7 +179,7 @@ public class Action {
 	 * The method returns the Action itself so that it can be used in the Fluent
 	 * Interface style.
 	 */
-	public <AgentSt> Action until_(Predicate<AgentSt> myguard) {
+	public <AgentSt> Action until(Predicate<AgentSt> myguard) {
 		return until__(s -> myguard.test((AgentSt) s)) ;
 	}
 	
@@ -187,11 +198,7 @@ public class Action {
 	 */
 	public boolean isCompleted() { return completed ; }
 	
-	/**
-	 * Mark this action as completed.
-	 */
-	void markAsCompleted() { completed = true ; }
-	
+
 	/**
 	 * True if the guard of this Action evaluates to true on the given agent state.
 	 */

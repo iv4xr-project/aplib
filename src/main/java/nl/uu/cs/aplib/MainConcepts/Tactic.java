@@ -2,6 +2,7 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.MainConcepts.GoalStructure.GoalsCombinator;
@@ -174,12 +175,15 @@ public class Tactic {
 		 * PrimitiveTactic. The method returns this instance of PrimitiveTactic
 		 * so that it can be used in the Fluent Interface style.
 		 */
-		public <AgentSt> PrimitiveTactic on__(Predicate<AgentSt> guard) { 
-			action.on__(guard) ;
+		public <AgentSt> PrimitiveTactic on_(Predicate<AgentSt> guard) { 
+			action.on_(guard) ;
 			return this ;
 		}
 		
-		
+		public <AgentSt,QueryResult> PrimitiveTactic on(Function<AgentSt,QueryResult> guard) { 
+			action.on(guard) ;
+			return this ;
+		}
 	}
 	
 
