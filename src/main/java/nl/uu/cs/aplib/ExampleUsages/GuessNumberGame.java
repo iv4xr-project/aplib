@@ -104,7 +104,7 @@ public class GuessNumberGame  {
     	  agent.update(); 
       } 
       topgoal.printGoalStructureStatus(); 
-      g.getTactic().printActionsStatistics();
+      g.getTactic().printStatistics();
 
 	}
 

@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import nl.uu.cs.aplib.MainConcepts.GoalStructure.GoalsCombinator;
 
@@ -126,23 +127,50 @@ public class Tactic {
 	}
 	
 	/**
-	 * Write some basic statistics of this Strategy (e.g. the number of times
-	 * each Action in this Strategy has been invoked, and its total running time)
+	 * Write some basic statistics of this Tactic (e.g. the number of times
+	 * each Action in this Tactic has been invoked, and its total running time)
 	 * to a String.
 	 */
-	public String showActionsStatistics() {
+	public String showStatistics() {
 		String s = "" ;
+		if (parent == null) {
+			// root-tactic
+			s += "\n   tot. #invoked: " + totInvocation() ;
+			s += "\n   tot. #used time: " + totRuntime() + " (ms)" ;
+		}
 		if (this instanceof PrimitiveTactic) {
 			var action = ((PrimitiveTactic) this).action ;
-			s += "   " + action.name 
-				 + "\n     #invoked : " + action.invocationCount 
+			s +=   "\n   action: " + action.name 
+				 + "\n     #invoked: " + action.invocationCount 
 				 + "\n     used time: " + action.totalRuntime + " (ms)" ;
 			return s ;
 		}
 		for (Tactic S : subtactics) {
-			s += S.showActionsStatistics() + "\n" ;
+			s += S.showStatistics() ;
 		}
 		return s ;
+	}
+	
+	int totInvocation() {
+		if (this instanceof PrimitiveTactic) {
+			return ((PrimitiveTactic) this).action.invocationCount ;
+		}
+		return subtactics.stream().mapToInt(T -> T.totInvocation()).sum() ;
+	}
+	
+	long totRuntime() {
+		if (this instanceof PrimitiveTactic) {
+			return ((PrimitiveTactic) this).action.totalRuntime ;
+		}
+		return subtactics.stream().mapToLong(T -> T.totRuntime()).sum() ;
+	}
+	
+	public void resetStatistics() {
+		if (this instanceof PrimitiveTactic) {
+			var action = ((PrimitiveTactic) this).action ;
+			action.totalRuntime = 0 ;
+			action.invocationCount = 0 ;
+		}
 	}
 	
 	/**
@@ -150,9 +178,9 @@ public class Tactic {
 	 * each Action in this tactic has been invoked, and its total running time)
 	 * to the console.
 	 */
-	public void printActionsStatistics() {
+	public void printStatistics() {
 		System.out.println("** Actions statistics:") ;
-		System.out.println(showActionsStatistics()) ;
+		System.out.println(showStatistics()) ;
 	}
 	
 	/**

@@ -100,9 +100,9 @@ public class BasicAgent {
 	protected PrimitiveGoal currentGoal ;
 	
 	/**
-	 * The strategy the agent is currently using to solve its currentGoal.
+	 * The tactic the agent is currently using to solve its currentGoal.
 	 */
-	protected Tactic currentStrategy ;
+	protected Tactic currentTactic ;
 	
 	
 	protected Logger logger = Logging.getAPLIBlogger() ;
@@ -124,7 +124,11 @@ public class BasicAgent {
 	 * Create a blank agent. You will need to at least attach a {@link SimpleState} and 
 	 * a {@link GoalStructure} to it before it can be used to do something.
 	 */
-	public BasicAgent() { }
+	public BasicAgent() { 
+		// Setting up this default logging configuration
+		Logging.addSystemErrAsLogHandler();
+		Logging.setLoggingLevel(Level.INFO);
+	}
 	
 	/**
 	 * Create a blank agent with the given id and role. You will need to at least
@@ -148,8 +152,9 @@ public class BasicAgent {
 	 */
 	public BasicAgent setGoal(GoalStructure g) {
 		goal = g ;
+		goal.initilaizeBudget();
 		currentGoal = goal.getDeepestFirstPrimGoal() ;
-		currentStrategy = currentGoal.goal.getTactic() ;
+		currentTactic = currentGoal.goal.getTactic() ;
 		return this ; 
 	}
 	
@@ -279,7 +284,7 @@ public class BasicAgent {
 		// update the agent's state:
 		state.updateState() ;
 		
-		var candidates = currentStrategy.getFirstEnabledActions(state) ;
+		var candidates = currentTactic.getFirstEnabledActions(state) ;
 		if (candidates.isEmpty()) {
 			// if no action is enabled, we wait until the next update, to see
 			// if the environment changes its state.
@@ -304,9 +309,9 @@ public class BasicAgent {
 				currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
 			}
 		}
-		chosenAction.action.invocationCount++ ;
 		var elapsed = mytime.elapsedTimeSinceLastSample() ;
 		//System.out.println("### elapsed: " + elapsed) ;
+		chosenAction.action.invocationCount++ ;
 		chosenAction.action.totalRuntime += elapsed ;
 		currentGoal.addConsumedBudget(elapsed);
 		
@@ -328,7 +333,7 @@ public class BasicAgent {
 			// to find another goal to solve:
 			currentGoal = currentGoal.getNextPrimitiveGoal() ;
 			if (currentGoal != null) {
-				currentStrategy = currentGoal.goal.getTactic() ;
+				currentTactic = currentGoal.goal.getTactic() ;
 				goal.redistributeRemainingBudget();
 			}
 			else {
@@ -341,13 +346,13 @@ public class BasicAgent {
 		else {
 			// else the currentgoal is still in-progress
 			if(chosenAction.action.isCompleted()) {
-				currentStrategy = chosenAction.calcNextTactic() ;
+				currentTactic = chosenAction.calcNextTactic() ;
 				// if no strategy can be found, reset it to the root strategty of the goal:
-				if (currentStrategy == null) 
-					currentStrategy = currentGoal.goal.getTactic() ;
+				if (currentTactic == null) 
+					currentTactic = currentGoal.goal.getTactic() ;
 			}
 			else {
-				currentStrategy = chosenAction ;
+				currentTactic = chosenAction ;
 			}
 		}
 	}

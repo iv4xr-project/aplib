@@ -38,7 +38,7 @@ public class MinimalAutonomousAgent {
 		  System.err.println("** Main thread " + Thread.currentThread().getId()) ;
 		  
 		  // configure logging:
-		  Logging.addSystemErrAsLogger();
+		  Logging.addSystemErrAsLogHandler();
 
 	      // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 		  var agent = new AutonomousBasicAgent()

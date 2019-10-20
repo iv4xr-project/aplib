@@ -116,7 +116,7 @@ public class Test_BasicAgent_budgeting {
 	    agent.mytime = new MockedTime(0,501,510,520,530) ;
 	    
 	    System.out.println("===x 0 state:" + state.counter) ;
-		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> alocated topgoal " + topgoal.requestedBudget) ;
 		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
 		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
 		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
@@ -129,7 +129,7 @@ public class Test_BasicAgent_budgeting {
 
 	    agent.update();
 	    System.out.println("=== 1 state:" + state.counter) ;
-		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> alocated topgoal " + topgoal.requestedBudget) ;
 		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
 		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
 		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
@@ -148,7 +148,7 @@ public class Test_BasicAgent_budgeting {
 			
 		agent.update();
 	    System.out.println("=== 2 state:" + state.counter) ;
-		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> alocated topgoal " + topgoal.requestedBudget) ;
 		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
 		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
 		System.out.println(">>> budget g2 " + g2.remainingBudget) ;
@@ -168,7 +168,7 @@ public class Test_BasicAgent_budgeting {
 
 		agent.update() ;
 		System.out.println("=== 3 state:" + state.counter) ;
-		System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
+		System.out.println(">>> alocated topgoal " + topgoal.requestedBudget) ;
 		System.out.println(">>> togoal used budget " + topgoal.consumedBudget) ;
 		System.out.println(">>> budget g1 " + g1.remainingBudget) ;
 		System.out.println(">>> budget g2 " + g2.remainingBudget) ;

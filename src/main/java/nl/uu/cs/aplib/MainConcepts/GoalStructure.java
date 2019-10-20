@@ -40,7 +40,7 @@ public class GoalStructure {
 	List<GoalStructure> subgoals ;
 	GoalsCombinator combinator ;
 	ProgressStatus status = new ProgressStatus() ;
-	double allocatedBudget = Double.POSITIVE_INFINITY ;
+	double requestedBudget = Double.POSITIVE_INFINITY ;
 	double consumedBudget = 0 ;
 	double remainingBudget = Double.POSITIVE_INFINITY ;
 	
@@ -184,16 +184,11 @@ public class GoalStructure {
 	}
 	
 	/**
-	 * Allocate budget to this goal. This can only be invoked on the top goal.
-	 * The allocated budget should finite and positive.
+	 * Allocate budget to this goal. The allocated budget should finite and positive.
 	 */
 	public GoalStructure withBudget(double budget) {
 		if (! isTopGoal()) throw new IllegalArgumentException("Can only be called on a top goal") ;
 		if (budget <= 0 || ! Double.isFinite(budget)) throw new IllegalArgumentException() ;
-		if (budget < demandedMinimumBudget())
-			throw new IllegalArgumentException("The allocated budget is below the demanded minimum.") ;
-		allocatedBudget = budget ;
-		redistributeRemainingBudget() ;
 		return this ;
 	}
 	
@@ -210,7 +205,7 @@ public class GoalStructure {
 	/**
 	 * Return the budget allocated for this GoalTree.
 	 */
-	public double getBudget() { return allocatedBudget ; }
+	public double getBudget() { return requestedBudget ; }
 	
 	/**
 	 * Call this at the top goal to reset tracked consumed budget in this goal and its subgoals to
@@ -228,18 +223,28 @@ public class GoalStructure {
 	}
 	
 	/**
+	 * Call this at the top goal, to initialize the budget alocation for the first time,
+	 * when a topgoal is set for an agent.
+	 */
+	void initilaizeBudget() {
+		if (! isTopGoal()) throw new IllegalArgumentException() ;
+		remainingBudget = requestedBudget ;
+		redistributeRemainingBudget() ;
+	}
+	
+	/**
 	 * Call this at the top goal, to recalculate remaining budget and re-distribute it to
 	 * the subgoals.
 	 */
 	void redistributeRemainingBudget() {
 		if (! isTopGoal()) throw new IllegalArgumentException() ;
-		if (allocatedBudget == Double.POSITIVE_INFINITY) return ;
+		if (requestedBudget == Double.POSITIVE_INFINITY) return ;
 		// if the topgoal is already closed:
 		if (!status.inProgress()) {
 			this.remainingBudget = 0 ;
 			return ;
 		}
-		distributeRemainingBudgetWorker(allocatedBudget - consumedBudget) ;
+		distributeRemainingBudgetWorker(requestedBudget - consumedBudget) ;
 	}
 	
 	private int numberOfOpenPrimitiveGoals() {
@@ -324,16 +329,27 @@ public class GoalStructure {
 		String s = "" ;
 		if (this instanceof PrimitiveGoal) {
 			s += indent + ((PrimitiveGoal) this).goal.getName() + ": " + status ;
-			if (isTopGoal()) s += "\n" + indent + "Budget:" + allocatedBudget ;
+			if (isTopGoal()) s += "\n" + indent + "Budget:" + requestedBudget ;
 			s += "\n" + indent + "Consumed budget:" + consumedBudget ;
 			
 			return s ;
 		}
 		s += indent + combinator + ": " + status ; 
-		if (isTopGoal()) s += "\n" + indent + "Budget:" + allocatedBudget ;
+		if (isTopGoal()) s += "\n" + indent + "Budget:" + requestedBudget ;
 		s += "\n" + indent + "Consumed budget:" + consumedBudget + "\n" ;
 		for (GoalStructure gt : subgoals) s += gt.showGoalStructureStatusWorker(level+1) + "\n" ;
 		return s ;
+	}
+	
+	private String indent(int indentation, String s) {
+		String[] lines = s.split("\n") ;
+		String z = "" ;
+		for (int k=0; k<lines.length; k++) {
+			z += space(k) ;
+			z += lines[k] ;
+			if (k>0) z += "\n" ;
+		}
+		return z ;
 	}
 	
 	/**
