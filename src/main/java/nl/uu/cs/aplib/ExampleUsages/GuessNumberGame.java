@@ -92,7 +92,7 @@ public class GuessNumberGame  {
       g.withTactic(SEQ(asklb,guess)) ;
       
       // creating an agent, attaching state to it, and the above topgoal to it:
-      GoalStructure topgoal = g.lift().withBudget(100000) ;
+      GoalStructure topgoal = g.lift().maxbudget(100000) ;
       var belief = new MyAgentState() ;
       belief.setEnvironment(new ConsoleEnvironment()) ;      
       var agent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;

@@ -130,44 +130,44 @@ public class Test_GoalStructure {
 	public void test_getNextPrimitiveGoalWorker() {
 		setup() ;
 		g1.setStatusToFail("");
-		var h = g1.getNextPrimitiveGoal() ;
+		var h = g1.getNextPrimitiveGoal_andAllocateBudget() ;
 		//System.out.println(h.goal.getName()) ;
 		assertTrue(h == g2) ;
 		
 		setup() ;
 		g1.setStatusToSuccess("");
-		h = g1.getNextPrimitiveGoal() ;
+		h = g1.getNextPrimitiveGoal_andAllocateBudget() ;
 		//System.out.println(h.goal.getName()) ;
 		assertTrue(h == g3) ;
 		
 		setup() ;
 		g2.setStatusToFail("");
-		assertTrue(g2.getNextPrimitiveGoal() == g6) ;
+		assertTrue(g2.getNextPrimitiveGoal_andAllocateBudget() == g6) ;
 
 		setup() ;
 		g2.setStatusToSuccess("");
-		assertTrue(g2.getNextPrimitiveGoal() == g3) ;
+		assertTrue(g2.getNextPrimitiveGoal_andAllocateBudget() == g3) ;
 		
 		setup() ;
 		g3.setStatusToFail("");
-		assertTrue(g3.getNextPrimitiveGoal() == g4) ;
+		assertTrue(g3.getNextPrimitiveGoal_andAllocateBudget() == g4) ;
 		setup() ;
 		g3.setStatusToSuccess("");
-		assertTrue(g3.getNextPrimitiveGoal() == g5) ;
+		assertTrue(g3.getNextPrimitiveGoal_andAllocateBudget() == g5) ;
 
 		setup() ;
 		g5.setStatusToFail("");
-		assertTrue(g5.getNextPrimitiveGoal() == g6) ;
+		assertTrue(g5.getNextPrimitiveGoal_andAllocateBudget() == g6) ;
 		setup() ;
 		g5.setStatusToSuccess("");
-		assertTrue(g5.getNextPrimitiveGoal() == null) ;
+		assertTrue(g5.getNextPrimitiveGoal_andAllocateBudget() == null) ;
 
 		setup() ;
 		g6.setStatusToFail("");
-		assertTrue(g6.getNextPrimitiveGoal() == null) ;
+		assertTrue(g6.getNextPrimitiveGoal_andAllocateBudget() == null) ;
 		setup() ;
 		g6.setStatusToSuccess("");
-		assertTrue(g6.getNextPrimitiveGoal() == null) ;
+		assertTrue(g6.getNextPrimitiveGoal_andAllocateBudget() == null) ;
 	}
 	
 	@Test

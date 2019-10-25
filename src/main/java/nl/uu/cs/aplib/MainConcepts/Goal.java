@@ -45,14 +45,28 @@ public class Goal {
 	
 	String name ;
 	public String desc ;
-	double demandedMinimumBudget = 0 ;
+	
+	/**
+	 * The maximum budget that can be allocated to this goal whenever the goal is adopted
+	 * (the goal becomes current).
+	 * Note that when the goal is adopted multiple times, this maximum budget is allocated
+	 * multiple times as well.
+	 */
+	double bmax = Double.POSITIVE_INFINITY ;
+	
 	ProgressStatus status = new ProgressStatus() ;
 	Tactic tactic ;
+
+	/**
+	 * Minimum abs-distance for a proposal to be accepted as a solution. Currently set to be 0.005.
+	 */
+	Double epsilon = 0.005 ;
+	
 	Double distance = null ;
+
 	Object proposal ;
 	
-	Predicate checkPredicate ;
-	ToDoubleFunction distFunction ;
+	Function<Object,Double> checkPredicate ;
 	
 	/**
 	 * Create a blank instance of a Goal. It will have no goal and no distance function.
@@ -64,29 +78,52 @@ public class Goal {
 	}
 	
 	/**
-	 * Set an estimated minimum computation budget that this goal requires. Note that an
-	 * agent can try to allocate this budget, but it does not have to.
+	 * Set a maximum to the computation budget that can be allocated to this goal each time
+	 * the goal is adopted (each time the goal becomes current). If left
+	 * unset then it is +infinity (so, no maximum).
 	 * 
 	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
 	 */
-	public Goal demandMinimumBudget(double budget) {
+	public Goal maxbudget(double budget) {
 		if (budget<=0 || ! Double.isFinite(budget)) throw new IllegalArgumentException() ;
-		demandedMinimumBudget = budget ;
+		bmax = budget ;
 		return this ;
 	}
 	
 	/**
-	 * Return the agent's estimate required minimum computation budget. The default is
-	 * just 0.
+	 * Return the agent's maximum allowed budget each time the goal is adopted.
 	 */
-	public double getDemandedMinimumBudget() { return demandedMinimumBudget ; }
+	public double getMaxBudgetAllowed() { return bmax ; }
+	
+	/**
+	 * Set the value of eplison.
+	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
+	 */
+	public Goal withEpsilon(Double e) {
+		if (epsilon < 0) throw new IllegalArgumentException() ;
+		epsilon = e ;
+		return this ;
+	}
 	
 	/**
 	 * Set the predicate which would serve as the predicate to solve.
 	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
 	 */
 	public Goal toSolve_(Predicate predicateToSolve) {
-		checkPredicate = predicateToSolve ; return this ;
+		checkPredicate = o -> predicateToSolve.test(o) ? 0.0 : 1 ; 
+		return this ;
+	}
+	
+	/**
+	 * Set the given function as a goal function. A proposal o is a solution if abs(goalfunction(o))
+	 * is a value less than epsilon (default is 0.005).
+	 * 
+	 * @param goalfunction the goal function to solve.
+	 * @return The method returns this Goal itself so that it can be used in the Fluent Interface style.
+	 */
+	public Goal ftoSolve_(Function<Object,Double> goalfunction) {
+		checkPredicate = goalfunction ;
+		return this ;
 	}
 	
 	/**
@@ -106,28 +143,22 @@ public class Goal {
 	}
 	
 	/**
-	 * Set a distance function to be associated to this goal.
-	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
-	 */
-	public Goal withDistF_(ToDoubleFunction f) {
-		distFunction = f ; return this ;
-	}
-
-	/**
-	 * Set a distance function to be associated to this goal. The more general
+	 * Set the given function as a goal function. A proposal o is a solution if abs(goalfunction(o))
+	 * is a value less than epsilon (default is 0.005).
+	 * The more general
 	 * typing of the method's signature is for convenience, to allow you to explicitly
 	 * specify the type of the goal's proposals domain at the point where this method is
 	 * called, e.g. as in:
 	 * 
 	 * <pre>
-	 *   Goal g = new Goal() . withDistF((Integer x) -> Math.abs(9999 - x)) ;
+	 *   Goal g = new Goal() . ftoSolve((Integer x) -> x - 9999) ;
 	 * </pre>
+	 * 
 	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
 	 */
-	public <Proposal> Goal withDistF(ToDoubleFunction<Proposal> f) {
-		return withDistF_(p -> f.applyAsDouble((Proposal) p)) ;
+	public <Proposal> Goal ftoSolve(Function<Proposal,Double> predicateToSolve) {
+		return ftoSolve_(p -> predicateToSolve.apply((Proposal) p)) ;
 	}
-
 	
 	/**
 	 * Set the strategy to that a solving agent can use to solve this goal.
@@ -152,8 +183,9 @@ public class Goal {
 	 */
 	public void propose(Object proposal) {
 		if (proposal == null) return ;
-		if(checkPredicate.test(proposal)) status.setToSuccess(); ;
-		if (distFunction != null) distance = distFunction.applyAsDouble(proposal) ;
+		this.proposal = proposal ;
+		distance = checkPredicate.apply(proposal) ;
+		if(Math.abs(distance) <= epsilon) status.setToSuccess(); 
 	}
 	
 	public String getName() { return name ; }
@@ -194,7 +226,7 @@ public class Goal {
 	
 	/**
 	 * If a distance function has been specified for this goal, this will return
-	 * the distance between the last proposed and non-null proposal to being
+	 * the absolute distance between the last proposed and non-null proposal to being
 	 * a solution.
 	 */
 	public Double distance() { return distance ; }
