@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.Exception.aplibError;
+import nl.uu.cs.aplib.Exception.AplibError;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
 import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
@@ -357,7 +357,7 @@ public class BasicAgent {
 		
 		if (chosenAction.action instanceof Abort) {
 			// if the action is ABORT:
-			currentGoal.setStatusToFail("abort() were invoked.");
+			currentGoal.setStatusToFail("abort() was invoked.");
 		}
 		else {
 			// else execute the action:
@@ -393,12 +393,12 @@ public class BasicAgent {
 		if (currentGoal.getStatus().success() || currentGoal.getStatus().failed()) {
 			// so... if the current goal is closed (but the topgoal is not closed yet), we need
 			// to find another goal to solve:
-			currentGoal = currentGoal.getDeepestFirstPrimGoal_andAllocateBudget() ;
+			currentGoal = currentGoal.getNextPrimitiveGoal_andAllocateBudget() ;
 			if (currentGoal != null) {
 				currentTactic = currentGoal.goal.getTactic() ;
 				if (currentTactic == null) 
 					// should not happen...
-					throw new aplibError("Goal " + currentGoal.goal.name + " has no tactic.") ;
+					throw new AplibError("Goal " + currentGoal.goal.name + " has no tactic.") ;
 			}
 			else {
 				// there is no more goal left! 

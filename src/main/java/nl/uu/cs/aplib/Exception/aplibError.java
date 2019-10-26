@@ -1,8 +1,10 @@
 package nl.uu.cs.aplib.Exception;
 
-public class aplibError extends Error {
+public class AplibError extends Error {
 
-	public aplibError(String cause) {
+	private static final long serialVersionUID = 1L;
+
+	public AplibError(String cause) {
 		super(cause) ;
 	}
 	

@@ -45,15 +45,7 @@ public class Goal {
 	
 	String name ;
 	public String desc ;
-	
-	/**
-	 * The maximum budget that can be allocated to this goal whenever the goal is adopted
-	 * (the goal becomes current).
-	 * Note that when the goal is adopted multiple times, this maximum budget is allocated
-	 * multiple times as well.
-	 */
-	double bmax = Double.POSITIVE_INFINITY ;
-	
+		
 	ProgressStatus status = new ProgressStatus() ;
 	Tactic tactic ;
 
@@ -76,24 +68,6 @@ public class Goal {
 	public Goal(String name) {
 		this.name = name ;
 	}
-	
-	/**
-	 * Set a maximum to the computation budget that can be allocated to this goal each time
-	 * the goal is adopted (each time the goal becomes current). If left
-	 * unset then it is +infinity (so, no maximum).
-	 * 
-	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
-	 */
-	public Goal maxbudget(double budget) {
-		if (budget<=0 || ! Double.isFinite(budget)) throw new IllegalArgumentException() ;
-		bmax = budget ;
-		return this ;
-	}
-	
-	/**
-	 * Return the agent's maximum allowed budget each time the goal is adopted.
-	 */
-	public double getMaxBudgetAllowed() { return bmax ; }
 	
 	/**
 	 * Set the value of eplison.

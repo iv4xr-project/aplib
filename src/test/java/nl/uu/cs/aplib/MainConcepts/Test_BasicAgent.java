@@ -87,7 +87,11 @@ public class Test_BasicAgent {
 		assertTrue(g1.getStatus().failed()) ;
 		assertTrue(topgoal2.getStatus().inProgress()) ;
 		
+		assertTrue(agent.currentGoal.goal.name == "g2") ;
+		
 		agent.update();
+		topgoal2.printGoalStructureStatus();
+		//System.out.println("*** " + state.counter) ;
 		assertTrue(state.counter == 1) ;
 		assertTrue(g1.getStatus().failed()) ;
 		assertTrue(g2.getStatus().success()) ;	

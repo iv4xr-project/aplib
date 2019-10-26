@@ -2,6 +2,7 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.* ;
 import java.util.stream.Collectors;
+import nl.uu.cs.aplib.Exception.AplibError;
 
 /**
  * A GoalStructure is a generalization of a {@link Goal}. It is a tree-shaped structure
@@ -37,7 +38,7 @@ public class GoalStructure {
 	static public enum GoalsCombinator { SEQ, FIRSTOF, PRIMITIVE }
 	
 	GoalStructure parent = null ;
-	List<GoalStructure> subgoals ;
+	List<GoalStructure> subgoals = new LinkedList<GoalStructure>() ; 
 	GoalsCombinator combinator ;
 	ProgressStatus status = new ProgressStatus() ;
 	
@@ -58,16 +59,21 @@ public class GoalStructure {
 	 */
 	double budget = Double.POSITIVE_INFINITY ;
 	
+	GoalStructure() { }
+	
 	/**
 	 * Construct a new GoalStructure with the specified type of node (SEQ, FIRSTOFF, or PRIMITIVE)
 	 * and the given subgoals.
 	 */
 	public GoalStructure(GoalsCombinator type, GoalStructure ... subgoals) {
 		combinator = type ;
-		this.subgoals = new LinkedList<GoalStructure>() ;
-		for (GoalStructure g : subgoals) {
-			this.subgoals.add(g) ;
-			g.parent = this ;
+		//this.subgoals = new LinkedList<GoalStructure>() ;
+		if (subgoals != null) {
+			for (int k=0; k<subgoals.length; k++) {
+				var g = subgoals[k] ;
+				this.subgoals.add(g) ;
+				g.parent = this ;
+			}			
 		}
 	}
 	
@@ -221,14 +227,19 @@ public class GoalStructure {
 	
 	PrimitiveGoal getDeepestFirstPrimGoal_andAllocateBudget() {
 		// allocate budget:
-		if (isTopGoal())
-			budget = Math.min(budget,bmax) ;
-		else
+		if (isTopGoal()) {
+			budget = Math.min(bmax,budget) ; 
+		}
+		else {
 			budget = Math.min(bmax,parent.budget) ; 
+		}
 		// find the first deepest primitive subgoal:
-		if (this instanceof PrimitiveGoal) 
-			 return (PrimitiveGoal) this ;
-		else return subgoals.get(0).getDeepestFirstPrimGoal_andAllocateBudget() ;
+		if (this instanceof PrimitiveGoal)  {
+			return (PrimitiveGoal) this ;
+		}
+		else {
+			return subgoals.get(0).getDeepestFirstPrimGoal_andAllocateBudget() ;
+		}
 	}
 	
 
@@ -260,19 +271,25 @@ public class GoalStructure {
 	 */
 	public double getBudget() { return budget ; }
 	
+	/**
+	 * Return the agent's maximum allowed budget each time the goal is adopted.
+	 */
+	public double getMaxBudgetAllowed() { return bmax ; }
+	
 	private String space(int k) { String s = "" ; for(int i=0; i<k; i++) s += " " ; return s ; }
 	
 	String showGoalStructureStatusWorker(int level) {
 		String indent =  space(3*(level+1)) ;
 		String s = "" ;
 		if (this instanceof PrimitiveGoal) {
-			s += indent + ((PrimitiveGoal) this).goal.getName() + ": " + status ;
+			s += indent + "Goal " + ((PrimitiveGoal) this).goal.getName() + ": " + status ;
 		}
 		else 
 			s += indent + combinator + ": " + status ; 
 		if (bmax < Double.POSITIVE_INFINITY) s += "\n" + indent + "Max. budget:" + bmax ;
+		s += "\n" + indent + "Budget: " + budget ;
 		s += "\n" + indent + "Consumed budget:" + consumedBudget + "\n" ;
-		for (GoalStructure gt : subgoals) s += gt.showGoalStructureStatusWorker(level+1) + "\n" ;
+		for (GoalStructure gt : subgoals) s += gt.showGoalStructureStatusWorker(level+1)  ;
 		return s ;
 	}
 	
@@ -311,14 +328,11 @@ public class GoalStructure {
 		 * Create an instance of PrimitiveGoal, wrapping around the given {@link Goal}.
 		 */
 		public PrimitiveGoal(Goal g) { 
-			super(GoalsCombinator.PRIMITIVE) ;
+			super() ;
+			combinator = GoalsCombinator.PRIMITIVE ;
 			goal = g ; 
 		}
 		
-		PrimitiveGoal getDeepestFirstPrimGoal_andAllocateBudget() {
-			return this ;
-		}
-
 	}
 
 }
