@@ -35,21 +35,21 @@ public class Test_InterAgentCommunication {
 				    . attachState(state1)
 				    . registerTo(comNode) ;
 		var a0 = action("a0")
-				 . do_((MyState S)->actionState-> { 
+				 . do1((MyState S)-> { 
 					 S.messenger.send("D1",0, MsgCastType.SINGLECAST, "P1","SC") ;
 					 return 0 ;
 				 })
 				 . lift() ;
 		
 		var a1 = action("a1")
-				 . do_((MyState S)->actionState-> { 
+				 . do1((MyState S)-> { 
 					 S.messenger.send("D1",0, MsgCastType.BROADCAST, "P1","BC") ;
 					 return 0 ;
 				 })
 				 . lift() ;
 		
 		var a2 = action("a2")
-				 . do_((MyState S)->actionState-> { 
+				 . do1((MyState S)-> { 
 					 S.messenger.send("D1",0, MsgCastType.ROLECAST, "student","RC") ;
 					 return 0 ;
 				 })
@@ -66,7 +66,7 @@ public class Test_InterAgentCommunication {
 				     . registerTo(comNode) ;
 		
 		var b1 = action("b1")
-				 . do_((MyState S)->actionState-> S.messenger().retrieve(M -> M.getMsgName().equals("BC")))
+				 . do1((MyState S)-> S.messenger().retrieve(M -> M.getMsgName().equals("BC")))
 				 . on_((MyState S) -> S.messenger().has(M -> M.getMsgName().equals("BC")))
 				 . lift() ;
 		

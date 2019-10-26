@@ -2,6 +2,7 @@ package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.* ;
 import java.util.stream.Collectors;
+import nl.uu.cs.aplib.Exception.AplibError;
 
 /**
  * A GoalStructure is a generalization of a {@link Goal}. It is a tree-shaped structure
@@ -37,12 +38,28 @@ public class GoalStructure {
 	static public enum GoalsCombinator { SEQ, FIRSTOF, PRIMITIVE }
 	
 	GoalStructure parent = null ;
-	List<GoalStructure> subgoals ;
+	List<GoalStructure> subgoals = new LinkedList<GoalStructure>() ; 
 	GoalsCombinator combinator ;
 	ProgressStatus status = new ProgressStatus() ;
-	double allocatedBudget = Double.POSITIVE_INFINITY ;
+	
+	/**
+	 * Maximum limit on the budget that can be allocated to this goal structure.
+	 */
+	double bmax = Double.POSITIVE_INFINITY ;
+	
+	/**
+	 * Total budget that is spent so far on this goal structure.
+	 */
 	double consumedBudget = 0 ;
-	double remainingBudget = Double.POSITIVE_INFINITY ;
+	
+	long consumedTime = 0 ;
+	
+	/**
+	 * The budget that remains for this goal structure.
+	 */
+	double budget = Double.POSITIVE_INFINITY ;
+	
+	GoalStructure() { }
 	
 	/**
 	 * Construct a new GoalStructure with the specified type of node (SEQ, FIRSTOFF, or PRIMITIVE)
@@ -50,10 +67,13 @@ public class GoalStructure {
 	 */
 	public GoalStructure(GoalsCombinator type, GoalStructure ... subgoals) {
 		combinator = type ;
-		this.subgoals = new LinkedList<GoalStructure>() ;
-		for (GoalStructure g : subgoals) {
-			this.subgoals.add(g) ;
-			g.parent = this ;
+		//this.subgoals = new LinkedList<GoalStructure>() ;
+		if (subgoals != null) {
+			for (int k=0; k<subgoals.length; k++) {
+				var g = subgoals[k] ;
+				this.subgoals.add(g) ;
+				g.parent = this ;
+			}			
 		}
 	}
 	
@@ -110,6 +130,26 @@ public class GoalStructure {
 		}
 	}
 	
+	
+	void setStatusToFailBecauseBudgetExhausted() {
+	    String reason = "The budget is exhausted" ;
+		status.setToFail(reason);
+		if (! isTopGoal()) {
+			if (parent.budget <= 0d) {
+				parent.setStatusToFailBecauseBudgetExhausted(); 
+				return ;
+			}
+			switch(parent.combinator) {
+			   case SEQ : parent.setStatusToFail(reason); break;
+			   case FIRSTOF :
+				    int i = parent.subgoals.indexOf(this) ;
+					if (i == parent.subgoals.size()-1)
+						parent.setStatusToFail(reason);
+					break;
+			}
+		}
+	}
+	
 	/**
 	 * To abort the entire goal tree; this is done by marking this goal, all
 	 * the way to the root, as fail.
@@ -131,191 +171,110 @@ public class GoalStructure {
 	 * method will return the next {@link PrimitiveGoal} to solve. The method will traverse
 	 * up through the parent of this GoalStructure to look for this next goal. If none
 	 * is found, null is returned.
+	 * 
+	 * <p>
+	 * If a new {@link PrimitiveGoal} can be found, it will be adopted. So, budget will
+	 * also be allocated for it. Recursively, all its ancestors that just become current
+	 * will also get freshly allocated budget.
 	 */
-	public PrimitiveGoal getNextPrimitiveGoal() {
-		if (status.inProgress() || isTopGoal()) return null ;
+	PrimitiveGoal getNextPrimitiveGoal_andAllocateBudget() {
+		
+		if (status.inProgress())
+            // this method should not be called on a goal-structure that is still in progress
+			throw new IllegalArgumentException() ;
+		
+		if (isTopGoal()) return null ;
+		
+		// So... this goal structure is either solved or failed, and is not the top-goal
+		
+		if (parent.status.success() || parent.status.failed()) 
+			return parent.getNextPrimitiveGoal_andAllocateBudget() ;
+		
+		// this case implies that the parent doesn't fail. So, it must have some budget left!
 		
 		switch(parent.combinator) {
 		  case SEQ :
 			   if(status.failed())
-				  return parent.getNextPrimitiveGoal() ;
+				  // this case should have caught by the if-parent above; as it implies that the
+				  // patent failed
+				  return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 			   // else: so, this goal is solved:
 			   int k = parent.subgoals.indexOf(this) ;
 			   if (k == parent.subgoals.size() - 1 ) 
-				  return parent.getNextPrimitiveGoal() ;
+				  // this case should have been caught by the if-parent case above; as it implies
+				  // that the parent succeeded
+				  return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 			   else
-				  return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
+				  return parent.subgoals.get(k+1).getDeepestFirstPrimGoal_andAllocateBudget() ;
 		  case FIRSTOF :
 			   if(status.success())
-				  return parent.getNextPrimitiveGoal() ;
+				  // this case should have been caught by the if-parent case above; as it implies
+				  // that the parent succeeded
+				  return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 			   // else: so, this goal failed:
 			   k = parent.subgoals.indexOf(this) ;
 			   if (k == parent.subgoals.size() - 1 ) 
-					return parent.getNextPrimitiveGoal() ;
+					// this case should have caught by the if-parent above; as it implies that the
+					// patent failed
+					return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 			   else
-					return parent.subgoals.get(k+1).getDeepestFirstPrimGoal() ;
+					return parent.subgoals.get(k+1).getDeepestFirstPrimGoal_andAllocateBudget() ;
 		}
 		// this case should not happen
 		return null ;
 	}
 	
 	
-	PrimitiveGoal getDeepestFirstPrimGoal() {
-		return subgoals.get(0).getDeepestFirstPrimGoal() ;
+	PrimitiveGoal getDeepestFirstPrimGoal_andAllocateBudget() {
+		// allocate budget:
+		if (isTopGoal()) {
+			budget = Math.min(bmax,budget) ; 
+		}
+		else {
+			budget = Math.min(bmax,parent.budget) ; 
+		}
+		// find the first deepest primitive subgoal:
+		if (this instanceof PrimitiveGoal)  {
+			return (PrimitiveGoal) this ;
+		}
+		else {
+			return subgoals.get(0).getDeepestFirstPrimGoal_andAllocateBudget() ;
+		}
 	}
 	
-	
-	/**
-	 * Calculate the estimated demanded minimum budget for this goal, if any specified.
-	 */
-	double demandedMinimumBudget() {
-		if (this instanceof PrimitiveGoal) {
-			var b = ((PrimitiveGoal) this).goal.demandedMinimumBudget ;
-			if (b <=0) return 0 ;
-			else return b ;
-		}
-		// for FIRSTOF and SEQ we define the minimum demanded budget to be the sum
-		// of that of the subgoals. For FIRSTOF this is indeed a worst case assumption.
-		double sum = 0 ;
-		for (GoalStructure gt : subgoals) {
-			sum += gt.demandedMinimumBudget() ;
-		}
-		return sum ;
-	}
-	
-	/**
-	 * Allocate budget to this goal. This can only be invoked on the top goal.
-	 * The allocated budget should finite and positive.
-	 */
-	public GoalStructure withBudget(double budget) {
-		if (! isTopGoal()) throw new IllegalArgumentException("Can only be called on a top goal") ;
-		if (budget <= 0 || ! Double.isFinite(budget)) throw new IllegalArgumentException() ;
-		if (budget < demandedMinimumBudget())
-			throw new IllegalArgumentException("The allocated budget is below the demanded minimum.") ;
-		allocatedBudget = budget ;
-		redistributeRemainingBudget() ;
+
+
+	public GoalStructure maxbudget(double b) {
+		if (b <= 0 || ! Double.isFinite(b)) throw new IllegalArgumentException() ;
+		bmax = b ;
 		return this ;
 	}
 	
 	/**
-	 * Register that the agent has consumed the given amount of budget.
+	 * Register that the agent has consumed the given amount of budget. Delta will be subtracted
+	 * from this goal-structure's budget, as well as that of its ancestors.
 	 */
-	void addConsumedBudget(float delta) {
+	void registerConsumedBudget(double delta) {
 		consumedBudget += delta ;
-		remainingBudget -= delta ;
-		if (! isTopGoal()) parent.addConsumedBudget(delta);
+		budget -= delta ;
+		if (! isTopGoal()) parent.registerConsumedBudget(delta);
+	}
+	
+	void registerUsedTime(long duration) {
+		consumedTime += duration ;
+		if (! isTopGoal()) parent.registerUsedTime(duration);
 	}
 	
 	
 	/**
-	 * Return the budget allocated for this GoalTree.
+	 * Return the remaining budget for this goal structure.
 	 */
-	public double getBudget() { return allocatedBudget ; }
+	public double getBudget() { return budget ; }
 	
 	/**
-	 * Call this at the top goal to reset tracked consumed budget in this goal and its subgoals to
-	 * 0, and then to reset the distribution of the budget accordingly.
+	 * Return the agent's maximum allowed budget each time the goal is adopted.
 	 */
-	void resetBudget() {
-		if (! isTopGoal()) throw new IllegalArgumentException() ;
-		resetConsumedBudget() ;
-		redistributeRemainingBudget() ;
-	}
-	
-	private void resetConsumedBudget() {
-		consumedBudget = 0 ;
-		for (GoalStructure gt : subgoals) gt.resetConsumedBudget(); 
-	}
-	
-	/**
-	 * Call this at the top goal, to recalculate remaining budget and re-distribute it to
-	 * the subgoals.
-	 */
-	void redistributeRemainingBudget() {
-		if (! isTopGoal()) throw new IllegalArgumentException() ;
-		if (allocatedBudget == Double.POSITIVE_INFINITY) return ;
-		// if the topgoal is already closed:
-		if (!status.inProgress()) {
-			this.remainingBudget = 0 ;
-			return ;
-		}
-		distributeRemainingBudgetWorker(allocatedBudget - consumedBudget) ;
-	}
-	
-	private int numberOfOpenPrimitiveGoals() {
-		if (! status.inProgress()) return 0 ;
-		if (combinator == GoalsCombinator.PRIMITIVE) return 1 ;
-		return subgoals.stream().collect(Collectors.summingInt(G -> G.numberOfOpenPrimitiveGoals())) ;
-	}
-	
-	private void giveZeroBudget() {
-		this.remainingBudget = 0 ;
-		for (GoalStructure gt : subgoals) gt.giveZeroBudget();
-	}
-	
-	private void distributeRemainingBudgetWorker(double budget) {
-		
-		// NOT needed; this is handled in below
-		//if (! status.inProgress()) {
-		//	System.out.println(">>> zeroing") ;
-		//	giveZeroBudget() ; return ;
-		//}
-		
-		double available = Math.max(budget,0) ;
-		this.remainingBudget = available ;
-		
-		if (combinator == GoalsCombinator.PRIMITIVE) return ;
-		
-		//System.err.println(">> remaining budget " + remainingBudget.amount) ;
-		var subgoalsWithBudgetDemand = subgoals.stream()
-				                       .filter(g -> g.status.inProgress() &&  g.demandedMinimumBudget()>0d)
-				                       .collect(Collectors.toList()) ;
-		var subgoalsWithNOBudgetDemand = subgoals.stream()
-				                       .filter(g -> g.status.inProgress() && ! (g.demandedMinimumBudget()>0d))
-				                       .collect(Collectors.toList()) ;
-		
-		var closedSubgoals = subgoals.stream()
-                .filter(g -> ! g.status.inProgress())
-                .collect(Collectors.toList()) ;
-		
-		// set budget for closed subgoals to zero first:
-		for (GoalStructure gt : closedSubgoals) gt.giveZeroBudget();
-		
-		//int K = subgoalsWithBudgetDemand.size() + subgoalsWithNOBudgetDemand.size() ;
-		int K = numberOfOpenPrimitiveGoals() ;
-		if (K == 0) return ;
-		double avrg_perPrimGoal = available / K ;
-		
-		for (GoalStructure gt : subgoalsWithBudgetDemand) {
-			if (available <= 0) {
-				gt.distributeRemainingBudgetWorker(0); 
-			}
-			else {
-				double demanded = gt.demandedMinimumBudget() ;
-				double toAllocate = avrg_perPrimGoal * gt.numberOfOpenPrimitiveGoals() ;
-				if (toAllocate < demanded) toAllocate = Math.min(demanded,available) ;
-				gt.distributeRemainingBudgetWorker(toAllocate);
-				available = available - toAllocate ;
-				//System.out.println("## allocating = " + toAllocate + ", available = " + available) ;
-			}
-		}
-		
-		K = subgoalsWithNOBudgetDemand.stream().collect(Collectors.summingInt(G -> G.numberOfOpenPrimitiveGoals())) ;
-		
-		if (K==0) return ;
-		//System.out.println("## available = " + available + ", K = " + K) ;
-		avrg_perPrimGoal = available/K ;
-		for (GoalStructure gt : subgoalsWithNOBudgetDemand) {
-			if (available <= 0) {
-				gt.distributeRemainingBudgetWorker(0); 
-			}
-			else {
-				double toAllocate = avrg_perPrimGoal * gt.numberOfOpenPrimitiveGoals() ;
-				gt.distributeRemainingBudgetWorker(toAllocate);
-				available = available - toAllocate ;
-			}
-		}
-	}
+	public double getMaxBudgetAllowed() { return bmax ; }
 	
 	private String space(int k) { String s = "" ; for(int i=0; i<k; i++) s += " " ; return s ; }
 	
@@ -323,17 +282,26 @@ public class GoalStructure {
 		String indent =  space(3*(level+1)) ;
 		String s = "" ;
 		if (this instanceof PrimitiveGoal) {
-			s += indent + ((PrimitiveGoal) this).goal.getName() + ": " + status ;
-			if (isTopGoal()) s += "\n" + indent + "Budget:" + allocatedBudget ;
-			s += "\n" + indent + "Consumed budget:" + consumedBudget ;
-			
-			return s ;
+			s += indent + "Goal " + ((PrimitiveGoal) this).goal.getName() + ": " + status ;
 		}
-		s += indent + combinator + ": " + status ; 
-		if (isTopGoal()) s += "\n" + indent + "Budget:" + allocatedBudget ;
+		else 
+			s += indent + combinator + ": " + status ; 
+		if (bmax < Double.POSITIVE_INFINITY) s += "\n" + indent + "Max. budget:" + bmax ;
+		s += "\n" + indent + "Budget: " + budget ;
 		s += "\n" + indent + "Consumed budget:" + consumedBudget + "\n" ;
-		for (GoalStructure gt : subgoals) s += gt.showGoalStructureStatusWorker(level+1) + "\n" ;
+		for (GoalStructure gt : subgoals) s += gt.showGoalStructureStatusWorker(level+1)  ;
 		return s ;
+	}
+	
+	private String indent(int indentation, String s) {
+		String[] lines = s.split("\n") ;
+		String z = "" ;
+		for (int k=0; k<lines.length; k++) {
+			z += space(k) ;
+			z += lines[k] ;
+			if (k>0) z += "\n" ;
+		}
+		return z ;
 	}
 	
 	/**
@@ -360,14 +328,11 @@ public class GoalStructure {
 		 * Create an instance of PrimitiveGoal, wrapping around the given {@link Goal}.
 		 */
 		public PrimitiveGoal(Goal g) { 
-			super(GoalsCombinator.PRIMITIVE) ;
+			super() ;
+			combinator = GoalsCombinator.PRIMITIVE ;
 			goal = g ; 
 		}
 		
-		PrimitiveGoal getDeepestFirstPrimGoal() {
-			return this ;
-		}
-
 	}
 
 }

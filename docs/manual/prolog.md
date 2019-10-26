@@ -41,8 +41,8 @@ state.test("isBoss(patrick)") // should return false
 We can query the engine to give us a boss, if any:
 
 ```java
-var solution = state.query("isBoss(X)","X") ;
-var boss = stringVal(solution[0]) ; // should contain "mrcrab"
+var solution = state.query("isBoss(X)") ;
+var boss = solution.str_("X") ; // should contain "mrcrab"
 ```
 
 The class `StateWithProlog` is btw also a subclass of `StateWithMessenger`. So it also gives you access to inter-agent messaging.

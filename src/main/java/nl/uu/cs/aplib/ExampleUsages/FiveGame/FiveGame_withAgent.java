@@ -303,11 +303,11 @@ public class FiveGame_withAgent {
 		
 		System.out.println(state.showTheory()) ;
 		
-		var solutions = state.query("set4Move(X,Y)", "X", "Y") ;
+		var solution = state.query("set4Move(X,Y)") ;
 	
-		if (solutions != null) {
-			for (Term x : solutions)
-				System.out.println(">> " + x) ;
+		if (solution != null) {
+			System.out.println(">> x = " + solution.int_("X")) ;
+			System.out.println(">> y = " + solution.int_("Y")) ;
 		}
 		else {
 			System.out.println(">> no solution") ; 
@@ -331,7 +331,7 @@ public class FiveGame_withAgent {
 		// defining various actions
 		// this one will randomly choose an empty square, that has a horizontal or vertical cross-neighbor:
 		var besideHV = action("besideHV") 
-			. do_((MyState st) -> actionstate -> {
+			. do1((MyState st) -> {
 			     var empties = st.getEmptySquaresWithHVNeighboringCross() ;
 			     if (empties.isEmpty()) empties = st.getEmptySquares() ;
 			     if (empties.isEmpty()) return null ;
@@ -344,44 +344,41 @@ public class FiveGame_withAgent {
 		
 		// put a cross if there is a winning horizontal or vertical conf:
 		var winningmove = action("winningmove")
-			. do_((MyState st) -> actionstate -> {		
-			     var solution = st.query(st.winningMove("X","Y"),"X","Y") ;
-			     if (solution == null) return null ;
-			     int x = intval(solution[0]) ;
-			     int y = intval(solution[1]) ;
+			. do2((MyState st) -> (QueryResult qsolution) -> {		
+			     if (qsolution == null) return null ;
+			     int x = qsolution.int_("X") ;
+			     int y = qsolution.int_("Y") ;
 			     var status = st.env().move(SQUARE.CROSS, x, y) ;
 			     st.markMove(SQUARE.CROSS,x,y) ;
 			     return status ;
 		      })
-			. on_((MyState st) -> st.test(st.winningMove("X","Y")) ) 
+			. on((MyState st) -> st.query(st.winningMove("X","Y")) ) 
 			. lift() ;
 		
 		// block the opponent if it has a 4 consecutive hor. or vert. row:
 		var block = action("block")
-				. do_((MyState st) -> actionstate -> {		
-				     var solution = st.query(st.blockMove("X","Y"),"X","Y") ;
-				     if (solution == null) return null ;
-				     int x = intval(solution[0]) ;
-				     int y = intval(solution[1]) ;
+				. do2((MyState st) -> (QueryResult qsolution) -> {		
+				     if (qsolution == null) return null ;
+				     int x = qsolution.int_("X") ;
+				     int y = qsolution.int_("Y") ;
 				     var status = st.env().move(SQUARE.CROSS, x, y) ;
 				     st.markMove(SQUARE.CROSS,x,y) ;
 				     return status ;
 			      })
-				. on_((MyState st) -> st.test(st.blockMove("X","Y")) ) 
+				. on((MyState st) -> st.query(st.blockMove("X","Y")) ) 
 				. lift() ;
 		
 		// place a cross next to 3 consecutive hor or vert crosses:
 		var smartmove = action("smartmove")
-				. do_((MyState st) -> actionstate -> {		
-				     var solution = st.query(st.set4Move("X","Y"),"X","Y") ;
-				     if (solution == null) return null ;
-				     int x = intval(solution[0]) ;
-				     int y = intval(solution[1]) ;
+				. do2((MyState st) -> (QueryResult qsolution) -> {		
+				     if (qsolution == null) return null ;
+				     int x = qsolution.int_("X") ;
+				     int y = qsolution.int_("Y") ;
 				     var status = st.env().move(SQUARE.CROSS, x, y) ;
 				     st.markMove(SQUARE.CROSS,x,y) ;
 				     return status ;
 			      })
-				. on_((MyState st) -> st.test(st.set4Move("X","Y")) ) 
+				. on((MyState st) -> st.query(st.set4Move("X","Y")) ) 
 				. lift() ;
 		
 		// define a goal and specify a tactic:

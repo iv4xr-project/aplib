@@ -25,7 +25,7 @@ public class MinimalAutonomousAgent {
 		   
 		  // defining a single action as the goal solver:
 		  var guessing = action("guessing")
-				.do_((SimpleState belief) -> actionstate_ -> { 
+				.do1((SimpleState belief) -> { 
 					int x = rnd.nextInt(5) ;
 					((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
 					return x ;
@@ -38,7 +38,7 @@ public class MinimalAutonomousAgent {
 		  System.err.println("** Main thread " + Thread.currentThread().getId()) ;
 		  
 		  // configure logging:
-		  Logging.addSystemErrAsLogger();
+		  Logging.addSystemErrAsLogHandler();
 
 	      // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 		  var agent = new AutonomousBasicAgent()
@@ -47,7 +47,7 @@ public class MinimalAutonomousAgent {
                     . setSamplingInterval(1000) 
                     ;
 		  
-		  // run the agent, autonously on its own thread:
+		  // run the agent, autonomously on its own thread:
 		  new Thread(() -> agent.loop()) . start();
 		  
 		  // while this main thread waits until the goal is concluded:

@@ -59,7 +59,7 @@ public class GuessNumberGame  {
       // defining the actions for the agent:
 	  var asklb = action("askLowerBound")
 		.desc("Ask user to give a number less or equal that his secret number.")
-		.do_((MyAgentState belief) -> actionstate_ -> {
+		.do1((MyAgentState belief) -> {
 		  var o = belief.env().ask("Type a number less or equal to your number:");
 		  var i = toInt(o) ;
 		  // the agent infers and adds new facts:
@@ -73,7 +73,7 @@ public class GuessNumberGame  {
 	  
       var guess = action("guess")
     	.desc("Guessing the secret number and ask the user to confirm if it is right or wrong.")
-        .do_((MyAgentState belief) -> actionstate_ -> {
+        .do1((MyAgentState belief) -> {
           // the agent performs some inference:
           var candidates = belief.getPossibilities() ;
           if(candidates.isEmpty()) {
@@ -92,7 +92,7 @@ public class GuessNumberGame  {
       g.withTactic(SEQ(asklb,guess)) ;
       
       // creating an agent, attaching state to it, and the above topgoal to it:
-      GoalStructure topgoal = g.lift().withBudget(30000) ;
+      GoalStructure topgoal = g.lift().maxbudget(100000) ;
       var belief = new MyAgentState() ;
       belief.setEnvironment(new ConsoleEnvironment()) ;      
       var agent = new BasicAgent() . attachState(belief) . setGoal(topgoal) ;
@@ -104,7 +104,7 @@ public class GuessNumberGame  {
     	  agent.update(); 
       } 
       topgoal.printGoalStructureStatus(); 
-      g.getTactic().printActionsStatistics();
+      g.getTactic().printStatistics();
 
 	}
 

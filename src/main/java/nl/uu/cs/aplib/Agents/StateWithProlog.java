@@ -124,25 +124,43 @@ public class StateWithProlog extends StateWithMessenger {
 		return this ;
 	}
 	
-	public Term[] query(String queryterm, String ... vars) {
-		try {
-			var q = term(queryterm) ;
-			SolveInfo info = prolog.solve(q);
-			//System.out.println("## " + q + " --> " + info) ;
-			if (! info.isSuccess()) return null ;
-			Term[] solutions = new Term[vars.length] ;
-			for (int k=0; k<vars.length; k++) {
-				solutions[k] = info.getVarValue(vars[k]) ;
+	public static class QueryResult {
+		SolveInfo info ;
+		public QueryResult(SolveInfo info) { this.info = info ; }
+		
+		public Integer int_(String varname) {
+			try {
+				Term t = info.getVarValue(varname) ;
+				return ((alice.tuprolog.Int) t).intValue() ; 
 			}
-			return solutions ;
+			catch(NoSolutionException e) {
+				return null ;
+			}			
 		}
-		catch(NoSolutionException e) { return null ; }
+		
+		public String str_(String varname) {
+			try {
+				Term t = info.getVarValue(varname) ;
+				if (!t.isAtom()) throw new IllegalArgumentException() ;
+				return ((Struct) t).getName() ;		
+			}
+			catch(NoSolutionException e) {
+				return null ;
+			}	
+		}
+		
+	}
+	
+	public QueryResult query(String queryterm) {
+		SolveInfo info = prolog.solve(term(queryterm));
+		//System.out.println("## " + q + " --> " + info) ;
+		if (! info.isSuccess()) return null ;
+		return new QueryResult(info) ;
 	}
 	
 	public boolean test(String queryterm) {
 		try {
-			var q = term(queryterm) ;
-			SolveInfo info = prolog.solve(q);
+			SolveInfo info = prolog.solve(term(queryterm));
 			return info.isSuccess() ;
 		}
 		catch(Exception e) { return false ; }

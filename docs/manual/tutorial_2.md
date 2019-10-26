@@ -56,7 +56,7 @@ Before we formulate our tactic to solve the previously formulated goal, below is
 ```java  
 var q1 = action("q1")
 		.desc("To ask a 'smart' question to the patient :D")
-		.do_((DoctorBelief belief) -> actionstate_ -> {
+		.do1((DoctorBelief belief) -> {
 		   	belief.env().ask("Please explain a bit more...");
 			  return ++belief.patientHappiness ;
 		       })
@@ -73,7 +73,7 @@ We also add the following action, which prints the doctor's initial opening sent
 ```java
 var opening = action("opening")
 			.desc("To say an opening question to the patient.")
-			.do_((DoctorBelief belief) -> actionstate_ -> {
+			.do1((DoctorBelief belief) -> {
 			  belief.env().ask("How do you feel today?");
 			  return ++belief.patientHappiness ;
 		  })

@@ -51,7 +51,7 @@ public class Test_AutonomousBasicAgent {
 		// a better alternative, short of mocking the entire Thread.sleep mechanism.., which
 		// is doable, but is also quite a hassle to do
 		
-		Logging.attachLogFile("mylog.txt");
+		Logging.attachFileAsLogHandler("mylog.txt");
 		
 		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent = new AutonomousBasicAgent("agent","sentinel") 
@@ -60,7 +60,7 @@ public class Test_AutonomousBasicAgent {
 				    ;
 		
 		var a0 = action("a0")
-				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
@@ -100,7 +100,7 @@ public class Test_AutonomousBasicAgent {
 	@Test
 	public void test_resume_by_msg(){
 		
-		Logging.attachLogFile("mylog1.txt");
+		Logging.attachFileAsLogHandler("mylog1.txt");
 		
 		var comNode = new ComNode() ;
 		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
@@ -114,7 +114,7 @@ public class Test_AutonomousBasicAgent {
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")
-				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
@@ -154,7 +154,7 @@ public class Test_AutonomousBasicAgent {
 	public void test_setgoal_awaken_suspendedAgent() {
 		// test that an agent that is suspended because it has no goal will indeed be awaken
 		// by setgoal
-        Logging.attachLogFile("mylog2.txt");
+        Logging.attachFileAsLogHandler("mylog2.txt");
 		
 		var state = (MyState) (new MyState().setEnvironment(new Environment())) ;
 		var agent = new AutonomousBasicAgent("agent","sentinel") 
@@ -163,7 +163,7 @@ public class Test_AutonomousBasicAgent {
 				    ;
 		
 		var a0 = action("a0")
-				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> false).withTactic(a0) . lift() ;
@@ -195,7 +195,7 @@ public class Test_AutonomousBasicAgent {
 				    ;
 		
 		var a0 = action("a0")
-				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> x==10).withTactic(a0) . lift() ;
@@ -227,7 +227,7 @@ public class Test_AutonomousBasicAgent {
 				     .registerTo(comNode) ;
 		
 		var a0 = action("a0")
-				 . do_((MyState S)->actionState-> { S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> { S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var g = goal("g").toSolve((Integer x) -> x==2).withTactic(a0) . lift() ;

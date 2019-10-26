@@ -32,7 +32,7 @@ The action below checks if there are still numbers in 0..10 that could be x. It 
 
 ```java
 var guess = action("guess")
-    . do_((MyAgentState belief) -> actionstate_ -> {
+    . do1((MyAgentState belief) -> {
         // the agent performs some inference:
         var candidates = belief.getPossibilities() ;
         if(candidates.isEmpty()) {
@@ -51,7 +51,7 @@ The action below asks if the user can give a hint in the form of a lower bound f
 
 ```java
 var asklb = action("askLowerBound")
-    . do_((MyAgentState belief) -> actionstate_ -> {
+    . do1((MyAgentState belief) -> {
         var o = belief.env().ask("Type a number less or equal to your number:");
         var i = toInt(o) ;
         if (i!=null) {

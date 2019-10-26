@@ -31,7 +31,7 @@ public class Test_BasicAgent {
 	    
 	    // ok let's now give a goal:
 	    var a0 = action("a0")
-	    		 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+	    		 . do1((MyState S)-> {S.counter++ ; return S.counter ; })
 	    		 . lift() ;
 		var topgoal = goal("g").toSolve((Integer k) -> k==2) 
 				      . withTactic(a0) 
@@ -56,7 +56,7 @@ public class Test_BasicAgent {
 		
 		// scenario with just a single goal, which is aborted:
 		var a0 = action("a0")
-				 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> {S.counter++ ; return S.counter ; })
 				 . lift() ;
 		
 		var topgoal =  goal("g").toSolve((Integer k) -> k==2) 
@@ -87,7 +87,11 @@ public class Test_BasicAgent {
 		assertTrue(g1.getStatus().failed()) ;
 		assertTrue(topgoal2.getStatus().inProgress()) ;
 		
+		assertTrue(agent.currentGoal.goal.name == "g2") ;
+		
 		agent.update();
+		topgoal2.printGoalStructureStatus();
+		//System.out.println("*** " + state.counter) ;
 		assertTrue(state.counter == 1) ;
 		assertTrue(g1.getStatus().failed()) ;
 		assertTrue(g2.getStatus().success()) ;	
@@ -100,12 +104,12 @@ public class Test_BasicAgent {
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
 		var a0 = action("a0")
-				 . do_((MyState S)->actionstate-> {S.counter++ ; S.last = "a0" ; return S.counter ; })
+				 . do1((MyState S)-> {S.counter++ ; S.last = "a0" ; return S.counter ; })
 				 . on_((MyState S) -> S.counter % 2 == 0) 
 				 . lift() ;
 		
 		var a1 = action("a1")
-				. do_((MyState S)->actionstate-> {S.counter++ ; S.last = "a1" ; return S.counter ; })
+				. do1((MyState S)-> {S.counter++ ; S.last = "a1" ; return S.counter ; })
 				. on_((MyState S) -> S.counter % 2 == 1) 
 				. lift() ;	
 		
@@ -139,7 +143,7 @@ public class Test_BasicAgent {
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
 		var a0 = action("a0")
-				 . do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
+				 . do1((MyState S)-> {S.counter++ ; return S.counter ; })
 				 . lift();
 			
 		var g1 = goal("g1").toSolve((Integer k) -> k==1) . withTactic(a0) . lift() ;
@@ -171,12 +175,12 @@ public class Test_BasicAgent {
 		var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment())) ;
 		var agent = new BasicAgent() .attachState(state);
 		var a0 = action("a0")
-				 .do_((MyState S)->actionstate-> {S.counter++ ; return S.counter ; })
-				 .until_((MyState S)->actionstate-> S.counter == 2)
+				 .do1((MyState S)-> {S.counter++ ; return S.counter ; })
+				 .until((MyState S)-> S.counter == 2)
 				 .lift() ;
 		
 		var a1 = action("a1")
-				 .do_((MyState S)->actionstate-> {S.counter = -1 ; return S.counter ; }) 
+				 .do1((MyState S)-> {S.counter = -1 ; return S.counter ; }) 
 				 .lift();
 		
 		var topgoal = goal("g").toSolve((Integer k) -> k==-1) 

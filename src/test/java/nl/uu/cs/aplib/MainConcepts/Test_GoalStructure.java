@@ -10,98 +10,6 @@ import static org.junit.jupiter.api.Assertions.* ;
 
 public class Test_GoalStructure {
 	
-	@Test
-	public void test_submitProposal() {
-		var g = goal("")
-				.toSolve_(i -> ((Integer) i ) == 0) 
-				.withDistF(i -> 0d+ ((int) i)) ;
-		
-		g.propose((Integer) 1);
-		assertTrue(g.getStatus().inProgress()) ;
-		assertTrue(g.distance() == 1d) ;
-		
-		g.propose((Integer) 0);
-		assertTrue(g.getStatus().success()) ;
-		assertTrue(g.distance() == 0d) ;
-		
-	}
-
-	@Test
-	public void test_1_status_propagation() {
-
-		var g1 = lift(goal("")) ;
-		var g2 = FIRSTof(g1, lift(goal(""))) ;
-		var g3 = FIRSTof(g2,lift(goal(""))) ;
-		assertTrue(g2.getStatus().inProgress()) ;
-		g1.setStatusToSuccess("");
-		assertTrue(g2.getStatus().success()) ;
-		assertTrue(g3.getStatus().success()) ;
-		
-		g1 = lift(goal("")) ;
-		g2 = FIRSTof(g1, lift(goal(""))) ;
-		g3 = FIRSTof(g2,lift(goal(""))) ;
-		g1.setStatusToFail("");
-		assertTrue(g2.getStatus().inProgress()) ;
-		assertTrue(g3.getStatus().inProgress()) ;
-		
-		
-		g1 = lift(goal("")) ;
-		g2 = lift(goal("")) ;
-		g3 = FIRSTof(g1,g2) ;
-		var g4 = FIRSTof(g3,lift(goal(""))) ;
-		g1.setStatusToFail("");
-		g2.setStatusToSuccess("");
-		assertTrue(g3.getStatus().success()) ;
-		assertTrue(g4.getStatus().success()) ;
-		
-		g1 = lift(goal("")) ;
-		g2 = lift(goal("")) ;
-		g3 = FIRSTof(g1,g2) ;
-		g4 = FIRSTof(g3,lift(goal(""))) ;
-		g1.setStatusToFail("");
-		g2.setStatusToFail("");
-		assertTrue(g3.getStatus().failed()) ;
-		assertTrue(g4.getStatus().inProgress()) ;	
-	}
-
-	@Test
-	public void test_2_status_propagation() {
-
-		var g1 = lift(goal("")) ;
-		var g2 = SEQ(g1, lift(goal(""))) ;
-		var g3 = SEQ(g2,lift(goal(""))) ;
-		assertTrue(g2.getStatus().inProgress()) ;
-		g1.setStatusToFail("");
-		assertTrue(g2.getStatus().failed()) ;
-		assertTrue(g3.getStatus().failed()) ;
-		
-		g1 = lift(goal("")) ;
-		g2 = SEQ(g1, lift(goal(""))) ;
-		g3 = SEQ(g2,lift(goal(""))) ;
-		g1.setStatusToSuccess("");
-		assertTrue(g2.getStatus().inProgress()) ;
-		assertTrue(g3.getStatus().inProgress()) ;
-		
-		g1 = lift(goal("")) ;
-		g2 = lift(goal("")) ;
-		g3 = SEQ(g1,g2) ;
-		var g4 = SEQ(g3,lift(goal(""))) ;
-		g1.setStatusToSuccess("");
-		g2.setStatusToFail("");
-		assertTrue(g3.getStatus().failed()) ;
-		assertTrue(g4.getStatus().failed()) ;
-		
-		g1 = lift(goal("")) ;
-		g2 = lift(goal("")) ;
-		g3 = SEQ(g1,g2) ;
-		g4 = SEQ(g3,lift(goal(""))) ;
-		g1.setStatusToSuccess("");
-		g2.setStatusToSuccess("");
-		assertTrue(g3.getStatus().success()) ;
-		assertTrue(g4.getStatus().inProgress()) ;	
-		
-	}
-	
 	PrimitiveGoal g1 ;
 	PrimitiveGoal g2 ;
 	PrimitiveGoal g3 ;
@@ -127,162 +35,289 @@ public class Test_GoalStructure {
 	}
 	
 	@Test
-	public void test_getNextPrimitiveGoalWorker() {
+	public void test_submitProposal() {
+		var g = goal("")
+				.ftoSolve_(i -> (Double) i - 0) ; 
+		
+		g.propose(1d);
+		assertTrue(g.getStatus().inProgress()) ;
+		assertTrue(g.distance() == 1d) ;
+		
+		g.propose(0d);
+		assertTrue(g.getStatus().success()) ;
+		assertTrue(g.distance() == 0d) ;
+		
+	}
+
+	@Test
+	public void test_1_status_propagation() {
+
+		var h1 = lift(goal("")) ;
+		var h2 = FIRSTof(h1, lift(goal(""))) ;
+		var h3 = FIRSTof(h2,lift(goal(""))) ;
+		assertTrue(h2.getStatus().inProgress()) ;
+		h1.setStatusToSuccess("");
+		assertTrue(h2.getStatus().success()) ;
+		assertTrue(h3.getStatus().success()) ;
+		
+		h1 = lift(goal("")) ;
+		h2 = FIRSTof(h1, lift(goal(""))) ;
+		h3 = FIRSTof(h2,lift(goal(""))) ;
+		h1.setStatusToFail("");
+		assertTrue(h2.getStatus().inProgress()) ;
+		assertTrue(h3.getStatus().inProgress()) ;
+		
+		
+		h1 = lift(goal("")) ;
+		h2 = lift(goal("")) ;
+		h3 = FIRSTof(h1,h2) ;
+		var h4 = FIRSTof(h3,lift(goal(""))) ;
+		h1.setStatusToFail("");
+		h2.setStatusToSuccess("");
+		assertTrue(h3.getStatus().success()) ;
+		assertTrue(h4.getStatus().success()) ;
+		
+		h1 = lift(goal("")) ;
+		h2 = lift(goal("")) ;
+		h3 = FIRSTof(h1,h2) ;
+		h4 = FIRSTof(h3,lift(goal(""))) ;
+		h1.setStatusToFail("");
+		h2.setStatusToFail("");
+		assertTrue(h3.getStatus().failed()) ;
+		assertTrue(h4.getStatus().inProgress()) ;	
+	}
+
+	@Test
+	public void test_2_status_propagation() {
+
+		var h1 = lift(goal("")) ;
+		var h2 = SEQ(h1, lift(goal(""))) ;
+		var h3 = SEQ(h2,lift(goal(""))) ;
+		assertTrue(h2.getStatus().inProgress()) ;
+		h1.setStatusToFail("");
+		assertTrue(h2.getStatus().failed()) ;
+		assertTrue(h3.getStatus().failed()) ;
+		
+		h1 = lift(goal("")) ;
+		h2 = SEQ(h1, lift(goal(""))) ;
+		h3 = SEQ(h2,lift(goal(""))) ;
+		h1.setStatusToSuccess("");
+		assertTrue(h2.getStatus().inProgress()) ;
+		assertTrue(h3.getStatus().inProgress()) ;
+		
+		h1 = lift(goal("")) ;
+		h2 = lift(goal("")) ;
+		h3 = SEQ(h1,h2) ;
+		var h4 = SEQ(h3,lift(goal(""))) ;
+		h1.setStatusToSuccess("");
+		h2.setStatusToFail("");
+		assertTrue(h3.getStatus().failed()) ;
+		assertTrue(h4.getStatus().failed()) ;
+		
+		h1 = lift(goal("")) ;
+		h2 = lift(goal("")) ;
+		h3 = SEQ(h1,h2) ;
+		h4 = SEQ(h3,lift(goal(""))) ;
+		h1.setStatusToSuccess("");
+		h2.setStatusToSuccess("");
+		assertTrue(h3.getStatus().success()) ;
+		assertTrue(h4.getStatus().inProgress()) ;	
+		
+	}
+	
+
+	
+	@Test
+	public void test_getNextPrimitiveGoal_noBudgetCheck() {
 		setup() ;
 		g1.setStatusToFail("");
-		var h = g1.getNextPrimitiveGoal() ;
+		var h = g1.getNextPrimitiveGoal_andAllocateBudget() ;
 		//System.out.println(h.goal.getName()) ;
 		assertTrue(h == g2) ;
+		assertTrue(d.getStatus().inProgress()) ;
 		
 		setup() ;
 		g1.setStatusToSuccess("");
-		h = g1.getNextPrimitiveGoal() ;
+		h = g1.getNextPrimitiveGoal_andAllocateBudget() ;
 		//System.out.println(h.goal.getName()) ;
 		assertTrue(h == g3) ;
+		assertTrue(d.getStatus().inProgress()) ;
 		
 		setup() ;
 		g2.setStatusToFail("");
-		assertTrue(g2.getNextPrimitiveGoal() == g6) ;
+		assertTrue(g2.getNextPrimitiveGoal_andAllocateBudget() == g6) ;
+		assertTrue(d.getStatus().inProgress()) ;
 
 		setup() ;
 		g2.setStatusToSuccess("");
-		assertTrue(g2.getNextPrimitiveGoal() == g3) ;
+		assertTrue(g2.getNextPrimitiveGoal_andAllocateBudget() == g3) ;
+		assertTrue(d.getStatus().inProgress()) ;
 		
 		setup() ;
 		g3.setStatusToFail("");
-		assertTrue(g3.getNextPrimitiveGoal() == g4) ;
+		assertTrue(g3.getNextPrimitiveGoal_andAllocateBudget() == g4) ;
+		assertTrue(d.getStatus().inProgress()) ;
+
 		setup() ;
 		g3.setStatusToSuccess("");
-		assertTrue(g3.getNextPrimitiveGoal() == g5) ;
+		assertTrue(g3.getNextPrimitiveGoal_andAllocateBudget() == g5) ;
+		assertTrue(d.getStatus().inProgress()) ;
 
 		setup() ;
 		g5.setStatusToFail("");
-		assertTrue(g5.getNextPrimitiveGoal() == g6) ;
+		assertTrue(g5.getNextPrimitiveGoal_andAllocateBudget() == g6) ;
+		assertTrue(d.getStatus().inProgress()) ;
+
 		setup() ;
 		g5.setStatusToSuccess("");
-		assertTrue(g5.getNextPrimitiveGoal() == null) ;
+		assertTrue(g5.getNextPrimitiveGoal_andAllocateBudget() == null) ;
+		assertTrue(d.getStatus().success()) ;
 
 		setup() ;
 		g6.setStatusToFail("");
-		assertTrue(g6.getNextPrimitiveGoal() == null) ;
+		assertTrue(g6.getNextPrimitiveGoal_andAllocateBudget() == null) ;
+		assertTrue(d.getStatus().failed()) ;
+		
 		setup() ;
 		g6.setStatusToSuccess("");
-		assertTrue(g6.getNextPrimitiveGoal() == null) ;
+		assertTrue(g6.getNextPrimitiveGoal_andAllocateBudget() == null) ;
+		assertTrue(d.getStatus().success()) ;
 	}
 	
 	@Test
-	public void test_demandedMinimumBudget() {
+	public void test_setting_maxbudget() {
 		setup() ;
-		g1.goal.demandMinimumBudget(10) ;
+		g1.maxbudget(10) ;
+		g2.maxbudget(20) ;
 		var topgoal = d ;
 		//System.out.println(topgoal.demandedMinimumBudget()) ;
-		assertTrue(topgoal.demandedMinimumBudget() == 10) ;
-		g2.goal.demandMinimumBudget(10) ;
-		assertTrue(topgoal.demandedMinimumBudget() == 20) ;
-		g5.goal.demandMinimumBudget(10) ;
-		assertTrue(topgoal.demandedMinimumBudget() == 30) ;
-	}
-	
-	void printBudget() {
-		System.out.println("g1 remaining: " + g1.remainingBudget) ;
-		System.out.println("g2 remaining: " + g2.remainingBudget) ;
-		System.out.println("g3 remaining: " + g3.remainingBudget) ;
-		System.out.println("g4 remaining: " + g4.remainingBudget) ;
-		System.out.println("g5 remaining: " + g5.remainingBudget) ;
-		System.out.println("g6 remaining: " + g6.remainingBudget) ;
-		System.out.println("a remaining: " + a.remainingBudget) ;
-		System.out.println("b remaining: " + b.remainingBudget) ;
-		System.out.println("c remaining: " + c.remainingBudget) ;
-		System.out.println("d remaining: " + d.remainingBudget) ;
+		assertTrue(g1.getMaxBudgetAllowed() == 10) ;
+		assertTrue(g2.getMaxBudgetAllowed() == 20) ;
+		assertTrue(topgoal.getMaxBudgetAllowed() == Double.POSITIVE_INFINITY) ;
 	}
 	
 	@Test
-	public void test_1_withBudget() {
+	public void test_1a_getDeepestFirstPrimGoal_andAllocateBudget() {	
+		g1 = lift(goal("g1")) ;
+		g1.maxbudget(10) ;
+        PrimitiveGoal y = g1.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		assertTrue(y == g1) ;
+		assertTrue(g1.bmax == 10) ;
+		assertTrue(g1.budget == 10) ;
+		
 		g1 = lift(goal("g1")) ;
 		g2 = lift(goal("g2")) ;
-		g2.goal.demandMinimumBudget(10) ;
-		g3 = lift(goal("g3")) ;
-		d = SEQ(g1,g2,g3) ;
-		d.withBudget(60) ;
-		assertTrue(g1.remainingBudget == 20) ;
-		assertTrue(g2.remainingBudget == 20) ;
-		assertTrue(g3.remainingBudget == 20) ;
-		d.withBudget(30) ;
-		assertTrue(g1.remainingBudget == 10) ;
-		assertTrue(g2.remainingBudget == 10) ;
-		assertTrue(g3.remainingBudget == 10) ;
-		d.withBudget(24) ;
-		assertTrue(g1.remainingBudget == 7) ;
-		assertTrue(g2.remainingBudget == 10) ;
-		assertTrue(g3.remainingBudget == 7) ;
-		d.withBudget(10) ;
-		assertTrue(g1.remainingBudget == 0) ;
-		assertTrue(g2.remainingBudget == 10) ;
-		assertTrue(g3.remainingBudget == 0) ;
+		var g = SEQ(g2,g1) ;
+		g.maxbudget(10) ;
+		g.budget = (5) ;
+        y = g.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		assertTrue(y == g2) ;
+		assertTrue(g.budget == 5) ;
+		assertTrue(g1.budget == Double.POSITIVE_INFINITY) ;
+		assertTrue(g2.budget == 5) ;
 		
-		boolean exceptionThrown = false ;
+		g1 = lift(goal("g1")) ;
+		g2 = lift(goal("g2")) ;
+		g = FIRSTof(g2,g1) ;
+		g.maxbudget(10) ;
+		g.budget = (15) ;
+		g2.maxbudget(5) ;
+        y = g.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		assertTrue(y == g2) ;
+		assertTrue(g.budget == 10) ;
+		assertTrue(g1.budget == Double.POSITIVE_INFINITY) ;
+		assertTrue(g2.budget == 5) ;
+	}
+	
+	@Test
+	public void test_1b_getDeepestFirstPrimGoal_andAllocateBudget() {	
+		setup() ;
+		d.maxbudget(10) ;
+		g1.maxbudget(5) ;
+		assertTrue(g1.bmax == 5) ;
+		var y = d.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		
+		assertTrue(y == g1) ;
+		
+		//System.out.println("*** d:" + d.budget) ;		
+		assertTrue(d.budget == 10) ;
+		assertTrue(c.budget == 10) ;
+		assertTrue(a.budget == 10) ;
+		//System.out.println("*** g1:" + g1.budget) ;
+		//assertTrue(g1.parent.budget == 10) ;
+		assertTrue(g1.budget == 5) ;
+		
+		setup() ;
+		d.budget = 10 ;
+		d.maxbudget(20) ;
+		a.maxbudget(12) ;
+		g1.maxbudget(5) ;
+		y = d.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		assertTrue(y == g1) ;
+		assertTrue(d.budget == 10) ;
+		assertTrue(c.budget == 10) ;
+		assertTrue(a.budget == 10) ;
+		assertTrue(g1.budget == 5) ;
+	}
+
+	@Test
+	public void test_getNextPrimitiveGoal_withBudgetCheck() {
+		setup() ;
+		var g = d ;
+		g.maxbudget(20) ;
+		g1.maxbudget(10) ;
+		g2.maxbudget(8) ;
+		g6.maxbudget(20) ;
+		var y = d.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		assertTrue(y == g1) ;
+		assertTrue(a.budget == 20) ;
+		
+		// call it on still open goal; it should throw an exception
 		try {
-			d.withBudget(9) ;
+			g1.getNextPrimitiveGoal_andAllocateBudget() ;
+			assertTrue(false) ;
 		}
-		catch(Exception e) { exceptionThrown = true ; }
+		catch(IllegalArgumentException e) {
+			// System.out.println("#####") ;
+		}
 		
-		assertTrue(exceptionThrown) ;
-	}
-
-	@Test
-	public void test_2_withBudget() {
-		//System.out.println(">>> test_2_withBudget") ;
-		g1 = lift(goal("g1")) ;
-		g2 = lift(goal("g2")) ;
-		g2.goal.demandMinimumBudget(10) ;
-		g3 = lift(goal("g3")) ;
-		d = FIRSTof(g1,g2,g3) ;
-		g1.setStatusToFail("");
-		d.withBudget(60) ;
+		// consume all budget for g1, then call getDeepestFirstPrimGoal_andAllocateBudget:
+		g1.registerConsumedBudget(10);
+		g1.setStatusToFailBecauseBudgetExhausted();
+		assertTrue(d.getStatus().inProgress()) ;
 		
-		//System.out.println(">> g1 status:" + g1.getStatus()) ;
-		//System.out.println(">> g1 remaining budget:" + g1.remainingBudget) ;
-		assertTrue(g1.remainingBudget == 0) ;
-		assertTrue(g2.remainingBudget == 30) ;
-		assertTrue(g3.remainingBudget == 30) ;
+		var h = g1.getNextPrimitiveGoal_andAllocateBudget() ;
+		//System.out.println(h.goal.getName()) ;
+		assertTrue(h == g2) ;
+		assertTrue(d.budget == 10) ;
+		assertTrue(c.budget == 10) ;
+		assertTrue(a.budget == 10) ;
+		assertTrue(g2.budget == 8) ;
 		
-		g2.setStatusToFail("");
-		d.withBudget(60) ;
-		assertTrue(g1.remainingBudget == 0) ;
-		assertTrue(g2.remainingBudget == 0) ;
-		assertTrue(g3.remainingBudget == 60) ;
-	}
-	
-	@Test
-	public void test_3_withBudget() {
-		//System.out.println(">>> test_3_withBudget") ;
-		g1 = lift(goal("g1")) ;
-		g2 = lift(goal("g2")) ;
-		a = FIRSTof(g1,g2) ;
-		g3 = lift(goal("g3")) ;
-        b = FIRSTof(a,g3) ;
-		g1.goal.demandMinimumBudget(10) ;
-		b.withBudget(60) ;
-
-		assertTrue(g1.remainingBudget == 20) ;
-		assertTrue(g2.remainingBudget == 20) ;
-		//System.out.println(">> g3 remaining budget:" + g3.remainingBudget) ;
-		assertTrue(g3.remainingBudget == 20) ;
+		//g.printGoalStructureStatus(); 
 		
-		b.withBudget(24) ;
-		//System.out.println(">> g1 remaining budget:" + g1.remainingBudget) ;
-		//System.out.println(">> g2 remaining budget:" + g2.remainingBudget) ;
-		//System.out.println(">> g3 remaining budget:" + g3.remainingBudget) ;
-		assertTrue(g1.remainingBudget == 10) ;
-		assertTrue(g2.remainingBudget == 6) ;
-		assertTrue(g3.remainingBudget == 8) ;
+		g2.registerConsumedBudget(1);
+		g2.setStatusToSuccess("g2 solved"); 
+		h = g2.getNextPrimitiveGoal_andAllocateBudget() ;
+		assertTrue(h==g3) ;
+		assertTrue(d.budget == 9) ;
+		assertTrue(c.budget == 9) ;
+		assertTrue(b.budget == 9) ;
+		assertTrue(g3.budget == 9) ;
+				
+		//g.printGoalStructureStatus(); 
 		
-		b.withBudget(10) ;
-		assertTrue(g1.remainingBudget == 10) ;
-		assertTrue(g2.remainingBudget == 0) ;
-		assertTrue(g3.remainingBudget == 0) ;
+		g3.setStatusToFail("g3 fails");
+		h = g3.getNextPrimitiveGoal_andAllocateBudget() ;
+		assertTrue(h==g4) ;
+		g4.setStatusToFail("g4 fails");
+		h = g4.getNextPrimitiveGoal_andAllocateBudget() ;
+		assertTrue(h==g6) ;
+		assertTrue(d.budget == 9) ;
+		assertTrue(g6.budget == 9) ;
+		
+		g.printGoalStructureStatus(); 
+		
 	}
 	
-	static public void main(String[] args) { }
-
 }

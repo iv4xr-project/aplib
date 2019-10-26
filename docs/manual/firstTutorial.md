@@ -156,9 +156,9 @@ var g10 = goal("Guess a the magic number (10)") . toSolve((Integer x) -> x == 10
 ```
 This goal is solved if the agent manage to compute a 'proposal' x that satisfies the predicate attached to it. Note: although simple, the above predicate might not be easy for the agent to solve, especially if it does not know upfront what the solution is.
 
-#### Goal-tree
+#### Goal-structure
 
-To be more precise, an agent actually expects a `GoalTree` rather than a `Goal`. A `GoalTree` allows a complex goal such as `SEQ(g1,g2,g3)` to be expressed. Let's not discuss this now. For now it is sufficient to know that a `Goal` can be lifted to a `GoalTree`. If `g` is a `Goal`, `g.lift()` will construct a `GoalTree` that contains `g` as its only element.
+To be more precise, an agent actually expects a `GoalStructure` rather than a `Goal`. A `GoalStructure` allows a complex goal such as `SEQ(g1,g2,g3)` to be expressed. Let's not discuss this now. For now it is sufficient to know that a `Goal` can be lifted to a `GoalStructure`. If `g` is a `Goal`, `g.lift()` will construct a `GoalStructure` that contains `g` as its only element.
 
 ### Action and tactic
 
@@ -181,44 +181,47 @@ Suppose that the agent uses the `ConsoleEnvironment` as its environment.
 Suppose, in addition to generating a random number we also want the action to print this number to this console. We can do this, but we will need a bit more coding:
 
 ```java
-(SimpleState belief) -> actionstate_ -> {
+(SimpleState belief) -> {
      int x = rnd.nextInt(11) ;
      ((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
      return x ;
      })
 ```
 
-Internally though, an action must be an instance of `nl.uu.cs.aplib.MainConcepts.Action`. Using a method called `action(f)` we can turn a lambda expression such as above into an instance of `Action`.
+Internally though, an action must be an instance of `nl.uu.cs.aplib.MainConcepts.Action`. Using a method called `action(name)` we can create a empty instance of this class. It is "empty" because it still has no behavior. We can use the function `do1` to turn a lambda expression such as above into the behavior of an `Action`. Example:
 
 ```java
-var a0 = action((SimpleState belief) -> actionstate_ -> {
-     int x = rnd.nextInt(11) ;
-     ... ;
-     return x ;
-   })) ;
+var a0 = action("a0")
+  . do1((SimpleState belief) -> {
+      int x = rnd.nextInt(11) ;
+      ... ;
+      return x ;
+      }) ;
 ```
 
 An action can be guarded too. For example, suppose our state `belief` is of type `MyState`, which has an integer field called `counter`, and we want `a0` above to be only **enabled** (executable) when this counter has an odd value, we can code this as follows:
 
 ```java
-var a0withCondition = action((MyState belief) -> actionstate_ -> {
-     int x = rnd.nextInt(11) ;
-     ... ;
-     return x ;
-   }))
-   . on_((MyState belief) -> belief.counter % 2 != 0) ;
+var a0withCondition = action("guarded a0")
+  . do1((MyState belief) -> {
+      int x = rnd.nextInt(11) ;
+      ... ;
+      return x ;
+      })
+ . on_((MyState belief) -> belief.counter % 2 != 0) ;
 ```
 
 
 There is one more technical detail: an agent actually wants to have a tactic rather than an action. A 'tactic' is an instance of `nl.uu.cs.aplib.MainConcepts.Tactic`. Although conceptually a single action is also a Tactic, technically we need to wrap it to become a `tactic`. The method `lift()` will do that.  So... here is the incantation to turn the previous lambda-expression to a `Tactic`:
 
 ```java
-var guessing = action((SimpleState belief) -> actionstate_ -> {
-     int x = rnd.nextInt(11) ;
-     ... ;
-     return x ;
-   }))
-   . lift() ;
+var a0 = action("a0")
+  . do1((SimpleState belief) -> {
+      int x = rnd.nextInt(11) ;
+      ... ;
+      return x ;
+      })
+ . lift() ;
 ```
 
 
@@ -240,7 +243,7 @@ Goal g10 = goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
 
 // defining a tactic as the goal solver:
 var guessing = action("guessing")
-   .do_((SimpleState belief) -> actionstate_ -> {
+   .do1((SimpleState belief) -> {
         int x = rnd.nextInt(11) ;
         ... ;
         return x ;

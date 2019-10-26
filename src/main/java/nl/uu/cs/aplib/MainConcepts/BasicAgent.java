@@ -1,12 +1,14 @@
 package nl.uu.cs.aplib.MainConcepts;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import nl.uu.cs.aplib.Logging;
+import nl.uu.cs.aplib.Exception.AplibError;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
 import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
@@ -100,9 +102,9 @@ public class BasicAgent {
 	protected PrimitiveGoal currentGoal ;
 	
 	/**
-	 * The strategy the agent is currently using to solve its currentGoal.
+	 * The tactic the agent is currently using to solve its currentGoal.
 	 */
-	protected Tactic currentStrategy ;
+	protected Tactic currentTactic ;
 	
 	
 	protected Logger logger = Logging.getAPLIBlogger() ;
@@ -121,10 +123,20 @@ public class BasicAgent {
 	protected Deliberation deliberation = new Deliberation() ;
 	
 	/**
+	 * Specify how to calculate the cost of a single invocation of an action. The default
+	 * is that each action invocation costs 1.0.
+	 */
+	protected CostFunction costFunction = new CostFunction() ;
+	
+	/**
 	 * Create a blank agent. You will need to at least attach a {@link SimpleState} and 
 	 * a {@link GoalStructure} to it before it can be used to do something.
 	 */
-	public BasicAgent() { }
+	public BasicAgent() { 
+		// Setting up this default logging configuration
+		Logging.addSystemErrAsLogHandler();
+		Logging.setLoggingLevel(Level.INFO);
+	}
 	
 	/**
 	 * Create a blank agent with the given id and role. You will need to at least
@@ -148,9 +160,56 @@ public class BasicAgent {
 	 */
 	public BasicAgent setGoal(GoalStructure g) {
 		goal = g ;
-		currentGoal = goal.getDeepestFirstPrimGoal() ;
-		currentStrategy = currentGoal.goal.getTactic() ;
+		if (! allGoalsHaveTactic(g)) 
+			throw new IllegalArgumentException("Agent " + id + ": some goal has no tactic.") ;
+		currentGoal = goal.getDeepestFirstPrimGoal_andAllocateBudget() ;
+		if (currentGoal == null) throw new IllegalArgumentException("Agent " + id + ": is gievn a goal structure with NO goal.") ;
+		currentTactic = currentGoal.goal.getTactic() ; 
+		if (currentTactic == null) 
+			throw new IllegalArgumentException("Agent "  + id 
+					+ ", goal " + currentGoal.goal.name + ": has NO tactic.") ;
 		return this ; 
+	}
+	
+	static private boolean allGoalsHaveTactic(GoalStructure g) {
+		if (g instanceof PrimitiveGoal) {
+			var g_ = (PrimitiveGoal) g ;
+			return g_.goal.getTactic() != null ;
+		}
+		for (GoalStructure h : g.subgoals) {
+			if (! allGoalsHaveTactic(h)) return false ;
+		}
+		return true ;
+	}
+
+	/**
+	 * Set a goal for this agent, with the specified initial budget. 
+	 * The method returns the agent itself so that this method can be used in the Fluent Interface style.
+	 */
+	public BasicAgent setGoal(double budget, GoalStructure g) {
+		g.budget = budget ;
+		return setGoal(g) ;
+	}
+	
+	/**
+	 * Set initial computation budget for this agent. The agent must have a goal set.
+	 * This method should not be called when the agent is already working on its 
+	 * goal.
+	 */
+	public BasicAgent budget(double b) {
+		if (goal == null) throw new IllegalArgumentException("Agent " + id + ": allocating budget to an agent requires it to have a goal.") ;
+		if (b <= 0 || ! Double.isFinite(b)) throw new IllegalArgumentException() ;
+		goal.budget = b ;
+		setGoal(goal) ;
+		return this ;
+	}
+	
+	/**
+	 * Set f as this agent cost-function. Return the agent itself so that this
+	 * method can be used in the Fluent Interface style.
+	 */
+	public BasicAgent withCostFunction(CostFunction f) {
+		costFunction = f ; return this ;
 	}
 	
 	/**
@@ -262,7 +321,11 @@ public class BasicAgent {
 			//System.err.print("x") ;
 			return ;
 		}
-		// if goal is not null, currentGoal should not be null either
+		// Note on BUDGET:
+		// We will not check the budget at the start of the update. The first current
+		// goal is guaranteed to have >0 budget. This implies it is safe to check
+		// the budget at the end of every update instead.
+			
 		mytime.sample(); 
 		// We need to lock the environment since there may be multiple agents
 		// sharing the same environment:
@@ -279,7 +342,7 @@ public class BasicAgent {
 		// update the agent's state:
 		state.updateState() ;
 		
-		var candidates = currentStrategy.getFirstEnabledActions(state) ;
+		var candidates = currentTactic.getFirstEnabledActions(state) ;
 		if (candidates.isEmpty()) {
 			// if no action is enabled, we wait until the next update, to see
 			// if the environment changes its state.
@@ -294,26 +357,30 @@ public class BasicAgent {
 		
 		if (chosenAction.action instanceof Abort) {
 			// if the action is ABORT:
-			currentGoal.setStatusToFail("abort() were invoked.");
+			currentGoal.setStatusToFail("abort() was invoked.");
 		}
 		else {
 			// else execute the action:
-			Object proposal = chosenAction.action.exec1(state) ;
+			Object proposal = costFunction.executeAction_andInstrumentCost(state,chosenAction.action) ;
 			currentGoal.goal.propose(proposal);	
 			if (currentGoal.goal.getStatus().success()) {
 				currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
 			}
+			currentGoal.registerConsumedBudget(costFunction.getCost());
 		}
+		
+		// registering some statistics:
 		chosenAction.action.invocationCount++ ;
 		var elapsed = mytime.elapsedTimeSinceLastSample() ;
 		//System.out.println("### elapsed: " + elapsed) ;
-		chosenAction.action.totalRuntime += elapsed ;
-		currentGoal.addConsumedBudget(elapsed);
+		chosenAction.action.totalRuntime += elapsed ;   ;
+		currentGoal.registerUsedTime(elapsed);
+
 		
 		// if the current goal is not decided (still in progres), check if its budget is
 		// not exhausted:
-		if (currentGoal.getStatus().inProgress() && currentGoal.remainingBudget <= 0d) {
-			currentGoal.setStatusToFail("Running out of budget.");
+		if (currentGoal.getStatus().inProgress() && currentGoal.budget <= 0d) {
+			currentGoal.setStatusToFailBecauseBudgetExhausted();
 		}
 		
 		// check the status of top-level goal; if it is resolved, the agent is done:
@@ -324,12 +391,14 @@ public class BasicAgent {
 		// otherwise the top goal is still in-progress...
 		
 		if (currentGoal.getStatus().success() || currentGoal.getStatus().failed()) {
-			// so... if the current goal is solved (but the topgoal is not solved yet), we need
+			// so... if the current goal is closed (but the topgoal is not closed yet), we need
 			// to find another goal to solve:
-			currentGoal = currentGoal.getNextPrimitiveGoal() ;
+			currentGoal = currentGoal.getNextPrimitiveGoal_andAllocateBudget() ;
 			if (currentGoal != null) {
-				currentStrategy = currentGoal.goal.getTactic() ;
-				goal.redistributeRemainingBudget();
+				currentTactic = currentGoal.goal.getTactic() ;
+				if (currentTactic == null) 
+					// should not happen...
+					throw new AplibError("Goal " + currentGoal.goal.name + " has no tactic.") ;
 			}
 			else {
 				// there is no more goal left! 
@@ -341,13 +410,13 @@ public class BasicAgent {
 		else {
 			// else the currentgoal is still in-progress
 			if(chosenAction.action.isCompleted()) {
-				currentStrategy = chosenAction.calcNextTactic() ;
-				// if no strategy can be found, reset it to the root strategty of the goal:
-				if (currentStrategy == null) 
-					currentStrategy = currentGoal.goal.getTactic() ;
+				currentTactic = chosenAction.calcNextTactic() ;
+				// if no tactic can be found, reset it to the root tactic of the goal:
+				if (currentTactic == null) 
+					currentTactic = currentGoal.goal.getTactic() ;
 			}
 			else {
-				currentStrategy = chosenAction ;
+				currentTactic = chosenAction ;
 			}
 		}
 	}
