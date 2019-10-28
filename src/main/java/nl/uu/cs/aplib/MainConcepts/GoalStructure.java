@@ -35,7 +35,7 @@ public class GoalStructure {
 	 * SEQ g1,g2,... where g1,g2,... are h' subgoals. If h is marked as FIRSTOF, it represents a
 	 * tree of the form FIRSTof g1,g2,....
 	 */
-	static public enum GoalsCombinator { SEQ, FIRSTOF, PRIMITIVE }
+	static public enum GoalsCombinator { SEQ, FIRSTOF, REPEAT, PRIMITIVE }
 	
 	GoalStructure parent = null ;
 	List<GoalStructure> subgoals = new LinkedList<GoalStructure>() ; 
@@ -108,6 +108,7 @@ public class GoalStructure {
 				    if (i == parent.subgoals.size()-1)
 					  	 parent.setStatusToSuccess(info); 
 				    break ;
+			   case REPEAT : parent.setStatusToSuccess(info); break ;   
 			}
 		}
 	}
@@ -120,12 +121,18 @@ public class GoalStructure {
 		status.setToFail(reason);
 		if (! isTopGoal()) {
 			switch(parent.combinator) {
-			   case SEQ : parent.setStatusToFail(reason); break;
+			   case SEQ : 
+				    parent.setStatusToFail(reason); break;
 			   case FIRSTOF :
 				    int i = parent.subgoals.indexOf(this) ;
 					if (i == parent.subgoals.size()-1)
 						parent.setStatusToFail(reason);
 					break;
+			   case REPEAT :
+				   if (parent.budget <= 0) {
+					   parent.setStatusToFailBecauseBudgetExhausted();
+				   }
+				   break ;
 			}
 		}
 	}
@@ -146,6 +153,7 @@ public class GoalStructure {
 					if (i == parent.subgoals.size()-1)
 						parent.setStatusToFail(reason);
 					break;
+			   case REPEAT : break ;	
 			}
 		}
 	}
@@ -190,35 +198,56 @@ public class GoalStructure {
 		if (parent.status.success() || parent.status.failed()) 
 			return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 		
-		// this case implies that the parent doesn't fail. So, it must have some budget left!
+		// this case implies: (1) the parent goal is still open/in-progress, and 
+		// (2) the parent must have some budget left!
 		
 		switch(parent.combinator) {
 		  case SEQ :
-			   if(status.failed())
+			   // Since the parent is still open, it follows that this goal cannot be failed.
+			   // In other words, this goal must be successful. Furthermore, it cannot be the
+			   // last goal of the SEQ, because then the whole SEQ would be successful as well.
+			   //
+			   // So.. we can simplify this case:
+			  
+			   //if(status.failed())
 				  // this case should have caught by the if-parent above; as it implies that the
-				  // patent failed
-				  return parent.getNextPrimitiveGoal_andAllocateBudget() ;
+				  // parent also failed
+				  //return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 			   // else: so, this goal is solved:
 			   int k = parent.subgoals.indexOf(this) ;
-			   if (k == parent.subgoals.size() - 1 ) 
+			   //if (k == parent.subgoals.size() - 1 ) 
 				  // this case should have been caught by the if-parent case above; as it implies
 				  // that the parent succeeded
-				  return parent.getNextPrimitiveGoal_andAllocateBudget() ;
-			   else
-				  return parent.subgoals.get(k+1).getDeepestFirstPrimGoal_andAllocateBudget() ;
+				  //return parent.getNextPrimitiveGoal_andAllocateBudget() ;
+			   //else
+			   return parent.subgoals.get(k+1).getDeepestFirstPrimGoal_andAllocateBudget() ;
+			   
 		  case FIRSTOF :
-			   if(status.success())
+			   // Since the parent is still open, it follows that this goal cannot be successful.
+			   // In other words, this goal must be failed. Furthermore, it cannot be the
+			   // last goal of the FIRSTOF, because then the whole FIRSTOF would be failed as well.
+			   //
+			   // So.. we can simplify this case:
+			  
+			   //if(status.success())
 				  // this case should have been caught by the if-parent case above; as it implies
 				  // that the parent succeeded
-				  return parent.getNextPrimitiveGoal_andAllocateBudget() ;
+				  //return parent.getNextPrimitiveGoal_andAllocateBudget() ;
 			   // else: so, this goal failed:
 			   k = parent.subgoals.indexOf(this) ;
-			   if (k == parent.subgoals.size() - 1 ) 
+			   //if (k == parent.subgoals.size() - 1 ) 
 					// this case should have caught by the if-parent above; as it implies that the
 					// patent failed
-					return parent.getNextPrimitiveGoal_andAllocateBudget() ;
-			   else
-					return parent.subgoals.get(k+1).getDeepestFirstPrimGoal_andAllocateBudget() ;
+					//return parent.getNextPrimitiveGoal_andAllocateBudget() ;
+			   //else
+			   return parent.subgoals.get(k+1).getDeepestFirstPrimGoal_andAllocateBudget() ;
+		   case REPEAT :
+			   // Since the parent is still open, it follows that this goal cannot be successful.
+			   // In other words, this goal must be failed, and furthermore its REPEAT parent
+			   // still have some budget (otherwise the parent would be failed).
+			   //
+			   // so we can simplify this to:
+			   return this.getDeepestFirstPrimGoal_andAllocateBudget() ;
 		}
 		// this case should not happen
 		return null ;

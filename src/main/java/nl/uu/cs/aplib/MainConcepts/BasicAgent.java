@@ -284,6 +284,47 @@ public class BasicAgent {
 	}
 	
 	/**
+	 * Insert the goal-structure G as the next direct sibling of the current goal.
+	 * Fail if the current goal is null or if it is the top-goal.
+	 */
+	public void addGoalStructure(GoalStructure G) {
+		if (currentGoal == null || currentGoal.isTopGoal()) 
+			throw new IllegalArgumentException() ;
+		int k = currentGoal.parent.subgoals.indexOf(currentGoal) ;
+		int N = currentGoal.parent.subgoals.size() ;
+		if (k==N-1) {
+			currentGoal.parent.subgoals.add(G) ;
+		}
+		else {
+			currentGoal.parent.subgoals.add(k+1,G);
+		}
+	}
+	
+	/**
+	 * Remove the goal-structure G from this agent root goal-structure.
+	 * Fail if the agent has no goal.
+	 */
+	public void removeGoalStructure(GoalStructure G) {
+		if (goal==null) throw new IllegalArgumentException() ;
+		removeGoalWorker(goal,G) ;
+	}
+	
+	private boolean removeGoalWorker(GoalStructure H, GoalStructure tobeRemoved) {
+		if (H.subgoals.contains(tobeRemoved)) {
+			H.subgoals.remove(tobeRemoved) ;
+			return true ;
+		}
+		else {
+			for (GoalStructure H2 : H.subgoals) {
+				var r = removeGoalWorker(H2,tobeRemoved) ;
+				if (r) return true ;
+			}
+			return false ;
+		}
+	}
+	
+	
+	/**
 	 * You should not need to use this, unless you want to implement your own Agent
 	 * by overriding this class, and you need your own custom way to lock and unlock
 	 * access to the Environment.
