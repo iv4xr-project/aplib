@@ -201,5 +201,77 @@ public class Test_BasicAgent {
 	    assertTrue(state.counter == -1) ;
 		assertTrue(topgoal.getStatus().success()) ;	
 	}
+	
+	
+	// test whether H contains G
+	private boolean contains(GoalStructure H, GoalStructure G) {
+		if (H==G) return true ;
+		for (GoalStructure H2: H.subgoals) {
+			if (contains(H2,G)) return true ;
+		}
+		return false ;
+	}
+	
+	@Test
+	public void test_addingAGoal() {
+		
+		var g = goal("g")
+				.toSolve((Integer i) -> i == 5)
+				.withTactic(action("a")
+						.do1((MyState S) -> { S.counter++ ; return S.counter ; })
+						.lift())
+				.lift() ;
+		
+		var g0 = goal("g0")
+				.toSolve((Integer i) -> i == 2)
+				.withTactic(action("a")
+						.do1((MyState S) -> { S.counter++ ; return S.counter ; })
+						.lift())
+				.lift() ;
+			
+		var gnew = goal("new")
+				.toSolve((Integer i) -> i == 4)
+				.withTactic(action("a")
+						.do1((MyState S) -> { S.counter++ ; return S.counter ; })
+						.lift())
+				.lift() ;
+		
+		// Scenario 1: trying to add a goal on a singleton goal; should throw an exception:
+		var agent = new BasicAgent()
+				.attachState(new MyState())
+				.setGoal(g) ;
+		
+		assertTrue(agent.currentGoal == g) ;
+		
+		try {
+			agent.addGoalStructure(gnew);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		// Scenario 2: the current goal is the last child of some parent combinator:
+		var grepeat = REPEAT(g) ;
+		agent.setGoal(grepeat) ;
+		assertTrue(agent.currentGoal == g) ;
+		
+		agent.addGoalStructure(gnew);
+		assertTrue(agent.currentGoal == g) ;
+		assertTrue(contains(grepeat,gnew)) ;
+		assertTrue(grepeat.subgoals.indexOf(g) == 0) ;
+		assertTrue(grepeat.subgoals.indexOf(gnew) == 1) ;
+
+		// Scenario 3: the current goal is NOT the last child of some parent combinator:
+		var gseq = SEQ(g0,g) ;
+		agent.setGoal(gseq) ;
+		assertTrue(agent.currentGoal == g0) ;
+		
+		agent.addGoalStructure(gnew);
+		assertTrue(agent.currentGoal == g0) ;
+		assertTrue(contains(gseq,gnew)) ;
+		assertTrue(gseq.subgoals.indexOf(g0) == 0) ;
+		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
+		assertTrue(gseq.subgoals.indexOf(g) == 2) ;
+		
+	}
 
 }
