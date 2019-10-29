@@ -171,7 +171,7 @@ public class BasicAgent {
 		return this ; 
 	}
 	
-	static private boolean allGoalsHaveTactic(GoalStructure g) {
+	private static boolean allGoalsHaveTactic(GoalStructure g) {
 		if (g instanceof PrimitiveGoal) {
 			var g_ = (PrimitiveGoal) g ;
 			return g_.goal.getTactic() != null ;
@@ -302,16 +302,24 @@ public class BasicAgent {
 	
 	/**
 	 * Remove the goal-structure G from this agent root goal-structure.
-	 * Fail if the agent has no goal.
+	 * Fail if the agent has no goal or if G is an ancestor of the current goal.
 	 */
 	public void removeGoalStructure(GoalStructure G) {
-		if (goal==null) throw new IllegalArgumentException() ;
+		if (goal==null || currentGoal.isDescendantOf(G)) throw new IllegalArgumentException() ;
 		removeGoalWorker(goal,G) ;
 	}
 	
 	private boolean removeGoalWorker(GoalStructure H, GoalStructure tobeRemoved) {
 		if (H.subgoals.contains(tobeRemoved)) {
 			H.subgoals.remove(tobeRemoved) ;
+			if (H.subgoals.isEmpty()) {
+				if (H.isTopGoal()) {
+					throw new AplibError("Removal of a goal structure causes the topgoal to become childless.") ;
+				}
+				else {
+					removeGoalWorker(goal,H) ;
+ 				}
+			}
 			return true ;
 		}
 		else {
@@ -414,7 +422,7 @@ public class BasicAgent {
 		chosenAction.action.invocationCount++ ;
 		var elapsed = mytime.elapsedTimeSinceLastSample() ;
 		//System.out.println("### elapsed: " + elapsed) ;
-		chosenAction.action.totalRuntime += elapsed ;   ;
+		chosenAction.action.totalRuntime += elapsed ;   
 		currentGoal.registerUsedTime(elapsed);
 
 		

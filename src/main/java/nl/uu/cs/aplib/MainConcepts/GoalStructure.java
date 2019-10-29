@@ -271,6 +271,16 @@ public class GoalStructure {
 		}
 	}
 	
+	/**
+	 * Check if this goal structure is a descendant of G. It is it is G itself, or
+	 * if its parent is a descendant of G.
+	 */
+	boolean isDescendantOf(GoalStructure G) {
+		if (this==G) return true ;
+		if (parent==null) return false ;
+		return parent.isDescendantOf(G) ;				
+	}
+	
 
 
 	public GoalStructure maxbudget(double b) {

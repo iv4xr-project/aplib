@@ -216,23 +216,20 @@ public class Test_BasicAgent {
 	public void test_addingAGoal() {
 		
 		var g = goal("g")
-				.toSolve((Integer i) -> i == 5)
 				.withTactic(action("a")
-						.do1((MyState S) -> { S.counter++ ; return S.counter ; })
+						.do1((MyState S) -> 0 )
 						.lift())
 				.lift() ;
 		
 		var g0 = goal("g0")
-				.toSolve((Integer i) -> i == 2)
 				.withTactic(action("a")
-						.do1((MyState S) -> { S.counter++ ; return S.counter ; })
+						.do1((MyState S) -> 0)
 						.lift())
 				.lift() ;
 			
 		var gnew = goal("new")
-				.toSolve((Integer i) -> i == 4)
 				.withTactic(action("a")
-						.do1((MyState S) -> { S.counter++ ; return S.counter ; })
+						.do1((MyState S) -> 0)
 						.lift())
 				.lift() ;
 		
@@ -271,6 +268,61 @@ public class Test_BasicAgent {
 		assertTrue(gseq.subgoals.indexOf(g0) == 0) ;
 		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
 		assertTrue(gseq.subgoals.indexOf(g) == 2) ;
+		
+	}
+	
+	@Test
+	public void test_removingAGoal() {
+		var g = goal("g")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0 )
+						.lift())
+				.lift() ;
+		
+		var g0 = goal("g0")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+		
+		var g1 = goal("g1")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+		
+		var g2 = REPEAT(SEQ(g0,g1)) ;
+		var g3 = REPEAT(g) ;
+		
+		var gRoot = REPEAT(FIRSTof(g2,g3)) ;
+		var agent = new BasicAgent()
+				.attachState(new MyState())
+				.setGoal(g) ;
+		agent.setGoal(gRoot) ;
+		assertTrue(agent.currentGoal == g0) ;
+		
+		try {
+			agent.removeGoalStructure(g0);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		try {
+			agent.removeGoalStructure(g2);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		try {
+			agent.removeGoalStructure(gRoot);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+				
+		agent.removeGoalStructure(g);
+		assertTrue(contains(gRoot,g0)) ;
+		assertFalse(contains(gRoot,g)) ;
+		assertFalse(contains(gRoot,g3)) ;
 		
 	}
 
