@@ -67,6 +67,24 @@ public class Test_GoalStructure {
 		assertTrue(h2.getStatus().inProgress()) ;
 		assertTrue(h3.getStatus().inProgress()) ;
 		
+		h1 = lift(goal("")) ;
+		h2 = FIRSTof(h1, lift(goal(""))) ;
+		h3 = FIRSTof(h2,lift(goal(""))) ;
+		h1.budget = 0 ;
+		h1.setStatusToFailBecauseBudgetExhausted();
+		assertTrue(h1.getStatus().failed()) ;
+		assertTrue(h2.getStatus().inProgress()) ;
+		assertTrue(h3.getStatus().inProgress()) ;
+		
+		h1 = lift(goal("")) ;
+		h2 = FIRSTof(h1, lift(goal(""))) ;
+		h3 = FIRSTof(h2,lift(goal(""))) ;
+		h1.budget = 0 ;
+		h2.budget = 0 ;
+		h1.setStatusToFailBecauseBudgetExhausted();
+		assertTrue(h1.getStatus().failed()) ;
+		assertTrue(h2.getStatus().failed()) ;
+		assertTrue(h3.getStatus().inProgress()) ;
 		
 		h1 = lift(goal("")) ;
 		h2 = lift(goal("")) ;
@@ -97,7 +115,7 @@ public class Test_GoalStructure {
 		h1.setStatusToFail("");
 		assertTrue(h2.getStatus().failed()) ;
 		assertTrue(h3.getStatus().failed()) ;
-		
+			
 		h1 = lift(goal("")) ;
 		h2 = SEQ(h1, lift(goal(""))) ;
 		h3 = SEQ(h2,lift(goal(""))) ;
@@ -126,6 +144,33 @@ public class Test_GoalStructure {
 	}
 	
 
+	@Test
+	public void test_3_status_propagation() {
+		var h1 = lift(goal("")) ;
+		var h2 = lift(goal("")) ;
+		var h3 = REPEAT(h1) ;
+		var h4 = SEQ(h3,h2) ;
+		h1.setStatusToSuccess("");
+		assertTrue(h1.getStatus().success()) ;
+		assertTrue(h3.getStatus().success()) ;
+		assertTrue(h2.getStatus().inProgress()) ;
+		assertTrue(h4.getStatus().inProgress()) ;
+		
+		var h1a = lift(goal("")) ;
+		var h1b = lift(goal("")) ;
+		var h1c = SEQ(h1a,h1b) ;
+		h2 = lift(goal("")) ;
+		h3 = REPEAT(h1c) ;
+		h4 = SEQ(h3,h2) ;
+		h1a.setStatusToSuccess("");
+		h1b.setStatusToFail("");
+		assertTrue(h1a.getStatus().success()) ; 
+		assertTrue(h1b.getStatus().failed()) ;
+		assertTrue(h1c.getStatus().failed()) ;
+		assertTrue(h3.getStatus().inProgress()) ;
+		assertTrue(h4.getStatus().inProgress()) ;
+		
+	}
 	
 	@Test
 	public void test_getNextPrimitiveGoal_noBudgetCheck() {
@@ -182,6 +227,17 @@ public class Test_GoalStructure {
 		g6.setStatusToSuccess("");
 		assertTrue(g6.getNextPrimitiveGoal_andAllocateBudget() == null) ;
 		assertTrue(d.getStatus().success()) ;
+		
+		setup() ;
+		a = REPEAT(SEQ(g1,g2)) ;
+		var g = SEQ(a,g3) ;
+		g1.setStatusToSuccess("");
+		assertTrue(g1.getNextPrimitiveGoal_andAllocateBudget() == g2) ;
+		g2.setStatusToFail("");
+		assertTrue(g2.getNextPrimitiveGoal_andAllocateBudget() == g1) ;
+		assertTrue(g1.getStatus().inProgress()) ;
+		assertTrue(a.getStatus().inProgress()) ;
+		assertTrue(g.getStatus().inProgress()) ;		
 	}
 	
 	@Test

@@ -120,6 +120,10 @@ public class GoalStructure {
 	void setStatusToFail(String reason) {
 		status.setToFail(reason);
 		if (! isTopGoal()) {
+			if (parent.budget <= 0d) {
+				parent.setStatusToFailBecauseBudgetExhausted(); 
+				return ;
+			}
 			switch(parent.combinator) {
 			   case SEQ : 
 				    parent.setStatusToFail(reason); break;
@@ -128,34 +132,13 @@ public class GoalStructure {
 					if (i == parent.subgoals.size()-1)
 						parent.setStatusToFail(reason);
 					break;
-			   case REPEAT :
-				   if (parent.budget <= 0) {
-					   parent.setStatusToFailBecauseBudgetExhausted();
-				   }
-				   break ;
+			   case REPEAT : break ;
 			}
 		}
 	}
 	
-	
 	void setStatusToFailBecauseBudgetExhausted() {
-	    String reason = "The budget is exhausted" ;
-		status.setToFail(reason);
-		if (! isTopGoal()) {
-			if (parent.budget <= 0d) {
-				parent.setStatusToFailBecauseBudgetExhausted(); 
-				return ;
-			}
-			switch(parent.combinator) {
-			   case SEQ : parent.setStatusToFail(reason); break;
-			   case FIRSTOF :
-				    int i = parent.subgoals.indexOf(this) ;
-					if (i == parent.subgoals.size()-1)
-						parent.setStatusToFail(reason);
-					break;
-			   case REPEAT : break ;	
-			}
-		}
+		setStatusToFail("The budget is exhausted") ;
 	}
 	
 	/**
@@ -246,7 +229,11 @@ public class GoalStructure {
 			   // In other words, this goal must be failed, and furthermore its REPEAT parent
 			   // still have some budget (otherwise the parent would be failed).
 			   //
-			   // so we can simplify this to:
+			   // so we can simplify this to the following:
+			   
+			   // first reset the status of this goal-structure and its descendants to in-progress:
+			   this.makeInProgressAgain() ;
+			   // then get the first primitive goal:
 			   return this.getDeepestFirstPrimGoal_andAllocateBudget() ;
 		}
 		// this case should not happen
@@ -269,6 +256,12 @@ public class GoalStructure {
 		else {
 			return subgoals.get(0).getDeepestFirstPrimGoal_andAllocateBudget() ;
 		}
+	}
+	
+	
+	private void makeInProgressAgain() {
+		status.resetToInProgress();
+		for (GoalStructure G : subgoals) G.makeInProgressAgain();
 	}
 	
 	/**

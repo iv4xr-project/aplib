@@ -59,6 +59,16 @@ public class ProgressStatus {
 	 * (it is set to null).
 	 */
 	public void setToSuccess() { setToSuccess(null) ; }
+	
+	
+	/**
+	 * Set the status represented by this instance to INPROGRESS. The info string is set
+	 * to null.
+	 */
+	public void resetToInProgress() {
+		status = ProgressStatus_.INPROGRESS ;
+		info = null ;
+	}
 		
 	/**
 	 * Set the status represented by this instance to FAILED, and set its info to
