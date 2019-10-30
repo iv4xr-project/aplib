@@ -5,13 +5,13 @@ Author: Wishnu Prasetya, Utrecht University, 2019
 
 ### Agent
 
-We define an **agent-based system** as a system consisting of an **environment** and one or more agents trying to control the environment. This environment can be a physical device, or another software, or humans connected to the agents through some interface. Conceptually, such an environment can be regarded as an **stateful** and **autonomous** program ('autonomous' means that it can at anytime change its state on its own decision). It may even be non-deterministic.
+We define an **agent-based system** as a system consisting of an **environment** and one or more agents trying to control the environment. This environment can be a physical device, or another software, or humans connected to the agents through some interface. Conceptually, such an environment can be regarded as a **stateful** and **autonomous** program ('autonomous' means that it can at anytime change its state on its own decision). It may even be non-deterministic.
 
-An **agent**, in the nutshell, as a stateful program that interacts with an environment. The purpose of an agent is to solve some problem over the environment.
+An **agent**, in the nutshell, as a stateful program that interacts with an environment. It has a purpose/goal, which can be as simple as to observe certain things in the environment, or a more complicated goal of nudging/moving the environment towards a certain state,
 
 The initial state of the agent is its state when it is created. At this point, it is assumed the environment already exists.
 
-The execution of the agent is a discrete tick-driven execution. When a tick comes, the agent samples the environment state, and then it does it own action which can change its own state as well as the environment. The environment is not required to run synchronously with the agent. All we say is that the agent will sample the environment state at every tick. Between ticks, there can be many times the environment changes its state.
+The execution of the agent is a discrete tick-driven execution. When a tick comes, the agent samples the environment state, and then it does its own action which can change its own state as well as the environment. The environment is not required to run synchronously with the agent. All we say is that the agent will sample the environment state at every tick. Between ticks, there can be multiple times the environment changes its state.
 
 We can distinguish between a **subservient** and an **autonomous** agent. A subservient agent has a master controlling when a tick is issued. If the master does not send a tick, the agent does nothing. An autonomous agent, as the name says, runs on its own without needing a master to tick it. The agent basically controls its own ticks. In implementation term, subservient agents can be run in one thread, the same thread as their master. On the other hand, autonomous agents require their own threads to run.
 
@@ -24,11 +24,11 @@ An agent can be given a goal. Without a goal, the agent will not do anything. A 
 
 For example a goal `(𝜆x → x=99)` is a goal that is solved only if the agent proposes 99. A goal `(𝜆x → isPrime(x))` is solved if the agent proposes a prime number.
 
-When created, agents are in principle blank: they have no behavior, so they wouldn’t have a clue how to solve even a simple goal. When giving a goal G to an agent, we will require G to be accompanied by a “tactic” that acts as a solver. This tactic will be invoked at every tick until the goal is solved. We can also specify a time budget for solving G; when this budget is used up, the agent will stop trying and the goal is marked as failed. The goal is said to be **closed** if it is either solved or failed.
+When created, agents are in principle blank: they have no behavior, so they wouldn’t have a clue how to solve even a simple goal. When giving a goal G to an agent, we will require G to be accompanied by a “tactic” that acts as a solver. This tactic will be invoked at every tick until the goal is solved. We can also specify a computation "budget" for solving G; when this budget is used up, the agent will stop trying and the goal is marked as failed. The goal is said to be **closed** if it is either solved or failed.
 
-The simplest form of a tactic is called **action**. An action 𝛼 is a pair a → f where a is called the **guard** of 𝛼, and f specifies the **effect** of the action. Let’s first consider a simple setup. An agent A is given a goal G with action a → f as the tactic to solve G, and time budget B. The execution of A goes as follows.
+The simplest form of a tactic is called **action**. An action 𝛼 is a pair a ▷ f where a is called the **guard** of 𝛼, and f specifies the **effect** of the action. Let’s first consider a simple setup. An agent A is given a goal G with action a ▷ f as the tactic to solve G, and computation budget B. The execution of A goes as follows.
 
- ##### algorithm _actionExec_(𝛼), where 𝛼 = a → f
+ ##### algorithm _actionExec_(𝛼), where 𝛼 = a ▷ f
 
 When a tick comes:
 
@@ -38,24 +38,35 @@ When a tick comes:
 
 3. The guard a is evaluated on A’s state and the newly sampled environment’s state.
 
-  * If a evaluates to true, the action 𝛼 is said to be **enabled** on the current state. The effect f is then executed. This may change the agent as well as the environment state, and it may produce a proposal x:
+  * If a evaluates to true, the action 𝛼 is said to be **enabled** on the current state. The effect f is then executed:
 
-      * If G(x) is true, the goal is solved and marked as **success**. The solution can be stored within G itself, and then G is detached from the agent.
+      * This execution costs something: the budget B is subtracted with some amount. This amount is determined by the "cost function" associated to the agent. A simple cost function can for example defines that this cost is a fixed cost of 1 unit.
 
-  * If a evaluates to false the agent does nothing. Note that in some future tick, the environment may change enough to cause the “unblocking” of a.
+      * Executing the effect f may change the agent's as well as the environment's state.
 
-4. In all cases, before the turn ends, the budget B is subtracted with the time that has elapsed since the tick arrival.
+      * It may also produce a proposal x, which the agent then passes to the goal G to be inspected. If G(x) is true, the goal is solved and marked as **success**. The solution can be stored within G itself, and then G is detached from the agent.
 
-### Query guarded action
+  * If a evaluates to false, the action's effect will not be executed. Hence, the agent does nothing. Note that in some future tick, the environment may change enough to cause the “unblocking” of a.
 
-Rather than having an action guarded by a predicate, we will also allow actions of the form 𝛼 = q → f where q is a query on the agent state. q is a function that can be evaluated on the agent state. The action 𝛼 is enabled if the the evaluation of q results
-in something (a non-null value), say some r. Its effect part, f, can then be executed. When f is executed, it also has access to r that it can use to calculate its effect. 
+##### Query guarded actions
+
+Rather than having an action guarded by a predicate, we can also have actions of the form 𝛼 = q ▷ f where q is a query on the agent state.
+
+A predicate returns true or false. E.g. the predicate `(𝜆state → isPrime(m(state))` is true on states where `m(state)` would result
+a prime number. In some situation, the f part of 𝛼 maybe interested in not only knowing that it is enabled, but also in the value of `m(state)` that solves the predicate. Of course it can then invoke m again, but this is wasteful.
+
+In the second form, q is a 'query', which is a function that can be evaluated on the agent state to search for some value. The action 𝛼 is said to be enabled if q(state) results in a non-null value; otherwise 𝛼 is not enabled. So, when the agent checks if 𝛼 is executable, it will invoke q and checks if it returns a non-null value. This value is also stored in the action state, which can be inspected by f, without having to re-execute q.
+
+##### Distance-based goals
+
+We have said that a goal is a predicate. However a predicate only return either a true or a false. If it gives a false, it does not give further clue on how far a given proposal is from being a solution. We will therefore also allow a goal to be formulated as a function g(x) that returns a real number. A proposal x is consider a solution only if |g(x)| returns a value which is less than some pre-determined 𝜀. The value of g(x) represents thus the 'distance' to a real solution.
+The agent can inspect the state of its current goal to know the distance of its last proposal to being a solution, and can use this information to decide its next action.
 
 ### Complex goal (goal-structure)
 
 Inevitably, there will be goals which are too difficult to solve with typical tactics. To mitigate this, we will allow the user to split a goal into smaller chunks, which at the lowest level are, hopefully, feasible to solve. To support this concept, we generalize the concept of goal to goal-structure. A **goal-structure** is conceptually is just a goal, but it has so-called _combinators_ to construct it from smaller goal-structures.
 
-There are three combinators for building a goal-structure:
+There are several combinators for building a goal-structure:
 
 1. If G is a goal, **lift**(G) is a goal-structure, consisting of a single leaf, namely G. This goal-structure is solved/failed is G is solved/failed.
 
@@ -63,6 +74,7 @@ There are three combinators for building a goal-structure:
 
 3. If h0, h1, ... are goal-structures, then 𝛨 = **FIRSTof**(h0,h1,...) is also a goal-structure. The subgoal h0, h1, ... are tried sequentially in that order. 𝛨 is solved if one of h0, h1, … is solved. 𝛨 fails of all the subgoals h0, h1, … fail.
 
+4. If h is a goal structure, **REPEAT**(h) is also a goal structure. If h is solved, so is **REPEAT**(h). If h fails, it will be tried again if the goal structure **REPEAT**(h) has some budget left. Else the latter also fails.
 
 So, a goal-structure 𝛨 would have goals as leaves, each would require an action to be specified as its “solver”. To emphasize the distinction between leaf and non-leaf goal-structure, those goals in the leaves are also called **primitive goals**.
 
@@ -71,11 +83,28 @@ Rather than giving a goal to an agent, we now give a goal-structure. The goal-st
 Note that only primitive goals of a top-level goal-structure will trigger computation by the agent (in the sense of executing some tactics). Not all primitive goals will eventually be tried (e.g. when a subgoal in a **SEQ** fails, the **SEQ** node fails; the remaining subgoals of the same **SEQ** node does not have to be inspected). However, when a primitive goal is picked up by the agent, the previously defined execution model of (primitive) goals insists that the agent stays on this goal over multiple ticks if needed, until either the primitive goal is solved, or until the allocated budget for that goal runs out, or until the agent executes an abort action (will be explained later). In other words, the execution of a goal cannot be interrupted by another goal.
 
 
+##### Dynamically adjusting the goal structures
+
+`Aplib` agents do have some methods to dynamically insert a new goal to its current goal structure, or to remove some substructure.
+
 ### Budgeting
 
-When specifying a top-level goal-structure, the user can also specify a time budget B that is available for the agent to solve the goal-structure. This is specified at the top level only. On the other hand, each primitive goal can specify minimum budget that it would ideally require. It is up to the agent to regulate how it distributes the starting budget it receives at the top level down to every subgoal.
+Every goal structure G (including if it is a goal) has two budget related attributes:
 
-Regardless of how the agent distributes the budget, when a primitive goal G is picked up by the agent, the agent must decide how much fraction of B it will give to G. Suppose a budget B’ ≤ B is given to G. If this B’ is less than the minimum demanded by G, the agent decides whether to still try G, or to declare G as failed. If the agent decides to do G anyway, it will then start solving G, which can potentially takes multiple ticks to do. The execution time of every tick will be subtracted from B’ and B. If B’ is exhausted, the goal G is marked as failed, and the agent will switch to another primitive goal, if there is any left.
+* `bmax` specifying the maximum computation budget G can have. If left unspecified, this is +∞.
+* `budget`, representing G's current budget.
+
+Executing an action's effect consumes some of G's `budget`. Furthermore, execution any action within G is only possible if `budget` > 0.
+
+Suppose now an agent is given G0 as the goal structure to work on. So, G0 is the top level goal. We can specify its initial computation budget B0. However. the budget that G0 will actually get will be capped by its `bmax`. So, initially `G0.budget` would be `min(B0,G0.bmax)`. If no B0 is specified, then it is assumed to be +∞.
+
+At any time, the agent will focus at just one goal. This is its current goal. Note that when a goal is current, then all its ancestors are also current. The converse is not always true: when a goal structure is current, not all of its children would be current (though: exactly one of its children is current).
+
+When a goal g becomes current, some budget is allocated to it. In otherwords, `g.budget` will have to be set to a new value. This value would be the minimum of `g.bmax` and the budget C available at its parent. If the parent was already current, then this C would be this parent's current budget (so, `g.parent.budget`). Else, if the parent is also just becoming current, its new budget is recursively determined in the same was as that of g.
+
+Suppose g is the current goal. Suppose an action f of g is executed (that is, its effect is executed). This costs some budget. The default is a fixed cost of 1 unit. This will be subtracted from `g.budget`, but additionally also from the budget of all ancestors of g.
+
+If the budget of a current goal structure becomes 0 or less while it is still unsolved, it is declared as failed.
 
 ### Tactic
 
@@ -147,11 +176,11 @@ Before the tick is done, we update _currentTactic_ as follows:
 
 Choosing one action from a set of candidates in step-3 is called  **deliberation**. The easiest deliberation method is to just choose randomly, but indeed it would be interesting to explore more intelligent deliberation.
 
-### Abort action
+##### Abort action
 
 Sometimes it is better to just give up on a goal, rather than wasting computing budget on it. To allow this, a tactic can include a special action called abort (which can also be guarded). If invoked, it will mark the current goal as being failed. Note that this does not necessarily mean that the topgoal will fail as well. E.g. if the topgoal is G = **FIRSTof**(g1,g2), if g1 fails, g2 might still succeed and hence still solving G.
 
-### Persistent action
+##### Persistent action
 
 Other than the top-level implicit iterative execution of a tactic, so far we have no means to program a tactic that requires an inner loop. We can still write **SEQ**(T,T,..) that will do T k number of times, but this k must be known upfront. So far there is no direct way to have a tactic that repeatedly does T until some condition holds, and then to continue with another tactic, say, U.
 To facilitate such a tactic we will add one more construct: if f is an effect and a is a predicate, f **until** a specifies an action.
