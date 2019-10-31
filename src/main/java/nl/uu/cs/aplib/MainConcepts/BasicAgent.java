@@ -406,7 +406,7 @@ public class BasicAgent {
 		
 		if (chosenAction.action instanceof Abort) {
 			// if the action is ABORT:
-			currentGoal.setStatusToFail("abort() was invoked.");
+			currentGoal.setStatusToFail("Abort was invoked.");
 		}
 		else {
 			// else execute the action:

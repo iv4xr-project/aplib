@@ -177,9 +177,6 @@ public class Goal {
 		if (status.success()) return proposal ; else return null ;
 	}
 	
-	Goal setStatusToFail(String reason) { status.setToFail(reason) ; return this ; }
-	Goal setStatusToSuccess(String reason) { status.setToSuccess(reason); ; return this ; }
-	
 	/**
 	 * To lift this goal to become an instance of {@link Solution}. Conceptually, a Goal is a simplest
 	 * type of {@link Solution}. Technically, to be more precise, Goal is not a subclass of

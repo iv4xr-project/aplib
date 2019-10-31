@@ -141,14 +141,6 @@ public class GoalStructure {
 		setStatusToFail("The budget is exhausted") ;
 	}
 	
-	/**
-	 * To abort the entire goal tree; this is done by marking this goal, all
-	 * the way to the root, as fail.
-	 */
-	void abort() {
-		status.setToFail("abort() is invoked.") ; 
-		if (! isTopGoal()) parent.abort() ;
- 	}
 	
 	/**
 	 * Get the status of this GoalStructure. The status is INPROGRESS if the GoalStructure is
