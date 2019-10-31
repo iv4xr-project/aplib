@@ -201,5 +201,129 @@ public class Test_BasicAgent {
 	    assertTrue(state.counter == -1) ;
 		assertTrue(topgoal.getStatus().success()) ;	
 	}
+	
+	
+	// test whether H contains G
+	private boolean contains(GoalStructure H, GoalStructure G) {
+		if (H==G) return true ;
+		for (GoalStructure H2: H.subgoals) {
+			if (contains(H2,G)) return true ;
+		}
+		return false ;
+	}
+	
+	@Test
+	public void test_addingAGoal() {
+		
+		var g = goal("g")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0 )
+						.lift())
+				.lift() ;
+		
+		var g0 = goal("g0")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+			
+		var gnew = goal("new")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+		
+		// Scenario 1: trying to add a goal on a singleton goal; should throw an exception:
+		var agent = new BasicAgent()
+				.attachState(new MyState())
+				.setGoal(g) ;
+		
+		assertTrue(agent.currentGoal == g) ;
+		
+		try {
+			agent.addGoalStructure(gnew);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		// Scenario 2: the current goal is the last child of some parent combinator:
+		var grepeat = REPEAT(g) ;
+		agent.setGoal(grepeat) ;
+		assertTrue(agent.currentGoal == g) ;
+		
+		agent.addGoalStructure(gnew);
+		assertTrue(agent.currentGoal == g) ;
+		assertTrue(contains(grepeat,gnew)) ;
+		assertTrue(grepeat.subgoals.indexOf(g) == 0) ;
+		assertTrue(grepeat.subgoals.indexOf(gnew) == 1) ;
+
+		// Scenario 3: the current goal is NOT the last child of some parent combinator:
+		var gseq = SEQ(g0,g) ;
+		agent.setGoal(gseq) ;
+		assertTrue(agent.currentGoal == g0) ;
+		
+		agent.addGoalStructure(gnew);
+		assertTrue(agent.currentGoal == g0) ;
+		assertTrue(contains(gseq,gnew)) ;
+		assertTrue(gseq.subgoals.indexOf(g0) == 0) ;
+		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
+		assertTrue(gseq.subgoals.indexOf(g) == 2) ;
+		
+	}
+	
+	@Test
+	public void test_removingAGoal() {
+		var g = goal("g")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0 )
+						.lift())
+				.lift() ;
+		
+		var g0 = goal("g0")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+		
+		var g1 = goal("g1")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+		
+		var g2 = REPEAT(SEQ(g0,g1)) ;
+		var g3 = REPEAT(g) ;
+		
+		var gRoot = REPEAT(FIRSTof(g2,g3)) ;
+		var agent = new BasicAgent()
+				.attachState(new MyState())
+				.setGoal(g) ;
+		agent.setGoal(gRoot) ;
+		assertTrue(agent.currentGoal == g0) ;
+		
+		try {
+			agent.removeGoalStructure(g0);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		try {
+			agent.removeGoalStructure(g2);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		try {
+			agent.removeGoalStructure(gRoot);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+				
+		agent.removeGoalStructure(g);
+		assertTrue(contains(gRoot,g0)) ;
+		assertFalse(contains(gRoot,g)) ;
+		assertFalse(contains(gRoot,g3)) ;
+		
+	}
 
 }

@@ -224,7 +224,6 @@ public class Action {
 		return proposal ;
 	}
 	
-	
 	/**
 	 * A special Action. When an agent executes this Action from within a
 	 * {@link Tactic}, it will cause the current goal to be considered as

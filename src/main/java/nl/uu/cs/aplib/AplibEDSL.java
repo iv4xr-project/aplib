@@ -29,6 +29,13 @@ public class AplibEDSL {
 	}
 	
 	/**
+	 * Create a REPEAT type {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
+	 */
+	static public GoalStructure REPEAT(GoalStructure subgoal) {
+		return new GoalStructure(GoalsCombinator.REPEAT, subgoal) ;
+	}
+	
+	/**
 	 * Create a blank instance of {@link nl.uu.cs.aplib.MainConcepts.Goal} with the given name.
 	 */
 	static public Goal goal(String name) { 
