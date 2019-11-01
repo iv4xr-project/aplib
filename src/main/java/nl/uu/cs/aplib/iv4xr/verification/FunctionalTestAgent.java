@@ -1,55 +1,54 @@
 package nl.uu.cs.aplib.iv4xr.verification;
 
 import java.util.*;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
+import static nl.uu.cs.aplib.iv4xr.verification.TestDataCollector.*;
 
 public class FunctionalTestAgent extends AutonomousBasicAgent {
 	
-	String testDesc ;
-	
-	public static class Verdicts {
-		List<Entry<String,Object>> verdicts = new LinkedList<Entry<String,Object>>() ;
-		int failCount = 0 ;
-		
-		public void registerSuccess(String verdictname, Object o) {
-			if (o instanceof Throwable) throw new IllegalArgumentException() ;
-			verdicts.add(new AbstractMap.SimpleEntry(verdictname,o)) ;
-		}
-		
-		public void registerFail(String verdictname, Object o) {
-			if (! (o instanceof Throwable)) throw new IllegalArgumentException() ;
-			verdicts.add(new AbstractMap.SimpleEntry(verdictname,o)) ;
-			failCount++ ;
-		}
-		
-		public void registerUndecided(String verdictname) {
-			verdicts.add(new AbstractMap.SimpleEntry(verdictname,null)) ;
-		}
-		
-		public List<Entry<String,Object>> getVerdicts() { return verdicts ; }
-		
-		public List<Entry<String,Object>> getFails() {
-			return verdicts.stream()
-			   .filter(entry -> { var v = entry.getValue() ; return v != null && v instanceof Throwable ; } )
-			   .collect(Collectors.toList())
-			   ;
-		}
-		
-		public boolean success() { return failCount <= 0 ; }
-		public boolean failed()  { return failCount > 0 ; }
-	}
-	
-
-	Verdicts verdicts = new Verdicts() ;
-
-	
+	protected String testDesc ;
+	protected TestDataCollector testDataCollector ;
+    		
 	public FunctionalTestAgent setTestDesc(String desc) {
 		testDesc = desc ; return this ;
 	}
 
-	public Verdicts getVerdicts() { return verdicts ; }
+	public FunctionalTestAgent setTestDataCollector(TestDataCollector dc) {
+		if (dc==null) throw new IllegalArgumentException() ;
+		testDataCollector = dc ;
+		dc.registerTestAgent(this.id);
+		return this ;
+	}
+	
+	public TestDataCollector getTestDataCollector() { return testDataCollector ; }
+	
+	/**
+	 * Register a visit to e for the purpose of test-coverage tracking.
+	 * 
+	 * @param e Representing something of interest that we want to cover during testing.
+	 */
+	public void registerVisit(CoveragePointEvent e) {
+		testDataCollector.registerVisit(id,e);
+	}
+	
+	/**
+	 * Register this event to be appended to a historical trace that this test agent keeps track.
+	 * 
+	 * @param event Some event whose occurence we want to keep track in a trace. The event will be time-stamped.
+	 */
+	public void registerEvent(TimeStampedObservationEvent event) {
+		testDataCollector.registerEvent(id,event);
+	}
+
+	/**
+	 * Register a verdict, which can be either a success or fail, or undecided. Verdicts will
+	 * also be put in this agent trace.
+	 * 
+	 * @param verdict Representing the verdict.
+	 */
+	public void registerVerdict(VerdictEvent verdict) {
+		testDataCollector.registerEvent(id,verdict);
+	}
 
 }

@@ -104,6 +104,10 @@ public class TestDataCollector implements Parsable {
 			if (s==null) throw new IllegalArgumentException("Trying to parse an TimeStampedObservationEvent from a null string.") ;
 			var parts = s.split(";") ;
 			if (parts.length != 3) throw new IllegalArgumentException("Parse error on: " + s) ;
+			return parseWorker(parts) ;
+		}
+		
+		TimeStampedObservationEvent parseWorker(String[] parts) {
 			TimeStampedObservationEvent o = new TimeStampedObservationEvent() ;
 			o.id = parts[0] ; 
 			o.timestamp = LocalTime.parse(parts[1]) ;
@@ -119,6 +123,8 @@ public class TestDataCollector implements Parsable {
 		 * True means it is ok. False represents error. Null represents undecided.
 		 */
 		protected Boolean verdict = null ;
+		
+		VerdictEvent() { super() ; }
 		
 		public VerdictEvent(String id, String info, Boolean v) {
 			super(id,info) ;
@@ -140,16 +146,51 @@ public class TestDataCollector implements Parsable {
 				var o_ = (VerdictEvent) o ;
 				if (verdict == null) return o_.verdict == null ;
 				if (o_.verdict == null) return verdict == null ;
-				return verdict.equals(o_.verdict) xxx ;
+				return verdict.equals(o_.verdict) ;
 			}
 			return false ;
 		}
+		
+		@Override
+		public int hashCode() {
+			return Objects.hash(id,timestamp,verdict) ;
+		}
+		
+		@Override
+		public String toString() {
+			var s = super.toString() ;
+			var v = "false" ;
+			if (verdict == null) v = "null" ;
+			else if (verdict.booleanValue()) v = "true" ;
+			return s + ";" + v ;
+		}
+		
+		@Override
+		public VerdictEvent parse(String s) {
+			if (s==null) throw new IllegalArgumentException("Trying to parse an VerdictEvent from a null string.") ;
+			var parts = s.split(";") ;
+			if (parts.length != 4) throw new IllegalArgumentException("Parse error on: " + s) ;
+			TimeStampedObservationEvent e = parseWorker(parts) ;
+			VerdictEvent o = new VerdictEvent() ;
+			o.id = e.id ;
+			o.timestamp = e.timestamp ;
+			o.info = e.info ;
+			String v = parts[3] ;
+			if (v.equals("null")) o.verdict = null ;
+			else if (verdict.equals("true")) o.verdict = true ;
+			else o.verdict = false ;
+			return o ;
+		}
 	}
+	
+	
 	
 	static class EventTrace implements Parsable {
 		List<TimeStampedObservationEvent> trace = new LinkedList<>() ;
-		int numOfErrorEvent = 0 ;
-		VerdictEvent lastErrorEvent = null ;
+		int numOfPassVerdicts = 0 ;
+		int numOfUndecidedVerdicts = 0 ;
+		int numOfFailVerdicts = 0 ;
+		VerdictEvent lastFailVerdict = null ;
 		public EventTrace() { }
 		
 		/**
@@ -161,8 +202,13 @@ public class TestDataCollector implements Parsable {
 			if (e == null) return ;
 			trace.add(e) ;
 			if (e instanceof VerdictEvent) {
-				numOfErrorEvent++ ;
-				lastErrorEvent = (VerdictEvent) e ;
+				VerdictEvent e_ = (VerdictEvent) e ;
+				if (e_.isPass()) numOfPassVerdicts++ ;
+				else if (((VerdictEvent) e).isFail()) {
+					numOfFailVerdicts++ ;
+					lastFailVerdict = (VerdictEvent) e ;					
+				}
+				else numOfUndecidedVerdicts++ ;
 			}
 		}
 
@@ -260,28 +306,52 @@ public class TestDataCollector implements Parsable {
 		return ET.trace ;
 	}
 	
-	public int getNumberOfErrorSeen(String agentUniqueId) {
+	public int getNumberOfFailVerdictsSeen(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
-		return ET.numOfErrorEvent ;
+		return ET.numOfFailVerdicts ;
 	}
 	
-	public int getNumberOfErrorSeen() {
+	public int getNumberOfFailVerdictsSeen() {
 		int count = 0 ;
-		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfErrorEvent ;
+		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfFailVerdicts ;
 		return count ;
 	}
 	
-	public VerdictEvent getLastError(String agentUniqueId) {
+	public int getNumberOfPassVerdictsSeen(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
-		return ET.lastErrorEvent ;
+		return ET.numOfPassVerdicts ;
 	}
 	
-	public VerdictEvent getLastError() {
+	public int getNumberOfPassVerdictsSeen() {
+		int count = 0 ;
+		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfPassVerdicts ;
+		return count ;
+	}
+	
+	public int getNumberOfUndecidedVerdictsSeen(String agentUniqueId) {
+		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
+		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
+		return ET.numOfUndecidedVerdicts ;
+	}
+	
+	public int getNumberOfUndecidedVerdictsSeen() {
+		int count = 0 ;
+		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfUndecidedVerdicts ;
+		return count ;
+	}
+	
+	public VerdictEvent getLastFailVerdict(String agentUniqueId) {
+		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
+		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
+		return ET.lastFailVerdict ;
+	}
+	
+	public VerdictEvent getLastFailVerdict() {
 		VerdictEvent err = null ;
 		for (EventTrace ET : perAgentEventTrace.values()) {
-			VerdictEvent err2 = ET.lastErrorEvent ;
+			VerdictEvent err2 = ET.lastFailVerdict ;
 			if (err2 == null) continue ;
 			if (err == null) err = err2 ;
 			else {
