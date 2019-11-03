@@ -87,7 +87,7 @@ public class Test_BasicAgent {
 		assertTrue(g1.getStatus().failed()) ;
 		assertTrue(topgoal2.getStatus().inProgress()) ;
 		
-		assertTrue(agent.currentGoal.goal.name == "g2") ;
+		assertTrue(agent.currentGoal.goal.name.equals("g2")) ;
 		
 		agent.update();
 		topgoal2.printGoalStructureStatus();
@@ -241,7 +241,7 @@ public class Test_BasicAgent {
 		assertTrue(agent.currentGoal == g) ;
 		
 		try {
-			agent.addGoalStructure(gnew);
+			agent.addAfter(gnew);
 			assertTrue(false) ;
 		}
 		catch(IllegalArgumentException e) { assertTrue(true) ; }
@@ -251,18 +251,23 @@ public class Test_BasicAgent {
 		agent.setGoal(grepeat) ;
 		assertTrue(agent.currentGoal == g) ;
 		
-		agent.addGoalStructure(gnew);
+		agent.addAfter(gnew);
 		assertTrue(agent.currentGoal == g) ;
 		assertTrue(contains(grepeat,gnew)) ;
-		assertTrue(grepeat.subgoals.indexOf(g) == 0) ;
-		assertTrue(grepeat.subgoals.indexOf(gnew) == 1) ;
+		assertTrue(contains(grepeat,g)) ;
+		assertTrue(grepeat.subgoals.size() == 1) ;
+		var gseq = grepeat.subgoals.get(0) ;
+		assertTrue(gseq.combinator == GoalsCombinator.SEQ) ;
+		assertTrue(gseq.subgoals.size() == 2)  ;
+		assertTrue(gseq.subgoals.indexOf(g) == 0) ;
+		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
 
 		// Scenario 3: the current goal is NOT the last child of some parent combinator:
-		var gseq = SEQ(g0,g) ;
+		gseq = SEQ(g0,g) ;
 		agent.setGoal(gseq) ;
 		assertTrue(agent.currentGoal == g0) ;
 		
-		agent.addGoalStructure(gnew);
+		agent.addAfter(gnew);
 		assertTrue(agent.currentGoal == g0) ;
 		assertTrue(contains(gseq,gnew)) ;
 		assertTrue(gseq.subgoals.indexOf(g0) == 0) ;

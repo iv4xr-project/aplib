@@ -307,7 +307,7 @@ public class BasicAgent {
 	 * 
 	 * <p>Fail if the current goal is null or if it is the top-goal.
 	 */
-	public void addNext(GoalStructure G) {
+	public void addAfter(GoalStructure G) {
 		if (currentGoal == null || currentGoal.isTopGoal()) 
 			throw new IllegalArgumentException() ;
 		
