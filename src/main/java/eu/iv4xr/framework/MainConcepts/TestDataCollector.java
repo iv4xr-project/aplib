@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.iv4xr.verification;
+package eu.iv4xr.framework.MainConcepts;
 
 import java.io.Serializable;
 import java.time.LocalTime;

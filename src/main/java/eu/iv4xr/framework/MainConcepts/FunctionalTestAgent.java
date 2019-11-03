@@ -1,9 +1,13 @@
-package nl.uu.cs.aplib.iv4xr.verification;
+package eu.iv4xr.framework.MainConcepts;
+
+import static eu.iv4xr.framework.MainConcepts.TestDataCollector.*;
 
 import java.util.*;
 
+import eu.iv4xr.framework.MainConcepts.TestDataCollector.CoveragePointEvent;
+import eu.iv4xr.framework.MainConcepts.TestDataCollector.TimeStampedObservationEvent;
+import eu.iv4xr.framework.MainConcepts.TestDataCollector.VerdictEvent;
 import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
-import static nl.uu.cs.aplib.iv4xr.verification.TestDataCollector.*;
 
 public class FunctionalTestAgent extends AutonomousBasicAgent {
 	

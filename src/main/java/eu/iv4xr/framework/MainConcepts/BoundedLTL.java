@@ -1,10 +1,27 @@
-package nl.uu.cs.aplib.iv4xr.verification;
+package eu.iv4xr.framework.MainConcepts;
 
 import java.util.*;
 import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.MainConcepts.Environment;
 
+/**
+ * A Bouded LTL property F is a tuple (p,q,ltl,n). It is interpreted over a finite sequence of
+ * states representing execution. Let sigma be such a sequence. p and q are state predicates.
+ * They define a sequence of segments in sigma, as follows. A segment z starts on a state where
+ * p holds for the first time since the previous segment. If there is no previous segment, z
+ * starts at the first state where p holds. The segment z ends when q holds the first time at
+ * or after the start of z. Defined in this way, note that the segments do not overlap.
+ * 
+ * <p>ltl is an LTL formula interpreted over a finite sequence of states. sigma satisfies F
+ * is there exists a [p,q] segment in sigma, whose length is less than n, and such that ltl
+ * holds on this segment. Notice the existential-interpretation of F. So, if we instead
+ * want to verify that some LTL property G would hold on ALL [p,q] segments of length less than n
+ * in sigma, we should check the satisfaction of not G instead.
+ * 
+ * @author wish
+ *
+ */
 public class BoundedLTL {
 	
 	LTL ltl ;
@@ -12,10 +29,10 @@ public class BoundedLTL {
 	Predicate<Environment> endf ;
 	Integer maxlength ;
 	
-	static enum BLTLstate { NOTSTARTED, STARTED , SATFOUND  }
+	enum BLTLstate { NOTSTARTED, STARTED , SATFOUND  }
 	
 	BLTLstate state  = BLTLstate.NOTSTARTED ;
-	List<String> trace = new LinkedList<String>() ;
+	List<String> trace = new LinkedList<>() ;
 	
 	boolean keepFullTrace = false ;
 	
