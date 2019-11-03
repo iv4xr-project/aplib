@@ -7,9 +7,11 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static nl.uu.cs.aplib.AplibEDSL.* ;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.Exception.AplibError;
 import nl.uu.cs.aplib.MainConcepts.Action.Abort;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure.GoalsCombinator;
 import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
 import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
@@ -93,6 +95,11 @@ public class BasicAgent {
 	 * The current topgoal the agent has.
 	 */
 	protected GoalStructure goal ;
+	
+	/**
+	 * The last goal handled by this agent before it was detached.
+	 */
+	protected GoalStructure lastHandledGoal ;
 	
 	/**
 	 * A topgoal may consists of multiple subgoals, which the agent will work on
@@ -252,14 +259,23 @@ public class BasicAgent {
 	 * setting the {@code goal} and {@code currentGoal} fields to null.
 	 */
 	protected void detachgoal() {
+		lastHandledGoal = goal ;
 		goal = null ;
 		currentGoal = null ;
 	}
 	
 	/**
+	 * Return the goal-structure that was last detached by this agent. A goal is detached
+	 * when it is declared successful or failed. 
+	 */
+	public GoalStructure getLastHandledGoal() { return lastHandledGoal ; }
+	
+	/**
 	 * Currently unimplemented.
 	 */
-	public void restart() { }
+	public void restart() { 
+		throw new UnsupportedOperationException() ;
+	}
 	
 	/**
 	 * Write the string to this agent logger, with the specified logging level.
@@ -284,27 +300,88 @@ public class BasicAgent {
 	}
 	
 	/**
-	 * Insert the goal-structure G as the next direct sibling of the current goal.
-	 * Fail if the current goal is null or if it is the top-goal.
+	 * Insert the goal-structure G as the <b>next</b> direct sibling of the current goal.
+	 * However, if the parent of this goal-structure is REPEAT (which can only have one
+	 * child), a SEQ node will first be inserted in-between, and the G is added as the
+	 * next sibling of this goal-structure.
+	 * 
+	 * <p>Fail if the current goal is null or if it is the top-goal.
 	 */
-	public void addGoalStructure(GoalStructure G) {
+	public void addNext(GoalStructure G) {
 		if (currentGoal == null || currentGoal.isTopGoal()) 
 			throw new IllegalArgumentException() ;
-		int k = currentGoal.parent.subgoals.indexOf(currentGoal) ;
-		int N = currentGoal.parent.subgoals.size() ;
-		if (k==N-1) {
-			currentGoal.parent.subgoals.add(G) ;
+		
+		var parent = currentGoal.parent ;
+		if (parent.combinator == GoalsCombinator.REPEAT) {
+			// if the parent is a REPEAT-node, it can only have one child. So, we insert
+			// an additional SEQ node.
+			var H = SEQ(currentGoal,G) ;
+			H.budget = parent.budget ;
+			parent.subgoals.clear(); 
+			parent.subgoals.add(H) ;
+			return ;
 		}
 		else {
-			currentGoal.parent.subgoals.add(k+1,G);
+			int k = currentGoal.parent.subgoals.indexOf(currentGoal) ;
+			int N = currentGoal.parent.subgoals.size() ;
+			if (k==N-1) {
+				currentGoal.parent.subgoals.add(G) ;
+			}
+			else {
+				currentGoal.parent.subgoals.add(k+1,G);
+			}
 		}
+	}
+	
+	/**
+	 * Insert the goal-structure G as the <b>before</b> direct sibling of the current goal.
+	 * More precisely, the current goal will be replaced by REPEAT(SEQ(G,current-goal)).
+	 * This is only carried out if G does not already appear as a previous sibling
+	 * of the current goal under a SEQ node.
+	 * 
+	 * <p>If added, the REPEAT node will get the same budget and max-budget as whatever
+	 * the current budget of the current-goal's parent.
+	 * 
+	 * <p>Fail if the current goal is null or if it is the top-goal. The latter case is forbidden
+	 * because otherwise we would have to introduce a new top-goal, which might confuse the user
+	 * of this agent.
+	 */
+	public void addBefore(GoalStructure G) {
+		if (currentGoal == null || currentGoal.isTopGoal()) throw new IllegalArgumentException() ;
+		
+		// currentGoal must therefore have a parent:
+		var parent = currentGoal.parent ;
+		int k = parent.subgoals.indexOf(currentGoal) ;
+		
+		// case (1), G was already added. This is the case if G occurs as a previous
+		// sibling under a SEQ parent.
+		if (parent.combinator == GoalsCombinator.SEQ) {
+			if (k>0 && G.isomorphic(parent.subgoals.get(k-1))) {
+				// G already occurs as the previous sibling!
+				return ;
+			}
+			// else:
+			parent.subgoals.add(0,G);
+			return ;
+		}
+		// else:
+		// case (2), the parent is NOT a SEQ node. We insert REPEAT(SEQ(G,currenrgoal))
+		var g1 = SEQ(G,currentGoal) ;
+		var repeatNode = REPEAT(g1) ;
+		g1.budget = parent.budget ;
+		repeatNode.budget = parent.budget ;
+		repeatNode.maxbudget(parent.budget) ;
+		parent.subgoals.remove(k) ;
+		parent.subgoals.add(k,repeatNode);
+		repeatNode.parent = parent ;
+	    // case-2 done
 	}
 	
 	/**
 	 * Remove the goal-structure G from this agent root goal-structure.
 	 * Fail if the agent has no goal or if G is an ancestor of the current goal.
 	 */
-	public void removeGoalStructure(GoalStructure G) {
+	public void remove(GoalStructure G) {
 		if (goal==null || currentGoal.isDescendantOf(G)) throw new IllegalArgumentException() ;
 		removeGoalWorker(goal,G) ;
 	}

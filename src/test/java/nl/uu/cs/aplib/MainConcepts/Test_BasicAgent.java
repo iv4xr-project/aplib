@@ -302,24 +302,24 @@ public class Test_BasicAgent {
 		assertTrue(agent.currentGoal == g0) ;
 		
 		try {
-			agent.removeGoalStructure(g0);
+			agent.remove(g0);
 			assertTrue(false) ;
 		}
 		catch(IllegalArgumentException e) { assertTrue(true) ; }
 		
 		try {
-			agent.removeGoalStructure(g2);
+			agent.remove(g2);
 			assertTrue(false) ;
 		}
 		catch(IllegalArgumentException e) { assertTrue(true) ; }
 		
 		try {
-			agent.removeGoalStructure(gRoot);
+			agent.remove(gRoot);
 			assertTrue(false) ;
 		}
 		catch(IllegalArgumentException e) { assertTrue(true) ; }
 				
-		agent.removeGoalStructure(g);
+		agent.remove(g);
 		assertTrue(contains(gRoot,g0)) ;
 		assertFalse(contains(gRoot,g)) ;
 		assertFalse(contains(gRoot,g3)) ;

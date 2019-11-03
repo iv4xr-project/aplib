@@ -95,6 +95,30 @@ public class GoalStructure {
 	public boolean isTopGoal() { return parent == null ; }
 	
 	/**
+	 * Check if this goal structure is isomorphic with H. This is the case if they
+	 * have primitive goals with the same names, and they have the same tree-shapes.
+	 */
+	public boolean isomorphic(GoalStructure H) {
+		if (this instanceof PrimitiveGoal) {
+			var this_ = (PrimitiveGoal) this ;
+			if (H instanceof PrimitiveGoal) {
+				var H_ = (PrimitiveGoal) H ;
+				return this_.goal.name.equals(H_.goal.name) ;
+			}
+			return false ;
+		}
+		if (H instanceof PrimitiveGoal) return false ;
+		// case when both are not prim.goals
+		if (this.combinator != H.combinator) return false ;
+		if (this.subgoals.size() != H.subgoals.size()) return false ;
+		int N = this.subgoals.size() ;
+		for (int k=0; k<N; k++) {
+			if (! this.subgoals.get(k).isomorphic(H.subgoals.get(k))) return false ;
+		}
+		return true ;
+	}
+	
+	/**
 	 * Set the status of this goal to success, and propagating this accordingly
 	 * to its ancestors.
 	 */

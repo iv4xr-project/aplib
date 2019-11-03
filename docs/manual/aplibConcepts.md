@@ -87,6 +87,29 @@ Note that only primitive goals of a top-level goal-structure will trigger comput
 
 `Aplib` agents do have some methods to dynamically insert a new goal to its current goal structure, or to remove some substructure.
 
+1. Inserting a new goal structure **after** the current subgoal. For example suppose the topgoal is:
+
+   > **FIRSTof**(SEQ(g1,g2),g3)
+
+   Suppose g1 is the current goal. Inserting a new goal structure G at the **after** position would modify the topgoal to:
+
+   > **FIRSTof**(SEQ(g1,**G**,g2),g3)
+
+   This is useful when the solver of g1 wants to plan ahead and insert G as an intermediate goal towards ultimately solving g2. Note that this insertion happens **dynamically** because it is decided at the runtime by g1's solver.
+
+2. Inserting a new goal structure **before** the current subgoal. Consider again this as the topgoal:
+
+   > **FIRSTof**(SEQ(g1,g2),g3)
+
+   Suppose g1 is the current goal. Inserting a new goal structure G at the **before** position would modify the topgoal to:
+
+   > **FIRSTof**(SEQ(**REPEAT**(**SEQ**(G,g1)),g2),g3)
+
+   This is useful when g1 turns out to be too hard to be solved directly. The solver can then decide to introduce G **before** g1. When g1 fails (well, it has too hard), the introduction of the **REPEAT** node will try the underlying **SEQ** node. In turn, this will first focus on solving G. If after solving G, g1 can be solved, the entire **REPEAT** node will be solved as well. If g1 still fails, the **REPEAT** node will retry SEQ(G,g1), until it runs out its budget. The budget set for the **REPEAT** node is the same as the budget that the original parent of g1 had.
+
+3. There is also a method to remove a goal structure, can be useful to cancel some future goal.   
+
+
 ### Budgeting
 
 Every goal structure G (including if it is a goal) has two budget related attributes:
