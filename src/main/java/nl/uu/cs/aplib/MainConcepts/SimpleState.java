@@ -78,7 +78,7 @@ public class SimpleState {
 	 * This will ask the {@link Environment} associated with this state to update itself.
 	 */
 	public void updateState() {
-		 env.refresh() ;
+		 env.refreshAndInstrument() ;
 	};
 	
 	/**

@@ -1,9 +1,11 @@
 package eu.iv4xr.framework.MainConcepts;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.MainConcepts.Environment;
+import nl.uu.cs.aplib.MainConcepts.Environment.EnvironmentInstrumenter;
 
 /**
  * A Bouded LTL property F is a tuple (p,q,ltl,n). It is interpreted over a finite sequence of
@@ -22,19 +24,103 @@ import nl.uu.cs.aplib.MainConcepts.Environment;
  * @author wish
  *
  */
-public class BoundedLTL {
+public class BoundedLTL implements EnvironmentInstrumenter {
 	
 	LTL ltl ;
 	Predicate<Environment> startf ;
 	Predicate<Environment> endf ;
-	Integer maxlength ;
+	Integer maxlength = null ;
+	Function<Environment,String> stateShowFunction = null ;
+	Function<Environment,String> transitionShowFunction = env -> { 
+		var tr = env.getLastOperation() ;
+		return "agent=" + tr.invokerId + "; command=" + tr.command + "; target=" + tr.targetId + "; result=" + tr.result ;
+	} ;
+	
 	
 	enum BLTLstate { NOTSTARTED, STARTED , SATFOUND  }
 	
-	BLTLstate state  = BLTLstate.NOTSTARTED ;
-	List<String> trace = new LinkedList<>() ;
+	BLTLstate bltlState  = BLTLstate.NOTSTARTED ;
+	ExecutionTrace trace = new ExecutionTrace() ;
 	
-	boolean keepFullTrace = false ;
+	public BoundedLTL() { }
+	public BoundedLTL thereIs(LTL F) { ltl = F ; return this ;}
+	public BoundedLTL when(Predicate<Environment> p) { startf = p ; return this ; }
+	public BoundedLTL until(Predicate<Environment> q) { endf = q ; return this ; }
+	public BoundedLTL withMaxLength(int n) { maxlength = n ; return this ; }
+	public BoundedLTL withStateShowFunction(Function<Environment,String> f) { stateShowFunction = f ; return this ; }
+	public BoundedLTL attachToEnv(Environment env) {
+		env.registerInstrumenter(this) ;
+		return this ;
+	}
+	
+	/**
+	 * This will reset the state of this bounded LTL checker to its initial state, but only
+	 * if no SAT has been found. Else if will leave the state of the checker unchanged.
+	 */
+	public void reset() {
+		if (bltlState != BLTLstate.SATFOUND) {
+			bltlState = BLTLstate.NOTSTARTED ;
+			trace.reset(); 
+		}
+	}
+	
+	public void update(Environment env) {
+		if (env.lastOperationWasRefresh()) sat(env) ;
+	}
+	
+	public static class ExecutionTrace {
+		/**
+		 * A list of "transition". Every transition is represented by an array of two elements, with
+		 * a[0] is a string representing the label of the transition, and a[1] representing the
+		 * resulting state of the transition.
+		 */
+		List<String[]> trace = new LinkedList<>() ;
+		
+		public void register(String transitionLabel, String destinationState) {
+			String[] tr = {transitionLabel, destinationState } ;
+			trace.add(tr) ;
+		}
+		
+		public void reset() { trace.clear(); }
+		
+		public String getState(int k) {
+			if (k<0 || k >= trace.size()) throw new IllegalArgumentException() ;
+			if (k==0) return null ;
+			return trace.get(k)[1] ;
+		}
+		
+		public String getTransitionLabel(int k) {
+			if (k<0 || k >= trace.size()) throw new IllegalArgumentException() ;
+			return trace.get(k)[0] ;
+		}
+		
+		public String getTransition(int k) {
+			if (k<0 || k >= trace.size()) throw new IllegalArgumentException() ;
+			var tr = trace.get(k) ;
+			return "" + getState(k) + ";" + tr[0] + ";" + tr[1] ;
+		}
+		
+		public List<String[]> getTrace() { return trace ; }
+		
+		public String toString() {
+			int k = 0 ;
+			String s = "" ;
+			for (String[] tr : trace) {
+				if (k>0) s += "/n" ;
+				s += k + ";" + tr[0] + ";" + tr[1] ;
+			}
+			return s ;
+		}
+
+	}
+	
+	private void registerToTrace(Environment env) {
+		String oprStr = "?" ;
+		if (env.getLastOperation() != null) oprStr = transitionShowFunction.apply(env) ;
+		String stateStr = "?" ;
+		if (stateShowFunction != null) stateStr = stateShowFunction.apply(env) ;
+		trace.register(oprStr, stateStr);
+	}
 	
 	/**
 	 * Search for an interval on which the LTL antecedent of this bounded-LTL is satisfied.
@@ -43,20 +129,23 @@ public class BoundedLTL {
 	 * @param env
 	 * @return
 	 */
-	public VERDICT sat(Environment env) {
-		switch(state) {
+	VERDICT sat(Environment env) {
+		switch(bltlState) {
 			case SATFOUND : return VERDICT.SAT ;
 			case NOTSTARTED :
 				if (startf.test(env)) {
+					registerToTrace(env) ;
 					ltl.resettracking();
 					ltl.evalAtomSat(env);
-					state = BLTLstate.STARTED ;
+					bltlState = BLTLstate.STARTED ;
 					if (endf.test(env)) {
 						// the interval ends immediately
 						var verdict = ltl.sat() ;
-						switch(verdict) {
-							case SAT : state = BLTLstate.SATFOUND ; break ;
-							default  : state = BLTLstate.NOTSTARTED ;
+						if (verdict == VERDICT.SAT) {
+							bltlState = BLTLstate.SATFOUND ;
+						}
+						else {
+							trace.reset(); bltlState = BLTLstate.NOTSTARTED ;
 						}
 						return verdict ;
 					}
@@ -67,19 +156,23 @@ public class BoundedLTL {
 					// maximum interval length is reached exceeded, since the end-marker
 					// is not seen yet, the next evaluation will exceed the max-length anyway,
 					// so we abort the evaluation:
-					state = BLTLstate.NOTSTARTED ;
+					bltlState = BLTLstate.NOTSTARTED ;
+					trace.reset();
 					return VERDICT.UNKNOWN ;
 				}
 				
 				// pass the env to the ltl to have its atoms evaluated:
+				registerToTrace(env) ;
 				ltl.evalAtomSat(env) ;
 				
 				if (endf.test(env)) {
 					// end marker holds; then force full evaluation of the ltl
 					var verdict = ltl.sat() ;
-					switch(verdict) {
-						case SAT  : state = BLTLstate.SATFOUND ; break ;
-						default   : state = BLTLstate.NOTSTARTED ;
+					if (verdict == VERDICT.SAT) {
+						bltlState = BLTLstate.SATFOUND ;
+					}
+					else {
+						trace.reset(); bltlState = BLTLstate.NOTSTARTED ;
 					}
 					return verdict ;
 				}
@@ -92,7 +185,7 @@ public class BoundedLTL {
 	}
 	
 
-	public static abstract class LTL {
+	public abstract static class LTL {
 		LinkedList<VerdictInfo> absexecution = new LinkedList<VerdictInfo>() ;
 		LTL() { }
 		abstract void resettracking() ;
@@ -100,8 +193,8 @@ public class BoundedLTL {
 		abstract void evalAtomSat(Environment env) ;	
 	}
 	
-	static public enum VERDICT { SAT, UNSAT, UNKNOWN }
-	static public class VerdictInfo { 
+	public enum VERDICT { SAT, UNSAT, UNKNOWN }
+	public static class VerdictInfo { 
 		public VERDICT verdict ;
 		VerdictInfo(VERDICT v) { verdict = v ; }
 	}
