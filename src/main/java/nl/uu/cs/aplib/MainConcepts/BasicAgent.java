@@ -342,6 +342,11 @@ public class BasicAgent {
 	 * <p>If added, the REPEAT node will get the same budget and max-budget as whatever
 	 * the current budget of the current-goal's parent.
 	 * 
+	 * <p>Note that inserting a new goal in this way has the following effect. Suppose G0 is the current
+	 * goal. If it fails, the inserted REPEAT node will cause the agent to retry, but this time by
+	 * trying the newly inserted G first. If it is solved, the agent will continue with re-trying
+	 * G0. If this still fails, G will be tried again, and so on. It will not be added twice.
+	 * 
 	 * <p>Fail if the current goal is null or if it is the top-goal. The latter case is forbidden
 	 * because otherwise we would have to introduce a new top-goal, which might confuse the user
 	 * of this agent.
@@ -360,9 +365,6 @@ public class BasicAgent {
 				// G already occurs as the previous sibling!
 				return ;
 			}
-			// else:
-			parent.subgoals.add(0,G);
-			return ;
 		}
 		// else:
 		// case (2), the parent is NOT a SEQ node. We insert REPEAT(SEQ(G,currenrgoal))
@@ -370,7 +372,7 @@ public class BasicAgent {
 		var repeatNode = REPEAT(g1) ;
 		g1.budget = parent.budget ;
 		repeatNode.budget = parent.budget ;
-		repeatNode.maxbudget(parent.budget) ;
+		if (Double.isFinite(parent.budget)) repeatNode.maxbudget(parent.budget) ;
 		parent.subgoals.remove(k) ;
 		parent.subgoals.add(k,repeatNode);
 		repeatNode.parent = parent ;

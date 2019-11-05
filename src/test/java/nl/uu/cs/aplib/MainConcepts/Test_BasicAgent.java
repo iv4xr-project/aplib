@@ -213,7 +213,7 @@ public class Test_BasicAgent {
 	}
 	
 	@Test
-	public void test_addingAGoal() {
+	public void test_addingAGoal_withAddAfter() {
 		
 		var g = goal("g")
 				.withTactic(action("a")
@@ -246,7 +246,7 @@ public class Test_BasicAgent {
 		}
 		catch(IllegalArgumentException e) { assertTrue(true) ; }
 		
-		// Scenario 2: the current goal is the last child of some parent combinator:
+		// Scenario 2: the current goal is the child of a REPEAT node
 		var grepeat = REPEAT(g) ;
 		agent.setGoal(grepeat) ;
 		assertTrue(agent.currentGoal == g) ;
@@ -261,8 +261,19 @@ public class Test_BasicAgent {
 		assertTrue(gseq.subgoals.size() == 2)  ;
 		assertTrue(gseq.subgoals.indexOf(g) == 0) ;
 		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
-
-		// Scenario 3: the current goal is NOT the last child of some parent combinator:
+		
+		// Scenario 3: the current goal is NOT the last child of some parent combinator (and not REPEAT):
+		gseq = SEQ(g0) ;
+		agent.setGoal(gseq) ;
+		assertTrue(agent.currentGoal == g0) ;
+		
+		agent.addAfter(gnew);
+		assertTrue(agent.currentGoal == g0) ;
+		assertTrue(contains(gseq,gnew)) ;
+		assertTrue(gseq.subgoals.indexOf(g0) == 0) ;
+		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
+		
+		// Scenario 4: the current goal is NOT the last child of some parent combinator (and not REPEAT):
 		gseq = SEQ(g0,g) ;
 		agent.setGoal(gseq) ;
 		assertTrue(agent.currentGoal == g0) ;
@@ -275,6 +286,73 @@ public class Test_BasicAgent {
 		assertTrue(gseq.subgoals.indexOf(g) == 2) ;
 		
 	}
+	
+	@Test
+	public void test_addingAGoal_withAddBefore() {
+		var g = goal("g")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0 )
+						.lift())
+				.lift() ;
+		
+		var g0 = goal("g0")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+			
+		var gnew = goal("new")
+				.withTactic(action("a")
+						.do1((MyState S) -> 0)
+						.lift())
+				.lift() ;
+		
+		// Scenario 1: trying to add a goal on a singleton goal; should throw an exception:
+		var agent = new BasicAgent()
+				.attachState(new MyState())
+				.setGoal(g) ;
+		assertTrue(agent.currentGoal == g) ;
+		try {
+			agent.addBefore(gnew);
+			assertTrue(false) ;
+		}
+		catch(IllegalArgumentException e) { assertTrue(true) ; }
+		
+		// Scenario 2: trying to add a goal before the current goal:
+		var gtop = SEQ(g,g0) ;
+		gtop.budget = 10 ;
+		agent.setGoal(gtop) ;
+		assertTrue(agent.currentGoal == g) ;
+		assertTrue(g.parent == gtop) ;
+		var gnew2 = FIRSTof(gnew) ;
+		agent.addBefore(gnew2);
+		//gtop.printGoalStructureStatus();
+		assertTrue(agent.currentGoal == g) ;
+		assertTrue(gtop.subgoals.get(0).combinator == GoalsCombinator.REPEAT) ;
+		assertTrue(contains(gtop,g)) ;
+		assertTrue(contains(gtop,gnew2)) ;
+		assertTrue(contains(gtop,gnew)) ;
+		assertTrue(gnew2.parent.combinator == GoalsCombinator.SEQ) ;
+		assertTrue(gnew2.parent.parent.combinator == GoalsCombinator.REPEAT) ;
+		assertTrue(gnew2.parent.parent.parent == gtop) ;
+		assertTrue(gnew2.parent.subgoals.get(0) == gnew2) ;
+		assertTrue(gnew2.parent.subgoals.get(1) == g) ;
+		assertTrue(gnew2.parent.parent.budget == 10) ;
+		assertTrue(gnew2.parent.parent.bmax == 10) ;
+		assertTrue(gnew2.parent.budget == 10) ;
+		
+		
+		
+		// Scenario 3: trying to add a goal that was already added:
+		agent.addBefore(gnew2);
+		//gtop.printGoalStructureStatus();
+		assertTrue(agent.currentGoal == g) ;
+		assertTrue(g.parent.subgoals.size() == 2) ;
+		assertTrue(g.parent.subgoals.get(0) == gnew2) ;
+		assertTrue(g.parent.subgoals.get(1) == g) ;
+	}
+	
+	
 	
 	@Test
 	public void test_removingAGoal() {
