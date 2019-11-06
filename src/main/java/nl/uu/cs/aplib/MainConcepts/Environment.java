@@ -25,7 +25,7 @@ import nl.uu.cs.aplib.Logging;
  * implement your own set of methods to command the actual environment.
  * 
  * <p>
- * This class provides the method {@link #refresh()}. In an actual
+ * This class provides the method {@link #refreshAndInstrument()}. In an actual
  * implementation of Environment, this method is expected to inspect the state
  * of the real environment, and to reflect this in this representation of
  * environment. This method is implicitly called by agents every time their
@@ -74,12 +74,19 @@ public class Environment {
 	
 	
 	/**
-	 * Inspect the actual environment and reflects its actual state into this
+	 * Call  {@link #refresh()} to inspect the actual environment and reflect its actual state into this
 	 * abstract representation. This will also implicitly call {@link #instrument(String)}.
 	 */
-	public void refresh() { 
+	public final void refreshAndInstrument() { 
+		refresh() ;
 		instrument(REFRESH_CMD) ;
 	}
+	
+	/**
+	 * Inspect the actual environment and reflect its actual state into this
+	 * abstract representation. Override this method.
+	 */
+	public void refresh() { }
 	
 	/**
 	 * This will reset the actual environment. By reset we mean to put it back in
@@ -204,6 +211,15 @@ public class Environment {
 	}
 	
 	/**
+	 * Return the last "operation" that this environment does. This is either a "refresh" (e.g. invoked
+	 * by an agent), or a command this environment sends to the real environment.
+	 * 
+	 * <p>Note that the tracking of last-operation is only enabled when the debug-mode of this
+	 * environment is turned on.
+	 */
+	public EnvOperation getLastOperation() { return lastOperation ; }
+	
+	/**
 	 * Will record the id of the party that trigger this instrumentation step and
 	 * then call the update() method of every instrumenter registered to this
 	 * environement.
@@ -241,7 +257,7 @@ public class Environment {
 	}
 	
 	/**
-	 * The root class of instrumenters that you can attach to an environment. You
+	 * An interface for instrumenters that you can attach to an environment. You
 	 * attach an instrumenter to an environment through the method
 	 * {@code registerInstrumenter(instrumenter)} of the environment. Once
 	 * registered, and if the debug-mode of the environment is turned on, every time
@@ -253,11 +269,26 @@ public class Environment {
 	 * This root class has no behavior. You will have to write your own subcclass to
 	 * have an instrumenter that actually does something.
 	 */
-	static public class EnvironmentInstrumenter{		
-		public EnvironmentInstrumenter() { }
-		public void update(Environment env) { }
-		public void reset() { }
+	public static interface EnvironmentInstrumenter{		
+		
+		/**
+		 * Will be invoked by the Environment when its sendCommand() and refresh() methods
+		 * are invoked.
+		 */
+		public void update(Environment env) ;
+		
+		/**
+		 * Will be invoked by the Environment when its reset() is invoked. The reset() of
+		 * this instrumenter should set this instrumenter state back to its initial state.
+		 */
+		public void reset() ;
 	}
 	
+	/**
+	 * Return true if the last operation of this environment was a refresh().
+	 */
+	public boolean lastOperationWasRefresh() {
+		return lastOperation == REFRESH_CMD ;
+	}
 
 }

@@ -19,19 +19,22 @@ import nl.uu.cs.aplib.MainConcepts.BasicAgent;
  */
 public class Logging {
 	
+	
+	Logging() { }
+	
 	public static final String APLIBLOGGER = "APLIBlogger" ;
 	
 	/**
 	 * Get the logger instance used by aplib.
 	 */
-	static public Logger getAPLIBlogger() {
+	public static Logger getAPLIBlogger() {
 		return Logger.getLogger(APLIBLOGGER) ;
 	}
 	
 	/**
 	 * Attach {@code System.err} to listen to this agent's logger (also called log-handler).
 	 */
-	static public void addSystemErrAsLogHandler() {
+	public static void addSystemErrAsLogHandler() {
 		Logger logger = getAPLIBlogger()  ;
 		logger.addHandler(new ConsoleHandler());
 	}
@@ -39,7 +42,7 @@ public class Logging {
 	/**
 	 * Remove all current handlers of the aplib logger.
 	 */
-	static public void clearLoggers() {
+	public static void clearLoggers() {
 		Logger logger = getAPLIBlogger()  ;
 		Handler[] handlers = logger.getHandlers() ;
 		for (Handler h : handlers) logger.removeHandler(h);
@@ -50,7 +53,7 @@ public class Logging {
 	 * logger (in Logging jargon, the file becomes a log handler).
 	 * The filename can include a path to the file.
 	 */
-	static public void attachFileAsLogHandler(String filename) {
+	public static void attachFileAsLogHandler(String filename) {
 		Logger logger = getAPLIBlogger()  ;
 		try {
 			var fh = new FileHandler(filename);  
@@ -67,7 +70,7 @@ public class Logging {
 	 * To set the the logging level of aplib logger. Logging messages of lower level
 	 * will then be ignored.
 	 */
-	static public void setLoggingLevel(Level level) {
+	public static void setLoggingLevel(Level level) {
 		Logger logger = getAPLIBlogger()  ;
 		logger.setLevel(level);
 	}

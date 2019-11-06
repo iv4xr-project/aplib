@@ -13,78 +13,79 @@ import nl.uu.cs.aplib.MainConcepts.Tactic.*;
  */
 public class AplibEDSL {
 	
+	AplibEDSL() {}
 	
 	/**
 	 * Create a SEQ type {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
-	static public GoalStructure SEQ(GoalStructure ... subgoals) {
+    public static GoalStructure SEQ(GoalStructure ... subgoals) {
 		return new GoalStructure(GoalsCombinator.SEQ, subgoals) ;
 	}
 
 	/**
 	 * Create a FIRSTof type {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
-	static public GoalStructure FIRSTof(GoalStructure ... subgoals) {
+    public static GoalStructure FIRSTof(GoalStructure ... subgoals) {
 		return new GoalStructure(GoalsCombinator.FIRSTOF, subgoals) ;
 	}
 	
 	/**
 	 * Create a REPEAT type {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
-	static public GoalStructure REPEAT(GoalStructure subgoal) {
+    public static GoalStructure REPEAT(GoalStructure subgoal) {
 		return new GoalStructure(GoalsCombinator.REPEAT, subgoal) ;
 	}
 	
 	/**
 	 * Create a blank instance of {@link nl.uu.cs.aplib.MainConcepts.Goal} with the given name.
 	 */
-	static public Goal goal(String name) { 
+    public static Goal goal(String name) { 
 		return new Goal(name) ;
 	}
 	
 	/**
 	 * Lift a Goal to become a {@link nl.uu.cs.aplib.MainConcepts.GoalStructure}.
 	 */
-	static public PrimitiveGoal lift(Goal g) {
+    public static PrimitiveGoal lift(Goal g) {
 		return g.lift() ;
 	}
 	
 	/**
 	 * Create a blank {@link nl.uu.cs.aplib.MainConcepts.Action} with the given name.
 	 */
-	static public Action action(String name) {
+    public static Action action(String name) {
 		return new Action(name) ;
 	}
 	
 	/**
 	 * To construct a FIRSTof {@link nl.uu.cs.aplib.MainConcepts.Tactic}.
 	 */
-	static public Tactic FIRSTof(Tactic ... strategies) {
+    public static Tactic FIRSTof(Tactic ... strategies) {
 		return new Tactic(TacticType.FIRSTOF, strategies) ;
 	}
 	
 	/**
 	 * Creating an Abort action ({@see nl.uu.cs.aplib.MainConcepts.Action.Abort})
 	 */
-	static public Action Abort() { return new Action.Abort() ; }
+    public static Action Abort() { return new Action.Abort() ; }
 	
 	/**
 	 * Creating a {@link nl.uu.cs.aplib.MainConcepts.PrimitiveTactic} that
 	 * wraps over an Abort action.
 	 */
-	static public PrimitiveTactic ABORT() { return lift(new Action.Abort()) ; }
+    public static PrimitiveTactic ABORT() { return lift(new Action.Abort()) ; }
 	
 	/**
 	 * To construct a SEQ {@link nl.uu.cs.aplib.MainConcepts.Tactic}.
 	 */
-	static public Tactic SEQ(Tactic ... strategies) {
+	public static Tactic SEQ(Tactic ... strategies) {
 		return new Tactic(TacticType.SEQ, strategies) ;
 	}
 	
 	/**
 	 * To construct a ANYof {@link nl.uu.cs.aplib.MainConcepts.Tactic}.
 	 */
-	static public Tactic ANYof(Tactic ... strategies) {
+	public static Tactic ANYof(Tactic ... strategies) {
 		return new Tactic(TacticType.ANYOF, strategies) ;
 	}
 
@@ -92,7 +93,7 @@ public class AplibEDSL {
 	 * Lift an {@link nl.uu.cs.aplib.MainConcepts.Action} to become a
 	 * {@link nl.uu.cs.aplib.MainConcepts.PrimitiveTactic}.
 	 */
-	static public PrimitiveTactic lift(Action a) {
+	public static PrimitiveTactic lift(Action a) {
 		return new PrimitiveTactic(a) ;
 	}
 }
