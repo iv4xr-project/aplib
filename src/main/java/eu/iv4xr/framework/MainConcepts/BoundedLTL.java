@@ -44,10 +44,15 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 	
 	public BoundedLTL() { }
 	public BoundedLTL thereIs(LTL F) { ltl = F ; return this ;}
-	public BoundedLTL when(Predicate<Environment> p) { startf = p ; return this ; }
-	public BoundedLTL until(Predicate<Environment> q) { endf = q ; return this ; }
+	public BoundedLTL when_(Predicate<Environment> p) { startf = p ; return this ; }
+	public <E> BoundedLTL when(Predicate<E> p) { return when_(env -> p.test((E) env)) ; }
+	public BoundedLTL until_(Predicate<Environment> q) { endf = q ; return this ; }
+	public <E> BoundedLTL until(Predicate<E> q) { return until_(env -> q.test((E) env)); }
 	public BoundedLTL withMaxLength(int n) { maxlength = n ; return this ; }
-	public BoundedLTL withStateShowFunction(Function<Environment,String> f) { stateShowFunction = f ; return this ; }
+	public BoundedLTL withStateShowFunction_(Function<Environment,String> f) { stateShowFunction = f ; return this ; }
+	public <E> BoundedLTL withStateShowFunction(Function<E,String> f) { 
+		return withStateShowFunction_(env -> f.apply((E) env)) ;
+	}
 	public BoundedLTL attachToEnv(Environment env) {
 		env.registerInstrumenter(this) ;
 		return this ;
@@ -64,8 +69,17 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		}
 	}
 	
+	/**
+	 * This defines when the environment will be sampled for sat checking by this
+	 * bounded LTL checker. This will happen whenever the environment invokes
+	 * an "operation". Currently the policy is that the checker will only sample the environment
+	 * state whenever the refresh() operation is invoked. 
+	 */
 	public void update(Environment env) {
-		if (env.lastOperationWasRefresh()) sat(env) ;
+		if (env.lastOperationWasRefresh()) {
+			//System.out.println(">>> invoking sat(env)") ;
+			sat(env) ;
+		}
 	}
 	
 	public static class ExecutionTrace {
@@ -134,6 +148,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 			case SATFOUND : return VERDICT.SAT ;
 			case NOTSTARTED :
 				if (startf.test(env)) {
+					System.out.println(">>> start found") ;
 					registerToTrace(env) ;
 					ltl.resettracking();
 					ltl.evalAtomSat(env);
@@ -184,6 +199,15 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		return null ;
 	}
 	
+	public VERDICT getVerdict() {
+		if (bltlState == BLTLstate.SATFOUND) return VERDICT.SAT ;
+		return VERDICT.UNSAT ;
+	}
+	
+	public ExecutionTrace getWitness() {
+		if (bltlState == BLTLstate.SATFOUND) return trace ;
+		return null ;
+	}
 
 	public abstract static class LTL {
 		LinkedList<VerdictInfo> absexecution = new LinkedList<VerdictInfo>() ;
@@ -191,6 +215,12 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		abstract void resettracking() ;
 		abstract VERDICT sat() ;
 		abstract void evalAtomSat(Environment env) ;	
+		public LTL ltlUntil(LTL psi) {
+			var ltl = new Until() ;
+			ltl.phi1 = this ;
+			ltl.phi2 = psi ;
+			return ltl ;
+		}
 	}
 	
 	public enum VERDICT { SAT, UNSAT, UNKNOWN }
@@ -200,7 +230,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 	}
 	
 	
-	static public class Atom extends LTL {
+	public static class Atom extends LTL {
 		Predicate<Environment> p ;
 		void check(Environment env) {
 					
@@ -222,7 +252,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		}
 	}
 	
-	static public class Not extends LTL {
+	public static class Not extends LTL {
 		LTL phi ;
 		
 		@Override
@@ -254,7 +284,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		}
 	}
 	
-	static public class Until extends LTL {
+	public static class Until extends LTL {
 		LTL phi1 ;
 		LTL phi2 ;
 		
@@ -279,7 +309,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 			while (iterator.hasNext()) {
 				var psi = iterator.next() ;
 				var p = iteratorPhi1.next().verdict ;
-				var q = iteratorPhi1.next().verdict ;
+				var q = iteratorPhi2.next().verdict ;
 				if (q == VERDICT.SAT) {
 					psi.verdict = VERDICT.SAT ;
 					nextSat = true ;
@@ -343,5 +373,29 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		
 	}
 	
+	public static <E> LTL now(Predicate<E> p) {
+		var a = new Atom() ;
+		a.p = env -> p.test((E) env) ;
+		return a ;
+	}
+	
+	public static LTL next(LTL phi) { 
+		var ltl = new Next() ;
+		ltl.phi = phi ;
+		return ltl ;
+	}
+	
+	public static LTL ltlNot(LTL phi) {
+		var ltl = new Not() ;
+		ltl.phi = phi ; return ltl ;
+	}
+	
+	public static LTL eventually(LTL phi) {
+		return now((Environment env) -> true).ltlUntil(phi) ;
+	}
+	
+	public static LTL always(LTL phi) {
+		return ltlNot(eventually(ltlNot(phi))) ;
+	}
 
 }

@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.MainConcepts;
 
+import java.io.File;
 import java.io.Serializable;
 import java.time.LocalTime;
 import java.util.*;
@@ -270,6 +271,12 @@ public class TestDataCollector implements Parsable {
 		for (CoverageMap CM : perAgentCoverage.values()) CM.startTrackingCoveragePoint(e);
 	}
 	
+	/**
+	 * Register a test-agent to this data collector. We do not literally pass a test-agent,
+	 * but rather its id.
+	 * 
+	 * @param agentUniqueId The id of the agent. This is assumed to be unique.
+	 */
 	public void registerTestAgent(String agentUniqueId) {
 		if (perAgentCoverage.containsKey(agentUniqueId)) return ;
 		perAgentEventTrace.put(agentUniqueId, new EventTrace()) ;
@@ -278,12 +285,29 @@ public class TestDataCollector implements Parsable {
 		for (CoveragePointEvent e : collectiveCoverageMap.coverage.keySet()) CM.startTrackingCoveragePoint(e);
 	}
 	
+	/**
+	 * Register a coverage visit by a test-agent.
+	 * 
+	 * @param agentUniqueId Unique id of the test-agent.
+	 * @param e An event representing the visit to some coverage point of interest.
+	 */
 	public void registerVisit(String agentUniqueId, CoveragePointEvent e) {
 		if (! perAgentCoverage.containsKey(agentUniqueId)) return ;
 		CoverageMap CM = perAgentCoverage.get(agentUniqueId) ;
 		CM.registerVisit(e, collectiveCoverageMap);
 	}
 	
+	/**
+	 * Register an observation event. This allows a test-agent to register whatever event of interest
+	 * to this data collector. This will be recorded into the agent's trace.
+	 * Note that an event can also be a verdict-event, where the test
+	 * agent reports that it has seen something that is either according to its expectation, or violating
+	 * it. 
+	 * 
+	 * 
+	 * @param agentUniqueId Unique id of the test-agent.
+	 * @param e An event representing the observation to record.
+	 */
 	public void registerEvent(String agentUniqueId, TimeStampedObservationEvent e) {
 		if (! perAgentEventTrace.containsKey(agentUniqueId)) return ;
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
@@ -371,5 +395,33 @@ public class TestDataCollector implements Parsable {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("TODO") ;
 	}
+	
+	/**
+	 * Save the data collected to a file.
+	 */
+	public void save(File file) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("TODO") ;
+	}
+	
+	/**
+	 * Merge two sets of collected test data. The merged data is put into a new 
+	 * instance of TestDataCollector.
+	 * 
+	 * @param data2 test-date to merge with this test-data.
+	 */
+	public TestDataCollector merge(TestDataCollector data2) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("TODO") ;
+	}
+	
+	/**
+	 * Read collected test data from a file.
+	 */
+	public static TestDataCollector readCollectedTestData(File file) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("TODO") ;
+	}
+
 
 }

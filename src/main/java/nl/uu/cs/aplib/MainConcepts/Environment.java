@@ -77,7 +77,7 @@ public class Environment {
 	 * Call  {@link #refresh()} to inspect the actual environment and reflect its actual state into this
 	 * abstract representation. This will also implicitly call {@link #instrument(String)}.
 	 */
-	void refreshAndInstrument() { 
+	public final void refreshAndInstrument() { 
 		refresh() ;
 		instrument(REFRESH_CMD) ;
 	}
