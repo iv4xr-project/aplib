@@ -48,7 +48,10 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 	public <E> BoundedLTL when(Predicate<E> p) { return when_(env -> p.test((E) env)) ; }
 	public BoundedLTL until_(Predicate<Environment> q) { endf = q ; return this ; }
 	public <E> BoundedLTL until(Predicate<E> q) { return until_(env -> q.test((E) env)); }
-	public BoundedLTL withMaxLength(int n) { maxlength = n ; return this ; }
+	public BoundedLTL withMaxLength(int n) { 
+		if (n<1) throw new IllegalArgumentException() ;
+		maxlength = n ; return this ; 
+	}
 	public BoundedLTL withStateShowFunction_(Function<Environment,String> f) { stateShowFunction = f ; return this ; }
 	public <E> BoundedLTL withStateShowFunction(Function<E,String> f) { 
 		return withStateShowFunction_(env -> f.apply((E) env)) ;
@@ -120,8 +123,9 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 			int k = 0 ;
 			String s = "" ;
 			for (String[] tr : trace) {
-				if (k>0) s += "/n" ;
-				s += k + ";" + tr[0] + ";" + tr[1] ;
+				if (k>0) s += "\n" ;
+				s += k + ";<" + tr[0] + ">;<" + tr[1] + ">" ;
+				k++ ;
 			}
 			return s ;
 		}
@@ -148,7 +152,6 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 			case SATFOUND : return VERDICT.SAT ;
 			case NOTSTARTED :
 				if (startf.test(env)) {
-					System.out.println(">>> start found") ;
 					registerToTrace(env) ;
 					ltl.resettracking();
 					ltl.evalAtomSat(env);
@@ -167,15 +170,6 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 				}
 				return VERDICT.UNKNOWN ;
 			case STARTED :
-				if (maxlength != null && ltl.absexecution.size()>=maxlength) {
-					// maximum interval length is reached exceeded, since the end-marker
-					// is not seen yet, the next evaluation will exceed the max-length anyway,
-					// so we abort the evaluation:
-					bltlState = BLTLstate.NOTSTARTED ;
-					trace.reset();
-					return VERDICT.UNKNOWN ;
-				}
-				
 				// pass the env to the ltl to have its atoms evaluated:
 				registerToTrace(env) ;
 				ltl.evalAtomSat(env) ;
@@ -192,6 +186,12 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 					return verdict ;
 				}
 				else {
+					if (maxlength != null && ltl.absexecution.size()>=maxlength) {
+						// maximum interval length is reached, since the end-marker
+						// is not seen yet, we stop the evaluation:
+						bltlState = BLTLstate.NOTSTARTED ;
+						trace.reset();
+					}
 					return VERDICT.UNKNOWN ;
 				}
 		}
@@ -209,12 +209,35 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		return null ;
 	}
 
+	/**
+	 * Representing an LTL formula.
+	 */
 	public abstract static class LTL {
+		
+		/**
+		 * Abstractlty representing the finite execution on which this LTL is interpreted.
+		 */
 		LinkedList<VerdictInfo> absexecution = new LinkedList<VerdictInfo>() ;
+		
 		LTL() { }
+		
+		
 		abstract void resettracking() ;
+		
+		/**
+		 * Check if {@link #absexecution} satisfies this LTL formula.
+		 */
 		abstract VERDICT sat() ;
+		
+		/**
+		 * Evaluate the atoms of this LTL formula on the given env (concrete state),
+		 * and add the verdict at the end of {@link #absexecution}.
+		 */
 		abstract void evalAtomSat(Environment env) ;	
+
+		/**
+		 * Construct the LTL formula "phi Until psi", where phi is this LTL formula.
+		 */
 		public LTL ltlUntil(LTL psi) {
 			var ltl = new Until() ;
 			ltl.phi1 = this ;
@@ -262,6 +285,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 
 		@Override
 		VERDICT sat() {
+			phi.sat() ;
 			var iterator = absexecution.descendingIterator() ;
 			var iteratorPhi = phi.absexecution.descendingIterator() ;
 			
@@ -284,6 +308,45 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		}
 	}
 	
+	public static class And extends LTL {
+		LTL[] conjuncts ;
+		
+		@Override
+		void resettracking() {
+			absexecution.clear(); 
+			for (LTL phi : conjuncts) phi.resettracking();	
+		}
+		
+		@Override
+		VERDICT sat() {
+			for (LTL phi : conjuncts) phi.sat() ;
+			var iterator = absexecution.descendingIterator() ;
+			var N = conjuncts.length ;
+			Iterator<VerdictInfo>[] conjuntIterators = new Iterator[N] ;
+			for (int k=0; k<N; k++)
+				conjuntIterators[k] = conjuncts[k].absexecution.descendingIterator() ;
+		
+			while (iterator.hasNext()) {
+				var psi = iterator.next() ;
+				boolean allSat = true ;
+				for (int k=0; k<N; k++) {
+					var p = conjuntIterators[k].next().verdict ;
+					allSat = allSat && (p == VERDICT.SAT) ;
+				}
+				if (allSat) psi.verdict = VERDICT.SAT ;
+				else psi.verdict = VERDICT.UNSAT ;
+			}
+			return absexecution.getFirst().verdict ;
+		}
+		
+		@Override
+		void evalAtomSat(Environment env) {
+			absexecution.add(new VerdictInfo(VERDICT.UNKNOWN)) ;
+			for (LTL phi : conjuncts) phi.evalAtomSat(env);		
+		}
+	}
+	
+	
 	public static class Until extends LTL {
 		LTL phi1 ;
 		LTL phi2 ;
@@ -297,6 +360,8 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		
 		@Override
 		VERDICT sat() {
+			phi1.sat() ;
+			phi2.sat() ;
 			var iterator = absexecution.descendingIterator() ;
 			var iteratorPhi1 = phi1.absexecution.descendingIterator() ;
 			var iteratorPhi2 = phi2.absexecution.descendingIterator() ;
@@ -345,6 +410,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 
 		@Override
 		VERDICT sat() {
+			phi.sat() ;
 			var iterator = absexecution.descendingIterator() ;
 			var iteratorPhi = phi.absexecution.descendingIterator() ;
 			
@@ -388,6 +454,14 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 	public static LTL ltlNot(LTL phi) {
 		var ltl = new Not() ;
 		ltl.phi = phi ; return ltl ;
+	}
+	
+	public static LTL ltlAnd(LTL... phis) {
+		if (phis == null) throw new IllegalArgumentException() ;
+		if (phis.length <2) throw new IllegalArgumentException() ;
+		var ltl = new And() ;
+		ltl.conjuncts = phis ;
+		return ltl ;
 	}
 	
 	public static LTL eventually(LTL phi) {

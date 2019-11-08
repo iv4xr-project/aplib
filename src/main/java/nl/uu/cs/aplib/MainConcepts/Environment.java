@@ -25,7 +25,7 @@ import nl.uu.cs.aplib.Logging;
  * implement your own set of methods to command the actual environment.
  * 
  * <p>
- * This class provides the method {@link #refreshAndInstrument()}. In an actual
+ * This class provides the method {@link #refresh()}. In an actual
  * implementation of Environment, this method is expected to inspect the state
  * of the real environment, and to reflect this in this representation of
  * environment. This method is implicitly called by agents every time their
@@ -65,28 +65,39 @@ public class Environment {
 	ReentrantLock lock = new ReentrantLock() ;
 		
 	/**
-	 * Create an instance of this environment. It will implicitly also call
-	 * {@link #reset()}.
+	 * Create an instance of this environment.
 	 */
-	public Environment() { 
-		reset() ;
-	}
+	public Environment() { 	}
 	
 	
 	/**
-	 * Call  {@link #refresh()} to inspect the actual environment and reflect its actual state into this
+	 * Call  {@link #refreshWorker()} to inspect the actual environment and reflect its actual state into this
 	 * abstract representation. This will also implicitly call {@link #instrument(String)}.
 	 */
-	public final void refreshAndInstrument() { 
-		refresh() ;
+	public final void refresh() { 
+		refreshWorker() ;
 		instrument(REFRESH_CMD) ;
 	}
 	
 	/**
 	 * Inspect the actual environment and reflect its actual state into this
-	 * abstract representation. Override this method.
+	 * abstract representation. Override this method when
+	 * implementing your own specific Environment.
 	 */
-	public void refresh() { }
+	public void refreshWorker() { }
+	
+	/**
+	 * This will will call [@link #resetWorker()} and additionally reset this Environment's 
+	 * active instrumentaters.
+	 */
+	public final void resetAndInstrument() { 
+		logger.info("Environment reset is called.");
+		lastOperation = null ;
+		resetWorker() ;
+		for(EnvironmentInstrumenter I : instrumenters) {
+			I.reset();
+		}			
+	}
 	
 	/**
 	 * This will reset the actual environment. By reset we mean to put it back in
@@ -94,16 +105,10 @@ public class Environment {
 	 * It is your responsibility to make sure that after calling this method the
 	 * environment is indeed available and is in a legal initial state.
 	 * 
-	 * <p> The method also resets this environment debug-instrumentation facility.
+	 * <p>This implementation does not do anything; you should override this when
+	 * implementing your own specific Environment.
 	 */
-	public void reset() { 
-		logger.info("Environment reset is called.");
-		lastOperation = null ;
-		for(EnvironmentInstrumenter I : instrumenters) {
-			I.reset();
-		}			
-	}
-	
+	public void resetWorker() {  }
 	
 	/**
 	 * Send the specified command to the environment. This method also anticipates
