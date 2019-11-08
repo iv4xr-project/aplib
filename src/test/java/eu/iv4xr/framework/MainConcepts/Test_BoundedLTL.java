@@ -3,6 +3,8 @@ package eu.iv4xr.framework.MainConcepts;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.* ;
 
+import java.util.function.Predicate;
+
 import nl.uu.cs.aplib.MainConcepts.*;
 import static eu.iv4xr.framework.MainConcepts.BoundedLTL.* ;
 
@@ -324,6 +326,41 @@ public class Test_BoundedLTL {
 		for (int k=0; k<5; k++) {
 			env_.refresh(); 
 			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		}
+	}
+	
+	@Test
+	public void test_ltl_nested_formula() {
+		// well... deeper nested
+		
+		Predicate<MyEnv> p1 = env -> 2 <= env.val ;
+		Predicate<MyEnv> p2 = env -> env.val <= 3 ;
+		
+		Predicate<MyEnv> q = env -> 4 <= env.val ;
+		Predicate<MyEnv> r = env -> env.val != 7 ;
+		// X(p1 && p2 U (q U ~r)) :
+		var phi = next(ltlAnd(now(p1),now(p2)).ltlUntil(now(q).ltlUntil(ltlNot(now(r))))) ;
+		
+		var bltl = new BoundedLTL() 
+				   .thereIs(phi) 
+				   .when( (MyEnv env) -> env.val == 1)
+				   .until((MyEnv env) -> env.val == 8)
+				   .withStateShowFunction((MyEnv env) -> "" + env.val)
+					;
+		var env_ = new MyEnv(0,1,2,3,4,5,6,7,8,9,10) ;
+		env_.turnOnDebugInstrumentation() ;
+		bltl.attachToEnv(env_) ;
+		
+		for(int k=0; k<8; k++) {
+			env_.refresh();
+			System.out.println(">>> val=" + env_.val) ;
+			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		}
+		
+		for (int k=8; k<11; k++) {
+			env_.refresh();
+			System.out.println(">>> *val=" + env_.val) ;
+			assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
 		}
 	}
 

@@ -490,7 +490,7 @@ public class BasicAgent {
 		else {
 			// else execute the action:
 			Object proposal = costFunction.executeAction_andInstrumentCost(state,chosenAction.action) ;
-			currentGoal.goal.propose(proposal);	
+			currentGoal.goal.propose_(proposal);	
 			if (currentGoal.goal.getStatus().success()) {
 				currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
 			}

@@ -39,11 +39,11 @@ public class Test_GoalStructure {
 		var g = goal("")
 				.ftoSolve_(i -> (Double) i - 0) ; 
 		
-		g.propose(1d);
+		g.propose_(1d);
 		assertTrue(g.getStatus().inProgress()) ;
 		assertTrue(g.distance() == 1d) ;
 		
-		g.propose(0d);
+		g.propose_(0d);
 		assertTrue(g.getStatus().success()) ;
 		assertTrue(g.distance() == 0d) ;
 		
