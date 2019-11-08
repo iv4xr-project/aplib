@@ -1,12 +1,14 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.LTL;
 
 import org.junit.jupiter.api.Test;
+
+import static eu.iv4xr.framework.LTL.BoundedLTL.*;
+import static eu.iv4xr.framework.LTL.LTL.*;
 import static org.junit.jupiter.api.Assertions.* ;
 
 import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.MainConcepts.*;
-import static eu.iv4xr.framework.MainConcepts.BoundedLTL.* ;
 
 public class Test_BoundedLTL {
 	
@@ -55,24 +57,24 @@ public class Test_BoundedLTL {
 		bltl.attachToEnv(env_) ;
 		// 3x refresh
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		
 		// 4th time:
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
 		//System.out.println("" + bltl.trace) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		
 		// 3x refresh .. this should not change the SAT result nor that witness found
 		env_.refresh() ;
 		env_.refresh() ;
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		assertTrue(bltl.trace.trace.size() == 3) ;
 		assertTrue(bltl.trace.trace.get(0)[1].equals("1") ) ;
 		assertTrue(bltl.trace.trace.get(2)[1].equals("3") ) ;
@@ -83,7 +85,7 @@ public class Test_BoundedLTL {
 		env_.resetAndInstrument();
 		for (int k=0; k<9; k++) {
 			env_.refresh() ;
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}		
 	}
 	
@@ -103,24 +105,24 @@ public class Test_BoundedLTL {
 		bltl.attachToEnv(env_) ;
 		// 3x refresh
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		
 		// 4th time:
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
 		//System.out.println("" + bltl.trace) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		
 		// 3x refresh .. this should not change the SAT result nor that witness found
 		env_.refresh() ;
 		env_.refresh() ;
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		assertTrue(bltl.trace.trace.size() == 3) ;
 		assertTrue(bltl.trace.trace.get(0)[1].equals("1") ) ;
 		assertTrue(bltl.trace.trace.get(2)[1].equals("3") ) ;
@@ -131,7 +133,7 @@ public class Test_BoundedLTL {
 		env_.resetAndInstrument();
 		for (int k=0; k<9; k++) {
 			env_.refresh() ;
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}		
 	}
 	
@@ -151,24 +153,24 @@ public class Test_BoundedLTL {
 		bltl.attachToEnv(env_) ;
 		// 3x refresh
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		
 		// 4th time:
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
 		//System.out.println("" + bltl.trace) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		
 		// 3x refresh .. this should not change the SAT result nor that witness found
 		env_.refresh() ;
 		env_.refresh() ;
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		assertTrue(bltl.trace.trace.size() == 3) ;
 		assertTrue(bltl.trace.trace.get(0)[1].equals("1") ) ;
 		assertTrue(bltl.trace.trace.get(2)[1].equals("3") ) ;
@@ -179,7 +181,7 @@ public class Test_BoundedLTL {
 		env_.resetAndInstrument();
 		for (int k=0; k<9; k++) {
 			env_.refresh() ;
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}		
 	}
 	
@@ -199,24 +201,24 @@ public class Test_BoundedLTL {
 		bltl.attachToEnv(env_) ;
 		// 3x refresh
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		
 		// 4th time:
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
 		//System.out.println("" + bltl.trace) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		
 		// 3x refresh .. this should not change the SAT result nor that witness found
 		env_.refresh() ;
 		env_.refresh() ;
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		assertTrue(bltl.trace.trace.size() == 3) ;
 		assertTrue(bltl.trace.trace.get(0)[1].equals("1") ) ;
 		assertTrue(bltl.trace.trace.get(2)[1].equals("3") ) ;
@@ -227,7 +229,7 @@ public class Test_BoundedLTL {
 		env_.resetAndInstrument();
 		for (int k=0; k<9; k++) {
 			env_.refresh() ;
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}		
 	}
 	
@@ -247,24 +249,24 @@ public class Test_BoundedLTL {
 		bltl.attachToEnv(env_) ;
 		// 3x refresh
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		
 		// 4th time:
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
 		System.out.println("" + bltl.trace) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		
 		// 3x refresh .. this should not change the SAT result nor that witness found
 		env_.refresh() ;
 		env_.refresh() ;
 		env_.refresh() ;
 		//System.out.println(">>> " + env_.val) ;
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		assertTrue(bltl.trace.trace.size() == 3) ;
 		assertTrue(bltl.trace.trace.get(0)[1].equals("1") ) ;
 		assertTrue(bltl.trace.trace.get(2)[1].equals("3") ) ;
@@ -275,7 +277,7 @@ public class Test_BoundedLTL {
 		env_.resetAndInstrument();
 		for (int k=0; k<9; k++) {
 			env_.refresh() ;
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}		
 	}
 	
@@ -292,13 +294,13 @@ public class Test_BoundedLTL {
 		env_.turnOnDebugInstrumentation() ;
 		bltl.attachToEnv(env_) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		env_.refresh(); 
-		assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+		assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		
 		// Scenario 2: UNSAT
 		bltl.bltlState = BLTLstate.NOTSTARTED ; // hard reseting bltl so that we can reuse it
@@ -306,7 +308,7 @@ public class Test_BoundedLTL {
 		env_.resetAndInstrument();
 		for (int k=0; k<4; k++) {
 			env_.refresh(); 
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}
 	}
 	
@@ -325,7 +327,7 @@ public class Test_BoundedLTL {
 		bltl.attachToEnv(env_) ;
 		for (int k=0; k<5; k++) {
 			env_.refresh(); 
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}
 	}
 	
@@ -354,13 +356,13 @@ public class Test_BoundedLTL {
 		for(int k=0; k<8; k++) {
 			env_.refresh();
 			System.out.println(">>> val=" + env_.val) ;
-			assertTrue(bltl.getVerdict() == VERDICT.UNSAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.UNSAT) ;
 		}
 		
 		for (int k=8; k<11; k++) {
 			env_.refresh();
 			System.out.println(">>> *val=" + env_.val) ;
-			assertTrue(bltl.getVerdict() == VERDICT.SAT) ;
+			assertTrue(bltl.getVerdict() == LTLVerdict.SAT) ;
 		}
 	}
 
