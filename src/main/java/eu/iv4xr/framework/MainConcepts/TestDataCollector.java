@@ -1,191 +1,39 @@
 package eu.iv4xr.framework.MainConcepts;
 
 import java.io.File;
-import java.io.Serializable;
-import java.time.LocalTime;
 import java.util.*;
 
+import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
 import nl.uu.cs.aplib.Utils.Parsable;
 
+/**
+ * This class is used to collect information from one or more test-agents.
+ * Test-agents collect information in the form of instances of {@link ObservationEvent}
+ * that they then send to a TestDataCollector. Such a collector collects
+ * three types of data:
+ * 
+ * <ul>
+ *    <li>Time-stamped events. These are instances of {@link ObservationEvent.TimeStampedObservationEvent}.
+ *        They are stored chronologically in a list and is useful for debugging. E.g. when
+ *        a negative verdict is observed, we can see in this list what are the events that preceed it.
+ *        
+ *    <li>Verdicts. These are a special kind of time-stamped events that report things that the agent observed
+ *    as correct as well as as wrong.
+ *    
+ *    <li>Coverage events. These are instances of {@link ObservationEvent.CoveragePointEvent} representing
+ *    the coverage-points the test-agent manage to cover.
+ * </ul>   
+ * 
+ * @author Wish
+ *
+ */
 public class TestDataCollector implements Parsable {
 	
 	TestDataCollector() { }
-	
-	public static class ObservationEvent implements Serializable, Parsable {
 		
-		private static final long serialVersionUID = 1L;
-		
-		protected String id ;
-		
-		ObservationEvent() { }
-		public ObservationEvent(String id) { 
-			if (id==null) throw new IllegalArgumentException("Trying to create an ObservationEvent with a null id.") ;
-			this.id = id ; 
-		}
-		
-		public String getId() { return id ; }
-		
-		@Override
-		public boolean equals(Object o) {
-			if (o instanceof ObservationEvent) {
-				return id.equals(((ObservationEvent) o).id)  ;
-			}
-			return false ;
-		}
-		
-		@Override
-		public int hashCode() {
-			return id.hashCode() ;
-		}
-		
-		@Override
-		public String toString() { return id; }
-		
-		public ObservationEvent parse(String s) { 
-			if (s==null) throw new IllegalArgumentException("Trying to parse an ObservationEvent from a null string.") ;
-			return new ObservationEvent(s) ;
-		}
-	}
-	
-	public static class CoveragePointEvent extends ObservationEvent { }
-	
-	public static class TimeStampedObservationEvent extends ObservationEvent {
-		
-		private static final long serialVersionUID = 1L;
-
-		protected LocalTime timestamp ;
-		
-		/**
-		 * Further information about this event. It can be null, or something that is not an empty string.
-		 */
-		protected String info ;
-		
-		TimeStampedObservationEvent() { super() ; }
-
-		public TimeStampedObservationEvent(String id, String info) {
-			super(id) ;
-			timestamp = LocalTime.now() ;
-			if (info != null && info.length()==0) throw new IllegalArgumentException("The info part cannot be empty.") ;
-			this.info = info ;
-		}
-		
-		public TimeStampedObservationEvent(String id) {
-			this(id,null) ;
-		}
-		
-		public LocalTime getTimestamp() { return timestamp; }
-		public String getInfo() { return info ; }
-		
-		@Override
-		/**
-		 * Two time-stamped events are equal if their id and time stamps are equal.
-		 */
-		public boolean equals(Object o) {
-			if (o instanceof TimeStampedObservationEvent) {
-				var o_ = (TimeStampedObservationEvent) o ;
-				return id.equals(o_.id) && timestamp.equals(o_.timestamp) ;
-			}
-			return false ;
-		}
-		
-		@Override
-		public int hashCode() {
-			return Objects.hash(id,timestamp) ;
-		}
-		
-		@Override
-		public String toString() {
-			var info_ = info ;
-			if (info_ == null) info_ = "null" ;
-			return id + ";" + timestamp  + ";" + info_ ;
-		}
-		
-		@Override
-		public TimeStampedObservationEvent parse(String s) {
-			if (s==null) throw new IllegalArgumentException("Trying to parse an TimeStampedObservationEvent from a null string.") ;
-			var parts = s.split(";") ;
-			if (parts.length != 3) throw new IllegalArgumentException("Parse error on: " + s) ;
-			return parseWorker(parts) ;
-		}
-		
-		TimeStampedObservationEvent parseWorker(String[] parts) {
-			TimeStampedObservationEvent o = new TimeStampedObservationEvent() ;
-			o.id = parts[0] ; 
-			o.timestamp = LocalTime.parse(parts[1]) ;
-			o.info = parts[2] ;
-			if (o.info.equals("null")) o.info = null ;
-			return o ;
-		}
-	}
-	
-	public static class VerdictEvent extends TimeStampedObservationEvent { 
-		
-		/**
-		 * True means it is ok. False represents error. Null represents undecided.
-		 */
-		protected Boolean verdict = null ;
-		
-		VerdictEvent() { super() ; }
-		
-		public VerdictEvent(String id, String info, Boolean v) {
-			super(id,info) ;
-			if (v != null) {
-				if (v.booleanValue()) verdict = true ; else verdict = false ;
-			}
-		}
-		
-		public boolean isPass() { return verdict != null && verdict.booleanValue() ; }
-		public boolean isFail() { return verdict != null && !verdict.booleanValue() ; }
-		public boolean isUndecided() { return verdict == null ; }
-		
-		@Override
-		/**
-		 * Two verdicts events are equal if their id, their time stamps, and their verdicts are equal.
-		 */
-		public boolean equals(Object o) {
-			if (super.equals(o) && o instanceof VerdictEvent) {
-				var o_ = (VerdictEvent) o ;
-				if (verdict == null) return o_.verdict == null ;
-				if (o_.verdict == null) return verdict == null ;
-				return verdict.equals(o_.verdict) ;
-			}
-			return false ;
-		}
-		
-		@Override
-		public int hashCode() {
-			return Objects.hash(id,timestamp,verdict) ;
-		}
-		
-		@Override
-		public String toString() {
-			var s = super.toString() ;
-			var v = "false" ;
-			if (verdict == null) v = "null" ;
-			else if (verdict.booleanValue()) v = "true" ;
-			return s + ";" + v ;
-		}
-		
-		@Override
-		public VerdictEvent parse(String s) {
-			if (s==null) throw new IllegalArgumentException("Trying to parse an VerdictEvent from a null string.") ;
-			var parts = s.split(";") ;
-			if (parts.length != 4) throw new IllegalArgumentException("Parse error on: " + s) ;
-			TimeStampedObservationEvent e = parseWorker(parts) ;
-			VerdictEvent o = new VerdictEvent() ;
-			o.id = e.id ;
-			o.timestamp = e.timestamp ;
-			o.info = e.info ;
-			String v = parts[3] ;
-			if (v.equals("null")) o.verdict = null ;
-			else if (verdict.equals("true")) o.verdict = true ;
-			else o.verdict = false ;
-			return o ;
-		}
-	}
-	
-	
-	
+	/**
+	 * This class is used to hold a chronological list of time-stamped events.
+	 */
 	static class EventTrace implements Parsable {
 		List<TimeStampedObservationEvent> trace = new LinkedList<>() ;
 		int numOfPassVerdicts = 0 ;
@@ -225,6 +73,9 @@ public class TestDataCollector implements Parsable {
 		}	
 	}
 	
+	/**
+	 * This class is used to keep track which coverage-points were visited.
+	 */
 	static class CoverageMap implements Parsable {
 		
 		Map<CoveragePointEvent,Integer> coverage = new HashMap<>() ;
@@ -262,10 +113,26 @@ public class TestDataCollector implements Parsable {
 		
 	}
 	
+	/**
+	 * The coverage-map of each agent. By "each agent" we mean a test-agent that has
+	 * been registered to this TestDataCollector.
+	 */
 	protected Map<String,CoverageMap> perAgentCoverage = new HashMap<>() ;
+	
+	/**
+	 * The cummulative coverage-map of all agents. By "agents" we mean the test-agents
+	 * that have been registered to this TestDataCollector.
+	 */
 	protected CoverageMap collectiveCoverageMap = new CoverageMap() ;
+	
+	/**
+	 * The trace of time-stamped events of each agent.
+	 */
 	protected Map<String,EventTrace> perAgentEventTrace = new HashMap<>() ;
 	
+	/**
+	 * Add e to the set of coverage-points whose coverage will be tracked.
+	 */
 	public void startTrackingCoveragePoint(CoveragePointEvent e) {
 		collectiveCoverageMap.startTrackingCoveragePoint(e);
 		for (CoverageMap CM : perAgentCoverage.values()) CM.startTrackingCoveragePoint(e);
@@ -286,7 +153,7 @@ public class TestDataCollector implements Parsable {
 	}
 	
 	/**
-	 * Register a coverage visit by a test-agent.
+	 * Register a visit to a coverage-point by a test-agent.
 	 * 
 	 * @param agentUniqueId Unique id of the test-agent.
 	 * @param e An event representing the visit to some coverage point of interest.
@@ -304,7 +171,6 @@ public class TestDataCollector implements Parsable {
 	 * agent reports that it has seen something that is either according to its expectation, or violating
 	 * it. 
 	 * 
-	 * 
 	 * @param agentUniqueId Unique id of the test-agent.
 	 * @param e An event representing the observation to record.
 	 */
@@ -314,64 +180,108 @@ public class TestDataCollector implements Parsable {
 		ET.registerEvent(e);
 	}
 	
+	/**
+	 * Return a map describing which coverage-points were covered by the specified agent.
+	 * If m is the returned map, it maps a set of {@link ObservationEvent.CoveragePointEvent}
+	 * to integers. Each coverage-point-event in the map represents a unique coverage-point
+	 * to track. The integer it is mapped to is the number of times the coverage-point is
+	 * visited.
+	 */
 	public Map<CoveragePointEvent,Integer> getTestAgentCoverage(String agentUniqueId) {
 		CoverageMap CM = perAgentCoverage.get(agentUniqueId) ;
 		if (CM == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
 		return CM.coverage ; 
 	}
 
+	/**
+	 * Return a map describing which coverage-points were collectively covered all test-agents
+	 * registered to this TestDataCollector.
+	 * If m is the returned map, it maps a set of {@link ObservationEvent.CoveragePointEvent}
+	 * to integers. Each coverage-point-event in the map represents a unique coverage-point
+	 * to track. The integer it is mapped to is the number of times the coverage-point is
+	 * visited.
+	 */
 	public Map<CoveragePointEvent,Integer> getCollectiveCoverage() {
 		return collectiveCoverageMap.coverage ; 
 	}
 	
+	/**
+	 * Return the "trace" of the specified test-agent. This trace is a chronologically ordered
+	 * list of time-stamped events that this test-agent reported to this TestDataCollector.
+	 * Note that verdicts count as time-stamped events.
+	 */
 	public List<TimeStampedObservationEvent> getTestAgentTrace(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
 		return ET.trace ;
 	}
 	
+	/**
+	 * Get the number of negative verdicts reported by the specified test-agent.
+	 */
 	public int getNumberOfFailVerdictsSeen(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
 		return ET.numOfFailVerdicts ;
 	}
-	
+
+	/**
+	 * Get the total number of negative verdicts reported by all test-agents.
+	 */
 	public int getNumberOfFailVerdictsSeen() {
 		int count = 0 ;
 		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfFailVerdicts ;
 		return count ;
 	}
 	
+	/**
+	 * Get the number of positive verdicts reported by the specified test-agent.
+	 */
 	public int getNumberOfPassVerdictsSeen(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
 		return ET.numOfPassVerdicts ;
 	}
 	
+	/**
+	 * Get the total number of positive verdicts reported by all test-agents.
+	 */
 	public int getNumberOfPassVerdictsSeen() {
 		int count = 0 ;
 		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfPassVerdicts ;
 		return count ;
 	}
 	
+	/**
+	 * Get the number of undecided verdicts reported by the specified test-agent.
+	 */
 	public int getNumberOfUndecidedVerdictsSeen(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
 		return ET.numOfUndecidedVerdicts ;
 	}
 	
+	/**
+	 * Get the total number of undecided verdicts reported by all test-agents.
+	 */
 	public int getNumberOfUndecidedVerdictsSeen() {
 		int count = 0 ;
 		for (EventTrace ET : perAgentEventTrace.values()) count += ET.numOfUndecidedVerdicts ;
 		return count ;
 	}
 	
+	/**
+	 * Get the last negative verdict reported by the specified test-agent.
+	 */
 	public VerdictEvent getLastFailVerdict(String agentUniqueId) {
 		EventTrace ET = perAgentEventTrace.get(agentUniqueId) ;
 		if (ET == null) throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.") ;
 		return ET.lastFailVerdict ;
 	}
 	
+	/**
+	 * Get the last reported negative verdict.
+	 */
 	public VerdictEvent getLastFailVerdict() {
 		VerdictEvent err = null ;
 		for (EventTrace ET : perAgentEventTrace.values()) {

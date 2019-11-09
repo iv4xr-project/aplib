@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.LTL;
 
 import java.util.*;
 import java.util.function.Function;
@@ -48,7 +48,10 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 	public <E> BoundedLTL when(Predicate<E> p) { return when_(env -> p.test((E) env)) ; }
 	public BoundedLTL until_(Predicate<Environment> q) { endf = q ; return this ; }
 	public <E> BoundedLTL until(Predicate<E> q) { return until_(env -> q.test((E) env)); }
-	public BoundedLTL withMaxLength(int n) { maxlength = n ; return this ; }
+	public BoundedLTL withMaxLength(int n) { 
+		if (n<1) throw new IllegalArgumentException() ;
+		maxlength = n ; return this ; 
+	}
 	public BoundedLTL withStateShowFunction_(Function<Environment,String> f) { stateShowFunction = f ; return this ; }
 	public <E> BoundedLTL withStateShowFunction(Function<E,String> f) { 
 		return withStateShowFunction_(env -> f.apply((E) env)) ;
@@ -120,8 +123,9 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 			int k = 0 ;
 			String s = "" ;
 			for (String[] tr : trace) {
-				if (k>0) s += "/n" ;
-				s += k + ";" + tr[0] + ";" + tr[1] ;
+				if (k>0) s += "\n" ;
+				s += k + ";<" + tr[0] + ">;<" + tr[1] + ">" ;
+				k++ ;
 			}
 			return s ;
 		}
@@ -143,12 +147,11 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 	 * @param env
 	 * @return
 	 */
-	VERDICT sat(Environment env) {
+	LTLVerdict sat(Environment env) {
 		switch(bltlState) {
-			case SATFOUND : return VERDICT.SAT ;
+			case SATFOUND : return LTLVerdict.SAT ;
 			case NOTSTARTED :
 				if (startf.test(env)) {
-					System.out.println(">>> start found") ;
 					registerToTrace(env) ;
 					ltl.resettracking();
 					ltl.evalAtomSat(env);
@@ -156,7 +159,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 					if (endf.test(env)) {
 						// the interval ends immediately
 						var verdict = ltl.sat() ;
-						if (verdict == VERDICT.SAT) {
+						if (verdict == LTLVerdict.SAT) {
 							bltlState = BLTLstate.SATFOUND ;
 						}
 						else {
@@ -165,17 +168,8 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 						return verdict ;
 					}
 				}
-				return VERDICT.UNKNOWN ;
+				return LTLVerdict.UNKNOWN ;
 			case STARTED :
-				if (maxlength != null && ltl.absexecution.size()>=maxlength) {
-					// maximum interval length is reached exceeded, since the end-marker
-					// is not seen yet, the next evaluation will exceed the max-length anyway,
-					// so we abort the evaluation:
-					bltlState = BLTLstate.NOTSTARTED ;
-					trace.reset();
-					return VERDICT.UNKNOWN ;
-				}
-				
 				// pass the env to the ltl to have its atoms evaluated:
 				registerToTrace(env) ;
 				ltl.evalAtomSat(env) ;
@@ -183,7 +177,7 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 				if (endf.test(env)) {
 					// end marker holds; then force full evaluation of the ltl
 					var verdict = ltl.sat() ;
-					if (verdict == VERDICT.SAT) {
+					if (verdict == LTLVerdict.SAT) {
 						bltlState = BLTLstate.SATFOUND ;
 					}
 					else {
@@ -192,16 +186,22 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 					return verdict ;
 				}
 				else {
-					return VERDICT.UNKNOWN ;
+					if (maxlength != null && ltl.absexecution.size()>=maxlength) {
+						// maximum interval length is reached, since the end-marker
+						// is not seen yet, we stop the evaluation:
+						bltlState = BLTLstate.NOTSTARTED ;
+						trace.reset();
+					}
+					return LTLVerdict.UNKNOWN ;
 				}
 		}
 		// should not reach this point
 		return null ;
 	}
 	
-	public VERDICT getVerdict() {
-		if (bltlState == BLTLstate.SATFOUND) return VERDICT.SAT ;
-		return VERDICT.UNSAT ;
+	public LTLVerdict getVerdict() {
+		if (bltlState == BLTLstate.SATFOUND) return LTLVerdict.SAT ;
+		return LTLVerdict.UNSAT ;
 	}
 	
 	public ExecutionTrace getWitness() {
@@ -209,193 +209,10 @@ public class BoundedLTL implements EnvironmentInstrumenter {
 		return null ;
 	}
 
-	public abstract static class LTL {
-		LinkedList<VerdictInfo> absexecution = new LinkedList<VerdictInfo>() ;
-		LTL() { }
-		abstract void resettracking() ;
-		abstract VERDICT sat() ;
-		abstract void evalAtomSat(Environment env) ;	
-		public LTL ltlUntil(LTL psi) {
-			var ltl = new Until() ;
-			ltl.phi1 = this ;
-			ltl.phi2 = psi ;
-			return ltl ;
-		}
+	public enum LTLVerdict { SAT, UNSAT, UNKNOWN }
+	public static class LTLVerdictInfo { 
+		public LTLVerdict verdict ;
+		LTLVerdictInfo(LTLVerdict v) { verdict = v ; }
 	}
 	
-	public enum VERDICT { SAT, UNSAT, UNKNOWN }
-	public static class VerdictInfo { 
-		public VERDICT verdict ;
-		VerdictInfo(VERDICT v) { verdict = v ; }
-	}
-	
-	
-	public static class Atom extends LTL {
-		Predicate<Environment> p ;
-		void check(Environment env) {
-					
- 		}
-		@Override
-		void resettracking() { absexecution.clear(); }
-		
-		@Override
-		VERDICT sat() {
-			return absexecution.getFirst().verdict ;
-		}
-		
-		@Override
-		void evalAtomSat(Environment env) {
-			if (p.test(env)) 
-				absexecution.add(new VerdictInfo(VERDICT.SAT)) ;
-			else
-				absexecution.add(new VerdictInfo(VERDICT.UNSAT)) ;		
-		}
-	}
-	
-	public static class Not extends LTL {
-		LTL phi ;
-		
-		@Override
-		void resettracking() {
-			absexecution.clear(); phi.resettracking();	
-		}
-
-		@Override
-		VERDICT sat() {
-			var iterator = absexecution.descendingIterator() ;
-			var iteratorPhi = phi.absexecution.descendingIterator() ;
-			
-			while (iterator.hasNext()) {
-				var psi = iterator.next() ;
-				var p = iteratorPhi.next().verdict ;
-				switch (p) {
-				case SAT : psi.verdict = VERDICT.UNSAT ; break ;
-				case UNSAT : psi.verdict = VERDICT.SAT ; break ;
-				}
-			}
-			
-			return absexecution.getFirst().verdict ;
-		}
-
-		@Override
-		void evalAtomSat(Environment env) {
-			absexecution.add(new VerdictInfo(VERDICT.UNKNOWN)) ;
-			phi.evalAtomSat(env);		
-		}
-	}
-	
-	public static class Until extends LTL {
-		LTL phi1 ;
-		LTL phi2 ;
-		
-		@Override
-		void resettracking() {
-			absexecution.clear(); 
-			phi1.resettracking();	
-			phi2.resettracking();	
-		}
-		
-		@Override
-		VERDICT sat() {
-			var iterator = absexecution.descendingIterator() ;
-			var iteratorPhi1 = phi1.absexecution.descendingIterator() ;
-			var iteratorPhi2 = phi2.absexecution.descendingIterator() ;
-			
-			// keep track if phi1 untill phi2 holds at sigma(k+1)
-			boolean nextSat = false ;
-			
-			// calculate phi1 until phi2 holds on every sigma(k); we calculate this
-			// backwards for every state in the interval:
-			while (iterator.hasNext()) {
-				var psi = iterator.next() ;
-				var p = iteratorPhi1.next().verdict ;
-				var q = iteratorPhi2.next().verdict ;
-				if (q == VERDICT.SAT) {
-					psi.verdict = VERDICT.SAT ;
-					nextSat = true ;
-				}
-				else {
-					if (nextSat && p == VERDICT.SAT) psi.verdict = VERDICT.SAT ;
-					else {
-						psi.verdict = VERDICT.UNSAT ;
-						nextSat = false ;	
-					}
-				}
-			}
-			return absexecution.getFirst().verdict ;
-		}
-		
-		@Override
-		void evalAtomSat(Environment env) {
-			absexecution.add(new VerdictInfo(VERDICT.UNKNOWN)) ;
-			phi1.evalAtomSat(env);	
-			phi2.evalAtomSat(env);			
-		}						
-	}
-	
-	static public class Next extends LTL {
-		
-		LTL phi ;
-
-		@Override
-		void resettracking() {
-			absexecution.clear(); 
-			phi.resettracking();		
-		}
-
-		@Override
-		VERDICT sat() {
-			var iterator = absexecution.descendingIterator() ;
-			var iteratorPhi = phi.absexecution.descendingIterator() ;
-			
-			var psi = iterator.next() ;
-			psi.verdict = VERDICT.UNSAT ; // always unsat at the last state
-
-			// calculate phi1 until phi2 holds on every sigma(k); we calculate this
-			// backwards for every state in the interval:
-			while (iterator.hasNext()) {
-				psi = iterator.next() ;
-				var q = iteratorPhi.next().verdict ;
-				switch(q) {
-				  case SAT   : psi.verdict = VERDICT.SAT ; break ;
-				  case UNSAT : psi.verdict = VERDICT.UNSAT ;
-				}
-			}
-			
-			return absexecution.getFirst().verdict ;
-		}
-
-		@Override
-		void evalAtomSat(Environment env) {
-			absexecution.add(new VerdictInfo(VERDICT.UNKNOWN)) ;
-			phi.evalAtomSat(env);			
-		}
-		
-	}
-	
-	public static <E> LTL now(Predicate<E> p) {
-		var a = new Atom() ;
-		a.p = env -> p.test((E) env) ;
-		return a ;
-	}
-	
-	public static LTL next(LTL phi) { 
-		var ltl = new Next() ;
-		ltl.phi = phi ;
-		return ltl ;
-	}
-	
-	public static LTL ltlNot(LTL phi) {
-		var ltl = new Not() ;
-		ltl.phi = phi ; return ltl ;
-	}
-	
-	public static LTL eventually(LTL phi) {
-		return now((Environment env) -> true).ltlUntil(phi) ;
-	}
-	
-	public static LTL always(LTL phi) {
-		return ltlNot(eventually(ltlNot(phi))) ;
-	}
-
 }

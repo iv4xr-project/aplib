@@ -61,7 +61,8 @@ public class Goal {
 	Function<Object,Double> checkPredicate ;
 	
 	/**
-	 * Create a blank instance of a Goal. It will have no goal and no distance function.
+	 * Create a blank instance of a Goal. It will have no actual predicate 
+	 * as the actual goal.
 	 * 
 	 * @param name A name to be associated with the goal.
 	 */
@@ -162,15 +163,23 @@ public class Goal {
 		if(Math.abs(distance) <= epsilon) status.setToSuccess(); 
 	}
 	
+	/**
+	 * This is the version of {@link #propose(Object)} that will be called internally by
+	 * {@link BasicAgent#updateWorker()}. Override this if its behavior need to be extended.
+	 */
+	protected void propose_(Object proposal) {
+		propose(proposal) ;
+	}
+	
 	public String getName() { return name ; }
 	
 	/**
-	 * Return the last non-null proposal that was tested by this goal (see the method {@link Goal#propose(Object)}).
+	 * Return the last non-null proposal that was tested by this goal (see the method {@link Goal#propose_(Object)}).
 	 */
 	public Object getProposal() { return proposal ; }
 
 	/**
-	 * Return the last proposal that was tested by this goal (see the method {@link Goal#propose(Object)})
+	 * Return the last proposal that was tested by this goal (see the method {@link Goal#propose_(Object)})
 	 * that turned out to be a solution. If there was none, null is returned.
 	 */
 	public Object getSolution() {

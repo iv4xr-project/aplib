@@ -25,7 +25,7 @@ public class FiveGameEnv extends Environment {
 	}
 	
 	@Override
-	public void refresh() {
+	public void refreshWorker() {
 		lastmove = thegame.getLastmove() ;
 	}
 	
