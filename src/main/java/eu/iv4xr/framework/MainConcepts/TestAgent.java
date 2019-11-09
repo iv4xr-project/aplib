@@ -1,0 +1,83 @@
+package eu.iv4xr.framework.MainConcepts;
+
+import static eu.iv4xr.framework.MainConcepts.TestDataCollector.*;
+
+import java.util.*;
+import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
+import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
+
+/**
+ * This class implements a test-agent. It extents {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent}.
+ * All the functionalities of a test-agent fot being an agent are inherited
+ * for either {@link nl.uu.cs.aplib.MainConcepts.BasicAgent} 
+ * or {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent}. This class TestAgent adds some functionalities
+ * related to testing.
+ * 
+ * <p>A test-agent is used to test some target system, also called System-Under-Test or SUT.
+ * From the test-agent's perspective, this SUT is seen as an environment the agent want to 
+ * interact with.
+ * This implies that  proper instance of the class {@link nl.uu.cs.aplib.MainConcepts.Environment},
+ * or of one of its subclasses. must be placed between the agent and the SUT to facilitate
+ * the interactions between them.
+ * 
+ * <p>The idea is that a test-agent interacts with the SUT in order to observe it. It is
+ * up to the test-agent to decide what are the circumstances worth observing. When it
+ * observes something notable, it can register this as a so-called observation event.  
+ * There are several types of observations a test-agent can collect:
+ * 
+ * <ul>
+ *    <li> <b>Verdicts</b>. A verdict is an instance of {@link TestDataCollector.VerdictEvent}.
+ * </ul>
+ * 
+ * 
+ * @author Wish
+ *
+ */
+
+public class TestAgent extends AutonomousBasicAgent {
+	
+	protected String testDesc ;
+	protected TestDataCollector testDataCollector ;
+    		
+	public TestAgent setTestDesc(String desc) {
+		testDesc = desc ; return this ;
+	}
+
+	public TestAgent setTestDataCollector(TestDataCollector dc) {
+		if (dc==null) throw new IllegalArgumentException() ;
+		testDataCollector = dc ;
+		dc.registerTestAgent(this.id);
+		return this ;
+	}
+	
+	public TestDataCollector getTestDataCollector() { return testDataCollector ; }
+	
+	/**
+	 * Register a visit to e for the purpose of test-coverage tracking.
+	 * 
+	 * @param e Representing something of interest that we want to cover during testing.
+	 */
+	public void registerVisit(CoveragePointEvent e) {
+		testDataCollector.registerVisit(id,e);
+	}
+	
+	/**
+	 * Register this event to be appended to a historical trace that this test agent keeps track.
+	 * 
+	 * @param event Some event whose occurrence we want to keep track in a trace. The event will be time-stamped.
+	 */
+	public void registerEvent(TimeStampedObservationEvent event) {
+		testDataCollector.registerEvent(id,event);
+	}
+
+	/**
+	 * Register a verdict, which can be either a success or fail, or undecided. Verdicts will
+	 * also be put in this agent trace.
+	 * 
+	 * @param verdict Representing the verdict.
+	 */
+	public void registerVerdict(VerdictEvent verdict) {
+		testDataCollector.registerEvent(id,verdict);
+	}
+
+}

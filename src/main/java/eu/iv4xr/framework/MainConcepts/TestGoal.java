@@ -2,7 +2,7 @@ package eu.iv4xr.framework.MainConcepts;
 
 import java.util.function.* ;
 
-import eu.iv4xr.framework.MainConcepts.TestDataCollector.VerdictEvent;
+import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
 import nl.uu.cs.aplib.MainConcepts.*;
 
 /**
@@ -13,11 +13,11 @@ import nl.uu.cs.aplib.MainConcepts.*;
  * 
  * <p>A test-oracle expresses a test on the correctness of the proposal (not to be confused with
  * the goal-predicate itself). E.g. the goal may only require that a certain object becomes
- * accessible to the agent, whereas the oracle would test of this object has the correct
+ * accessible to the agent, whereas the oracle would test whether this object has the correct
  * properties.
  * 
  * A test-oracle
- * is essentially a function f that will inspect the given proposal object and returns
+ * is essentially a function f that will inspect a given proposal-object and returns
  * a verdict. 
  * 
  * @author Wish
@@ -32,7 +32,7 @@ public class TestGoal extends Goal {
 		super(name);
 	}
 	
-	FunctionalTestAgent owningTestAgent ;
+	TestAgent owningTestAgent ;
 	Function<Object,VerdictEvent> oracle ;
 	
 	/**
@@ -42,7 +42,7 @@ public class TestGoal extends Goal {
 	 * @param testagent  The test-agent to which this TestGoal will be associated to (the one that will work on this goal).
 	 * @param oracle     The oracle predicate/function.
 	 */
-	public TestGoal oracle_(FunctionalTestAgent testagent, Function<Object,VerdictEvent> oracle) {
+	public TestGoal oracle_(TestAgent testagent, Function<Object,VerdictEvent> oracle) {
 		this.oracle = oracle ;
 		owningTestAgent = testagent ;
 		return this ;
@@ -55,7 +55,7 @@ public class TestGoal extends Goal {
 	 * @param testagent  The test-agent to which this TestGoal will be associated to (the one that will work on this goal).
 	 * @param oracle     The oracle predicate/function.
 	 */
-	public <Proposal> TestGoal oracle(FunctionalTestAgent testagent, Function<Proposal,VerdictEvent> oracle) {
+	public <Proposal> TestGoal oracle(TestAgent testagent, Function<Proposal,VerdictEvent> oracle) {
 		return oracle_(testagent, o -> oracle.apply((Proposal) o)) ;
 	}	
 	
