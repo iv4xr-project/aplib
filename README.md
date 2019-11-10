@@ -2,12 +2,12 @@
 
 
 * [APIs Javadoc documentation](http://www.staff.science.uu.nl/~prase101/research/projects/iv4xr/aplib/apidocs/)
-* [Tutorials and additional documentations](./docs/manuals)
-   * [Concepts](./docs/manuals/aplibConcepts.md)
-   * [Tutorial 1](./docs/manuals/firstTutorial.md)
-    | [Tutorial 2](./docs/manuals/tutorial_2.md)
-    | [Tutorial 3](./docs/manuals/tutorial_3.md)
-   * [Prolog binding](./docs/manuals/prolog.md)
+* [Tutorials and additional documentations](./docs/manual)
+   * [Concepts](./docs/manual/aplibConcepts.md)
+   * [Tutorial 1](./docs/manual/firstTutorial.md)
+    | [Tutorial 2](./docs/manual/tutorial_2.md)
+    | [Tutorial 3](./docs/manual/tutorial_3.md)
+   * [Prolog binding](./docs/manual/prolog.md)
 * Paper: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://drive.google.com/open?id=17ydV_6CIxQ_QSIGfR8JWHyrmrVFomeeH)
 
 `Aplib` is a Java library to program multi agent programs.
