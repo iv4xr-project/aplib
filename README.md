@@ -8,7 +8,7 @@
     | [Tutorial 2](./docs/manual/tutorial_2.md)
     | [Tutorial 3](./docs/manual/tutorial_3.md)
    * [Prolog binding](./docs/manual/prolog.md)
-* Paper: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://drive.google.com/open?id=17ydV_6CIxQ_QSIGfR8JWHyrmrVFomeeH)
+* Paper: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
 
 `Aplib` is a Java library to program multi agent programs.
 `Aplib` is inspired by the popular [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming (e.g. `aplib` agents have 'goals' and run so-called 'deliberation' cycles).
