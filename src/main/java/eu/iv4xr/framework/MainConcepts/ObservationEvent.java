@@ -82,7 +82,19 @@ public class ObservationEvent implements Serializable, Parsable {
 	 * @author Wish
 	 *
 	 */
-	public static class CoveragePointEvent extends ObservationEvent { }
+	public static class CoveragePointEvent extends ObservationEvent { 
+		
+		/**
+		 * Create a coverage-event with the given family-name. 
+		 * Family-name is used to identify that the event belongs to some meaningful family.
+		 */
+		public CoveragePointEvent(String family) {
+			super(family) ;
+		}
+		
+		
+		
+	}
 	
 	
 	/**
