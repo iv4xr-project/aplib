@@ -38,7 +38,27 @@ public class TestAgent extends AutonomousBasicAgent {
 	
 	protected String testDesc ;
 	protected TestDataCollector testDataCollector ;
+	
+	
+	/**
+	 * Create a blank instance of TestAgent. To be useful you will need 
+	 * to add few other things to it, e.g. a state and a goal. You also need to link it
+	 * to a {@link TestDataCollector}.
+	 */
+	public TestAgent() { super() ; }
+	
+	/**
+	 * Create a plain instance of TestAgent with the given id and role.
+	 * To be useful you will need to add few other things to it, e.g. a state and a
+	 * goal. You also need to link it to a {@link TestDataCollector}.
+	 */
+	public TestAgent(String id, String role) {
+		super(id,role) ;
+	}
     		
+	/**
+	 * To add some textual description of the test carried out by this test agent.
+	 */
 	public TestAgent setTestDesc(String desc) {
 		testDesc = desc ; return this ;
 	}

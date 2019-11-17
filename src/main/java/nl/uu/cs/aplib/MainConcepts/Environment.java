@@ -151,8 +151,6 @@ public class Environment {
 	}
 	
 	
-	EnvOperation lastCommand ;
-	
 	/**
 	 * An instance of this class is used to record a command that an agent sent to the
 	 * real environment through an instance of {@link Environment}. This is so that
@@ -252,6 +250,7 @@ public class Environment {
 	 * some method of this environment.
 	 */
 	public Environment registerInstrumenter(EnvironmentInstrumenter I) {
+		if (I == null) throw new IllegalArgumentException() ;
 		instrumenters.add(I) ;
 		return this ;
 	}
