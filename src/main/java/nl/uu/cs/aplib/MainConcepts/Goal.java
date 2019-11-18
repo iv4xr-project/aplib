@@ -156,7 +156,7 @@ public class Goal {
 	 * 
 	 * <p>A null proposal is always rejected.
 	 */
-	public void propose(Object proposal) {
+	final public void propose(Object proposal) {
 		if (proposal == null) return ;
 		this.proposal = proposal ;
 		distance = checkPredicate.apply(proposal) ;
