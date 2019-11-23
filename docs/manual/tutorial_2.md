@@ -24,7 +24,7 @@ Goal g = goal("the-goal").toSolve((Integer happiness) -> happiness >= 5) ;
 
 ### Agent's state/belief
 
-Recall that an agent needs a state (and in agent programming the agent's state is also called its _belief_), which is an instance of `nl.uu.cs.aplib.MainConcepts.SimpleState`. The class `SimpleState` itself has no field other than a hidden field called `env` that points to the Environment that is attached to the agent.
+Recall that an agent needs a state (and in agent programming the agent's state is also called its _belief_), which is an instance of `nl.uu.cs.aplib.mainConcepts.SimpleState`. The class `SimpleState` itself has no field other than a hidden field called `env` that points to the Environment that is attached to the agent.
 
 For the doctor agent, we will need at least one variable to be incorporated in its state, which the agent can use to keep track the number of times it interacts with the patient. In other words, we need to **extend** `SimpleState`. Let's do it like this:
 
@@ -129,7 +129,7 @@ while (topgoal.getStatus().inProgress()) {
 
 ### The full example
 
-The full code of `agent-X` can be found in [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/DumbDoctor.java). You can run the method `main` to run this demo. A sample of its interactions is shown below:
+The full code of `agent-X` can be found in [`nl.uu.cs.aplib.exampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/DumbDoctor.java). You can run the method `main` to run this demo. A sample of its interactions is shown below:
 
 ```
 How do you feel today?

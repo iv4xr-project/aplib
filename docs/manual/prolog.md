@@ -1,6 +1,6 @@
 # Aplib's Prolog Backend
 
-`aplib` provides a Prolog backend, namely [tuprolog](http://alice.unibo.it/xwiki/bin/view/Tuprolog/), that your agent can use to do reasoning. The access to this backend is through the class `nl.uu.cs.aplib.Agents.StateWithProlog` whose rootclass is `nl.uu.cs.aplib.MainConcepts.SimpleState`. Recall that an instance of `SimpleState` represents an agent state. Any agent would need a state to be attached to it, and it should be an instance of `SimpleState`, as in:
+`aplib` provides a Prolog backend, namely [tuprolog](http://alice.unibo.it/xwiki/bin/view/Tuprolog/), that your agent can use to do reasoning. The access to this backend is through the class `nl.uu.cs.aplib.Agents.StateWithProlog` whose rootclass is `nl.uu.cs.aplib.mainConcepts.SimpleState`. Recall that an instance of `SimpleState` represents an agent state. Any agent would need a state to be attached to it, and it should be an instance of `SimpleState`, as in:
 
 ```java
 var state = new StateWithProlog() ;
@@ -11,7 +11,7 @@ An instance of `StateWithProlog` holds an instance of Prolog-engine. This engine
 
 A Prolog-engine is useful when your have a non-trivial state structure and some actions of your agent need to inspect if a certain complex predicate P(X,Y,Z) has a solution in the agent's current state (instances for X,Y,Z that would make P true). Using Prolog allows you to declaratively describe how P can be inferred using one ore more inference rules, and leave it to a Prolog-engine to do the hard work of search for its solution. To be able to make use of this, you of course will need to formulate the inference rules. Additionally, you need to encode fragments of your agent's state that would be relevant for the reasoning as Prolog facts and send these facts to the Prolog-engine.
 
-There is an example of using Prolog in the class [` nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame_withAgent`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/FiveGame/FiveGame_withAgent.java). This class contains an `aplib` agent for playing a simple board game called _Five Game_. It is played on a board of _N x N_ by two players, each takes turn to place a piece of their respective color on a still empty square on the board. The first player that can form a consecutive row or column or diagonal consisting of 5 pieces all of his color wins. The agent player is programmed to use some bits of Prolog reasoning as part of its tactic.
+There is an example of using Prolog in the class [` nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame_withAgent`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/FiveGame/FiveGame_withAgent.java). This class contains an `aplib` agent for playing a simple board game called _Five Game_. It is played on a board of _N x N_ by two players, each takes turn to place a piece of their respective color on a still empty square on the board. The first player that can form a consecutive row or column or diagonal consisting of 5 pieces all of his color wins. The agent player is programmed to use some bits of Prolog reasoning as part of its tactic.
 
 For example, to add reasoning rules we do the following:
 
