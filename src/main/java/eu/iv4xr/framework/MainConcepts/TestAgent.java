@@ -5,6 +5,11 @@ import static eu.iv4xr.framework.MainConcepts.TestDataCollector.*;
 import java.util.*;
 import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
 import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.MainConcepts.BasicAgent;
+import nl.uu.cs.aplib.MainConcepts.CostFunction;
+import nl.uu.cs.aplib.MainConcepts.Deliberation;
+import nl.uu.cs.aplib.MainConcepts.GoalStructure;
+import nl.uu.cs.aplib.MainConcepts.SimpleState;
 
 /**
  * This class implements a test-agent. It extents {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent}.
@@ -98,6 +103,63 @@ public class TestAgent extends AutonomousBasicAgent {
 	 */
 	public void registerVerdict(VerdictEvent verdict) {
 		testDataCollector.registerEvent(id,verdict);
+	}
+	
+	/**
+	 * Attach a state structure to this agent. The method returns the agent itself
+	 * so that this method can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestAgent attachState(SimpleState state) {
+		return (TestAgent) super.attachState(state) ;
+	}
+	
+	/**
+	 * Set initial computation budget for this agent. The agent must have a goal set.
+	 * This method should not be called when the agent is already working on its 
+	 * goal.
+	 */
+	@Override
+	public TestAgent budget(double b) {
+		return (TestAgent) super.budget(b) ;
+	}
+	
+	/**
+	 * Set a goal for this agent. The method returns the agent itself so that this
+	 * method can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestAgent setGoal(GoalStructure g) {
+		return (TestAgent) super.setGoal(g) ;
+	}
+	
+	/**
+	 * Set a goal for this agent, with the specified initial budget. 
+	 * The method returns the agent itself so that this method can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestAgent setGoal(double budget, GoalStructure g) {
+		return (TestAgent) super.setGoal(budget, g) ;
+	}
+	
+	
+	/**
+	 * Replace the agent's deliberation module with the one given to this method.
+	 * The method returns the agent itself so that this method can be used in the
+	 * Fluent Interface style.
+	 */
+	@Override
+	public TestAgent useDeliberation(Deliberation delib) {
+		return (TestAgent) super.useDeliberation(delib) ;
+	}
+	
+	/**
+	 * Set f as this agent cost-function. Return the agent itself so that this
+	 * method can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestAgent withCostFunction(CostFunction f) {
+		return (TestAgent) super.withCostFunction(f) ;
 	}
 
 }

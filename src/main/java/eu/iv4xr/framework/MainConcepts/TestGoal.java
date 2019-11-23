@@ -74,5 +74,58 @@ public class TestGoal extends Goal {
 		}
 	}
 	
+	/**
+	 * Set the given function as a goal function. A proposal o is a solution if abs(goalfunction(o))
+	 * is a value less than epsilon (default is 0.005).
+	 * The more general
+	 * typing of the method's signature is for convenience, to allow you to explicitly
+	 * specify the type of the goal's proposals domain at the point where this method is
+	 * called, e.g. as in:
+	 * 
+	 * <pre>
+	 *   Goal g = new Goal() . ftoSolve((Integer x) -> x - 9999) ;
+	 * </pre>
+	 * 
+	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
+	 */
+	@Override
+	public <Proposal> TestGoal ftoSolve(Function<Proposal,Double> predicateToSolve) {
+		return (TestGoal) super.ftoSolve(predicateToSolve);
+	}
 
+	/**
+	 * Set the predicate which would serve as the predicate to solve. The more general
+	 * typing of the method's signature is for convenience, to allow you to explicitly
+	 * specify the type of the goal's proposals domain at the point where this method is
+	 * called, e.g. as in:
+	 * 
+	 * <pre>
+	 *   Goal g = new Goal() . toSolve((Integer x) -> x==9999) ;
+	 * </pre>
+	 * 
+	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
+	 */
+	@Override
+	public <Proposal> TestGoal toSolve(Predicate<Proposal> predicateToSolve) {
+		return (TestGoal) super.toSolve(predicateToSolve) ;
+	}
+
+	/**
+	 * Set the value of eplison.
+	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestGoal withEpsilon(Double e) {
+		return (TestGoal) super.withEpsilon(e) ;
+	}
+	
+	/**
+	 * Set the strategy to that a solving agent can use to solve this goal.
+	 * The method returns this Goal itself so that it can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestGoal withTactic(Tactic S) {
+		return (TestGoal) super.withTactic(S) ;
+	}
+	
 }
