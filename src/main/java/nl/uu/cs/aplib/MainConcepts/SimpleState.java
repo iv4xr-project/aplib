@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -31,12 +31,12 @@ import java.util.logging.Logger;
  * 
  * <ol>
  * <li>A message queue containing incoming messages (instances of
- * {@link nl.uu.cs.aplib.MultiAgentSupport}) for the agent that owns S. The
+ * {@link nl.uu.cs.aplib.multiAgentSupport}) for the agent that owns S. The
  * queue itself is not exposed. Instead, the agent can access it through a
  * number of exposed methods, e.g. to check if a message of a certain type is
  * present in the queue and to pop it out.
  * 
- * <li>A pointer to the {@link nl.uu.cs.aplib.MainConcepts.Environment} used by
+ * <li>A pointer to the {@link nl.uu.cs.aplib.mainConcepts.Environment} used by
  * the agent, thus allowing the agent to inspect the Environment, and to send
  * commands to it.
  * </ol>

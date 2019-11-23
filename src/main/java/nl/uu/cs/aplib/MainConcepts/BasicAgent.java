@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.*;
 import java.util.function.Function;
@@ -9,15 +9,15 @@ import java.util.logging.Logger;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.Exception.AplibError;
-import nl.uu.cs.aplib.MainConcepts.Action.Abort;
-import nl.uu.cs.aplib.MainConcepts.GoalStructure.GoalsCombinator;
-import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
-import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
-import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
-import nl.uu.cs.aplib.MultiAgentSupport.Message;
-import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
-import nl.uu.cs.aplib.Utils.Time;
+import nl.uu.cs.aplib.exception.AplibError;
+import nl.uu.cs.aplib.mainConcepts.Action.Abort;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.GoalsCombinator;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
+import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
+import nl.uu.cs.aplib.multiAgentSupport.ComNode;
+import nl.uu.cs.aplib.multiAgentSupport.Message;
+import nl.uu.cs.aplib.multiAgentSupport.Messenger;
+import nl.uu.cs.aplib.utils.Time;
 
 /**
  * This is the root class of all agents in aplib. As the name suggests, this
@@ -34,7 +34,7 @@ import nl.uu.cs.aplib.Utils.Time;
  * it lacks the ability to run as an autonomous agent. It also lacks the ability
  * to exchange messages with other agents. If you need autonomous and
  * communicating agents, you can use a subclass called
- * {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent}.
+ * {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent}.
  * 
  * <p>After creating a blank agent using the constructor, you will need to attach
  * a state to it. This may sound contradictory to you. Since we are in Java,
@@ -77,7 +77,7 @@ import nl.uu.cs.aplib.Utils.Time;
  * <i>subservient</i>, as opposed to autonomous agents that control the ticking
  * themselves. Autonomous agents would run on their own threads, whereas a
  * subservient agent can stay in the same thread is your main thread. See
- * {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent} for a base class to create
+ * {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent} for a base class to create
  * autonomous agents.
  * 
  * 
@@ -152,7 +152,7 @@ public class BasicAgent {
 	 * 
 	 * The id should be unique. Multiple agents can have the same role. For
 	 * BasicAgent, Id and role do not have any influence. For
-	 * {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent} they are important to
+	 * {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent} they are important to
 	 * identify where messages should be sent to.
 	 */
 	public BasicAgent(String id, String role) {

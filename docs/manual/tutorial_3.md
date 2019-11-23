@@ -16,7 +16,7 @@ while (g.getStatus().inProgress()) {
 Running agents in the subservient mode could be good enough for some applications. This mode is also useful when we want to test/verify an agent-based system as it allows the execution of such a system to be fully controlled by the verifier. E.g. this opens a way to do model checking on an agent-based system.
 
 
-For `agent` to run autonomously, it needs to be a subclass of `nl.uu.cs.aplib.Agents.AutonomousBasicAgent`. To run it we can do something like this:
+For `agent` to run autonomously, it needs to be a subclass of `nl.uu.cs.aplib.agents.AutonomousBasicAgent`. To run it we can do something like this:
 
 ```java
 agent.setGoal(g) ;
@@ -57,9 +57,9 @@ Recall that `apsl` defines an agent-based system as an environment with one or m
 
 To coordinate their work, agents can send messages to each other. To use this feature there are three requirements:
 
-1. The agent must be an instance of `nl.uu.cs.aplib.Agents.AutonomousBasicAgent` (or an instance of its subclass).
-1. The agent must be configured to use a state which is an instance of `nl.uu.cs.aplib.Agents.StateWithMessenger` (or an instance of its subclass).
-1. The agent must register itself to a **communication node**, which is an instance of `nl.uu.cs.aplib.MultiAgentSupport.ComNode`.
+1. The agent must be an instance of `nl.uu.cs.aplib.agents.AutonomousBasicAgent` (or an instance of its subclass).
+1. The agent must be configured to use a state which is an instance of `nl.uu.cs.aplib.agents.StateWithMessenger` (or an instance of its subclass).
+1. The agent must register itself to a **communication node**, which is an instance of `nl.uu.cs.aplib.multiAgentSupport.ComNode`.
 
 A state of type `StateWithMessenger` has access to the method `state.messenger().send(...)`. Actions of the agent that owns the state can use it to send messages to other agents.
 
@@ -161,7 +161,7 @@ agentstate -> {
 }
 ```
 
-The agent-state, assuming you have configured the agent to  have a state which is an intance of `StateWithMessenger`, gives you access to methods to send and receive messages. More precisely, the method `state.messanger()` returns a so-called **messanger** built-in the state, which in turn is an instance of the class `nl.uu.cs.aplib.MultiAgentSupport.Messenger`. The messenger holds a **input-queue** storing all incoming messages for the agent that owns it (messages will stay in this queue until some action of the agent decides to remove them). The messenger has the following methods:
+The agent-state, assuming you have configured the agent to  have a state which is an intance of `StateWithMessenger`, gives you access to methods to send and receive messages. More precisely, the method `state.messanger()` returns a so-called **messanger** built-in the state, which in turn is an instance of the class `nl.uu.cs.aplib.multiAgentSupport.Messenger`. The messenger holds a **input-queue** storing all incoming messages for the agent that owns it (messages will stay in this queue until some action of the agent decides to remove them). The messenger has the following methods:
 
 * `has(p)` checks of the messenger's input-queue has a messange satisfying the predicate p. This returns true or false.
 

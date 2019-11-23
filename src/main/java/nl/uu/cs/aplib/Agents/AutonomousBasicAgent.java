@@ -1,19 +1,19 @@
-package nl.uu.cs.aplib.Agents;
+package nl.uu.cs.aplib.agents;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
-import nl.uu.cs.aplib.MainConcepts.*;
-import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
-import nl.uu.cs.aplib.MultiAgentSupport.Message;
-import nl.uu.cs.aplib.MultiAgentSupport.Messenger;
-import nl.uu.cs.aplib.Utils.Time;
+import nl.uu.cs.aplib.mainConcepts.*;
+import nl.uu.cs.aplib.multiAgentSupport.ComNode;
+import nl.uu.cs.aplib.multiAgentSupport.Message;
+import nl.uu.cs.aplib.multiAgentSupport.Messenger;
+import nl.uu.cs.aplib.utils.Time;
 
 
 /**
- * An extension of {@link nl.uu.cs.aplib.MainConcepts.BasicAgent} that can be
+ * An extension of {@link nl.uu.cs.aplib.mainConcepts.BasicAgent} that can be
  * run as autonomous agents. Agents of this class moreover have the ability
  * to send messages to other agents.
  * 
@@ -63,14 +63,14 @@ public class AutonomousBasicAgent extends BasicAgent {
 	}
 	
 	/**
-	 * Return the {@link nl.uu.cs.aplib.MultiAgentSupport.Messenger} associated to this agent.
+	 * Return the {@link nl.uu.cs.aplib.multiAgentSupport.Messenger} associated to this agent.
 	 */
 	Messenger messenger() {
 		return ((StateWithMessenger) state).messenger ;
 	}
 	
 	/**
-	 * Register this agent to the given {@link nl.uu.cs.aplib.MultiAgentSupport.ComNode}.
+	 * Register this agent to the given {@link nl.uu.cs.aplib.multiAgentSupport.ComNode}.
 	 * Agents need to register to a ComNode first before it is able to send to or receive
 	 * messages from other agents. The method returns this agent itself, so that it can be
 	 * used in the Fluent Interface style.
@@ -155,7 +155,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 	/**
 	 * If the agent is running autonomously, this command will cause the agent to stop
 	 * its run. This command will not interrupt the agent if it is currently executing
-	 * an {@link nl.uu.cs.aplib.MainConcepts.Action}. Once the execution of the Action
+	 * an {@link nl.uu.cs.aplib.mainConcepts.Action}. Once the execution of the Action
 	 * is finished, the agent will respond to this stop command, causing it to exit its
 	 * autonomous loop.
 	 */
@@ -168,7 +168,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 	 * This will send a message to this agent. Invoking this method will cause the
 	 * agent to be awaken from its sleep, or if it was paused, it will be
 	 * unpaused/resumed. Normally this method is called by a
-	 * {@link nl.uu.cs.aplib.MultiAgentSupport.ComNode} to send a message to this
+	 * {@link nl.uu.cs.aplib.multiAgentSupport.ComNode} to send a message to this
 	 * agent on behalf of another agent. However, since this method is public,
 	 * whatever the application around this agent can also use it to directly send a
 	 * message to this agent.

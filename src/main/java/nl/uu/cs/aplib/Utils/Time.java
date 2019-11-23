@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.Utils;
+package nl.uu.cs.aplib.utils;
 
 /**
  * A class to track elapsed computing time.

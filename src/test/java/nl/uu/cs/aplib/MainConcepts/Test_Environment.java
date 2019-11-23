@@ -1,11 +1,13 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.*;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.* ;
 
-import nl.uu.cs.aplib.MainConcepts.Environment.EnvironmentInstrumenter;
+import nl.uu.cs.aplib.mainConcepts.Environment;
+import nl.uu.cs.aplib.mainConcepts.Environment.EnvironmentInstrumenter;
+
+import static org.junit.jupiter.api.Assertions.* ;
 
 public class Test_Environment {
 	

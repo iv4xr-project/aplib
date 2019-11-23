@@ -1,11 +1,11 @@
-package eu.iv4xr.framework.LTL;
+package eu.iv4xr.framework.ltl;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import nl.uu.cs.aplib.MainConcepts.Environment;
-import nl.uu.cs.aplib.MainConcepts.Environment.EnvironmentInstrumenter;
+import nl.uu.cs.aplib.mainConcepts.Environment;
+import nl.uu.cs.aplib.mainConcepts.Environment.EnvironmentInstrumenter;
 
 /**
  * A Bouded LTL property F is a tuple (p,q,ltl,n). It is interpreted over a finite sequence of

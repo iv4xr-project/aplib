@@ -1,10 +1,11 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import org.junit.jupiter.api.Test;
 
-import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 
 import static org.junit.jupiter.api.Assertions.* ;
 

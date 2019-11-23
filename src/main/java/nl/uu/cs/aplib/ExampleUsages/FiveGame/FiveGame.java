@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.ExampleUsages.FiveGame;
+package nl.uu.cs.aplib.exampleUsages.fiveGame;
 
 import java.util.LinkedList;
 import java.util.List;

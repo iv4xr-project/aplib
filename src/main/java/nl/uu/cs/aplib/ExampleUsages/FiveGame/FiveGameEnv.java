@@ -1,10 +1,10 @@
-package nl.uu.cs.aplib.ExampleUsages.FiveGame;
+package nl.uu.cs.aplib.exampleUsages.fiveGame;
 
-import nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame.GAMESTATUS;
-import nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame.SQUARE;
-import nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame.Square_;
-import nl.uu.cs.aplib.MainConcepts.Environment;
-import nl.uu.cs.aplib.MainConcepts.Environment.EnvOperation;
+import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.GAMESTATUS;
+import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.SQUARE;
+import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.Square_;
+import nl.uu.cs.aplib.mainConcepts.Environment;
+import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
 public class FiveGameEnv extends Environment {
 	
@@ -47,4 +47,5 @@ public class FiveGameEnv extends Environment {
 		var o = sendCommand("ANONYMOUS",null,"move",arg) ;
 		return (GAMESTATUS) o ;
 	}
+
 }

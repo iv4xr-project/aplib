@@ -11,7 +11,7 @@ There is however no quick Hello-World example to show you how to use `aplib`. Le
 
 Let's see how we can program an agent, let's call it _agent-X_ to guess a secret number. This secret number is the number 10, but the agent does not know that, so it really has to guess. The agent will also interact with the user (you), in this case by simply printing the number it proposes to the console.
 
-If you are **impatient**: the full code of this demo is here: [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java) But it won't explain the underlying concepts.
+If you are **impatient**: the full code of this demo is here: [`nl.uu.cs.aplib.exampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/exampleUsages/MinimalDemo.java) But it won't explain the underlying concepts.
 
 ### Computation model
 
@@ -31,7 +31,7 @@ To create an agent we do:
 var agentX = new BasicAgent()
 ```
 
-`nl.uu.cs.aplib.MainConcepts.BasicAgent` is the root class of all agents in `aplib`. That is, all agents are instances of `BasicAgent`. There are other types of agents in `aplib`, but let's not go into that yet.
+`nl.uu.cs.aplib.mainConcepts.BasicAgent` is the root class of all agents in `aplib`. That is, all agents are instances of `BasicAgent`. There are other types of agents in `aplib`, but let's not go into that yet.
 
 **Intermezzo: the `var` keyword.** Prior to Java-10, when we introduce a variable we must explicitly specify its type. E.g. the above declaration of *agent-X* is written like this before Java-10:
 
@@ -53,9 +53,9 @@ agentX.attachState(belief)   \\ attach a state-structure to the agent ;
 agentX.setGoal(topgoal) ;    \\ set a goal for the agent to solve
 ```
 
-Let's for now ignore where `belief` and `topgoal` come from. Both `attachState(s)` and `setGoal(g)` are methods of the class `BasicAgent`. Although a `BasicAgent` has its own internal state to support its own book keeping, it posses no state that semantically means something towards whatever the purpose we want to give to it. As the name says, the method `attachState(s)` will attach an object `s`, representing state, to the agent. This `s` must be an instance of `nl.uu.cs.aplib.MainConcepts.SimpleState`. Importantly, this state must also contain a pointer to an 'environment'.
+Let's for now ignore where `belief` and `topgoal` come from. Both `attachState(s)` and `setGoal(g)` are methods of the class `BasicAgent`. Although a `BasicAgent` has its own internal state to support its own book keeping, it posses no state that semantically means something towards whatever the purpose we want to give to it. As the name says, the method `attachState(s)` will attach an object `s`, representing state, to the agent. This `s` must be an instance of `nl.uu.cs.aplib.mainConcepts.SimpleState`. Importantly, this state must also contain a pointer to an 'environment'.
 
-The method `setGoal(g)` is used to set a 'goal' (more precisely, a 'goal-tree') for the agent; `g` must be an instance of `nl.uu.cs.aplib.MainConcepts.GoalTree`.
+The method `setGoal(g)` is used to set a 'goal' (more precisely, a 'goal-tree') for the agent; `g` must be an instance of `nl.uu.cs.aplib.mainConcepts.GoalTree`.
 
 
 #### Intermezzo: fluent interface programming style
@@ -90,7 +90,7 @@ Many APIs in `aplib` can be used in this Fluent Interface style.
 
 ### Agent state
 
-An agent state is an instance of `nl.uu.cs.aplib.MainConcepts.SimpleState`. For a start, such an instance does not contain any information other than a place holder an 'environment'. Below is how we can create an instance of an agent state. We will also attach a simple environment called `ConsoleEnvironment` to it:
+An agent state is an instance of `nl.uu.cs.aplib.mainConcepts.SimpleState`. For a start, such an instance does not contain any information other than a place holder an 'environment'. Below is how we can create an instance of an agent state. We will also attach a simple environment called `ConsoleEnvironment` to it:
 
 ```java
 var belief = new SimpleState() ;
@@ -120,7 +120,7 @@ var belief = new MyState() . setEnvironment(new ConsoleEnvironment()) ;
 
 Once we create an object that is to be used for holding the agent state (see above), we need to link this object to the environment that the agent will ultimately interact with. This linking up is what you do above with the method `setEnvironment`.
 
-An environment is an instance of `nl.uu.cs.aplib.MainConcepts.Environment`. This class does not provide any behaviour though. It is intended to be **subclassed** to implement an actual environment. As an example, `Aplib` provides one implementation called `nl.uu.cs.aplib.Environments.ConsoleEnvironment` that allows an agent to write to and read from the System console (and hence interacting with a human user through the console). This is the environment that we used in the previous examples.
+An environment is an instance of `nl.uu.cs.aplib.mainConcepts.environment`. This class does not provide any behaviour though. It is intended to be **subclassed** to implement an actual environment. As an example, `Aplib` provides one implementation called `nl.uu.cs.aplib.environments.ConsoleEnvironment` that allows an agent to write to and read from the System console (and hence interacting with a human user through the console). This is the environment that we used in the previous examples.
 
 `ConsoleEnvironment` provides the following APIs:
 
@@ -143,7 +143,7 @@ Predicate<Integer> p2 = x -> x>0 ;
 
 `p1` a predicate that is true only on x which is equal to 10, whereas `p2` is a predicate that is true only on positive x.
 
-Technically though, in `aplib` a goal is an instance of `nl.uu.cs.aplib.MainConcepts.Goal`, but we can easily turn a lambda expression such as above to internally become an instance of `Goal`:
+Technically though, in `aplib` a goal is an instance of `nl.uu.cs.aplib.mainConcepts.Goal`, but we can easily turn a lambda expression such as above to internally become an instance of `Goal`:
 
 ```java
 var g10 = goal("Guess a the magic number (10)") ; // create a goal g10 with some descriptive name
@@ -188,7 +188,7 @@ Suppose, in addition to generating a random number we also want the action to pr
      })
 ```
 
-Internally though, an action must be an instance of `nl.uu.cs.aplib.MainConcepts.Action`. Using a method called `action(name)` we can create a empty instance of this class. It is "empty" because it still has no behavior. We can use the function `do1` to turn a lambda expression such as above into the behavior of an `Action`. Example:
+Internally though, an action must be an instance of `nl.uu.cs.aplib.mainConcepts.Action`. Using a method called `action(name)` we can create a empty instance of this class. It is "empty" because it still has no behavior. We can use the function `do1` to turn a lambda expression such as above into the behavior of an `Action`. Example:
 
 ```java
 var a0 = action("a0")
@@ -212,7 +212,7 @@ var a0withCondition = action("guarded a0")
 ```
 
 
-There is one more technical detail: an agent actually wants to have a tactic rather than an action. A 'tactic' is an instance of `nl.uu.cs.aplib.MainConcepts.Tactic`. Although conceptually a single action is also a Tactic, technically we need to wrap it to become a `tactic`. The method `lift()` will do that.  So... here is the incantation to turn the previous lambda-expression to a `Tactic`:
+There is one more technical detail: an agent actually wants to have a tactic rather than an action. A 'tactic' is an instance of `nl.uu.cs.aplib.mainConcepts.Tactic`. Although conceptually a single action is also a Tactic, technically we need to wrap it to become a `tactic`. The method `lift()` will do that.  So... here is the incantation to turn the previous lambda-expression to a `Tactic`:
 
 ```java
 var a0 = action("a0")
@@ -273,7 +273,7 @@ while (topgoal.getStatus().inProgress()) {
 
 ### The full example
 
-The full code of `agent-X` can be found in [`nl.uu.cs.aplib.ExampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agent-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
+The full code of `agent-X` can be found in [`nl.uu.cs.aplib.exampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agent-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
 
 ```
 Proposing 5 ...
@@ -298,4 +298,4 @@ new Thread(() -> agent.loop()) . start() ;
 Check the corresponding Java documentation/tutorial on how to fork a thread using `Runnable` or using a lambda-expression.
 
 A minimalistic example of creating an autonomous agent can be found in
- [`nl.uu.cs.aplib.ExampleUsages.MinimalAutonomousAgent`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalAutonomousAgent.java).
+ [`nl.uu.cs.aplib.exampleUsages.MinimalAutonomousAgent`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalAutonomousAgent.java).

@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -12,7 +12,7 @@ import nl.uu.cs.aplib.Logging;
  * to interact and control an environment. This class is a root class for
  * representing this environment. This class is meant to be
  * <b>extended/subclassed</b>. For a minimalistic example implementation, see
- * the class {@link nl.uu.cs.aplib.Environments.ConsoleEnvironment}.
+ * the class {@link nl.uu.cs.aplib.environments.ConsoleEnvironment}.
  * 
  * <p>
  * The idea is that this class, or rather, your subclass of this class, should

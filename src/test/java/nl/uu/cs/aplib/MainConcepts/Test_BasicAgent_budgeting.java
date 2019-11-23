@@ -1,14 +1,16 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.* ;
 
-import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.GoalStructure.*;
-import nl.uu.cs.aplib.MainConcepts.Test_BasicAgent.MyState;
-import nl.uu.cs.aplib.Utils.Time;
+import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.mainConcepts.BasicAgent;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.*;
+import nl.uu.cs.aplib.mainConcepts.Test_BasicAgent.MyState;
+import nl.uu.cs.aplib.utils.Time;
 
 public class Test_BasicAgent_budgeting {
 	

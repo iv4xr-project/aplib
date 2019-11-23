@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MultiAgentSupport;
+package nl.uu.cs.aplib.multiAgentSupport;
 
 /**
  * Representing an acknowledgement sent back by the ComNode when an agent sends a message to it.

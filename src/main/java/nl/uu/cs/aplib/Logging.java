@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import nl.uu.cs.aplib.MainConcepts.BasicAgent;
+import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 
 /**
  * Define aplib logging. Use {@link #getAPLIBlogger()} to get aplib's logger.

@@ -1,7 +1,8 @@
-package nl.uu.cs.aplib.ExampleUsages;
+package nl.uu.cs.aplib.exampleUsages;
 
-import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.*;
+import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.mainConcepts.*;
+
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import java.util.*;
