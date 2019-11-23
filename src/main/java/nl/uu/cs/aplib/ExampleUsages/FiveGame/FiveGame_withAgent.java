@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.ExampleUsages.FiveGame;
+package nl.uu.cs.aplib.exampleUsages.fiveGame;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -8,13 +8,14 @@ import alice.tuprolog.MalformedGoalException;
 import alice.tuprolog.NoSolutionException;
 import alice.tuprolog.SolveInfo;
 import alice.tuprolog.Term;
-import nl.uu.cs.aplib.Agents.StateWithProlog;
-import nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame.GAMESTATUS;
-import nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame.SQUARE;
-import nl.uu.cs.aplib.ExampleUsages.FiveGame.FiveGame.Square_;
-import nl.uu.cs.aplib.MainConcepts.*;
+import nl.uu.cs.aplib.agents.StateWithProlog;
+import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.GAMESTATUS;
+import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.SQUARE;
+import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.Square_;
+import nl.uu.cs.aplib.mainConcepts.*;
+
 import static nl.uu.cs.aplib.AplibEDSL.* ;
-import static nl.uu.cs.aplib.Agents.StateWithProlog.* ;
+import static nl.uu.cs.aplib.agents.StateWithProlog.*;
 
 public class FiveGame_withAgent {
 	
@@ -46,7 +47,6 @@ public class FiveGame_withAgent {
 		String set4Move(String x, String y) { return mkPredString("set4Move",x,y) ; }
 		String blockMove(String x, String y) { return mkPredString("blockMove",x,y) ; }
 		
-
 		void markBlockedSquares() throws InvalidTheoryException {
 			for (int x=0; x < env().boardsize; x++) {
 				for (int y=0; y < env().boardsize; y++) {
@@ -312,6 +312,7 @@ public class FiveGame_withAgent {
 		else {
 			System.out.println(">> no solution") ; 
 		}
+		
 	}
 	
 	

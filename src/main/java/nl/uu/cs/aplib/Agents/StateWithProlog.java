@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.Agents;
+package nl.uu.cs.aplib.agents;
 
 import java.util.LinkedList;
 import java.util.List;

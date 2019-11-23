@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.Utils;
+package nl.uu.cs.aplib.utils;
 
 public interface Parsable {
    public Parsable parse(String s) ;

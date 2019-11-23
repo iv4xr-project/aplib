@@ -1,9 +1,9 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.List;
 import java.util.Random;
 
-import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
+import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
 
 /**
  * This class implements a deliberation process for agents. Agent deliberation

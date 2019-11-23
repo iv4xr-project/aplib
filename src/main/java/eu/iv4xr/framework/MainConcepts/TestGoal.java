@@ -1,9 +1,10 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.mainConcepts;
+
+import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
 import java.util.function.* ;
 
-import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
-import nl.uu.cs.aplib.MainConcepts.*;
+import nl.uu.cs.aplib.mainConcepts.*;
 
 /**
  * A TestGoal is a Goal, but you can additionally specify a test oracle. When a TestGoal

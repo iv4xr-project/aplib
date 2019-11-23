@@ -1,9 +1,9 @@
-package nl.uu.cs.aplib.MultiAgentSupport;
+package nl.uu.cs.aplib.multiAgentSupport;
 
 import java.util.* ;
 
-import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.MultiAgentSupport.Acknowledgement.AckType;
+import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.multiAgentSupport.Acknowledgement.AckType;
 
 /**
  * This class provides a 'communication node' for agents. It provides a simple
@@ -11,7 +11,7 @@ import nl.uu.cs.aplib.MultiAgentSupport.Acknowledgement.AckType;
  * themselves to a ComNode. The ComNode maintains an address book that maps
  * agents' names to pointers to these agents. A plain
  * {@link nl.uu.cs.aplib.MainConcepts.SimpleAgent} has no method to register to
- * ComNode. However, {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent} can
+ * ComNode. However, {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent} can
  * register to a ComNode, but keep in mind that an AutonomousBasicAgent can only
  * be a member of at most one ComNode. Access to this ComNode is provided
  * through its agent state.
@@ -80,7 +80,7 @@ public class ComNode {
 	 * the same role as the target role specified in the message.
 	 * 
 	 * @param msg The message to send.
-	 * @return An {@link nl.uu.cs.aplib.MultiAgentSupport.Acknowledgement}. It is a
+	 * @return An {@link nl.uu.cs.aplib.multiAgentSupport.Acknowledgement}. It is a
 	 *         negative acknowledgement (REJECTED) if the message is a SINGLECAST
 	 *         and its target does not exists. In all other cases the
 	 *         acknowledgement should be positive (SUCCESS).

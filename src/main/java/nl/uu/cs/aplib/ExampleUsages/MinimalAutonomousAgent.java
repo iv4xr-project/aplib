@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.ExampleUsages;
+package nl.uu.cs.aplib.exampleUsages;
 
 import static nl.uu.cs.aplib.AplibEDSL.action;
 import static nl.uu.cs.aplib.AplibEDSL.goal;
@@ -6,13 +6,13 @@ import static nl.uu.cs.aplib.AplibEDSL.goal;
 import java.util.Random;
 
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.Agents.StateWithMessenger;
-import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.BasicAgent;
-import nl.uu.cs.aplib.MainConcepts.Goal;
-import nl.uu.cs.aplib.MainConcepts.GoalStructure;
-import nl.uu.cs.aplib.MainConcepts.SimpleState;
+import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.mainConcepts.BasicAgent;
+import nl.uu.cs.aplib.mainConcepts.Goal;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
 public class MinimalAutonomousAgent {
 	

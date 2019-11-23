@@ -1,10 +1,11 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.mainConcepts;
+
+import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
 import java.io.File;
 import java.util.*;
 
-import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
-import nl.uu.cs.aplib.Utils.Parsable;
+import nl.uu.cs.aplib.utils.Parsable;
 
 /**
  * This class is used to collect information from one or more test-agents.

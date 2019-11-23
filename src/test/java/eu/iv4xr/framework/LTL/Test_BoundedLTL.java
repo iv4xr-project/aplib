@@ -1,14 +1,15 @@
-package eu.iv4xr.framework.LTL;
+package eu.iv4xr.framework.ltl;
 
 import org.junit.jupiter.api.Test;
 
-import static eu.iv4xr.framework.LTL.BoundedLTL.*;
-import static eu.iv4xr.framework.LTL.LTL.*;
+import eu.iv4xr.framework.ltl.BoundedLTL;
+import nl.uu.cs.aplib.mainConcepts.*;
+
+import static eu.iv4xr.framework.ltl.BoundedLTL.*;
+import static eu.iv4xr.framework.ltl.LTL.*;
 import static org.junit.jupiter.api.Assertions.* ;
 
 import java.util.function.Predicate;
-
-import nl.uu.cs.aplib.MainConcepts.*;
 
 public class Test_BoundedLTL {
 	

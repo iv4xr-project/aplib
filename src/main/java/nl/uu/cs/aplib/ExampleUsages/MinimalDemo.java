@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.ExampleUsages;
+package nl.uu.cs.aplib.exampleUsages;
 
 import static nl.uu.cs.aplib.AplibEDSL.ANYof;
 import static nl.uu.cs.aplib.AplibEDSL.FIRSTof;
@@ -7,11 +7,11 @@ import static nl.uu.cs.aplib.AplibEDSL.goal;
 
 import java.util.Random;
 
-import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.BasicAgent;
-import nl.uu.cs.aplib.MainConcepts.Goal;
-import nl.uu.cs.aplib.MainConcepts.GoalStructure;
-import nl.uu.cs.aplib.MainConcepts.SimpleState;
+import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.mainConcepts.BasicAgent;
+import nl.uu.cs.aplib.mainConcepts.Goal;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
 /**
  * This demo will create an agent whose goal is to guess a magic number (it is the number

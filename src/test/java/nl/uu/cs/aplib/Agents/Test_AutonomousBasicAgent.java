@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.Agents;
+package nl.uu.cs.aplib.agents;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,12 +14,14 @@ import java.nio.file.Paths;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.Agents.Test_InterAgentCommunication.MyState;
-import nl.uu.cs.aplib.Environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.MainConcepts.*;
-import nl.uu.cs.aplib.MultiAgentSupport.ComNode;
-import nl.uu.cs.aplib.MultiAgentSupport.Message;
-import nl.uu.cs.aplib.MultiAgentSupport.Message.MsgCastType;
+import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.Test_InterAgentCommunication.MyState;
+import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.mainConcepts.*;
+import nl.uu.cs.aplib.multiAgentSupport.ComNode;
+import nl.uu.cs.aplib.multiAgentSupport.Message;
+import nl.uu.cs.aplib.multiAgentSupport.Message.MsgCastType;
 
 public class Test_AutonomousBasicAgent {
 	

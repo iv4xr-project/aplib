@@ -1,10 +1,10 @@
-package nl.uu.cs.aplib.MultiAgentSupport;
+package nl.uu.cs.aplib.multiAgentSupport;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import nl.uu.cs.aplib.MultiAgentSupport.Message.MsgCastType;
+import nl.uu.cs.aplib.multiAgentSupport.Message.MsgCastType;
 
 /**
  * Providing incoming message queue for agents, methods to inspect and retrieve messages

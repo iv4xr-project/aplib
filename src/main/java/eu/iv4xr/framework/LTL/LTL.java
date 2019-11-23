@@ -1,12 +1,12 @@
-package eu.iv4xr.framework.LTL;
+package eu.iv4xr.framework.ltl;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.function.Predicate;
 
-import eu.iv4xr.framework.LTL.BoundedLTL.LTLVerdict;
-import eu.iv4xr.framework.LTL.BoundedLTL.LTLVerdictInfo;
-import nl.uu.cs.aplib.MainConcepts.Environment;
+import eu.iv4xr.framework.ltl.BoundedLTL.LTLVerdict;
+import eu.iv4xr.framework.ltl.BoundedLTL.LTLVerdictInfo;
+import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
  * Representing an LTL formula.

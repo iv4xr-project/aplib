@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 /**
  * A class that can be used to represent rough status of some 'computation'

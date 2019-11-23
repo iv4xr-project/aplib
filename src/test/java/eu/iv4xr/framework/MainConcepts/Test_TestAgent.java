@@ -1,9 +1,11 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.mainConcepts;
 
 import org.junit.jupiter.api.Test;
 
-import static eu.iv4xr.framework.MainConcepts.ObservationEvent.*;
+import eu.iv4xr.framework.mainConcepts.TestAgent;
+import eu.iv4xr.framework.mainConcepts.TestDataCollector;
 
+import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 import static org.junit.jupiter.api.Assertions.* ;
 
 public class Test_TestAgent {

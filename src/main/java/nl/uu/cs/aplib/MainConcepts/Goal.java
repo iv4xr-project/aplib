@@ -1,8 +1,8 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.function.*;
 
-import nl.uu.cs.aplib.MainConcepts.GoalStructure.PrimitiveGoal;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 
 /**
  * An instance of this class represents a goal that can be given to an agent (an

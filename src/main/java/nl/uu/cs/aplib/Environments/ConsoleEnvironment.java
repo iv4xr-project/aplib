@@ -1,12 +1,12 @@
-package nl.uu.cs.aplib.Environments;
+package nl.uu.cs.aplib.environments;
 
 import java.util.Scanner;
 
-import nl.uu.cs.aplib.MainConcepts.Environment;
-import nl.uu.cs.aplib.MainConcepts.Environment.EnvOperation;
+import nl.uu.cs.aplib.mainConcepts.Environment;
+import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
 /**
- * A simple implementation of {@link nl.uu.cs.aplib.MainConcepts.Environment}
+ * A simple implementation of {@link nl.uu.cs.aplib.mainConcepts.Environment}
  * that offers methods to read from and write to the console. Of course an agent
  * can just read or write to the console without the help of this Environment,
  * but the purpose of this class is to provide a simple example of implementing

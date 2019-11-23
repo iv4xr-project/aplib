@@ -1,27 +1,28 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.mainConcepts;
 
-import static eu.iv4xr.framework.MainConcepts.TestDataCollector.*;
+import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
+import static eu.iv4xr.framework.mainConcepts.TestDataCollector.*;
 
 import java.util.*;
-import static eu.iv4xr.framework.MainConcepts.ObservationEvent.* ;
-import nl.uu.cs.aplib.Agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.MainConcepts.BasicAgent;
-import nl.uu.cs.aplib.MainConcepts.CostFunction;
-import nl.uu.cs.aplib.MainConcepts.Deliberation;
-import nl.uu.cs.aplib.MainConcepts.GoalStructure;
-import nl.uu.cs.aplib.MainConcepts.SimpleState;
+
+import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.mainConcepts.BasicAgent;
+import nl.uu.cs.aplib.mainConcepts.CostFunction;
+import nl.uu.cs.aplib.mainConcepts.Deliberation;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
 /**
- * This class implements a test-agent. It extents {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent}.
+ * This class implements a test-agent. It extents {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent}.
  * All the functionalities of a test-agent fot being an agent are inherited
- * for either {@link nl.uu.cs.aplib.MainConcepts.BasicAgent} 
- * or {@link nl.uu.cs.aplib.Agents.AutonomousBasicAgent}. This class TestAgent adds some functionalities
+ * for either {@link nl.uu.cs.aplib.mainConcepts.BasicAgent} 
+ * or {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent}. This class TestAgent adds some functionalities
  * related to testing.
  * 
  * <p>A test-agent is used to test some target system, also called System-Under-Test or SUT.
  * From the test-agent's perspective, this SUT is seen as an environment the agent want to 
  * interact with.
- * This implies that  proper instance of the class {@link nl.uu.cs.aplib.MainConcepts.Environment},
+ * This implies that  proper instance of the class {@link nl.uu.cs.aplib.mainConcepts.Environment},
  * or of one of its subclasses. must be placed between the agent and the SUT to facilitate
  * the interactions between them.
  * 

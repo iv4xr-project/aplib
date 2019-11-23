@@ -1,8 +1,8 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.function.*;
 
-import nl.uu.cs.aplib.MainConcepts.Tactic.PrimitiveTactic;
+import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
 
 /**
  * Actions are the building blocks for to build a {@link Tactic}. To solve a

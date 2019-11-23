@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 /**
  * This class provides a method to calculate the budget-cost of executing an

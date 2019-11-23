@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.Exception;
+package nl.uu.cs.aplib.exception;
 
 public class AplibError extends Error {
 

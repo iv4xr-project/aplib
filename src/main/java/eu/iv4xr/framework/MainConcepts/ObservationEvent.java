@@ -1,10 +1,10 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.mainConcepts;
 
 import java.io.Serializable;
 import java.time.LocalTime;
 import java.util.Objects;
 
-import nl.uu.cs.aplib.Utils.Parsable;
+import nl.uu.cs.aplib.utils.Parsable;
 
 /**
  * Observation-events represent observations that a test-agent ({@link TestAgent}) collects.

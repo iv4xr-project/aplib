@@ -1,13 +1,15 @@
-package eu.iv4xr.framework.MainConcepts;
+package eu.iv4xr.framework.mainConcepts;
 
 import org.junit.jupiter.api.Test;
 
-import nl.uu.cs.aplib.MainConcepts.SimpleState;
+import eu.iv4xr.framework.mainConcepts.TestAgent;
+import eu.iv4xr.framework.mainConcepts.TestDataCollector;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
 import static org.junit.jupiter.api.Assertions.* ;
 
 import static eu.iv4xr.framework.Iv4xrEDSL.* ;
-import static eu.iv4xr.framework.MainConcepts.ObservationEvent.*;
+import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
 
 public class Test_TestGoal {

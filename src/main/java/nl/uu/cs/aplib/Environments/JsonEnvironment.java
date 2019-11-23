@@ -1,17 +1,17 @@
-package nl.uu.cs.aplib.Environments;
+package nl.uu.cs.aplib.environments;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import nl.uu.cs.aplib.MainConcepts.Environment;
-import nl.uu.cs.aplib.MainConcepts.Environment.EnvOperation;
+import nl.uu.cs.aplib.mainConcepts.Environment;
+import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
 /**
  * A root class of an Environment that communicates with the real environment by
  * exchanging JSON objects. This class is intended to be subclassed by a real
  * implementation. At least you must provide an implementation of (you must
  * override) the method
- * {@link nl.uu.cs.aplib.MainConcepts.Environment#sendCommand_(String,String,String)}
- * of the class {@link nl.uu.cs.aplib.MainConcepts.Environment}. The 2nd String
+ * {@link nl.uu.cs.aplib.mainConcepts.Environment#sendCommand_(String,String,String)}
+ * of the class {@link nl.uu.cs.aplib.mainConcepts.Environment}. The 2nd String
  * is the name of the command for the real environment, and the 3rd String is an
  * argument for the command. This class JsonEnvironment will allow you to send
  * an Object as an argument. This will be serialized to a string in the JSON

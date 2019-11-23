@@ -1,8 +1,11 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import org.junit.jupiter.api.Test;
+
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
+
 import static org.junit.jupiter.api.Assertions.* ;
 
 public class Test_Tactic {

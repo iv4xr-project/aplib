@@ -1,4 +1,4 @@
-package nl.uu.cs.aplib.MainConcepts;
+package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import nl.uu.cs.aplib.MainConcepts.GoalStructure.GoalsCombinator;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.GoalsCombinator;
 
 
 /**
