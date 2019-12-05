@@ -44,7 +44,7 @@ public class TestAgent extends AutonomousBasicAgent {
 	
 	protected String testDesc ;
 	protected TestDataCollector testDataCollector ;
-	
+	protected GoalStructure goal;
 	
 	/**
 	 * Create a blank instance of TestAgent. To be useful you will need 
@@ -111,10 +111,13 @@ public class TestAgent extends AutonomousBasicAgent {
 	 * so that this method can be used in the Fluent Interface style.
 	 */
 	@Override
+	//public TestAgent attachState(SimpleState state) {
+	//	return (TestAgent) super.attachState(state) ;
+	//}
 	public TestAgent attachState(SimpleState state) {
-		return (TestAgent) super.attachState(state) ;
+		this.state = state ; 
+		return this ;
 	}
-	
 	/**
 	 * Set initial computation budget for this agent. The agent must have a goal set.
 	 * This method should not be called when the agent is already working on its 
