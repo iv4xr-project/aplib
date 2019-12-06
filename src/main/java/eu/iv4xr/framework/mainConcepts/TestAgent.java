@@ -6,6 +6,7 @@ import static eu.iv4xr.framework.mainConcepts.TestDataCollector.*;
 import java.util.*;
 
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
+import nl.uu.cs.aplib.agents.StateWithMessenger;
 import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.CostFunction;
 import nl.uu.cs.aplib.mainConcepts.Deliberation;
@@ -111,13 +112,20 @@ public class TestAgent extends AutonomousBasicAgent {
 	 * so that this method can be used in the Fluent Interface style.
 	 */
 	@Override
-	//public TestAgent attachState(SimpleState state) {
-	//	return (TestAgent) super.attachState(state) ;
-	//}
 	public TestAgent attachState(SimpleState state) {
-		this.state = state ; 
+		return (TestAgent) super.attachState(state) ;
+	}
+	
+	/**
+	 * Attach a state structure to this agent. The method returns the agent itself
+	 * so that this method can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestAgent attachState(StateWithMessenger state) {
+		super.attachState(state) ;
 		return this ;
 	}
+
 	/**
 	 * Set initial computation budget for this agent. The agent must have a goal set.
 	 * This method should not be called when the agent is already working on its 
