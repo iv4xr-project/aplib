@@ -3,12 +3,13 @@ package eu.iv4xr.framework.exampleTestAgentUsage;
 import java.util.Random;
 
 /**
- * A simple game as an example of "Program under Test". This class implements a game called
- * GCD-game. The game is played on a 2D grid space. The fields x,y represent the current
- * position of the player in the 2D grid. The greatest common divisor of these x and y is
- * stored in the field gcd. The player can move up, down, left or right, one square at at time.
- * The player wins if he/she manage to find a square whose greatest common divisor is 1.
- *
+ * A simple game as an example of "Program under Test". This class implements a
+ * game called GCD-game. The game is played on a 2D grid space. The fields x,y
+ * represent the current position of the player in the 2D grid. Any non-negative
+ * x,y are valid. The greatest common divisor of these x and y is stored in the
+ * field gcd. The player can move up, down, left or right, one square at at
+ * time. The player wins if he/she manage to find a square whose greatest common
+ * divisor is 1.
  */
 public class GCDGame {
 	
