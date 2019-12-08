@@ -46,20 +46,6 @@ import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
  */
 public class TestWithRemotingEnv_GCDGame {
 	
-	//////////New State structure//////MyState Class///////////
-	/**
-	 * Define a new state-structure for the agent. For this example, we don't
-	 * actually need a new state-structure, but let's just pretend that we do.
-	 */
-	static class MyState extends StateWithMessenger {
-		//int counter = 0 ;
-		//String last = null ;
-		//int result = 0 ;
-		MyState(){ super() ; }
-		@Override
-		public GCDEnv env() { return (GCDEnv) super.env(); }
-	}
-	
 	// This static variable will hold an instance of the Program-under-test (an instance
 	// of GCDGame; we will pretend that this is a remote service, accessible through this
 	// static variable.
@@ -113,6 +99,20 @@ public class TestWithRemotingEnv_GCDGame {
 		
 		@Override
 		public String toString() { return "(" + x + "," + y + "), gcd=" + gcd ; }
+	}
+
+	//////////New State structure//////MyState Class///////////
+	/**
+	* Define a new state-structure for the agent. For this example, we don't
+	* actually need a new state-structure, but let's just pretend that we do.
+	*/
+	static class MyState extends StateWithMessenger {
+		//int counter = 0 ;
+		//String last = null ;
+		//int result = 0 ;
+		MyState(){ super() ; }
+		@Override
+		public GCDEnv env() { return (GCDEnv) super.env(); }
 	}
 
 	
@@ -172,13 +172,10 @@ public class TestWithRemotingEnv_GCDGame {
 				      . toSolve((MyState S) -> S.env().x==X && S.env().y==Y ) 
 				      // specify the tactic to solve the above goal:
 				      . withTactic(navigateTo(X,Y)) 
-				      // specify the check/test-oracle to conduct on the state where the goal is solved; 
-					  // we will chdck that the gcd field and win() have correct values:
-				      . oracle(agent, (MyState S) -> {
-				    	  if (S.env().gcd == expectedGCD && S.env().win == expectedWinConclusion) 
-				    		   return new VerdictEvent("",info,true) ;
-				    	  else return new VerdictEvent("",info,false) ;
-				          } )
+				      // assert the correctness property that must hold on the state where the goal is solved; 
+					  // we will check that the gcd field and win() have correct values:
+				      . oracle(agent, (MyState S) -> assertTrue_("",info,
+				    	                             S.env().gcd == expectedGCD && S.env().win == expectedWinConclusion))
 				      // finally we lift the goal to become a GoalStructure, for technical reason.
 				      . lift() ;
 		

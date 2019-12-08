@@ -42,16 +42,6 @@ import static eu.iv4xr.framework.mainConcepts.ObservationEvent.* ;
 public class TestWithWrappingEnv_GCDGame {
 	
 	/**
-	 * Define a new state-structure for the agent. For this example, we don't
-	 * actually need a new state-structure, but let's just pretend that we do.
-	 */
-	static class MyState extends StateWithMessenger {
-		MyState() { super(); }
-		@Override
-		public GCDEnv env() { return (GCDEnv) super.env(); }
-	}
-
-	/**
 	 * Define an Environment to provide an interface between the test agent and the
 	 * program-under-test. Here, we will choose to simply wrap the environment over
 	 * the program-under-test.
@@ -67,6 +57,16 @@ public class TestWithWrappingEnv_GCDGame {
 		public String toString() {
 			return "(" + gcdgameUnderTest.x + "," + gcdgameUnderTest.y + "), gcd=" + gcdgameUnderTest.gcd + ", win=" + gcdgameUnderTest.win();
 		}
+	}
+
+	/**
+	 * Define a new state-structure for the agent. For this example, we don't
+	 * actually need a new state-structure, but let's just pretend that we do.
+	 */
+	static class MyState extends StateWithMessenger {
+		MyState() { super(); }
+		@Override
+		public GCDEnv env() { return (GCDEnv) super.env(); }
 	}
 
 
@@ -125,15 +125,12 @@ public class TestWithWrappingEnv_GCDGame {
 				. toSolve((MyState S) -> S.env().gcdgameUnderTest.x == X && S.env().gcdgameUnderTest.y == Y)
 				// specify the tactic to solve the above goal:
 				. withTactic(navigateTo(X, Y))
-				// specify the check/test-oracle to conduct on the state where the goal is solved; 
-				// we will chdck that the gcd field and win() have correct values:
-				. oracle(agent, (MyState S) -> {
-					if (S.env().gcdgameUnderTest.gcd == expectedGCD
-							&& S.env().gcdgameUnderTest.win() == expectedWinConclusion)
-						return new VerdictEvent("", info, true);
-					else
-						return new VerdictEvent("", info, false);
-				})
+				// assert the correctness property that must hold on the state where the goal is solved; 
+				// we will check that the gcd field and win() have correct values:
+				. oracle(agent, (MyState S) -> 
+				      assertTrue_("",info,
+				    	S.env().gcdgameUnderTest.gcd == expectedGCD
+						&& S.env().gcdgameUnderTest.win() == expectedWinConclusion))
 				// finally we lift the goal to become a GoalStructure, for technical reason.
 				. lift();
 
