@@ -273,7 +273,7 @@ while (topgoal.getStatus().inProgress()) {
 
 ### The full example
 
-The full code of `agent-X` can be found in [`nl.uu.cs.aplib.exampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agent-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
+The full code of `agent-X` can be found in [`nl.uu.cs.aplib.exampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/exampleUsages/MinimalDemo.java). The agent is called `agent` there, rather than `agent-X` :D, You can run the method `main` to run this demo. It will produce output that looks something like this:
 
 ```
 Proposing 5 ...
@@ -288,7 +288,7 @@ Proposing 10 ...
 
 ### Extra: subservient vs autonomous agent
 
-An agent used as above will not do anything unless we, or the application that contains it, invoke its `update()` method. We call such an agent **subservient agent**. `Aplib` also allows us to create **autonomous agents**. Such an agent calls its own `update()` and controls when it wants to do so. The class `nl.uu.cs.aplib.Agents.AutonomousBasicAgent` is the class of autonomous agents. It is a subclass of `BasicAgent`, so everything that we do in the above example can also be done with `AutonomousBasicAgent`. However, the latter has a method `loop()` that will run forever until someone invokes `stop()`. The method `loop()` waits for someone to invoke `setGoal(g)` to give a goal to the agent. It will then proceed by calling invoke at some regular interval (which you can configure).
+An agent used as above will not do anything unless we, or the application that contains it, invoke its `update()` method. We call such an agent **subservient agent**. `Aplib` also allows us to create **autonomous agents**. Such an agent calls its own `update()` and controls when it wants to do so. The class `nl.uu.cs.aplib.agents.AutonomousBasicAgent` is the class of autonomous agents. It is a subclass of `BasicAgent`, so everything that we do in the above example can also be done with `AutonomousBasicAgent`. However, the latter has a method `loop()` that will run forever until someone invokes `stop()`. The method `loop()` waits for someone to invoke `setGoal(g)` to give a goal to the agent. It will then proceed by calling invoke at some regular interval (which you can configure).
 
 To launch an `AutonomousBasicAgent` to run independently (so, on a new thread) we can do:
 
@@ -298,4 +298,4 @@ new Thread(() -> agent.loop()) . start() ;
 Check the corresponding Java documentation/tutorial on how to fork a thread using `Runnable` or using a lambda-expression.
 
 A minimalistic example of creating an autonomous agent can be found in
- [`nl.uu.cs.aplib.exampleUsages.MinimalAutonomousAgent`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/MinimalAutonomousAgent.java).
+ [`nl.uu.cs.aplib.exampleUsages.MinimalAutonomousAgent`](../../src/main/java/nl/uu/cs/aplib/exampleUsages/MinimalAutonomousAgent.java).

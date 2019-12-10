@@ -141,7 +141,7 @@ public class BasicAgent {
 	 */
 	public BasicAgent() { 
 		// Setting up this default logging configuration
-		Logging.addSystemErrAsLogHandler();
+		//Logging.addSystemErrAsLogHandler(); ... no need? it seems to have already been added by default
 		Logging.setLoggingLevel(Level.INFO);
 	}
 	

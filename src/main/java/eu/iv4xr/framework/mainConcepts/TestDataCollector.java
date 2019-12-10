@@ -30,7 +30,7 @@ import nl.uu.cs.aplib.utils.Parsable;
  */
 public class TestDataCollector implements Parsable {
 	
-	TestDataCollector() { }
+	public TestDataCollector() { }
 		
 	/**
 	 * This class is used to hold a chronological list of time-stamped events.

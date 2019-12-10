@@ -129,7 +129,7 @@ while (topgoal.getStatus().inProgress()) {
 
 ### The full example
 
-The full code of `agent-X` can be found in [`nl.uu.cs.aplib.exampleUsages.MinimalDemo`](../../src/main/java/nl/uu/cs/aplib/ExampleUsages/DumbDoctor.java). You can run the method `main` to run this demo. A sample of its interactions is shown below:
+The full code of `agent-X` can be found in [`nl.uu.cs.aplib.exampleUsages.DumbDoctor`](../../src/main/java/nl/uu/cs/aplib/exampleUsages/DumbDoctor.java). You can run the method `main` to run this demo. A sample of its interactions is shown below:
 
 ```
 How do you feel today?
