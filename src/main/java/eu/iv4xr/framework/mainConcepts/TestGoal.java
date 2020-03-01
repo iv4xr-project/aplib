@@ -33,6 +33,15 @@ public class TestGoal extends Goal {
 		super(name);
 	}
 	
+	/**
+	 * Create a blank test-goal with the specified name, and link this goal to the given
+	 * test agent.
+	 */
+	public TestGoal(String name, TestAgent ta) {
+		this(name);
+		owningTestAgent = ta ;
+	}
+	
 	TestAgent owningTestAgent ;
 	Function<Object,VerdictEvent> oracle ;
 	
@@ -44,14 +53,36 @@ public class TestGoal extends Goal {
 	 * @param oracle     The oracle predicate/function.
 	 */
 	public TestGoal oracle_(TestAgent testagent, Function<Object,VerdictEvent> oracle) {
-		this.oracle = oracle ;
+		if (testagent==null && this.oracle==null) throw new IllegalArgumentException("A test goal needs to be linked to a test-agent.") ;
+		if (testagent!=null) this.oracle = oracle ;
 		owningTestAgent = testagent ;
 		return this ;
 	}
 	
+	
+	/**
+	 * Just another name for {@link #oracle(TestAgent,Function<Proposal,VerdictEvent>)}.
+	 * It is used to specify the test-oracle associated with for this TestGoal. Note that every TestGoal
+	 * must have an oracle.
+	 * This method will also link this teat-goal to the given test-agent.
+	 */
+	public <Proposal> TestGoal invariant(TestAgent testagent, Function<Proposal,VerdictEvent> oracle) {
+		return oracle(testagent,oracle) ;
+	}
+	
+	/**
+	 * Just another name for {@link #oracle(TestAgent,Function<Proposal,VerdictEvent>)}.
+	 * It is used to specify the test-oracle associated with for this TestGoal. Note that every TestGoal
+	 * must have an oracle.
+	 * This method assumes that this test-goal has been linked to some test-agent.
+	 */
+	public <Proposal> TestGoal invariant(Function<Proposal,VerdictEvent> oracle) {
+		return oracle(null,oracle) ;
+	}
+	
 	/**
 	 * Specify the test-oracle associated with for this TestGoal. Note that every TestGoal
-	 * must have an oracle.
+	 * must have an oracle. This method will also link this teat-goal to the given test-agent.
 	 * 
 	 * @param testagent  The test-agent to which this TestGoal will be associated to (the one that will work on this goal).
 	 * @param oracle     The oracle predicate/function.
@@ -59,6 +90,17 @@ public class TestGoal extends Goal {
 	public <Proposal> TestGoal oracle(TestAgent testagent, Function<Proposal,VerdictEvent> oracle) {
 		return oracle_(testagent, o -> oracle.apply((Proposal) o)) ;
 	}	
+	
+	/**
+	 * Specify the test-oracle associated with for this TestGoal. Note that every TestGoal
+	 * must have an oracle. Also note that a test-goal must be linked to a test-agent. This
+	 * method assumes that this test-goal has been linked to one.
+	 * 
+	 * @param oracle     The oracle predicate/function.
+	 */
+	public <Proposal> TestGoal oracle(Function<Proposal,VerdictEvent> oracle) {
+		return oracle_(null, o -> oracle.apply((Proposal) o)) ;
+	}
 	
 	/**
 	 * We override {@link Goal#propose_(Object)} so that it now automatically check the
