@@ -10,6 +10,7 @@ import nl.uu.cs.aplib.agents.StateWithMessenger;
 import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.CostFunction;
 import nl.uu.cs.aplib.mainConcepts.Deliberation;
+import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
@@ -124,6 +125,17 @@ public class TestAgent extends AutonomousBasicAgent {
 	public TestAgent attachState(StateWithMessenger state) {
 		super.attachState(state) ;
 		return this ;
+	}
+	
+	/**
+	 * Attach an Environment to this agent. To be more precise, to attach the
+	 * Environment to the state structure of this agent. The method returns the
+	 * agent itself so that this method can be used in the Fluent Interface style.
+	 */
+	@Override
+	public TestAgent attachEnvironment(Environment env) {
+		super.attachEnvironment(env) ;
+		return this  ;
 	}
 
 	/**

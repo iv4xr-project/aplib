@@ -244,6 +244,17 @@ public class BasicAgent {
 	}
 	
 	/**
+	 * Attach an Environment to this agent. To be more precise, to attach the
+	 * Environment to the state structure of this agent. The method returns the
+	 * agent itself so that this method can be used in the Fluent Interface style.
+	 */
+	public BasicAgent attachEnvironment(Environment env) {
+		if (state == null) throw new IllegalArgumentException("The agent needs to have a state to attach an environment to it.") ;
+		state.setEnvironment(env) ;
+		return this  ;
+	}
+	
+	/**
 	 * Replace the agent's deliberation module with the one given to this method.
 	 * The method returns the agent itself so that this method can be used in the
 	 * Fluent Interface style.
