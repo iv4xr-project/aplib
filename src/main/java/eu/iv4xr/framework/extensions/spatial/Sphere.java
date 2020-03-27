@@ -8,26 +8,30 @@ import java.util.Collection;
  * 
  * @author Naraenda 
  */
-public class Sphere implements LineIntersectable, Obstacle{
-    static float EPSILON = 0.0000001f;
+public class Sphere implements LineIntersectable {
+    static float EPSILON = 0.0001f;
 
     public float radius;
     public Vec3  center;
-    public boolean isBlocking = true;
+
+    public Sphere(float radius, Vec3 center) {
+        this.radius = radius;
+        this.center = center;
+    }
 
     /**
      * Line-sphere intersection:
      * https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
      */
-	@Override
-	public Collection<Vec3> intersect(Line l) {
+    @Override
+    public Collection<Vec3> intersect(Line l) {
         var res = new ArrayList<Vec3>();
         Vec3  oc   = Vec3.sub(l.origin(), center);
         float loc  = (float)Vec3.dot(l.direction(), oc);
         float d_sq = (float) 
             ( Math.pow(loc, 2)
             - Math.pow(oc.length(), 2) 
-            - Math.pow(radius, 2));
+            + Math.pow(radius, 2));
 
         // Square root is negative => no intersection
         if (d_sq < 0)
@@ -46,7 +50,6 @@ public class Sphere implements LineIntersectable, Obstacle{
         // Value is positive => 2 intersections
         float d_sqrt = (float) Math.sqrt(d_sq);
         float d1 = d_lh + d_sqrt;
-        
         if (d1 > 0 && d1 < l.length()) 
             res.add(l.alongLine(d1));
             
@@ -56,9 +59,4 @@ public class Sphere implements LineIntersectable, Obstacle{
             res.add(l.alongLine(d2));
         return res;
     }
-
-	@Override
-	public Boolean isBlocking() {
-		return isBlocking;
-	}    
 }

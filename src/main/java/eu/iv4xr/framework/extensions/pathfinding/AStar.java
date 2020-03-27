@@ -13,10 +13,11 @@ import java.util.PriorityQueue;
  */
 public class AStar implements Pathfinder {
 
-	@Override
-	public ArrayList<Integer> findPath(Navigatable graph, int start, int goal) {
+    @Override
+    public ArrayList<Integer> findPath(Navigatable graph, int start, int goal) {
         // Open nodes sorted by heuristic
-        PriorityQueue<Priotisable<Integer>> open = new PriorityQueue<Priotisable<Integer>>();
+        PriorityQueue<Priotisable<Integer>> open = new PriorityQueue<Priotisable<Integer>>(10
+            , new PriotisableComperator<Integer>());
         // Closed nodes with their associated measured distance
         HashMap<Integer, Float> closed = new HashMap<Integer, Float>();
         // Closed nodes with the shortest node towards it.
@@ -83,15 +84,15 @@ public class AStar implements Pathfinder {
             }
         }
 
-		return null;
-	}
+        return null;
+    }
 }
 
 /**
  * Wraps around a type to add a float value on which can be sorted.
  * @param <T> The type to wrap around.
  */
-class Priotisable<T> implements Comparator<Priotisable<T>> {
+class Priotisable<T> {
     public float priority;
     public T item;
 
@@ -104,9 +105,11 @@ class Priotisable<T> implements Comparator<Priotisable<T>> {
         this.item = item;
         this.priority = priority;
     }
+}
 
-	@Override
-	public int compare(Priotisable<T> o1, Priotisable<T> o2) {
-		return Float.compare(o1.priority, o2.priority);
+class PriotisableComperator<T> implements Comparator<Priotisable<T>> {
+    @Override
+    public int compare(Priotisable<T> o1, Priotisable<T> o2) {
+        return Float.compare(o1.priority, o2.priority);
     }
 }

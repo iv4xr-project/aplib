@@ -10,9 +10,9 @@ public class Face implements Iterable<Integer> {
         this.vertices = vertices;
     }
 
-	@Override
-	public Iterator<Integer> iterator() {
-		return Arrays.stream(vertices).boxed().iterator();
+    @Override
+    public Iterator<Integer> iterator() {
+        return Arrays.stream(vertices).boxed().iterator();
     }
 
     public static boolean isConnected(Face a, Face b) {

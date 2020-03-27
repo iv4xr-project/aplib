@@ -44,14 +44,14 @@ public class Vec3 {
      * @return Vec3 {0, 0, 0}
      */
     public static Vec3 zero() {
-        return new Vec3(0);
+        return new Vec3(0f);
     }   
 
     /**
      * @return Vec3 {1, 1, 1}
      */
     public static Vec3 one() {
-        return new Vec3(1);
+        return new Vec3(1f);
     }
 
     /**
@@ -124,6 +124,16 @@ public class Vec3 {
      */
     public static float dist(Vec3 a, Vec3 b) {
         return Vec3.sub(a, b).length();
+    }
+
+    /**
+     * @return The cross product between two vectors.
+     */
+    public static Vec3 cross(Vec3 a, Vec3 b) {
+        return new Vec3(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x);
     }
 
     /**

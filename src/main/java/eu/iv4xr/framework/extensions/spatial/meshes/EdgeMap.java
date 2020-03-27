@@ -3,9 +3,9 @@ package eu.iv4xr.framework.extensions.spatial.meshes;
 import java.util.*;
 
 public class EdgeMap extends HashMap<Integer, HashSet<Integer>> {
-	private static final long serialVersionUID = -1791683183609681586L;
+    private static final long serialVersionUID = -1791683183609681586L;
 
-	public void put(Edge edge) {
+    public void put(Edge edge) {
         if(!this.containsKey(edge.i))
             this.put(edge.i, new HashSet<Integer>());
         if(!this.containsKey(edge.j))

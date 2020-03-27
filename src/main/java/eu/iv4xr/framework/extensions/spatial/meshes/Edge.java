@@ -26,8 +26,8 @@ public class Edge implements Iterable<Integer> {
         this.j = Math.max(v0, v1);
     }
 
-	@Override
-	public Iterator<Integer> iterator() {
+    @Override
+    public Iterator<Integer> iterator() {
         return new Iterator<Integer>() {
             int state = 0;        
 
@@ -43,5 +43,5 @@ public class Edge implements Iterable<Integer> {
                 return v;
             }
         };
-	}
+    }
 }
