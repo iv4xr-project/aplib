@@ -21,7 +21,7 @@ public class ConsoleEnvironment extends Environment {
 	Scanner consoleInput = new Scanner(System.in);
 	
 	@Override
-	protected Object sendCommand_(EnvOperation cmd) {
+	protected String sendCommand_(EnvOperation cmd) {
 	  switch(cmd.command) {
 	    case "println" : System.out.println((String) cmd.arg) ; return null ;
 	    case "readln"  : String o = consoleInput.nextLine() ; return o ;

@@ -122,7 +122,11 @@ public class Environment {
 	 *                  the command is directed.
 	 * @param command   The name of the command.
 	 * @param arg       The arguments to be passed along with the command.
+	 * @param expectedTypeOfResult If non-null, specifies the expected type of the result 
+	 * of this command.
 	 * @return an object returned by the real environment as the result of the command, if any.
+	 * If the expectedTypeOfResult parameter is not null, then this returned object should be
+	 * an instance of the class specified by the expectedTypeOfResult parameter.
 	 * 
 	 * <p>The method may also throws a runtime exception.
 	 */
@@ -130,14 +134,29 @@ public class Environment {
 			         String invokerId,
 			         String targetId,
 			         String command,
-			         Object arg
+			         Object arg,
+			         Class expectedTypeOfResult
 			         ) {
-		var cmd = new EnvOperation(invokerId,targetId,command,arg) ;
+		var cmd = new EnvOperation(invokerId,targetId,command,arg,expectedTypeOfResult) ;
 		var response = sendCommand_(cmd) ;
 		cmd.result = response ;
 		instrument(cmd) ;
 		return response ;
 	}
+	
+	
+	/**
+	 * A simplified version of the other sendCommand where the expectedTypeOfResult parameter
+	 * is left unspecified (set to null). When using this method the agent is assumed
+	 * to somehow know what the runtime type of the returned object would be.
+	 */
+	public Object sendCommand(
+	         String invokerId,
+	         String targetId,
+	         String command,
+	         Object arg
+	         ) {
+		return sendCommand(invokerId,targetId,command,arg,null) ; }
 	
 	/**
 	 * Override this method to implement an actual Environment.
@@ -145,6 +164,9 @@ public class Environment {
 	 * @param cmd representing the command to send to the real environment.
 	 * @return an object that the real environment sends back as the result of the
 	 *         command, if any.
+	 *         If the cmd specifies what the expected type of the returned object,
+	 *         then this method should guarantee that the returned object is indeed
+	 *         an instance of the specified type.
 	 */
     protected Object sendCommand_(EnvOperation cmd) {
 		 throw new UnsupportedOperationException() ;
@@ -181,15 +203,25 @@ public class Environment {
 		public Object arg ;
 		
 		/**
-		 * Used to store the result of the operation, if any.
+		 * If not null, thus specifies the expected type of result of this operation.
+		 */
+		public Class expectedTypeOfResult ;
+		
+		
+		/**
+		 * Used to store the result of the operation, if any. If the field
+		 * expectedTypeOfResult is not null, then the runtime type of result is
+		 * expected to match (equal of a subclass of) the type specified by 
+		 * expectedTypeOfResult.
 		 */
 		public Object result = null ;
 		
-		public EnvOperation(String invokerId, String targetId, String command, Object arg) {
+		public EnvOperation(String invokerId, String targetId, String command, Object arg, Class expectedTypeOfResult) {
 			this.invokerId = invokerId ;
 			this.targetId = targetId ;
 			this.command = command ;
 			this.arg = arg ;
+			this.expectedTypeOfResult = expectedTypeOfResult ;
 		}
 	}
 		
@@ -236,7 +268,7 @@ public class Environment {
 		}
 	}
 	
-	private EnvOperation REFRESH_CMD = new EnvOperation("ENV",null,"refresh",null) ;
+	private EnvOperation REFRESH_CMD = new EnvOperation("ENV",null,"refresh",null,null) ;
 	
 	
 	EnvOperation lastOperation = null ;

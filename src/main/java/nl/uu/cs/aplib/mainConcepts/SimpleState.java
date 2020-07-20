@@ -76,6 +76,9 @@ public class SimpleState {
 	
 	/**
 	 * This will ask the {@link Environment} associated with this state to update itself.
+	 * Since this SimpleState does not actually has any state information, being just
+	 * a 'simple' state, this method updateState() does not actually update anything.
+	 * Override this method to implement a more elaborate scheme of updating state.
 	 */
 	public void updateState() {
 		 env.refresh() ;
