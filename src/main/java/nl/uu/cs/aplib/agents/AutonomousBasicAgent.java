@@ -17,7 +17,7 @@ import nl.uu.cs.aplib.utils.Time;
  * run as autonomous agents. Agents of this class moreover have the ability
  * to send messages to other agents.
  * 
- * Do note that an AutonomousBasicAgent requires a state of type {@link StateWithMessenger} .
+ * Do note that an AutonomousBasicAgent requires a state of type {@link State} .
  * 
  * @author Wish
  *
@@ -66,7 +66,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 	 * Return the {@link nl.uu.cs.aplib.multiAgentSupport.Messenger} associated to this agent.
 	 */
 	Messenger messenger() {
-		return ((StateWithMessenger) state).messenger ;
+		return ((State) state).messenger ;
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class AutonomousBasicAgent extends BasicAgent {
 	 */
 	public AutonomousBasicAgent registerTo(ComNode comNode) {
 		if (state == null) throw new IllegalArgumentException() ;
-		if (! (state instanceof StateWithMessenger)) throw new IllegalArgumentException() ;
+		if (! (state instanceof State)) throw new IllegalArgumentException() ;
 		messenger().attachCommuniationNode(comNode);
 		this.comNode = comNode ;
 		comNode.register(this);
@@ -104,13 +104,13 @@ public class AutonomousBasicAgent extends BasicAgent {
 	
 	@Override
 	public AutonomousBasicAgent attachState(SimpleState state) {
-		if (! (state instanceof StateWithMessenger)) 
+		if (! (state instanceof State)) 
 			throw new IllegalArgumentException("You need an instance of StateWithMessanger") ;
 		super.attachState(state) ;
 		return this ;
 	}
 	
-	public AutonomousBasicAgent attachState(StateWithMessenger state) {
+	public AutonomousBasicAgent attachState(State state) {
 		super.attachState(state) ;
 		return this ;
 	}

@@ -8,200 +8,164 @@ import alice.tuprolog.MalformedGoalException;
 import alice.tuprolog.NoSolutionException;
 import alice.tuprolog.SolveInfo;
 import alice.tuprolog.Term;
-import nl.uu.cs.aplib.agents.StateWithProlog;
+import nl.uu.cs.aplib.agents.PrologReasoner;
+import nl.uu.cs.aplib.agents.State;
+
+import static nl.uu.cs.aplib.agents.PrologReasoner.* ;
 import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.GAMESTATUS;
 import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.SQUARE;
 import nl.uu.cs.aplib.exampleUsages.fiveGame.FiveGame.Square_;
 import nl.uu.cs.aplib.mainConcepts.*;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
-import static nl.uu.cs.aplib.agents.StateWithProlog.*;
 
 public class FiveGame_withAgent {
 	
-	static class MyState extends StateWithProlog {
-			
+	// defining some predicate and atom names for Prolog:
+	static String cross   = "cross" ; 
+	static String circle  = "circle" ; 
+	static String blocked = "blocked" ; 
+	static PredicateName winningMove = predicate("winningMove") ;
+	static PredicateName eastNeighbor = predicate("eastNeighbor") ;
+	static PredicateName northNeighbor = predicate("northNeighbor") ;
+	static PredicateName occupied = predicate("occupied") ;
+	static PredicateName blockMove = predicate("blockMove") ;
+	static PredicateName set4Move = predicate("set4Move") ;
 		
-		MyState() { super() ; }
-
-        // defining bunch of predicates we will need
-		
-		String occupied(String type, String x, String y) { return mkPredString("occupied",type,x,y) ; }
-		String occupied(String type, int x, int y) { return occupied(type, "" + x, "" + y) ; }
-		
-		String eastNeighbor(String type, String x, String xe, String y) { 
-			return mkPredString("eastNeighbor",type,x,xe,y) ; 
-		}
-		String eastNeighbor(String type, int x, int xe, int y) { 
-			return eastNeighbor(type, "" + x, "" + xe, "" + y) ; 
-		}
-		
-		String northNeighbor(String type, String x, String y, String yn) { 
-			return mkPredString("northNeighbor",type,x,y,yn) ; 
-		}
-		String northNeighbor(String type, int x, int y, int yn) { 
-			return northNeighbor(type, "" + x, "" + y, "" + yn) ; 
-		}
-		
-		String winningMove(String x, String y) { return mkPredString("winningMove",x,y) ; }
-		String set4Move(String x, String y) { return mkPredString("set4Move",x,y) ; }
-		String blockMove(String x, String y) { return mkPredString("blockMove",x,y) ; }
-		
-		void markBlockedSquares() throws InvalidTheoryException {
-			for (int x=0; x < env().boardsize; x++) {
-				for (int y=0; y < env().boardsize; y++) {
-					//System.out.println(">>>") ;
-					if (env().board[x][y] == SQUARE.BLOCKED) {
-						//System.out.println(">>>==") ;
-						addFacts(occupied(blocked(),x,y)) ;
-					}
-				}
-			}
-		}
+	
+	static class MyState extends State {
 				
-		// be careful when using "not" and "is" because they are sensitive to the order
-		// of evaluation/unification; e.g. don't do them when the binding are not resolved yet
-		String ruleWinWest() {
-           return 
-        	 clause(winningMove("X","Y"))
-               . IMPby(eastNeighbor(cross(),"A","B","Y")) 
-               . and(eastNeighbor(cross(),"B","C","Y")) 
-               . and(eastNeighbor(cross(),"C","D","Y")) 
-               . and(eastNeighbor(cross(),"D","E","Y")) 
-               . and(not(occupied("O","A","Y"))) 
-        	   . and("X is A")
-        	   . toString()
-               ;
+		/**
+		 * Constructor. It will also create a prolog-engine and attach it to this state.
+		 */
+		MyState() { super() ; 
+		     this.attachProlog() ;
 		}
-		
-		String ruleWinEast() {
-	           return 
-	        	 clause(winningMove("X","Y"))
-	               . IMPby(occupied(cross(),"A","Y"))
-	               . and(eastNeighbor(cross(),"A","B","Y")) 
-	               . and(eastNeighbor(cross(),"B","C","Y")) 
-	               . and(eastNeighbor(cross(),"C","D","Y")) 
-	               . and("E is (D+1)") 
-	               . and("E < " + env().boardsize)
-	               . and(not(occupied("O","E","Y"))) 
-	               . and("X is E") 
-	               . toString()
-	               ;
-	    }
-		
-		String ruleWinSouth() {
-	           return 
-	        	 clause(winningMove("X","Y"))
-	               . IMPby(northNeighbor(cross(),"X","A","B")) 
-	               . and(northNeighbor(cross(),"X","B","C")) 
-	               . and(northNeighbor(cross(),"X","C","D")) 
-	               . and(northNeighbor(cross(),"X","D","E")) 
-	               . and(not(occupied("O","X","A"))) 
-	               . and("Y is A") 
-	               . toString()
-	               ;
-		}	
-		
-		String ruleWinNorth() {
-	           return 
-	        	 clause(winningMove("X","Y"))
-	               . IMPby(occupied(cross(),"X","A"))
-	               . and(northNeighbor(cross(),"X","A","B")) 
-	               . and(northNeighbor(cross(),"X","B","C")) 
-	               . and(northNeighbor(cross(),"X","C","D")) 
-	               . and("E is (D+1)")
-	               . and("E < " + env().boardsize)
-	               . and(not(occupied(cross(),"X","E"))) 
-	               . and("Y is E") 
-	               . toString()
-                   ;
-		}
-		
-		String ruleBlock4WestEast() {
-			return
-			  clause(blockMove("X","Y")) 
-			  . IMPby(eastNeighbor(circle(),"A","B","Y"))
-			  . and(eastNeighbor(circle(),"B","C","Y"))
-			  . and(eastNeighbor(circle(),"C","D","Y"))
-			  . and(eastNeighbor(circle(),"D","E","Y"))
-			  . and(or(and(not(occupied("O","A","Y")), "X is A"),
-					   and("F is (E+1)", "F < " + env().boardsize, not(occupied("O","F","Y")), "X is F")
-					  ))
-			  .toString() 
-			  ;
-		}
-		
-		String ruleBlock4SouthNorth() {
-			return
-			  clause(blockMove("X","Y")) 
-			  . IMPby(northNeighbor(circle(),"X","A","B"))
-			  . and(northNeighbor(circle(),"X","B","C"))
-			  . and(northNeighbor(circle(),"X","C","D"))
-			  . and(northNeighbor(circle(),"X","D","E"))
-			  . and(or(and(not(occupied("O","X","A")), "Y is A"),
-					   and("F is (E+1)", "F < " + env().boardsize, not(occupied("O","X","F")), "Y is F")
-					  ))
-			  .toString() 
-			  ;
-		}
-		
-		String rule4WestEast() {
-	           return 
-	        	 clause(set4Move("X","Y"))
-	               . IMPby(eastNeighbor(cross(),"A","B","Y")) 
-	               . and(eastNeighbor(cross(),"B","C","Y")) 
-	               . and(eastNeighbor(cross(),"C","D","Y")) 
-	               . and("E is (D+1)")
-	               . and("E < " + env().boardsize)
-	               . and(not(occupied("O","A","Y")))
-	               . and(not(occupied("P","E","Y"))) 
-	               . and(or(and("0 < A", "X is A"), 
-	            		    and("(E+1) < " + env().boardsize, "X is E"))) 
-	               . toString()
-	               ;
-	    }
-		
-		String rule4SouthNorth() {
-	           return 
-	        	 clause(set4Move("X","Y"))
-	               . IMPby(northNeighbor(cross(),"X","A","B")) 
-	               . and(northNeighbor(cross(),"X","B","C")) 
-	               . and(northNeighbor(cross(),"X","C","D")) 
-	               . and("E is (D+1)")
-	               . and("E < " + env().boardsize)
-	               . and(not(occupied("O","X","A")))
-	               . and(not(occupied("P","X","E"))) 
-	               . and(or(and("0 < A", "Y is A"), 
-	            		    and("(E+1) < " + env().boardsize , "Y is E"))) 
-	               . toString()
-	               ;
-	    }
-		
-		void createInitialTheory() throws InvalidTheoryException {
-			markBlockedSquares() ;
-			addRules(ruleWinWest().toString(),
-					 ruleWinEast().toString(),
-					 ruleBlock4WestEast(),
-					 ruleBlock4SouthNorth(),
-					 ruleWinSouth().toString(),
-					 ruleWinNorth().toString(),
-					 rule4WestEast().toString(),
-					 rule4SouthNorth().toString()
-					) ;
-		}
-		
+
 		@Override
 		public FiveGameEnv env() {
 			return (FiveGameEnv) super.env() ;
 		}
 		
+		/**
+		 * Attach the FiveGame environment to this state, and configure the prolog
+		 * engine to contain the AI for playing the game.
+		 * @throws InvalidTheoryException 
+		 */
 		@Override
 		public MyState setEnvironment(Environment env)  {
-			super.setEnvironment(env) ;
+			super.setEnvironment(env) ;	
+			
+			FiveGame.SQUARE[][] board = env().board ;
+			var boardsize = board.length ;
+			var prolog = prolog() ;
+			
+			// The strategy to play the next move is controlled by the following set of
+			// rules:
+			
+			// be careful when using "not" and "is" because they are sensitive to the order
+			// of evaluation/unification; e.g. don't do them when the binding are not resolved yet
+			var ruleWinWest = rule(winningMove.on("X","Y"))
+			       . impBy(eastNeighbor.on(cross,"A","B","Y")) 
+			       . and(eastNeighbor.on(cross,"B","C","Y")) 
+			       . and(eastNeighbor.on(cross,"C","D","Y")) 
+			       . and(eastNeighbor.on(cross,"D","E","Y")) 
+			       . and(not(occupied.on("O","A","Y"))) 
+			       . and("X is A") ;		
+			
+			var ruleWinEast = rule(winningMove.on("X","Y"))
+		           . impBy(occupied.on(cross,"A","Y"))
+		           . and(eastNeighbor.on(cross,"A","B","Y")) 
+		           . and(eastNeighbor.on(cross,"B","C","Y")) 
+		           . and(eastNeighbor.on(cross,"C","D","Y")) 
+		           . and("E is (D+1)") 
+		           . and("E < " + boardsize)
+		           . and(not(occupied.on("O","E","Y"))) 
+		           . and("X is E")  ;
+		    
+			var ruleWinSouth = rule(winningMove.on("X","Y"))
+		           . impBy(northNeighbor.on(cross,"X","A","B")) 
+		           . and(northNeighbor.on(cross,"X","B","C")) 
+		           . and(northNeighbor.on(cross,"X","C","D")) 
+		           . and(northNeighbor.on(cross,"X","D","E")) 
+		           . and(not(occupied.on("O","X","A"))) 
+		           . and("Y is A")  ;
+			
+			var ruleWinNorth = rule(winningMove.on("X","Y"))
+		           . impBy(occupied.on(cross,"X","A"))
+		           . and(northNeighbor.on(cross,"X","A","B")) 
+		           . and(northNeighbor.on(cross,"X","B","C")) 
+		           . and(northNeighbor.on(cross,"X","C","D")) 
+		           . and("E is (D+1)")
+		           . and("E < " + boardsize)
+		           . and(not(occupied.on(cross,"X","E"))) 
+		           . and("Y is E")  ;
+			
+			var ruleBlock4WestEast = rule(blockMove.on("X","Y")) 
+				   . impBy(eastNeighbor.on(circle,"A","B","Y"))
+				   . and(eastNeighbor.on(circle,"B","C","Y"))
+				   . and(eastNeighbor.on(circle,"C","D","Y"))
+				   . and(eastNeighbor.on(circle,"D","E","Y"))
+				   . and(or(and(not(occupied.on("O","A","Y")), "X is A"),
+					  	    and("F is (E+1)", "F < " + boardsize, not(occupied.on("O","F","Y")), "X is F")
+						   )) ;
+			
+			var ruleBlock4SouthNorth = rule(blockMove.on("X","Y")) 
+				  . impBy(northNeighbor.on(circle,"X","A","B"))
+				  . and(northNeighbor.on(circle,"X","B","C"))
+				  . and(northNeighbor.on(circle,"X","C","D"))
+				  . and(northNeighbor.on(circle,"X","D","E"))
+				  . and(or(and(not(occupied.on("O","X","A")), "Y is A"),
+						   and("F is (E+1)", "F < " + boardsize, not(occupied.on("O","X","F")), "Y is F")
+						  )) ;
+			
+			var rule4WestEast = rule(set4Move.on("X","Y"))
+		               . impBy(eastNeighbor.on(cross,"A","B","Y")) 
+		               . and(eastNeighbor.on(cross,"B","C","Y")) 
+		               . and(eastNeighbor.on(cross,"C","D","Y")) 
+		               . and("E is (D+1)")
+		               . and("E < " + boardsize)
+		               . and(not(occupied.on("O","A","Y")))
+		               . and(not(occupied.on("P","E","Y"))) 
+		               . and(or(and("0 < A", "X is A"), 
+		            		    and("(E+1) < " + boardsize, "X is E")))  ;
+			
+			var rule4SouthNorth = rule(set4Move.on("X","Y"))
+		               . impBy(northNeighbor.on(cross,"X","A","B")) 
+		               . and(northNeighbor.on(cross,"X","B","C")) 
+		               . and(northNeighbor.on(cross,"X","C","D")) 
+		               . and("E is (D+1)")
+		               . and("E < " + boardsize)
+		               . and(not(occupied.on("O","X","A")))
+		               . and(not(occupied.on("P","X","E"))) 
+		               . and(or(and("0 < A", "Y is A"), 
+		            		    and("(E+1) < " + boardsize , "Y is E"))) ;
+			
 			try {
-				createInitialTheory() ;
+				// now add the strategy-rules to the prolog engine:
+				prolog.add(ruleWinWest,
+						 ruleWinEast,
+						 ruleBlock4WestEast,
+						 ruleBlock4SouthNorth,
+						 ruleWinSouth,
+						 ruleWinNorth,
+						 rule4WestEast,
+						 rule4SouthNorth) ;
+				// and add blocked-squares to prolog:
+				for (int x=0; x < boardsize; x++) {
+				  for (int y=0; y < boardsize; y++) {
+					//System.out.println(">>>") ;
+					if (board[x][y] == SQUARE.BLOCKED) {
+						//System.out.println(">>>==") ;
+						prolog.facts(occupied.on(blocked,x,y)) ;
+					}
+				  }				  
+			   }
 			}
-			catch(Exception e) { return null ; }
+			catch(Exception e) {
+				throw new Error("Fail to add clauses to Prolog") ;
+			}
+			
 			return this ;
 		}
 		
@@ -225,36 +189,30 @@ public class FiveGame_withAgent {
 			catch(Exception e) { } // swallow...
 		}
 		
-		
-		String cross()   { return "cross" ; }
-		String circle()  { return "circle" ; }
-		String blocked() { return "blocked" ; }
-				
-		
+					
 		String sqtype(SQUARE sq) {
 			switch(sq) {
-			  case CROSS : return cross() ;
-			  case CIRCLE : return circle() ;
-			  case BLOCKED : return blocked() ;
+			  case CROSS : return cross ;
+			  case CIRCLE : return circle ;
+			  case BLOCKED : return blocked ;
 			}
 			return null ;
 		}
 		
 		void markMove_(SQUARE sq, int x, int y) throws InvalidTheoryException {
 			env().board[x][y] = sq ;
-			addFacts(occupied(sqtype(sq),x,y)) ;
-
+			prolog().facts(occupied.on(sqtype(sq),x,y)) ;
 			if (x>0) {
-				addFacts(eastNeighbor(sqtype(sq),x-1,x,y)) ; 
+				prolog().facts(eastNeighbor.on(sqtype(sq),x-1,x,y)) ; 
 			}
 			if (x<env().boardsize-1 && env().board[x+1][y] != SQUARE.EMPTY) {
-				addFacts(eastNeighbor(sqtype(env().board[x+1][y]), x, x+1, y)) ; 
+				prolog().facts(eastNeighbor.on(sqtype(env().board[x+1][y]), x, x+1, y)) ; 
 			}
 			if (y>0) {
-				addFacts(northNeighbor(sqtype(sq),x,y-1,y)) ;
+				prolog().facts(northNeighbor.on(sqtype(sq),x,y-1,y)) ;
 			}
 			if (y<env().boardsize-1 && env().board[x][y+1] != SQUARE.EMPTY) {
-				addFacts(northNeighbor(sqtype(env().board[x][y+1]), x, y, y+1)) ;
+				prolog().facts(northNeighbor.on(sqtype(env().board[x][y+1]), x, y, y+1)) ;
 			}
 		}
 		
@@ -286,24 +244,18 @@ public class FiveGame_withAgent {
 	
 	// just for testing
 	static private void test() throws InvalidTheoryException {
-		var state = new MyState() ;
 		int N = 8 ;
-		state.env().boardsize = N ;
-		state.env().board = new SQUARE[N][N] ;
-		for (int x=0; x<N; x++)
-			for (int y=0; y<N; y++)
-				state.env().board[x][y] = SQUARE.EMPTY ;
-		
-        //		state.board[0][0] = SQUARE.BLOCKED ;
-		state.createInitialTheory()  ;
+		var thegame = new FiveGame(N,0) ;
+		// create an agent state and an environment, attached to the game:
+		var state = new MyState().setEnvironment(new FiveGameEnv().attachGame(thegame));
 		
 		state.markMove(SQUARE.CROSS,2,2);
 		state.markMove(SQUARE.CROSS,3,2);
 		state.markMove(SQUARE.CROSS,4,2);
 		
-		System.out.println(state.showTheory()) ;
+		System.out.println(state.prolog().showTheory()) ;
 		
-		var solution = state.query("set4Move(X,Y)") ;
+		var solution = state.prolog().query("set4Move(X,Y)") ;
 	
 		if (solution != null) {
 			System.out.println(">> x = " + solution.int_("X")) ;
@@ -318,7 +270,8 @@ public class FiveGame_withAgent {
 	
 	static public void main(String[] args) throws InvalidTheoryException, NoSolutionException, MalformedGoalException {
 		
-		// test() ;
+		 //test() ;
+		
 		
 		// creating an instance of the FiveGame
 		var thegame = new FiveGame(7,0) ;
@@ -353,7 +306,7 @@ public class FiveGame_withAgent {
 			     st.markMove(SQUARE.CROSS,x,y) ;
 			     return status ;
 		      })
-			. on((MyState st) -> st.query(st.winningMove("X","Y")) ) 
+			. on((MyState st) -> st.prolog().query(winningMove.on("X","Y")) ) 
 			. lift() ;
 		
 		// block the opponent if it has a 4 consecutive hor. or vert. row:
@@ -366,7 +319,7 @@ public class FiveGame_withAgent {
 				     st.markMove(SQUARE.CROSS,x,y) ;
 				     return status ;
 			      })
-				. on((MyState st) -> st.query(st.blockMove("X","Y")) ) 
+				. on((MyState st) -> st.prolog().query(blockMove.on("X","Y")) ) 
 				. lift() ;
 		
 		// place a cross next to 3 consecutive hor or vert crosses:
@@ -379,7 +332,7 @@ public class FiveGame_withAgent {
 				     st.markMove(SQUARE.CROSS,x,y) ;
 				     return status ;
 			      })
-				. on((MyState st) -> st.query(st.set4Move("X","Y")) ) 
+				. on((MyState st) -> st.prolog().query(set4Move.on("X","Y")) ) 
 				. lift() ;
 		
 		// define a goal and specify a tactic:
@@ -408,6 +361,5 @@ public class FiveGame_withAgent {
 			System.out.println("(press a ENTER to continue)") ;
 			consoleInput.nextLine() ;
 		}
-		
 	}
 }

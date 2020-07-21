@@ -7,7 +7,7 @@ import static eu.iv4xr.framework.Iv4xrEDSL.*;
 import static nl.uu.cs.aplib.AplibEDSL.*;
 import eu.iv4xr.framework.mainConcepts.*;
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.*;
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.* ;
 
@@ -63,7 +63,7 @@ public class TestWithWrappingEnv_GCDGame {
 	 * Define a new state-structure for the agent. For this example, we don't
 	 * actually need a new state-structure, but let's just pretend that we do.
 	 */
-	static class MyState extends StateWithMessenger {
+	static class MyState extends State {
 		MyState() { super(); }
 		@Override
 		public GCDEnv env() { return (GCDEnv) super.env(); }

@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
@@ -106,7 +106,7 @@ public class TestWithRemotingEnv_GCDGame {
 	* Define a new state-structure for the agent. For this example, we don't
 	* actually need a new state-structure, but let's just pretend that we do.
 	*/
-	static class MyState extends StateWithMessenger {
+	static class MyState extends State {
 		//int counter = 0 ;
 		//String last = null ;
 		//int result = 0 ;

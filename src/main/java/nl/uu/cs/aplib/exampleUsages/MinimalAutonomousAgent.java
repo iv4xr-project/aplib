@@ -7,7 +7,7 @@ import java.util.Random;
 
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.Goal;
@@ -42,7 +42,7 @@ public class MinimalAutonomousAgent {
 
 	      // creating an agent; attaching a fresh state to it, and attaching the above goal to it:
 		  var agent = new AutonomousBasicAgent()
-                    . attachState(new StateWithMessenger() .setEnvironment(new ConsoleEnvironment())) 
+                    . attachState(new State() .setEnvironment(new ConsoleEnvironment())) 
                     . setGoal(topgoal) 
                     . setSamplingInterval(1000) 
                     ;

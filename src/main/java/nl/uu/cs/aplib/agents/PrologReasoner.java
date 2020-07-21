@@ -34,11 +34,11 @@ public class PrologReasoner {
 	public static class PredicateName {
 		String name ;
 		PredicateName(String name) { this.name = name ; }
-		public String on(String ... args) {
+		public String on(Object ... args) {
 			String s = name + "(" ;
 			for (int k=0; k<args.length; k++) {
 				if (k>0) s += "," ;
-				s += args[k] ;
+				s += args[k].toString() ;
 			}
 			s += ")" ;
 			return s ;

@@ -15,7 +15,7 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.agents.Test_InterAgentCommunication.MyState;
 import nl.uu.cs.aplib.environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.mainConcepts.*;
@@ -25,7 +25,7 @@ import nl.uu.cs.aplib.multiAgentSupport.Message.MsgCastType;
 
 public class Test_AutonomousBasicAgent {
 	
-	static class MyState extends StateWithMessenger {
+	static class MyState extends State {
 		int counter = 0 ;
 	}
 	

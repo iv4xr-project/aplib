@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.* ;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.environments.ConsoleEnvironment;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.multiAgentSupport.ComNode;
@@ -16,7 +16,7 @@ import nl.uu.cs.aplib.multiAgentSupport.Message.MsgCastType;
 
 public class Test_InterAgentCommunication {
 	
-	static class MyState extends StateWithMessenger {
+	static class MyState extends State {
 		int counter = 0 ;
 		@Override
 		public MyState setEnvironment(Environment env) {

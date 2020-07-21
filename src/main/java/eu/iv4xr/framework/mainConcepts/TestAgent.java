@@ -6,7 +6,7 @@ import static eu.iv4xr.framework.mainConcepts.TestDataCollector.*;
 import java.util.*;
 
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
-import nl.uu.cs.aplib.agents.StateWithMessenger;
+import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.CostFunction;
 import nl.uu.cs.aplib.mainConcepts.Deliberation;
@@ -122,7 +122,7 @@ public class TestAgent extends AutonomousBasicAgent {
 	 * so that this method can be used in the Fluent Interface style.
 	 */
 	@Override
-	public TestAgent attachState(StateWithMessenger state) {
+	public TestAgent attachState(State state) {
 		super.attachState(state) ;
 		return this ;
 	}
