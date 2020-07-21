@@ -73,12 +73,12 @@ Above, the only thing we did is to make this custom Environment to wrap over pro
 
 ### Step 2: Defining the State Structure for the Agent
 
-Every agent will need a state which it can use to keep track whatever information that it wants to keep track. The state of a test-agent must be an instance of the class [`StateWithMessenger`](../../src/test/java/nl/uu/cs/aplib/agents/StateWithMessenger.java). A direct instance of this class will get a pointer/reference to an `Environment`, and since the Environment you created above wraps over the program-under-test, an agent can thus access the latter through its state. For our purpose to test `GCDGame` this will suffice. But hypothetically, if your agent needs to keep track more information, you will need to extend its state with new fields to hold this information. In other words, you would need a custom state, which you can do that by subclassing `StateWithMessenger`.
+Every agent will need a state which it can use to keep track whatever information that it wants to keep track. The state of a test-agent must be an instance of the class [`State`](../../src/test/java/nl/uu/cs/aplib/agents/State.java). A direct instance of this class will get a pointer/reference to an `Environment`, and since the Environment you created above wraps over the program-under-test, an agent can thus access the latter through its state. For our purpose to test `GCDGame` this will suffice. But hypothetically, if your agent needs to keep track more information, you will need to extend its state with new fields to hold this information. In other words, you would need a custom state, which you can do that by subclassing `State`.
 
-For the purpose of testing `GCDGame` we don't need to subclass `StateWithMessenger`. However, it is convenient for later if the default method `env()` of `StateWithMessenger` would return an instance of `GCDEnv` (our custom Environment) rather than `Environment`, as it would save us from having to do the type casting in the agent code. So, here is our custom state:
+For the purpose of testing `GCDGame` we don't need to subclass `State`. However, it is convenient for later if the default method `env()` of `State` would return an instance of `GCDEnv` (our custom Environment) rather than `Environment`, as it would save us from having to do the type casting in the agent code. So, here is our custom state:
 
 ```java
-static class MyState extends StateWithMessenger {
+static class MyState extends State {
   MyState() { super(); }
   @Override
   public GCDEnv env() { return (GCDEnv) super.env(); } // forcing to return GCDEnv
@@ -208,7 +208,7 @@ public void tests() {
   parameterizedGCDGameTest(1,1,1,true) ;
   parameterizedGCDGameTest(12,0,12,false) ;
   parameterizedGCDGameTest(0,9,9,false) ;
-  parameterizedGCDGameTest(32*7,32*11,32,false) ; 
+  parameterizedGCDGameTest(32*7,32*11,32,false) ;
   parameterizedGCDGameTest(7,11*11,1,true) ;
 }
 ```

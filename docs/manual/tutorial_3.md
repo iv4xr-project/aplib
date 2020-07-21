@@ -63,10 +63,10 @@ To coordinate their work, agents can send messages to each other. To use this fe
 
 A state of type `StateWithMessenger` has access to the method `state.messenger().send(...)`. Actions of the agent that owns the state can use it to send messages to other agents.
 
-Let me show an example. Let's first define a state structure. Let's have a simple state, maintaining just one integer called `counter`. Importantly, this state must extends the class `StateWithMessenger`:
+Let me show an example. Let's first define a state structure. Let's have a simple state, maintaining just one integer called `counter`. Importantly, this state must extends the class `State` (which in turns extends `SimpleState`, adding to it, among other things, a facility for inter-agent communication):
 
 ```java
-class MyState extends StateWithMessenger {
+class MyState extends State {
    int counter == 0
 }
 ```
