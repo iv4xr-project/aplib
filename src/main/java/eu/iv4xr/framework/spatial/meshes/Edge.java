@@ -1,6 +1,11 @@
-package eu.iv4xr.framework.extensions.spatial.meshes;
+package eu.iv4xr.framework.spatial.meshes;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+
+import eu.iv4xr.framework.spatial.Vec3;
 
 /** 
  * This class contains two indices in the form of primitive integers that describe an edge.
@@ -43,5 +48,29 @@ public class Edge implements Iterable<Integer> {
                 return v;
             }
         };
+    }
+    
+    /**
+     * Given a list that maps vertex-indices to their real positions, this method
+     * calculate the center/middle point of this edge.
+     */
+    public Vec3 center(List<Vec3> vertices) {
+    	var a = vertices.get(i) ;
+    	var b = vertices.get(j) ;
+    	return new Vec3((a.x + b.x)/2f,
+    		  	        (a.y + b.y)/2f,
+    			        (a.z + b.z)/2f ) ;
+    }
+    
+    @Override
+    public int hashCode() {
+    	return Objects.hash(i,j) ;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (! (o instanceof Edge)) return false ;
+    	Edge o_ = (Edge) o ;
+    	return o_.i == i && o_.j == j ;
     }
 }

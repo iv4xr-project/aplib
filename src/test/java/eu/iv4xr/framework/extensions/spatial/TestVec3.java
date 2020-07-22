@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.spatial.Vec3;
+
 public class TestVec3 {
     
     @Test

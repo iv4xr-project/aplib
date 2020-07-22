@@ -1,7 +1,5 @@
 package eu.iv4xr.framework.mainConcepts;
 
-import eu.iv4xr.framework.environments.W3DEnvironment;
-import eu.iv4xr.framework.world.WorldModel;
 import nl.uu.cs.aplib.agents.State ; 
 
 public class W3DAgentState extends State {

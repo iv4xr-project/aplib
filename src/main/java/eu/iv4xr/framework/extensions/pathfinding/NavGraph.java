@@ -2,8 +2,8 @@ package eu.iv4xr.framework.extensions.pathfinding;
 
 import java.util.ArrayList;
 
-import eu.iv4xr.framework.extensions.spatial.*;
-import eu.iv4xr.framework.extensions.spatial.meshes.*;
+import eu.iv4xr.framework.spatial.*;
+import eu.iv4xr.framework.spatial.meshes.*;
 
 /**
  * A simple navitable graph which edges can be blocked by obstacles.
@@ -79,12 +79,7 @@ public class NavGraph implements Navigatable {
         // Get center of each face as vertex
         for (int i = 0; i < faces.size(); i++) {
             Face f = faces.get(i);
-            Vec3 avg = Vec3.zero();
-            for (Integer v : f) {
-                avg = Vec3.add(avg, mesh.vertices.get(v));
-            }
-            avg = Vec3.div(avg, f.vertices.length);
-            g.vertices.add(avg);
+            g.vertices.add(f.center(mesh.vertices));
         }
 
         // Connect common edges in faces to create dual map

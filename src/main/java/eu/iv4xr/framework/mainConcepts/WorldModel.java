@@ -1,10 +1,9 @@
-package eu.iv4xr.framework.world;
+package eu.iv4xr.framework.mainConcepts;
 
 import java.io.Serializable;
 import java.util.* ;
 
-import eu.iv4xr.framework.environments.W3DEnvironment;
-import eu.iv4xr.framework.extensions.spatial.Vec3 ;
+import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 

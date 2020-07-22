@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.spatial.Line;
+import eu.iv4xr.framework.spatial.Triangle;
+import eu.iv4xr.framework.spatial.Vec3;
+
 public class TestTriangle {
 
     @Test

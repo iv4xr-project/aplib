@@ -1,12 +1,12 @@
-package eu.iv4xr.framework.ltl;
+package eu.iv4xr.framework.extensions.ltl;
 
 import org.junit.jupiter.api.Test;
 
-import eu.iv4xr.framework.ltl.BoundedLTL;
+import eu.iv4xr.framework.extensions.ltl.BoundedLTL;
 import nl.uu.cs.aplib.mainConcepts.*;
 
-import static eu.iv4xr.framework.ltl.BoundedLTL.*;
-import static eu.iv4xr.framework.ltl.LTL.*;
+import static eu.iv4xr.framework.extensions.ltl.BoundedLTL.*;
+import static eu.iv4xr.framework.extensions.ltl.LTL.*;
 import static org.junit.jupiter.api.Assertions.* ;
 
 import java.util.function.Predicate;

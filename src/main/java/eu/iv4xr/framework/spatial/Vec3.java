@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.extensions.spatial;
+package eu.iv4xr.framework.spatial;
 
 /**
  * This is a simple 3D vector implementation using floats.

@@ -1,9 +1,9 @@
-package eu.iv4xr.framework.world;
+package eu.iv4xr.framework.mainConcepts;
 
 import java.io.*;
 import java.util.*;
 
-import eu.iv4xr.framework.extensions.spatial.Vec3 ;
+import eu.iv4xr.framework.spatial.Vec3;
 
 
 public class WorldEntity implements Serializable {

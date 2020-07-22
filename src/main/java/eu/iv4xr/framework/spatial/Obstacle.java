@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.extensions.spatial;
+package eu.iv4xr.framework.spatial;
 
 public class Obstacle<T> {
     public T obstacle;

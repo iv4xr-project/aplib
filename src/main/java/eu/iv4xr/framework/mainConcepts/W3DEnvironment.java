@@ -1,10 +1,8 @@
-package eu.iv4xr.framework.environments;
+package eu.iv4xr.framework.mainConcepts;
 
 import eu.iv4xr.framework.extensions.pathfinding.NavGraph;
-import eu.iv4xr.framework.extensions.spatial.Mesh;
-import eu.iv4xr.framework.extensions.spatial.Vec3;
-import eu.iv4xr.framework.world.WorldEntity;
-import eu.iv4xr.framework.world.WorldModel;
+import eu.iv4xr.framework.spatial.Vec3;
+import eu.iv4xr.framework.spatial.meshes.Mesh;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
@@ -61,7 +59,7 @@ public class W3DEnvironment extends Environment {
 	/**
 	 * Send a command to the real environment that will cause it to send back what the 
 	 * agent of the given id observes in the real environment. The observation will be
-	 * parsed into an instance of {@link eu.iv4xr.framework.world.WorldModel}.
+	 * parsed into an instance of {@link eu.iv4xr.framework.mainConcepts.WorldModel}.
 
 	 * @param agentId The id of the agent whose observation is requested.
 	 * @return An instance of WorldModel representing what the specified agent observes.

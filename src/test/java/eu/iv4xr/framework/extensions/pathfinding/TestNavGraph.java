@@ -7,8 +7,8 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 
-import eu.iv4xr.framework.extensions.spatial.*;
-import eu.iv4xr.framework.extensions.spatial.meshes.*;
+import eu.iv4xr.framework.spatial.*;
+import eu.iv4xr.framework.spatial.meshes.*;
 
 public class TestNavGraph {
 

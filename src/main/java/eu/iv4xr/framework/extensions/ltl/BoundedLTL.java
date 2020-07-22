@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.ltl;
+package eu.iv4xr.framework.extensions.ltl;
 
 import java.util.*;
 import java.util.function.Function;

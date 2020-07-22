@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.extensions.spatial;
+package eu.iv4xr.framework.spatial;
 
 import java.util.*;
 

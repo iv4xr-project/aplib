@@ -1,11 +1,11 @@
-package eu.iv4xr.framework.ltl;
+package eu.iv4xr.framework.extensions.ltl;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.function.Predicate;
 
-import eu.iv4xr.framework.ltl.BoundedLTL.LTLVerdict;
-import eu.iv4xr.framework.ltl.BoundedLTL.LTLVerdictInfo;
+import eu.iv4xr.framework.extensions.ltl.BoundedLTL.LTLVerdict;
+import eu.iv4xr.framework.extensions.ltl.BoundedLTL.LTLVerdictInfo;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
