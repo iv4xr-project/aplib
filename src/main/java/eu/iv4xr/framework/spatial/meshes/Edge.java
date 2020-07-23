@@ -8,13 +8,17 @@ import java.util.Objects;
 import eu.iv4xr.framework.spatial.Vec3;
 
 /** 
- * This class contains two indices in the form of primitive integers that describe an edge.
+ * This class contains two indices in the form of primitive integers 
+ * that describe an edge.
+ * 
+ * edge.get(0) gives the edge's end-point with the smaller index, and
+ * edge.get(1) gives the end-point with the larger index.
  * 
  * @author Naraenda
  */
 public class Edge implements Iterable<Integer> {
-    int i;
-    int j;
+    public int i; // the node with the smaller index
+    public int j; // the node with the bigger index
 
     public Edge(int v0, int v1) {
         if (v0 == v1)
@@ -71,6 +75,8 @@ public class Edge implements Iterable<Integer> {
     public boolean equals(Object o) {
     	if (! (o instanceof Edge)) return false ;
     	Edge o_ = (Edge) o ;
+    	// check if the two end-points are the same; since i,j are sorted,
+    	// this check will do:
     	return o_.i == i && o_.j == j ;
     }
 }

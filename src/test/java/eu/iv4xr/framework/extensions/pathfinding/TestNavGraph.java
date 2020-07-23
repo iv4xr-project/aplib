@@ -12,8 +12,8 @@ import eu.iv4xr.framework.spatial.meshes.*;
 
 public class TestNavGraph {
 
-    private NavGraph makeTriangle() {
-        var n = new NavGraph();
+    private SimpleNavGraph makeTriangle() {
+        var n = new SimpleNavGraph();
         n.vertices = new ArrayList<Vec3>();
         n.edges = new EdgeMap();
 

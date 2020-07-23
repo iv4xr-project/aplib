@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.extensions.spatial;
+package eu.iv4xr.framework.spatial;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

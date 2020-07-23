@@ -1,6 +1,7 @@
 package eu.iv4xr.framework.mainConcepts;
 
-import eu.iv4xr.framework.extensions.pathfinding.NavGraph;
+import eu.iv4xr.framework.exception.Iv4xrError;
+import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.Mesh;
 import nl.uu.cs.aplib.mainConcepts.Environment;
@@ -16,8 +17,9 @@ import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
  */
 public class W3DEnvironment extends Environment {
 	
-	
-	static public String OBSERVE_CMDNAME = "Observe" ;
+
+	static public String LOADWORLD_CMDNAME  = "LoadWorld" ;
+	static public String OBSERVE_CMDNAME    = "Observe" ;
 	static public String MOVETOWARD_CMDNAME = "Move" ;
 	
 	/**
@@ -27,13 +29,13 @@ public class W3DEnvironment extends Environment {
 	Mesh worldNavigableMesh ;
 	
 	/**
-	 * A graph of vertices/nodes to navigate the D-world represented by this
-	 * environment. The vertices will be as such that each polygon in the
-	 * worldNavigableMesh is represented by at least one vertex, and that if two
-	 * polygons are neighboring then there are at least two vertices in those polygons
-	 * which are directly connected.
+	 * A graph of vertices/nodes to navigate the 3D-world represented by this
+	 * environment. The graph should describes the world in terms of its navigable
+	 * surface, which is then divided into small connected convex polygons/faces.
+	 * The graph will then describe navigation/connectivity between the corners and
+	 * center-points of those polygons.
 	 */
-	NavGraph worldNavigationGraph ;
+	Mesh theWorldNavigableSurface ;
 	
 	/**
 	 * Execute an interaction of the specified type on the given target entity in
@@ -92,15 +94,44 @@ public class W3DEnvironment extends Environment {
 	}
 	
 	/**
+	 * Send a command to the real environment that should cause it to send over
+	 * the navigation-mesh of its 3D world. This mesh is assumed to be static
+	 * (does not change through out the agents' runs).
+	 */
+	public void loadWorld() {
+		theWorldNavigableSurface = (Mesh) sendCommand(null,null,LOADWORLD_CMDNAME,null,Mesh.class) ;
+		if (theWorldNavigableSurface==null) 
+			throw new Iv4xrError("Fail to load the navgation-graph of the world") ;
+	}
+	
+	/**
 	 * You need to implement this method. There are a number of pre-defined command
-	 * names, namely OBSERVE_CMDNAME and MOVETOWARD_CMDNAME, that you need to
-	 * implement. OBSERVE_CMDNAME has no argument, and MOVETOWARD_CMDNAME has one
-	 * Vec3 argument specifying the direction (and velocity) of the move.
+	 * names, namely:
 	 * 
-	 * Other command names are interpreted as interaction commands by the executing
-	 * agent on a specified target entity.
+	 *   cmd.command is LOADWORLD_CMDNAME: this should ask the real-environment
+	 *   to send back an navigation-mesh. This method should package it as
+	 *   an instance of Mesh and return it.
+	 *   
+	 *   cmd.command is OBSERVE_CMDNAME: this should ask the real-environment to
+	 *   send over the observation of agent cmd.invokerId. This method should
+	 *   package the result as an instance of WorldModel and return it.
+	 *   
+	 *   cmd.command is MOVETOWARD_CMDNAME: this should ask the real-environment
+	 *   to move its entity/agent cmd.invokerId in the direction specified by
+	 *   cmd.arg. This method should also obtain the observation of the said
+	 *   agent at the end of the move, and package the observation as an 
+	 *   instance of WorldModel and return it.
+	 *   
+	 *   cmd.command has other values: this should ask the real-environment
+	 *   to apply an interaction by the agent cmd.invokerId on the entity
+	 *   specified by cmd.targetId, and with interaction type specified by
+	 *   cmd.command (e.g. "OPEN" or "CLOSE"). This method should also obtain 
+	 *   the observation of the said agent at the end of the interaction, and 
+	 *   package the observation as an instance of WorldModel and return it.
 	 */
 	protected Object sendCommand_(EnvOperation cmd) {
 		 throw new UnsupportedOperationException() ;
 	}
+	
+	
 }

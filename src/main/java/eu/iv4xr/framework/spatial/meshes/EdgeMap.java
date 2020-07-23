@@ -3,8 +3,11 @@ package eu.iv4xr.framework.spatial.meshes;
 import java.util.*;
 
 /**
- * An instance of HashMap to store a set of connected vertices (so, a graph).
- * The connections/edges are undirected.
+ * An "EdgeMap" is actually a simple representation of a graph, which
+ * consists of a set of vertices, identified by their integer-id, and 
+ * edges between these vertices. The edges are undirected.
+ * 
+ * The graph is implemented as a subclass of HashMap.
  * 
  * The method vertices() gives the set of all vertices stored in this data
  * structure. The method neighbors(i) returns the set of all neighbors of i;

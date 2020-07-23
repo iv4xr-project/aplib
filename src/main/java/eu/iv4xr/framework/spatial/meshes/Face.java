@@ -50,6 +50,20 @@ public class Face implements Iterable<Integer> {
     }
     
     /**
+     * Check if the given edge is an edge of this Face.
+     */
+    public boolean containsEdge(Edge e) {
+    	int N_ = vertices.length - 1 ;
+    	for (int k=0; k < N_ ; k++) {
+    		Edge ex = new Edge(vertices[k],vertices[k+1]) ;
+    		if (e.equals(ex)) return true ;
+    	}
+    	// last edge:
+    	Edge ex = new Edge(vertices[N_], vertices[0]) ;
+    	return e.equals(ex) ;
+    }
+    
+    /**
      * Check if two Faces are 'connected'. The method defines 'connected' to mean
      * that the two Faces share at least one edge. This works well if the
      * Facses are convex and have no overlapping edge (except if it is common).
