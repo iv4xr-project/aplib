@@ -6,6 +6,7 @@ import eu.iv4xr.framework.spatial.Line;
 import eu.iv4xr.framework.spatial.Obstacle;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * A navigation-graph over a 3D-surface. The surface is described by
@@ -234,6 +235,20 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     }
     
     /**
+     * Check if the line from x to y is blocked by any of the
+     * blocking obstacles.
+     */
+    boolean isBlocked(Vec3 x, Vec3 y) {
+    	for (var obs : obstacles) {
+			if (obs.isBlocking && obs.obstacle.intersects(new Line(x,y)))  {
+				return true ;
+			}
+		}
+    	return false ;
+    }
+    
+    
+    /**
 	 * Return the id/index of a vertex, which is nearest to the given location, and
 	 * moreover the line between the location and this vertex is not blocked by any
 	 * of the blocking obstacles.
@@ -250,16 +265,9 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	Integer nearest = null ;
     	int id = 0 ;
     	for (Vec3 v : vertices) {
-    		boolean direct_line_is_blocked = false ;
-    		for (var obs : obstacles) {
-    			Line line = new Line(location,v) ;
-    			if (obs.isBlocking && obs.obstacle.intersects(line))  {
-    				direct_line_is_blocked = true ;
-    				break ;
-    			}
+    		if (! isBlocked(location,v))  {
+    			if (Vec3.dist(location, v) < dist) nearest = id ;
     		}
-    		if (direct_line_is_blocked) break ;
-    		if (Vec3.dist(location, v) < dist) nearest = id ;
     		id++ ;
     	}
     	return nearest ;
@@ -331,8 +339,62 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	return findPath(startNode,goalNode) ;
     }
     
-    public Integer explore() {
-    	// bla bla
+    /**
+     * This returns the set of frontier-vertices. A vertex is a frontier vertex if
+     * it is a seen/explored vertex and it has at least one unexplored and unblocked
+     * neighbor.
+     * 
+     * The method returns pairs of (v,z) where v is a frontier and z is one of its
+     * unexplored and unblocked neighbor.
+     */
+    List<Pair<Integer,Integer>> getFrontierVertices() {
+    	int N = vertices.size() ;
+    	var frontiers = new LinkedList<Pair<Integer,Integer>>() ;
+    	for (int v = 0 ; v<N ; v++) {
+    		Vec3 vloc = vertices.get(v) ;
+    		if (seenVertices.get(v))  {
+    			for (Integer z : edges.neighbours(v)) {
+    				if (! seenVertices.get(z)
+    					&& ! isBlocked(vloc, vertices.get(z))) {
+    					frontiers.add(new Pair(v,z)) ;
+    					break ;
+    				}
+    			}
+    		}
+    	}
+    	return frontiers ;
+    }
+    
+    /**
+     * Find a path to an unexplored and unblocked vertex which is
+     * the closest to the given location. Note that the path ends
+     * in that unexplored vertex.
+     * 
+     * If no such vertex, or no path to such a vertex can be founf,
+     * the method returns null.
+     */
+    public List<Integer> explore(Vec3 currentLocation) {
+    	
+    	var startNode = getNearestUnblockedVertex(currentLocation) ;
+    	if (startNode == null) return null ;
+    	var frontiers = getFrontierVertices() ;
+    	if (frontiers.isEmpty()) return null ;
+    	// sort the frontiers ascendingly, by their distance to the given location above:
+    	frontiers.sort((p1,p2) -> Float.compare(
+    			Vec3.dist(vertices.get(p1.fst), currentLocation), 
+    			Vec3.dist(vertices.get(p2.fst), currentLocation))) ;
+    	
+    	for (var front : frontiers) {
+    		var path = findPath(startNode,front.fst) ;
+    		if (path != null) {
+    			// ok, so reaching the frontier front.fst is possible;
+    			// we will also add the unexplored and unblocked neighbor of
+    			// front.fst to the path:
+    			path.add(front.snd) ;
+    			return path ;
+    		}
+    	}
+    	return null ;
     }
 
 }
