@@ -3,6 +3,7 @@ package eu.iv4xr.framework.extensions.pathfinding;
 import java.util.*;
 
 import eu.iv4xr.framework.spatial.Line;
+import eu.iv4xr.framework.spatial.Obstacle;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
 
@@ -233,22 +234,37 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     }
     
     /**
-     * Return the id/index of a vertex, which is nearest to the given location. Note that
-     * this method does not take into account whether this nearest vertex has been seen
-     * or not. If it is not, navigation to there will not be possible. 
-     * 
-     * Note: this choice is intentional.
-     */
-    public int getNearestVertex(Vec3 location) {
+	 * Return the id/index of a vertex, which is nearest to the given location, and
+	 * moreover the line between the location and this vertex is not blocked by any
+	 * of the blocking obstacles.
+	 * 
+	 * The method returns null if no such vertex can be found.
+	 * 
+	 * Note that this method does not take into account whether this nearest vertex
+	 * has been seen or not. If it is not, navigation to there will not be possible.
+	 * Note: this choice is intentional.
+	 * 
+	 */
+    public Integer getNearestUnblockedVertex(Vec3 location) {
     	float dist = Float.MAX_VALUE ;
-    	int nearest = -1 ;
+    	Integer nearest = null ;
     	int id = 0 ;
     	for (Vec3 v : vertices) {
+    		boolean direct_line_is_blocked = false ;
+    		for (var obs : obstacles) {
+    			Line line = new Line(location,v) ;
+    			if (obs.isBlocking && obs.obstacle.intersects(line))  {
+    				direct_line_is_blocked = true ;
+    				break ;
+    			}
+    		}
+    		if (direct_line_is_blocked) break ;
     		if (Vec3.dist(location, v) < dist) nearest = id ;
     		id++ ;
     	}
     	return nearest ;
     }
+    
     
     /**
      * Return the neighboring vertices of id. Only neighbors marked as "seen"
@@ -303,9 +319,20 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * It is up to the agent to figure out how to get from its own physical start
      * location to the starting vertex, and to get from the goal vertex to its
      * actual goal location.
+     * 
+     * The method calculates the start and goal-nodes such that the straight line
+     * between them and the corresponding start and goal locations are not blocked
+     * by any of the blocking obstacles.
      */
     public ArrayList<Integer> findPath(Vec3 start, Vec3 goal) {
-    	return findPath(getNearestVertex(start), getNearestVertex(goal)) ;
+    	Integer startNode = getNearestUnblockedVertex(start) ;
+    	if (startNode == null) return null ;
+    	Integer goalNode = getNearestUnblockedVertex(goal) ;
+    	return findPath(startNode,goalNode) ;
+    }
+    
+    public Integer explore() {
+    	// bla bla
     }
 
 }
