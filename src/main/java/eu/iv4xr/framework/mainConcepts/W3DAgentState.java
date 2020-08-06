@@ -24,7 +24,7 @@ public class W3DAgentState extends State {
      */
 	public W3DAgentState setEnvironment(W3DEnvironment env) {
 		super.setEnvironment(env) ;
-		worldNavigation = new SurfaceNavGraph(env.theWorldNavigableSurface) ;
+		worldNavigation = new SurfaceNavGraph(env.worldNavigableMesh) ;
 		return this ;
 	}
 	

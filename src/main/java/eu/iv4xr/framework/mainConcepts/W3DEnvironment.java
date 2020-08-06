@@ -90,8 +90,8 @@ public class W3DEnvironment extends Environment {
 	 * (does not change through out the agents' runs).
 	 */
 	public void loadWorld() {
-		theWorldNavigableSurface = (Mesh) sendCommand(null,null,LOADWORLD_CMDNAME,null,Mesh.class) ;
-		if (theWorldNavigableSurface==null) 
+		worldNavigableMesh = (Mesh) sendCommand(null,null,LOADWORLD_CMDNAME,null,Mesh.class) ;
+		if (worldNavigableMesh==null) 
 			throw new Iv4xrError("Fail to load the navgation-graph of the world") ;
 	}
 	
