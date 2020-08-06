@@ -29,15 +29,6 @@ public class W3DEnvironment extends Environment {
 	Mesh worldNavigableMesh ;
 	
 	/**
-	 * A graph of vertices/nodes to navigate the 3D-world represented by this
-	 * environment. The graph should describes the world in terms of its navigable
-	 * surface, which is then divided into small connected convex polygons/faces.
-	 * The graph will then describe navigation/connectivity between the corners and
-	 * center-points of those polygons.
-	 */
-	Mesh theWorldNavigableSurface ;
-	
-	/**
 	 * Execute an interaction of the specified type on the given target entity in
 	 * the real environment.
 	 * 
