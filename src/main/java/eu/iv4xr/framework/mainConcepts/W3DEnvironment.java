@@ -26,7 +26,7 @@ public class W3DEnvironment extends Environment {
 	 * A polygon-mesh describing the navigable surface of the 3D-world represented by
 	 * this environment.
 	 */
-	Mesh worldNavigableMesh ;
+	public Mesh worldNavigableMesh ;
 	
 	/**
 	 * Execute an interaction of the specified type on the given target entity in
