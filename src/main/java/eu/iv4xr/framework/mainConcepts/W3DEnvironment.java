@@ -6,6 +6,7 @@ import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.Mesh;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * An extension of {@link nl.uu.cs.aplib.mainConcepts.Environment}. It
@@ -75,8 +76,11 @@ public class W3DEnvironment extends Environment {
 	 * The method should return a new observation, sampled at the end of its
 	 * movement.
 	 */
-	public WorldModel moveToward(String agentId, Vec3 targetLocation) {
-		return (WorldModel) sendCommand(agentId,null,MOVETOWARD_CMDNAME,targetLocation,WorldModel.class) ;
+	public WorldModel moveToward(String agentId, Vec3 agentLocation, Vec3 targetLocation) {
+		return (WorldModel) sendCommand(agentId,null,
+				MOVETOWARD_CMDNAME,
+				new Pair(agentLocation,targetLocation),
+				WorldModel.class) ;
 	}
 	
 	/**

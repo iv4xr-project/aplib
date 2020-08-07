@@ -255,16 +255,19 @@ public class WorldModel {
 	}
 
 	/**
-	 * The agent will move a small distance is the given direction. If the real environment
-	 * allows the movement velocity to be set, then the length of the direction vector
-	 * specifies this velocity. Note that this method
-	 * is very primitive. That is, it may only move the agent a small distance in the
-	 * given direction.
+	 * The agent will move a (small) distance is towards the given target location. This
+	 * method will NOT deal with obstacles in-between. 
+	 * 
+	 * The vector between the target location and the agent's current position can be
+	 * seen as specifying the direction to move, and the length of this vector is the
+	 * speed of the agent. Whether the agent will actually move with this speed depends
+	 * on the game itself. E.g. the agent always move with a fixed speed, then it might
+	 * not reach the target location with just 1x call to this method.
 	 * 
 	 * It returns an observation of the real environment, sampled at the end of the move.
 	 */
-	public WorldModel moveToward(W3DEnvironment env, Vec3 direction) {
-		return env.moveToward(agentId, direction)  ;
+	public WorldModel moveToward(W3DEnvironment env, Vec3 targetLocation) {
+		return env.moveToward(agentId, position, targetLocation)  ;
 	}
 
 
