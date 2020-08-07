@@ -23,7 +23,8 @@ import eu.iv4xr.framework.spatial.meshes.*;
  * @author Naraenda
  */
 public class Mesh {
-    public ArrayList<Vec3> vertices;
-    public ArrayList<Edge> edges;
-    public ArrayList<Face> faces;
+    public ArrayList<Vec3> vertices = new ArrayList<>() ;
+    public ArrayList<Edge> edges = new ArrayList<>() ;
+    public ArrayList<Face> faces = new ArrayList<>() ;
+    public Mesh() { }
 }
