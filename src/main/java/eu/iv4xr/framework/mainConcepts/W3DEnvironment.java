@@ -62,8 +62,9 @@ public class W3DEnvironment extends Environment {
 	}	
 	
 	/**
-	 * A command to instruct an agent to move a small distance in the given
-	 * direction. How far the agent actually moves depends on the real environment.
+	 * A command to instruct an agent to move a small distance towards the given
+	 * target location.
+	 * How far the agent actually moves depends on the real environment.
 	 * Typically, the calling agent will execute interactions/commands in update
 	 * cycles. Then it depends on how fast time proceeds in the real environment as
 	 * we advance from one agent's update-cycle to the next. A possible setup is to
@@ -73,15 +74,9 @@ public class W3DEnvironment extends Environment {
 	 * 
 	 * The method should return a new observation, sampled at the end of its
 	 * movement.
-	 * 
-	 * @param direction A vector specifying the direction for the agent to move to.
-	 *                  The length of the vector specifies the movement velocity, as
-	 *                  far as the real environment allow the velocity to be
-	 *                  specified. Else the velocity will be ignored, and the real
-	 *                  environment decides the velocity.
 	 */
-	public WorldModel moveToward(String agentId, Vec3 direction) {
-		return (WorldModel) sendCommand(agentId,null,MOVETOWARD_CMDNAME,direction,WorldModel.class) ;
+	public WorldModel moveToward(String agentId, Vec3 targetLocation) {
+		return (WorldModel) sendCommand(agentId,null,MOVETOWARD_CMDNAME,targetLocation,WorldModel.class) ;
 	}
 	
 	/**
