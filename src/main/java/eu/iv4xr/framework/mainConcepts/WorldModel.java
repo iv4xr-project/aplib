@@ -255,14 +255,12 @@ public class WorldModel {
 	}
 
 	/**
-	 * The agent will move a (small) distance is towards the given target location. This
-	 * method will NOT deal with obstacles in-between. 
-	 * 
-	 * The vector between the target location and the agent's current position can be
-	 * seen as specifying the direction to move, and the length of this vector is the
-	 * speed of the agent. Whether the agent will actually move with this speed depends
-	 * on the game itself. E.g. the agent always move with a fixed speed, then it might
-	 * not reach the target location with just 1x call to this method.
+	 * The agent will move some (small) distance is towards the given target location. This
+	 * method will NOT deal with obstacles in-between. Assuming that the space between the
+	 * agent and the target location is clear of obstacle, whether the agent can cover
+	 * the full distance or only some of it depends on the speed of the agent. E.g. is the
+	 * speed is fixed and the distance is more than what this speed can cover in a single
+	 * "cycle", then obviously the full distance will not be covered.
 	 * 
 	 * It returns an observation of the real environment, sampled at the end of the move.
 	 */
