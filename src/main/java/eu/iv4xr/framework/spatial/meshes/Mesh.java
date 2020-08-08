@@ -27,4 +27,22 @@ public class Mesh {
     public ArrayList<Edge> edges = new ArrayList<>() ;
     public ArrayList<Face> faces = new ArrayList<>() ;
     public Mesh() { }
+    
+    @Override
+    public String toString() {
+    	var sb = new StringBuffer() ;
+    	int k = 0 ;
+    	for (Face face : faces) {
+    		if (k>0) sb.append("\n") ;
+    		sb.append("Face-" + k + ": (" + face.vertices.length + ") ") ;
+    		int j = 0 ;
+    		for (int v : face.vertices) {
+    			if (j>0) sb.append(", ") ;
+    			sb.append("" + vertices.get(face.vertices[v])) ;
+    			j++ ;
+    		}
+    		k++ ;
+    	}
+    	return sb.toString() ;
+    }
 }
