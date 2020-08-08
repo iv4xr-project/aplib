@@ -28,8 +28,9 @@ public class Mesh {
     public ArrayList<Face> faces = new ArrayList<>() ;
     public Mesh() { }
     
-    @Override
+//    @Override
     public String toString() {
+    	System.out.println(">>> #vertices = " + vertices.size()) ; 
     	var sb = new StringBuffer() ;
     	int k = 0 ;
     	for (Face face : faces) {
@@ -38,7 +39,7 @@ public class Mesh {
     		int j = 0 ;
     		for (int v : face.vertices) {
     			if (j>0) sb.append(", ") ;
-    			sb.append("" + vertices.get(face.vertices[v])) ;
+    			sb.append("" + vertices.get(v)) ;
     			j++ ;
     		}
     		k++ ;

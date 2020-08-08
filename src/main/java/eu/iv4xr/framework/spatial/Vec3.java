@@ -1,5 +1,7 @@
 package eu.iv4xr.framework.spatial;
 
+import java.util.Objects;
+
 /**
  * This is a simple 3D vector implementation using floats.
  * 
@@ -158,5 +160,22 @@ public class Vec3 {
         if (s == 0) 
             throw new ArithmeticException();
         return div(this, s);
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("<%s,%s,%s>", x, y, z);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Vec3)) return false;
+        Vec3 v = (Vec3) obj;
+        return x == v.x && y == v.y && z == v.z;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, z);
     }
 }
