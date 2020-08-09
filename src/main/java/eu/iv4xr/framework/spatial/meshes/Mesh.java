@@ -61,7 +61,11 @@ public class Mesh {
     					break ;
     				}
     			}
-    			group.add(face) ;
+    			if (foundGroup) {
+    				group.add(face) ;
+    				break ;
+    			}
+    			
     		}
 			if (!foundGroup) {
 				List<Face> newgroup = new LinkedList<>() ;
