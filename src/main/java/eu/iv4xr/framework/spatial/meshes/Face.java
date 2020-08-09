@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.spatial.meshes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -61,6 +62,25 @@ public class Face implements Iterable<Integer> {
     	// last edge:
     	Edge ex = new Edge(vertices[N_], vertices[0]) ;
     	return e.equals(ex) ;
+    }
+    
+    public String toString(ArrayList<Vec3> concreteVertices) {
+    	var sb = new StringBuffer() ;
+    	sb.append("#verts=" + vertices.length + " (") ;
+    	int j=0 ;
+    	for (int v : vertices) {
+    		if (j>0) sb.append(", ") ;
+    		sb.append("" + v) ;
+    		j++ ;
+    	}
+    	sb.append(") ; positions: ") ;
+    	j = 0 ;
+    	for (int v : vertices) {
+    		if (j>0) sb.append(", ") ;
+    		sb.append("" + concreteVertices.get(v)) ;
+    		j++ ;
+    	}
+    	return sb.toString() ;
     }
     
     /**

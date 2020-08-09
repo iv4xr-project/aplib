@@ -1,6 +1,8 @@
 package eu.iv4xr.framework.spatial.meshes;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
@@ -35,15 +37,38 @@ public class Mesh {
     	int k = 0 ;
     	for (Face face : faces) {
     		if (k>0) sb.append("\n") ;
-    		sb.append("Face-" + k + ": (" + face.vertices.length + ") ") ;
-    		int j = 0 ;
-    		for (int v : face.vertices) {
-    			if (j>0) sb.append(", ") ;
-    			sb.append("" + vertices.get(v)) ;
-    			j++ ;
-    		}
+    		sb.append("Face-" + k + ": " + face.toString(vertices)) ;
     		k++ ;
     	}
     	return sb.toString() ;
+    }
+    
+    /**
+     * Return the groups of connected faces. So, if all faces in this mesh is connected,
+     * then only one group will be returned, consisting of all faces in the mesh.
+     */
+    public List<List<Face>> getConnectedComponets() {
+    	LinkedList<Face> worklist = new LinkedList<>() ;
+    	worklist.addAll(faces) ;
+    	List<List<Face>> components = new LinkedList<>() ;
+    	while (!worklist.isEmpty()) {
+    		var face = worklist.removeFirst() ;
+    		var foundGroup = false ;
+			for (List<Face> group : components) {
+    			for(Face f2 : group) {
+    				if (Face.isConnected(face,f2)) {
+    					foundGroup = true ;
+    					break ;
+    				}
+    			}
+    			group.add(face) ;
+    		}
+			if (!foundGroup) {
+				List<Face> newgroup = new LinkedList<>() ;
+				newgroup.add(face) ;
+				components.add(newgroup) ;
+			}
+    	}
+    	return components ;
     }
 }
