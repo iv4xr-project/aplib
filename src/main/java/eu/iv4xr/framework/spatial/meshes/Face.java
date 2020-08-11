@@ -3,6 +3,7 @@ package eu.iv4xr.framework.spatial.meshes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import eu.iv4xr.framework.spatial.Vec3;
@@ -22,6 +23,7 @@ import eu.iv4xr.framework.spatial.Vec3;
  *
  */
 public class Face implements Iterable<Integer> {
+	
     public int[] vertices;
 
     public Face(int[] vertices) {
@@ -110,5 +112,30 @@ public class Face implements Iterable<Integer> {
         }
 
         return common >= 2;
+    }
+    
+    
+    /**
+     * Test if the given point is inside this Face. We only look at the (X,Z) values. So, essentially
+     * pretending the Face is 2D.
+     * 
+     * Algorithm: https://algorithmtutor.com/Computational-Geometry/Check-if-a-point-is-inside-a-polygon/
+     * Which looks to be a generalization of an algorithm for triangle: https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+     */
+    public boolean coversPointXZ(Vec3 point, ArrayList<Vec3> concreteVertices) {
+    	int N = vertices.length ;
+    	List<Float> d = new LinkedList<>() ;
+    	for (int i=0; i<N; i++) {
+    		var p1 = concreteVertices.get(vertices[i]) ;
+    		var p2 = concreteVertices.get(vertices[(i + 1) % N]) ;
+    		// calculate A, B and C
+    		float a = -(p2.z - p1.z) ;
+    		float b = p2.x - p1.x ;
+    		float c = -(a * p1.x + b * p1.z) ;
+    		d.add(a * point.x + b * point.z + c) ;
+
+    	}
+    	return d.stream().allMatch(value -> value >=0) 
+    			|| d.stream().allMatch(value -> value <=0) ;
     }
 }

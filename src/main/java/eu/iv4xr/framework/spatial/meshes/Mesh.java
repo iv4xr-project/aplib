@@ -3,6 +3,7 @@ package eu.iv4xr.framework.spatial.meshes;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
@@ -42,37 +43,5 @@ public class Mesh {
     	}
     	return sb.toString() ;
     }
-    
-    /**
-     * Return the groups of connected faces. So, if all faces in this mesh is connected,
-     * then only one group will be returned, consisting of all faces in the mesh.
-     */
-    public List<List<Face>> getConnectedComponets() {
-    	LinkedList<Face> worklist = new LinkedList<>() ;
-    	worklist.addAll(faces) ;
-    	List<List<Face>> components = new LinkedList<>() ;
-    	while (!worklist.isEmpty()) {
-    		var face = worklist.removeFirst() ;
-    		var foundGroup = false ;
-			for (List<Face> group : components) {
-    			for(Face f2 : group) {
-    				if (Face.isConnected(face,f2)) {
-    					foundGroup = true ;
-    					break ;
-    				}
-    			}
-    			if (foundGroup) {
-    				group.add(face) ;
-    				break ;
-    			}
-    			
-    		}
-			if (!foundGroup) {
-				List<Face> newgroup = new LinkedList<>() ;
-				newgroup.add(face) ;
-				components.add(newgroup) ;
-			}
-    	}
-    	return components ;
-    }
+   
 }
