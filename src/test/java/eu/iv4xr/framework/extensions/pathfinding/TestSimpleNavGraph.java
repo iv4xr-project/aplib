@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import eu.iv4xr.framework.spatial.*;
 import eu.iv4xr.framework.spatial.meshes.*;
 
-public class TestNavGraph {
+public class TestSimpleNavGraph {
 
     private SimpleNavGraph makeTriangle() {
         var n = new SimpleNavGraph();
@@ -51,16 +51,14 @@ public class TestNavGraph {
     @Test
     public void testBlocking() {
         var n = makeTriangle();
-        var o = new Obstacle<LineIntersectable>(
-            new Sphere(0.5f, new Vec3(0, 0, 1)));
+        var o = new Sphere(0.5f, new Vec3(0, 0, 1)) ;
 
-        n.obstacles = new ArrayList<Obstacle<LineIntersectable>>();
-        n.obstacles.add(o);
+        n.addObstacle(o);
         var p = new AStar();
         ArrayList<Integer> path;
         
         // Check with sphere not blocking
-        o.isBlocking = false;
+        n.toggleBlockingOff(o);
         path = p.findPath(n, 0, 2);
 
         assertEquals(2, path.size());
@@ -68,7 +66,7 @@ public class TestNavGraph {
         assertEquals(2, path.get(1));
 
         // Check with sphere blocking
-        o.isBlocking = true;
+        n.toggleBlockingOn(o);
         path = p.findPath(n, 0, 2);
 
         assertEquals(path.size(), 3);
@@ -77,10 +75,9 @@ public class TestNavGraph {
         assertEquals(2, path.get(2));
 
         // Check no route
-        var o2 = new Obstacle<LineIntersectable>(
-            new Sphere(0.3f, new Vec3(0, 0.5f, 1.5f)));
-        o2.isBlocking = true;
-        n.obstacles.add(o2);
+        var o2 = new Sphere(0.3f, new Vec3(0, 0.5f, 1.5f)) ;
+        n.addObstacle(o2);
+        n.toggleBlockingOn(o2);
 
         path = p.findPath(n, 0, 2);
         assertEquals(null, path);

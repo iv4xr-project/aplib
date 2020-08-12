@@ -7,7 +7,7 @@ import java.util.LinkedList;
 /**
  * Representing a 3D rectangular shape. For now, we don't support rotation.
  */
-public class Rectangular3D implements LineIntersectable {
+public class Box implements LineIntersectable {
 	
 	public Vec3 center ;
 	
@@ -17,7 +17,7 @@ public class Rectangular3D implements LineIntersectable {
 	 */
 	public Vec3 width ;
 	
-	public Rectangular3D(Vec3 center, Vec3 width) {
+	public Box(Vec3 center, Vec3 width) {
 		this.center = center ;
 		this.width = width ;
 	}

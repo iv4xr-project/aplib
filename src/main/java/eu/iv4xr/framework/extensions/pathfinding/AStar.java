@@ -46,13 +46,15 @@ public class AStar implements Pathfinder {
             var distToCurrent = closed.get(current).floatValue();
 
             for (var next_ : graph.neighbours(current)) {
-                // Unbox value
+            	// Unbox value
                 int next = next_.intValue();
-
+                
+               // System.out.println("## current:" + current + ", next: " + next) ;
+                
                 // The distance from start to next
                 var distToNext = distToCurrent + graph.distance(current, next);
 
-                // Guard for negetive distances
+                // Guard for negative distances
                 if (distToNext < 0) 
                     distToNext = 0;
 

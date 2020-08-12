@@ -9,7 +9,7 @@ public class TestRectangular3D {
 	@Test
 	public void testHit() {
 		// rectangular with center (1,0,0) and width 2 :
-		var rect = new Rectangular3D(new Vec3(1,0,0), new Vec3(2,2,2)) ;
+		var rect = new Box(new Vec3(1,0,0), new Vec3(2,2,2)) ;
 		
 		// lines that intersect two sides:
 		
@@ -54,7 +54,7 @@ public class TestRectangular3D {
 	@Test
 	public void testTouch() {
 		// rectangular with center (1,0,0) and width 2 :
-		var rect = new Rectangular3D(new Vec3(1,0,0), new Vec3(2,2,2)) ;
+		var rect = new Box(new Vec3(1,0,0), new Vec3(2,2,2)) ;
 		
 		// line that touches one side:
 		var line = new Line(new Vec3(-1,3,3), new Vec3(0,0,0)) ;
@@ -75,7 +75,7 @@ public class TestRectangular3D {
 	@Test
 	public void testMiss() {
 		// rectangular with center (1,0,0) and width 2 :
-		var rect = new Rectangular3D(new Vec3(1,0,0), new Vec3(2,2,2)) ;
+		var rect = new Box(new Vec3(1,0,0), new Vec3(2,2,2)) ;
 		
 		// line that misses the rectangle
 		var line = new Line(new Vec3(0,2,2), new Vec3(2,2,2)) ;

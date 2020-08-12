@@ -33,6 +33,48 @@ public class SimpleNavGraph implements Navigatable {
     public void addObstacle(LineIntersectable obstacle) {
         obstacles.add(new Obstacle<LineIntersectable>(obstacle));
     }
+    
+    public void removeObstacle(LineIntersectable tobeRemoved) {
+    	Obstacle q = null ;
+    	for (var o : obstacles) {
+    		if (o.obstacle == tobeRemoved) {
+    			q = o ;
+    			break ;
+    		}
+    	}
+    	if (q != null) obstacles.remove(q) ;
+    }
+    
+    public void toggleBlockingOn(LineIntersectable obstacle) {
+    	for (var o : obstacles) {
+    		if (o.obstacle == obstacle) {
+    			o.isBlocking = true ;
+    			break ;
+    		}
+    	}
+    }
+    
+    public void toggleBlockingOff(LineIntersectable obstacle) {
+    	for (var o : obstacles) {
+    		if (o.obstacle == obstacle) {
+    			o.isBlocking = false ;
+    			break ;
+    		}
+    	}
+    }
+    
+    /**
+     * Return the status of the given obstacle, if it is marked as blocking (true) or non-blocking (false).
+     * Return null of the said obstacle is not known.
+     */
+    public Boolean getBlockingStatus(LineIntersectable obstacle) {
+    	for (var o : obstacles) {
+    		if (o.obstacle == obstacle) {
+    			return o.isBlocking ;
+    		}
+    	}
+    	return null ;
+    }
 
     public SimpleNavGraph(EdgeMap edges, ArrayList<Vec3> vertices, ArrayList<Obstacle<LineIntersectable>> obstacles){
         this.edges = edges;
@@ -55,11 +97,20 @@ public class SimpleNavGraph implements Navigatable {
     	return vertices.get(i) ;
     }
 
+    /**
+     * Heuristic distance between any two vertices. Here it is chosen to be the geometric
+     * distance between them.
+     */
     @Override
     public float heuristic(int from, int to) {
         return Vec3.dist(vertices.get(from), vertices.get(to));
     }
 
+    
+    /**
+     * The distance between two NEIGHBORING vertices. If the connection is not blocked,
+     * it is deined to be their geometric distance, and else +inf.
+     */
     @Override
     public float distance(int from, int to) {
         Vec3 a = vertices.get(from);

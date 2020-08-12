@@ -184,6 +184,8 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         pathfinder = new AStar() ;
     }
     
+    
+    
     /**
      * Mark all vertices as "unseen".
      */
@@ -234,6 +236,12 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	}
     }
     
+    public void markAsSeen(Integer ... seen) {
+    	List<Integer> seen_ = new LinkedList<>() ;
+    	Collections.addAll(seen_ , seen) ;
+    	markAsSeen(seen_) ;
+    }
+    
     /**
      * Check if the line from x to y is blocked by any of the
      * blocking obstacles.
@@ -249,9 +257,15 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     
     
     /**
-	 * Return the id/index of a vertex, which is nearest to the given location, and
-	 * moreover the line between the location and this vertex is not blocked by any
-	 * of the blocking obstacles.
+	 * Return the id/index of a vertex, which is:
+	 * 
+	 *    (1) on the same Face as the given location
+	 *    (2) nearest to the location
+	 *    (3) and moreover the line between the location and this vertex is 
+	 *    not blocked by any of the blocking obstacles.
+	 *    
+	 * The method assume the the given location is NOT inside some blocking
+	 * object.   
 	 * 
 	 * The method returns null if no such vertex can be found.
 	 * 
@@ -261,18 +275,45 @@ public class SurfaceNavGraph extends SimpleNavGraph {
 	 * 
 	 */
     public Integer getNearestUnblockedVertex(Vec3 location) {
+    	// first find a face that contains the location:
+    	Face face = null ;
+    	for (Face f : faces) {
+    		if (f.coversPointXZ(location,vertices)) {
+    			face = f ;
+    			break ;
+    		}
+    	}
+    	if (face == null) {
+    		// well... then the location is not even in the mesh:
+    		return null ;
+    	}
+    	
+    	// find vertices to be taken into consideration. These are the face's corners + its center:
+    	List<Integer> verticesToConsider = new LinkedList<>() ;
+    	for(int v : face.vertices)
+    	{
+    		verticesToConsider.add(v) ;
+    	}
+    	verticesToConsider.add(faceToCenterIdMap.get(face)) ;
+    	
     	float dist = Float.MAX_VALUE ;
     	Integer nearest = null ;
-    	int id = 0 ;
-    	for (Vec3 v : vertices) {
-    		if (! isBlocked(location,v))  {
-    			if (Vec3.dist(location, v) < dist) nearest = id ;
+    	for (var v : verticesToConsider) {
+    		var v_location = vertices.get(v) ;
+    		if (! isBlocked(location,v_location))  {
+    			if (Vec3.dist(location, v_location) < dist) nearest = v ;
     		}
-    		id++ ;
     	}
     	return nearest ;
     }
     
+    
+    /**
+     * If true, the pathfinder will assume that the whole navgraph has been "seen",
+     * so no vertex would count as unreacahble because it is still unseen.
+     * The default of this flag is false.
+     */
+    public boolean perfect_memory_pathfinding = false ;
     
     /**
      * Return the neighboring vertices of id. Only neighbors marked as "seen"
@@ -280,32 +321,43 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      */
     @Override
     public Iterable<Integer> neighbours(int id) {
-    	// get the neighbors of id, and CLONE it to avoid destructive side effect
-    	// when we later filter it:
-    	HashSet<Integer> neighbors = (HashSet<Integer>) edges.neighbours(id).clone();
+    	// clone the neigbor-set to prevent side effect when we next filter it:
+    	HashSet<Integer>neighbors = new HashSet<>() ;
+    	for (var v : edges.neighbours(id)) {
+    		neighbors.add(v) ;
+    	}
+    	if (perfect_memory_pathfinding) return neighbors ;
     	// only let "seen" neighbors through:
     	neighbors.removeIf(v -> ! seenVertices.get(v));
         return neighbors ;
     }
     
     
-    
+    /**
+     * Defining the distance between two NEIGHBORING vertices.
+     */
     @Override
-    public float distance(int from, int to) {
-    	float distance = super.distance(from,to) ;
+    public float heuristic(int from, int to) {
+    	float distance = super.heuristic(from,to) ;
+    	//System.out.println("----" + from + " --> " + to + " dist = " + distance) ; 
     	if (distance == Float.POSITIVE_INFINITY) return distance ;
+    	//System.out.println(">>>>") ;
         // apply penalty to the distanced according to the travel preference:
         switch(travelPreferrence) {
            case PREFER_CENTER : 
-        	   if (verticesType.get(to) != VertexType.CENTRE)
-        		   distance = 1.2f * distance ;
+        	   if (verticesType.get(from) == VertexType.CENTRE) {
+        		   distance = 0.8f * distance ; 
+        	    }
+        	   //System.out.println(">> " + from + "->" + to + ", dist: " + distance) ; 
         	   break ; 
            case PREFER_BORDER : 
-        	   if (verticesType.get(to) != VertexType.BORDER)
-            	   distance = 1.1f * distance ;
+        	   if (verticesType.get(to) == VertexType.BORDER) {
+            	   distance = 0.8f * distance ;
+        	   }
                break ; 
            default :
         }
+        //System.out.println(">> distance: " + distance) ;
         return distance ;
     }
     
@@ -365,27 +417,43 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	return frontiers ;
     }
     
+    
     /**
-     * Find a path to an unexplored and unblocked vertex which is
-     * the closest to the given location. Note that the path ends
-     * in that unexplored vertex.
-     * 
-     * If no such vertex, or no path to such a vertex can be founf,
-     * the method returns null.
-     */
-    public List<Integer> explore(Vec3 currentLocation) {
+	 * Find a path to an unexplored and unblocked vertex w which is the geometrically
+	 * 'closest' to the given the given start location. Note that the path ends in that
+	 * unexplored vertex.
+	 * 
+	 * More precisely, we first look an explored vertex v in the vicinity of the given start-location,
+	 * that can be reached by a straight line from the start location, without being blocked.
+	 * The w meant above is the closest to this intermediate v.
+	 * 
+	 * If no no such path nor intermediate v can be found, the method returns null.
+	 */
+    public List<Integer> explore(Vec3 startLocation) {
+    	var startVertex = getNearestUnblockedVertex(startLocation) ;
+    	if (startVertex == null) return null ;
+    	return explore(startVertex) ;
+    }
+    
+    /**
+	 * Find a path to an unexplored and unblocked vertex which is the geometrically
+	 * closest to the given starting vertex. Note that the path ends in that
+	 * unexplored vertex.
+	 * 
+	 * If no no such path can be found, the method returns null.
+	 */
+    public List<Integer> explore(int startVertex) {
     	
-    	var startNode = getNearestUnblockedVertex(currentLocation) ;
-    	if (startNode == null) return null ;
     	var frontiers = getFrontierVertices() ;
     	if (frontiers.isEmpty()) return null ;
-    	// sort the frontiers ascendingly, by their distance to the given location above:
+    	// sort the frontiers ascendingly, by their geometric distance to the start-vertex:
+    	Vec3 startLocation = vertices.get(startVertex) ;
     	frontiers.sort((p1,p2) -> Float.compare(
-    			Vec3.dist(vertices.get(p1.fst), currentLocation), 
-    			Vec3.dist(vertices.get(p2.fst), currentLocation))) ;
+    			Vec3.dist(vertices.get(p1.fst), startLocation), 
+    			Vec3.dist(vertices.get(p2.fst), startLocation))) ;
     	
     	for (var front : frontiers) {
-    		var path = findPath(startNode,front.fst) ;
+    		var path = findPath(startVertex,front.fst) ;
     		if (path != null) {
     			// ok, so reaching the frontier front.fst is possible;
     			// we will also add the unexplored and unblocked neighbor of

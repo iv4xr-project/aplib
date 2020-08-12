@@ -47,7 +47,7 @@ public class TestFace {
 	 * convex polygon. We only look at the X and Z coordinates.
 	 */
 	@Test
-	public void coversPointXZ() {
+	public void test_coversPointXZ() {
 		// test with triangle:
 		var triangle_ = triangle() ;
 		var triangle_face = triangle_.fst ;
