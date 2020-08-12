@@ -1,6 +1,7 @@
 package eu.iv4xr.framework.spatial;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 /**
@@ -15,7 +16,30 @@ public class Rectangular3D implements LineIntersectable {
 	 * to each of the corresponding direction.
 	 */
 	public Vec3 width ;
+	
+	public Rectangular3D(Vec3 center, Vec3 width) {
+		this.center = center ;
+		this.width = width ;
+	}
 
+	/**
+	 * In typical cases, if a line intersects with a 3D rectangle, it will intersect at
+	 * one point (if the line ends somewhere inside the rectangle), or at two points
+	 * (if the line pass through the whole rectangle).
+	 * 
+	 * There are two a bit exceptional case:
+	 * 
+	 * (1) the line touches one of the rectangle corner. Although technically it intersects
+	 * with three of the rectangle's surfaces, the intersection points will all be the the same,
+	 * namely the corner. So, we will only return this single intersection point.
+	 * 
+	 * (2) the line slides along one of the rectangle's surfaces. Technically, it will then 
+	 * intersects at infinite number of points. However we will only return the points where
+	 * the line would go through other surfaces (the one that it does NOT slide on). 
+	 * 
+	 * Bearing those special cases in mind, this method will therefore return at most 2
+	 * intersection points.
+	 */
 	@Override
 	public Collection<Vec3> intersect(Line l) {
 		float minX = center.x - width.x/2 ;
@@ -25,7 +49,7 @@ public class Rectangular3D implements LineIntersectable {
 		float maxY = center.y + width.x/2 ;
 		float maxZ = center.z + width.x/2 ;
 		
-		Collection<Vec3> intersections = new LinkedList<>() ;
+		Collection<Vec3> intersections = new HashSet<>() ;
 		
 		// calculate intersections between the line and the six surfaces of the rectangle-3D:
 		
@@ -89,6 +113,12 @@ public class Rectangular3D implements LineIntersectable {
 	 */
 	Vec3 intersectPlaneXY(Vec3 p, Vec3 q, float c) {
 		Vec3 direction = Vec3.sub(q,p) ;
+		if (direction.z == 0) {
+			// The line is parallel with the plane, so it can't intersect the plane.
+			// One special case is of the line is literally on the plane. We will call
+			// the line as having to intersection. It will intersect two other planes though.
+			return null ;
+		}
 		float t = (c - p.z) / direction.z ;
 		if (t<0 || t>1) {
 			// the intersection lies outside the line (not between p and q)
@@ -103,6 +133,7 @@ public class Rectangular3D implements LineIntersectable {
 	 */
 	Vec3 intersectPlaneXZ(Vec3 p, Vec3 q, float c) {
 		Vec3 direction = Vec3.sub(q,p) ;
+		if (direction.y == 0) return null ;
 		float t = (c - p.y) / direction.y ;
 		if (t<0 || t>1) {
 			// the intersection lies outside the line (not between p and q)
@@ -117,6 +148,7 @@ public class Rectangular3D implements LineIntersectable {
 	 */
 	Vec3 intersectPlaneYZ(Vec3 p, Vec3 q, float c) {
 		Vec3 direction = Vec3.sub(q,p) ;
+		if (direction.x == 0) return null ;
 		float t = (c - p.x) / direction.x ;
 		if (t<0 || t>1) {
 			// the intersection lies outside the line (not between p and q)
