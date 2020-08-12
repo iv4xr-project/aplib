@@ -259,7 +259,8 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     /**
 	 * Return the id/index of a vertex, which is:
 	 * 
-	 *    (1) on the same Face as the given location
+	 *    (1) on the same Face as the given location. Note: when checking this this method ignores the "y" axis;
+	 *    so projecting all over the XZ plane.
 	 *    (2) nearest to the location
 	 *    (3) and moreover the line between the location and this vertex is 
 	 *    not blocked by any of the blocking obstacles.
