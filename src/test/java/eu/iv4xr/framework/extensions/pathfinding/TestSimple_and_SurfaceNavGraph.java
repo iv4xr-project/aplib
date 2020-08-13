@@ -166,7 +166,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	
 	
 	@Test
-	public void test_pathPinfing_on_SimpleNavGarph() {
+	public void test_pathFinding_on_SimpleNavGarph() {
 		Mesh mesh = mesh0() ;
 		SimpleNavGraph navgraph = SimpleNavGraph.fromMeshFaceAverage(mesh0()) ;
 		var pathfinder = new AStar() ;
@@ -188,6 +188,11 @@ public class TestSimple_and_SurfaceNavGraph {
 	return true ;	
 	}
 	
+	/**
+	 * Test vertex to vertex path-finding on SurfaceNavGraph, under perfect memory.
+	 * We also test different path preferences (CENTER/BORDER), as well as with
+	 * obstacles.
+	 */
 	@Test
 	public void test_SurfaceNavGraph_pathPinfing() {
 		Mesh mesh = mesh0() ;
@@ -231,6 +236,10 @@ public class TestSimple_and_SurfaceNavGraph {
 		assertTrue(checkPath(path,2,6,7,3,5)) ;
 		//System.out.println(path) ;
 	}
+
+	/**
+	 * Test vertex to vertex, memory-based path-finding on SurfaceNavGraph.
+	 */
 
 	@Test
 	public void test_SurfaceNavGraph_memory_based_pathfinding() {
@@ -281,5 +290,35 @@ public class TestSimple_and_SurfaceNavGraph {
         // explore should now have no path left:
         path = navgraph.explore(2) ;
         assertTrue(path == null) ;				
+	}
+	
+	@Test
+	public void test_SurfaceNavgrapg_getNearestUnblockedVertex() {
+		Mesh mesh = mesh0() ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		Vec3 location = new Vec3(0,0,0) ;
+		Integer vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 1) ;
+		
+		location = new Vec3(-0.1f,0,-0.1f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 1) ;
+		
+		location = new Vec3(-1f,0,2f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 3) ;
+		
+		location = new Vec3(-1f,0,1f) ;
+		var face1 = navgraph.faces.get(1) ;
+		//for (int v : face1.vertices) {
+		//	System.out.println("     >> vert " + v + ", at " + navgraph.vertices.get(v)) ;
+		//}
+		System.out.println("## dist face 1: " + face1.distFromPoint(location, navgraph.vertices)) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 7) ;
 	}
 }

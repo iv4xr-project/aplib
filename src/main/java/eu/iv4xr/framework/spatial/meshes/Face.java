@@ -114,14 +114,116 @@ public class Face implements Iterable<Integer> {
         return common >= 2;
     }
     
+    @Override
+    public String toString() {
+    	StringBuffer sb = new StringBuffer() ;
+    	sb.append("Face (") ;
+    	for (int k=0; k<vertices.length; k++) {
+    		if (k>0) sb.append(",") ;
+    		sb.append("" + vertices[k]) ;
+    	}
+    	sb.append(")") ;
+    	return sb.toString() ;
+    }
     
     /**
+     * Return an unsigned distance from a point w to this Face. The distance is defined as follows.
+     * Imagine first the 3D shape obtained by extruding this Face along its normal vector. Let's
+     * call this shape the extruding prism of this Face. The the point w is inside this prism,
+     * its distance is defines as its distance to the Face along the normal vector.
+     * 
+     * If the point w is outside the extruding prism, its distance to this Face is defined as its
+     * distance to the closest edge of the Face.
+     * 
+     * Taken from: https://www.iquilezles.org/www/articles/triangledistance/triangledistance.htm
+     * 
+     */
+    public float distFromPoint(Vec3 w, ArrayList<Vec3> concreteVertices) {
+    	//Much of the information here can be pre-computed; we will not do so here
+    	// to favor simpler implementation.
+    	//But can be improved in the future. 
+    	int N = vertices.length ;
+    	var line_0_to_1 = Vec3.sub(concreteVertices.get(1),concreteVertices.get(vertices[0])) ;
+    	var line_lastNode_to_0 = Vec3.sub(concreteVertices.get(0),concreteVertices.get(vertices[N-1])) ;
+    	// the normal vector between the above two lines, which is also parallel with the
+    	// face normal vector:
+    	var norm = Vec3.cross(line_0_to_1, line_lastNode_to_0) ;
+    	//System.out.println(">> normal: " + norm) ;
+    	// for inside outside test:
+    	List<Float> d = new LinkedList<>() ;
+    	
+    	// test is the point is inside the extruded prism over this Face:
+    	boolean inside_extruded_prism = true ;
+    	int sign = 0 ; // 0 unknown, 1 positive, -1 negative
+     	
+    	for (int i=0; i<N; i++) {
+    		var p = concreteVertices.get(vertices[i]) ;
+    		var p_next = concreteVertices.get(vertices[(i+1) % N]) ;
+    		var line_next_to_p = Vec3.sub(p_next,p) ;
+    		var line_w_to_p = Vec3.sub(w,p) ;
+    		var test = Vec3.dot(Vec3.cross(line_next_to_p, norm), line_w_to_p) ;
+    		//System.out.println(">>   " + test) ;
+    		if (sign==0) {
+    			if (test>=0) sign = 1 ; else sign = -1 ;
+    		}
+    		else if((sign>0 && test<0) || (sign<0 && test>=0)) {
+    			// found a test with differring sign:
+    			inside_extruded_prism = false ;
+    			break ;
+    		}
+    	}
+    	if (!inside_extruded_prism) {
+    		// the point is outside the prism
+    		float distSq = Float.POSITIVE_INFINITY ;  // we will compare the square of distance instead
+    		// iterate over all sides, to find the minimum distance :
+			for (int i=0; i<N; i++) {
+    			// current side to consider: v(i+1) --> v(i)
+        		var p = concreteVertices.get(vertices[i]) ;
+        		var p_next = concreteVertices.get(vertices[(i+1) % N]) ;
+        		
+        		// a complicated way to calculate the distance from the point w to the side:
+        		
+        		var line_next_to_p = Vec3.sub(p_next,p) ;
+        		var line_w_to_p = Vec3.sub(w,p) ;
+        		float line_next_to_p_lengthsq = line_next_to_p.lengthSq() ;
+        		float clamp_ ;
+        		if (line_next_to_p_lengthsq == 0) {
+        			clamp_ = 1 ;
+        		}
+        		else {
+        			clamp_ = clamp(Vec3.dot(line_next_to_p,line_w_to_p)/line_next_to_p_lengthsq) ;
+        		}
+        		float new_distSq = Vec3.sub(Vec3.mul(line_next_to_p,clamp_), line_w_to_p).lengthSq() ;
+        		// the square-distance of the point w to the current side pnext-->p
+        		distSq = Math.min(new_distSq,distSq) ;
+        	}
+    		return (float) Math.sqrt(distSq) ;
+    	}
+    	
+    	var z = Vec3.dot(w,norm) ;
+    	
+    	return (float) Math.sqrt((z*z/norm.lengthSq())) ;
+    }
+    
+	/**
+	 * Clamping x between 0 and 1. That is, if x<=0, we return 0, if x>=1 we return 1, and
+	 * else the original x is returned.
+	 */
+	static float clamp(float x) {
+		return x<=0 ? 0 : (x>=1 ? 1 : x) ;
+	}
+    
+    /*
+     * WP: COMMENTING THIS OUT. Ignoring the y-axis won't work when we e.g. have a mesh over
+     * overlaping building floors.
+     * 
      * Test if the given point is inside this Face. We only look at the (X,Z) values. So, essentially
      * pretending the Face is 2D.
      * 
      * Algorithm: https://algorithmtutor.com/Computational-Geometry/Check-if-a-point-is-inside-a-polygon/
      * Which looks to be a generalization of an algorithm for triangle: https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
      */
+	/*
     public boolean coversPointXZ(Vec3 point, ArrayList<Vec3> concreteVertices) {
     	int N = vertices.length ;
     	List<Float> d = new LinkedList<>() ;
@@ -137,5 +239,43 @@ public class Face implements Iterable<Integer> {
     	}
     	return d.stream().allMatch(value -> value >=0) 
     			|| d.stream().allMatch(value -> value <=0) ;
+    }
+    */
+    
+    
+    // just for testing:
+    public static void main(String[] args) {
+    	/* A rectangle 2x2, with (0,0,0) at node 0, raised by y=2 at nodes 2,3
+    	  
+    	   (2)----(3)
+    	    |      |
+    	    |      |
+    	   (0)----(1)
+    	*/
+    	var v0 = new Vec3(0,0,0) ;
+    	var v1 = new Vec3(2,0,0) ;
+    	var v2 = new Vec3(0,2,2) ;
+    	var v3 = new Vec3(2,2,2) ;
+    	
+    	int[] vertices = {0,1,3,2} ; // the order should make sure the edges are consecutivelly connected
+    	ArrayList<Vec3> concreteVertices = new ArrayList<>() ;
+    	concreteVertices.add(v0) ;
+    	concreteVertices.add(v1) ;
+    	concreteVertices.add(v3) ;
+    	concreteVertices.add(v2) ;
+    	
+    	Face face = new Face(vertices) ;
+    	
+    	var point = new Vec3(0,0,0) ;
+    	System.out.println("" + point + ", dist = " + face.distFromPoint(point,concreteVertices)) ;
+    	point = new Vec3(1,0,1) ;
+    	System.out.println("" + point + ", dist = " + face.distFromPoint(point,concreteVertices)) ;
+    	point = new Vec3(1,2,1) ;
+    	System.out.println("" + point + ", dist = " + face.distFromPoint(point,concreteVertices)) ;
+    	point = new Vec3(0,1,0) ;
+    	System.out.println("" + point + ", dist = " + face.distFromPoint(point,concreteVertices)) ;
+    	point = new Vec3(0,-1,0) ;
+    	System.out.println("" + point + ", dist = " + face.distFromPoint(point,concreteVertices)) ;
+	      	  
     }
 }

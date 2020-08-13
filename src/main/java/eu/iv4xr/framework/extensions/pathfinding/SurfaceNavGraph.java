@@ -196,17 +196,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         	seenVertices.add(false) ;
         }
     }
-    
-    /**
-     * Cheat. Mark all vertices as "seen". In other words, from this point on
-     * memory-based navigation is disabled (until we do wipeOutMemory()).
-     */
-    public void disableMemoryBasedNavigation() {
-    	int N = seenVertices.size() ;
-        for(int k = 0; k<N; k++) {
-        	seenVertices.add(true) ;
-        }
-    }
+   
     
     public void setPathFinder(Pathfinder pf) {
     	pathfinder = pf ;
@@ -257,61 +247,66 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     
     
     /**
-	 * Return the id/index of a vertex, which is:
+	 * This method returns a vertex v in the navgraph which is 'nearest' to the given
+	 * 3D location, such that the straight line between the location and this vertex v
+	 * is unobstructed.
 	 * 
-	 *    (1) on the same Face as the given location. Note: when checking this this method ignores the "y" axis;
-	 *    so projecting all over the XZ plane.
-	 *    (2) nearest to the location
-	 *    (3) and moreover the line between the location and this vertex is 
-	 *    not blocked by any of the blocking obstacles.
-	 *    
-	 * The method assume the the given location is NOT inside some blocking
-	 * object.   
+	 * To find v, the method first searches for a face F, whose distance to the given
+	 * location is below the threshold faceDistThreshold. Then v is searched among the vertices
+	 * on this face F. The method returns one with the least distance to the location,
+	 * where a straight line between them is unobstructed by any of the obstacles.
 	 * 
-	 * The method returns null if no such vertex can be found.
-	 * 
-	 * Note that this method does not take into account whether this nearest vertex
-	 * has been seen or not. If it is not, navigation to there will not be possible.
-	 * Note: this choice is intentional.
-	 * 
+	 * If no such F nor v can be found, the method returns null.
 	 */
-    public Integer getNearestUnblockedVertex(Vec3 location) {
+    public Integer getNearestUnblockedVertex(Vec3 location, float faceDistThreshold) {
     	// first find a face that contains the location:
     	Face face = null ;
+    	int k = 0 ;
     	for (Face f : faces) {
-    		if (f.coversPointXZ(location,vertices)) {
+    		var dist = f.distFromPoint(location, vertices) ;
+    		System.out.println(">>    Face " + k + "," + f + ", distance: " + dist) ;
+        	if (dist <= faceDistThreshold) {
+    			// found one ... we'll grab it:
     			face = f ;
     			break ;
     		}
+    		k++ ;
     	}
     	if (face == null) {
     		// well... then the location is not even in the mesh:
     		return null ;
     	}
     	
-    	// find vertices to be taken into consideration. These are the face's corners + its center:
-    	List<Integer> verticesToConsider = new LinkedList<>() ;
-    	for(int v : face.vertices)
-    	{
-    		verticesToConsider.add(v) ;
+    	// Find the closest vertex on the Face;
+    	// start with calculating the distance to the face center:
+    	Integer best = null ;
+    	float best_distsq = Float.POSITIVE_INFINITY ;
+    	int v = faceToCenterIdMap.get(face) ; 
+    	var v_loc = vertices.get(v) ;
+    	if (! isBlocked(location,v_loc)) {
+    		best = v ;
+    		best_distsq = Vec3.sub(location,v_loc).lengthSq() ;
     	}
-    	verticesToConsider.add(faceToCenterIdMap.get(face)) ;
-    	
-    	float dist = Float.MAX_VALUE ;
-    	Integer nearest = null ;
-    	for (var v : verticesToConsider) {
-    		var v_location = vertices.get(v) ;
-    		if (! isBlocked(location,v_location))  {
-    			if (Vec3.dist(location, v_location) < dist) nearest = v ;
+    	for(int w : face.vertices)
+    	{
+    		//System.out.println("=== " + w) ;
+    		v = w ;
+    		v_loc = vertices.get(v) ;
+    		if (isBlocked(location,v_loc)) continue ;
+    		var distsq = Vec3.sub(location,v_loc).lengthSq() ;
+    		if (distsq < best_distsq) {
+    			best = v ;
+    			best_distsq = distsq ;
     		}
     	}
-    	return nearest ;
+    	return best ;
     }
     
     
     /**
      * If true, the pathfinder will assume that the whole navgraph has been "seen",
      * so no vertex would count as unreacahble because it is still unseen.
+     * This essentially turns off memory-based path finding.
      * The default of this flag is false.
      */
     public boolean perfect_memory_pathfinding = false ;
@@ -375,20 +370,24 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     }
     
     /**
-     * The same as the other findPath. This will return a path from a vertex closest
+     * The same as the other findPath. This will return a path from a vertex v0 closest
      * to the given start position, to a vertex closest to the given goal location.
      * It is up to the agent to figure out how to get from its own physical start
-     * location to the starting vertex, and to get from the goal vertex to its
+     * location to the starting vertex, and to get from the goal vertex vn to its
      * actual goal location.
      * 
      * The method calculates the start and goal-nodes such that the straight line
      * between them and the corresponding start and goal locations are not blocked
      * by any of the blocking obstacles.
+     * 
+     * The parameter faceDistThreshold is a threshold defining how far the Face F0 on which
+     * v0 is from the start location is allowed to be. And similarly how far the
+     * face Fn on which vn is, from the goal location is allowed to be.
      */
-    public ArrayList<Integer> findPath(Vec3 start, Vec3 goal) {
-    	Integer startNode = getNearestUnblockedVertex(start) ;
+    public ArrayList<Integer> findPath(Vec3 start, Vec3 goal, float faceDistThreshold) {
+    	Integer startNode = getNearestUnblockedVertex(start, faceDistThreshold) ;
     	if (startNode == null) return null ;
-    	Integer goalNode = getNearestUnblockedVertex(goal) ;
+    	Integer goalNode = getNearestUnblockedVertex(goal, faceDistThreshold) ;
     	return findPath(startNode,goalNode) ;
     }
     
@@ -426,12 +425,13 @@ public class SurfaceNavGraph extends SimpleNavGraph {
 	 * 
 	 * More precisely, we first look an explored vertex v in the vicinity of the given start-location,
 	 * that can be reached by a straight line from the start location, without being blocked.
-	 * The w meant above is the closest to this intermediate v.
+	 * The w meant above is the closest to this intermediate v. The face F on which this v
+	 * is located must be of distance at most faceDistThreshold from the start-location.
 	 * 
 	 * If no no such path nor intermediate v can be found, the method returns null.
 	 */
-    public List<Integer> explore(Vec3 startLocation) {
-    	var startVertex = getNearestUnblockedVertex(startLocation) ;
+    public List<Integer> explore(Vec3 startLocation, float faceDistThreshold) {
+    	var startVertex = getNearestUnblockedVertex(startLocation, faceDistThreshold) ;
     	if (startVertex == null) return null ;
     	return explore(startVertex) ;
     }
