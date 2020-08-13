@@ -17,6 +17,9 @@ public class Box implements LineIntersectable {
 	 */
 	public Vec3 width ;
 	
+
+	float epsilon = 0.0001f ;
+	
 	public Box(Vec3 center, Vec3 width) {
 		this.center = center ;
 		this.width = width ;
@@ -42,12 +45,13 @@ public class Box implements LineIntersectable {
 	 */
 	@Override
 	public Collection<Vec3> intersect(Line l) {
-		float minX = center.x - width.x/2 ;
-		float minY = center.y - width.y/2 ;
-		float minZ = center.z - width.z/2 ;
-		float maxX = center.x + width.x/2 ;
-		float maxY = center.y + width.x/2 ;
-		float maxZ = center.z + width.x/2 ;
+		float minX = center.x - width.x/2  ;
+		float minY = center.y - width.y/2  ;
+		float minZ = center.z - width.z/2  ;
+		float maxX = center.x + width.x/2  ;
+		float maxY = center.y + width.y/2  ;
+		float maxZ = center.z + width.z/2  ;
+		
 		
 		Collection<Vec3> intersections = new HashSet<>() ;
 		
@@ -56,7 +60,7 @@ public class Box implements LineIntersectable {
 		// intersection with the infinite plane z = minZ :
 		Vec3 i = intersectPlaneXY(l.a, l.b, minZ)  ;
 		if (i != null) {
-			if (minX <= i.x && i.x <= maxX && minY <= i.y && i.y <= maxY) {
+			if (between(minX, i.x, maxX) && between(minY, i.y, maxY)) {
 				// the intersection point i lies in the finite plane between xmin,xmax and ymin,ymax
 				intersections.add(i) ;
 			}
@@ -64,7 +68,7 @@ public class Box implements LineIntersectable {
 		// intersection with the infinite plane z = maxZ :
 		i = intersectPlaneXY(l.a, l.b, maxZ)  ;
 		if (i != null) {
-			if (minX <= i.x && i.x <= maxX && minY <= i.y && i.y <= maxY) {
+			if (between(minX, i.x, maxX) && between(minY, i.y, maxY)) {
 				// the intersection point i lies in the finite plane between xmin,xmax and ymin,ymax
 				intersections.add(i) ;
 			}
@@ -74,7 +78,7 @@ public class Box implements LineIntersectable {
 		// intersection with the infinite plane y = minZ :
 		i = intersectPlaneXZ(l.a, l.b, minY)  ;
 		if (i != null) {
-			if (minX <= i.x && i.x <= maxX && minZ <= i.z && i.z <= maxZ) {
+			if (between(minX, i.x, maxX) && between(minZ, i.z, maxZ)) {
 			intersections.add(i) ;
 		    }
 		}
@@ -82,7 +86,7 @@ public class Box implements LineIntersectable {
 		
 		i = intersectPlaneXZ(l.a, l.b, maxY)  ;
 		if (i != null) {
-			if (minX <= i.x && i.x <= maxX && minZ <= i.z && i.z <= maxZ) {
+			if (between(minX, i.x, maxX) && between(minZ, i.z, maxZ)) {
 			intersections.add(i) ;
 		    }
 		}
@@ -91,7 +95,7 @@ public class Box implements LineIntersectable {
 		// intersection with the infinite plane x = minX :
 		i = intersectPlaneYZ(l.a, l.b, minX)  ;
 		if (i != null) {
-			if (minY <= i.y && i.y <= maxY && minZ <= i.z && i.z <= maxZ) {
+			if (between(minY, i.y, maxY) && between(minZ, i.z, maxZ)) {
 				intersections.add(i) ;
 		    }
 		}
@@ -99,13 +103,20 @@ public class Box implements LineIntersectable {
 		
 		i = intersectPlaneYZ(l.a, l.b, maxX)  ;
 		if (i != null) {
-			if (minY <= i.y && i.y <= maxY && minZ <= i.z && i.z <= maxZ) {
+			if (between(minY, i.y, maxY) && between(minZ, i.z, maxZ)) {
 				intersections.add(i) ;
 		    }
 		}
 		return intersections ;
 	} 
 	
+	/** 
+	 * Check if x is between the given lower and upperbound, with additional
+	 * epsilon as margin.
+	 */
+	boolean between(float lowerbound, float x, float upperbound) {
+		return lowerbound - epsilon <= x && x <= upperbound + epsilon ;
+	}
 	
 	/**
 	 * Calculate the intersection of the line between p and q, and a plane XY
@@ -155,6 +166,13 @@ public class Box implements LineIntersectable {
 			return null ;
 		}
 		return Vec3.add(p, Vec3.mul(direction, t)) ;
+	}
+	
+	// just for testing few things
+	public static void main(String[] args) {
+		var box = new Box(new Vec3(0f,0f,0f), new Vec3(0.01f, 0.01f, 0.01f)) ;
+		var line = new Line(new Vec3(-0.1f,0f,-0.1f), new Vec3(0f,0f,0f)) ;
+		System.out.println("Intersections: " + box.intersect(line)) ;
 	}
 
 }

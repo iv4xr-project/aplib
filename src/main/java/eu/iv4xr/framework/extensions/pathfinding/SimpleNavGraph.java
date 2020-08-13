@@ -30,8 +30,20 @@ public class SimpleNavGraph implements Navigatable {
     // TODO: Use a more optimal datastructure for better performance
     public ArrayList<Obstacle<LineIntersectable>> obstacles;
 
+    /**
+     * Add the obstacle to this navgraph. The obstacle is set as non-blocking.
+     */
     public void addObstacle(LineIntersectable obstacle) {
         obstacles.add(new Obstacle<LineIntersectable>(obstacle));
+    }
+
+    /**
+     * Add the obstacle to this navgraph. The obstacle is set as blocking.
+     */
+    public void addObstacleInBlockingState(LineIntersectable obstacle) {
+    	var o = new Obstacle<LineIntersectable>(obstacle) ;
+    	o.isBlocking = true ;
+        obstacles.add(o);
     }
     
     public void removeObstacle(LineIntersectable tobeRemoved) {

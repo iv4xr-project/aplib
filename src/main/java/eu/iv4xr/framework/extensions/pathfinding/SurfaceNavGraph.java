@@ -292,6 +292,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     		//System.out.println("=== " + w) ;
     		v = w ;
     		v_loc = vertices.get(v) ;
+    		//System.out.println(">>   " + location + " --> "  + v + " " + v_loc + ": blocked " + isBlocked(location,v_loc)) ;
     		if (isBlocked(location,v_loc)) continue ;
     		var distsq = Vec3.sub(location,v_loc).lengthSq() ;
     		if (distsq < best_distsq) {

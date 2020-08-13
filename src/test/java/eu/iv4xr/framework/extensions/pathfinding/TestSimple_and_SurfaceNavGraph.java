@@ -15,6 +15,7 @@ import eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph;
 import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
 import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph.VertexType;
 import eu.iv4xr.framework.spatial.Box;
+import eu.iv4xr.framework.spatial.Line;
 import eu.iv4xr.framework.spatial.Obstacle;
 import eu.iv4xr.framework.spatial.Sphere;
 import eu.iv4xr.framework.spatial.Vec3;
@@ -296,6 +297,9 @@ public class TestSimple_and_SurfaceNavGraph {
 	public void test_SurfaceNavgrapg_getNearestUnblockedVertex() {
 		Mesh mesh = mesh0() ;
 		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		
+		// without obstacles:
+	
 		Vec3 location = new Vec3(0,0,0) ;
 		Integer vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
 		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
@@ -320,5 +324,48 @@ public class TestSimple_and_SurfaceNavGraph {
 		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
 		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
 		assertTrue(vertex == 7) ;
+		
+		location = new Vec3(-0.2f,0,0.1f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 1) ;
+		
+		location = new Vec3(-1.7f,0,0.5f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 0) ;
+		
+		// elevated:
+		location = new Vec3(-1f,0.2f,1f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 7) ;
+		
+		location = new Vec3(-1f,0.22f,1f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == null) ;
+		
+		location = new Vec3(-1f,-0.22f,1f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == null) ;
+		
+		// now with obstacle at node-1
+		var box = new Box(new Vec3(0,0,0) ,new Vec3(0.01f,0.01f,0.01f)) ;
+        navgraph.addObstacleInBlockingState(box);
+        location = new Vec3(-0.1f,0,-0.1f) ;
+        //System.out.println("## #obstacles = " + navgraph.obstacles.size()) ;
+        //System.out.println("## obs1 blocking: " + navgraph.obstacles.get(0).isBlocking) ;
+        //System.out.println("## blocking: " + box.intersect(new Line(location, new Vec3(0,0,0)))) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 6) ;
+		
+		location = new Vec3(-0.2f,0,0.2f) ;
+		vertex = navgraph.getNearestUnblockedVertex(location,0.2f) ;
+		System.out.println("** location: " + location + ", closest vertex: " + vertex) ;
+		assertTrue(vertex == 6) ;
+		
 	}
 }
