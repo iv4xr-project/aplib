@@ -129,11 +129,13 @@ public class Face implements Iterable<Integer> {
     /**
      * Return an unsigned distance from a point w to this Face. The distance is defined as follows.
      * Imagine first the 3D shape obtained by extruding this Face along its normal vector. Let's
-     * call this shape the extruding prism of this Face. The the point w is inside this prism,
+     * call this shape the extruding prism of this Face. 
+     * 
+     * If the the point w is strictly inside this prism,
      * its distance is defines as its distance to the Face along the normal vector.
      * 
-     * If the point w is outside the extruding prism, its distance to this Face is defined as its
-     * distance to the closest edge of the Face.
+     * Otherwise, the point is either strictly outside the prism, or at the prism's border. Then 
+     * its distance to this Face is defined as its distance to the closest edge of the Face.
      * 
      * Taken from: https://www.iquilezles.org/www/articles/triangledistance/triangledistance.htm
      * 
@@ -155,23 +157,24 @@ public class Face implements Iterable<Integer> {
     	// test is the point is inside the extruded prism over this Face:
     	boolean inside_extruded_prism = true ;
     	int sign = 0 ; // 0 unknown, 1 positive, -1 negative
-     	
+    	
     	for (int i=0; i<N; i++) {
     		var p = concreteVertices.get(vertices[i]) ;
-    		var p_next = concreteVertices.get(vertices[(i+1) % N]) ;
+    		var p_next = concreteVertices.get(vertices[(i+1) % N]) ;	
     		var line_next_to_p = Vec3.sub(p_next,p) ;
     		var line_w_to_p = Vec3.sub(w,p) ;
     		var test = Vec3.dot(Vec3.cross(line_next_to_p, norm), line_w_to_p) ;
     		//System.out.println(">>   " + test) ;
     		if (sign==0) {
-    			if (test>=0) sign = 1 ; else sign = -1 ;
+    			if (test>0) sign = 1 ; else sign = -1 ;
     		}
-    		else if((sign>0 && test<0) || (sign<0 && test>=0)) {
+    		else if((sign>0 && test<=0) || (sign<0 && test>=0)) {
     			// found a test with differring sign:
     			inside_extruded_prism = false ;
     			break ;
     		}
     	}
+    	//System.out.println(">>  Inside extruded prism: " + inside_extruded_prism) ;
     	if (!inside_extruded_prism) {
     		// the point is outside the prism
     		float distSq = Float.POSITIVE_INFINITY ;  // we will compare the square of distance instead
@@ -202,7 +205,10 @@ public class Face implements Iterable<Integer> {
     	
     	var z = Vec3.dot(w,norm) ;
     	
-    	return (float) Math.sqrt((z*z/norm.lengthSq())) ;
+    	//System.out.println(">>>> " + z/norm.length()) ;
+    	
+    	return Math.abs(z/norm.length()) ;
+    	//return (float) Math.sqrt((z*z/norm.lengthSq())) ;
     }
     
 	/**

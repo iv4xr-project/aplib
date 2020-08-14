@@ -13,10 +13,23 @@ import nl.uu.cs.aplib.utils.Pair;
 public class TestFace {
 
 	
-	Pair<Face,ArrayList<Vec3>> triangle() {
+	Pair<Face,ArrayList<Vec3>> triangle1() {
 		var v0 = new Vec3(-2,0,0) ;
 		var v1 = new Vec3(0,0,0) ;
 		var v2 = new Vec3(-1,0,2) ;
+		int[] face_ = {0,1,2} ;
+		Face f = new Face(face_) ;
+		ArrayList<Vec3> concretes = new ArrayList<>() ;
+		concretes.add(v0) ;
+		concretes.add(v1) ;
+		concretes.add(v2) ;
+		return new Pair(f,concretes) ;
+	}
+	
+	Pair<Face,ArrayList<Vec3>> triangle2() {
+		var v0 = new Vec3(-1,0,2) ;
+		var v1 = new Vec3(1,0,2) ;
+		var v2 = new Vec3(0,2,4) ;	
 		int[] face_ = {0,1,2} ;
 		Face f = new Face(face_) ;
 		ArrayList<Vec3> concretes = new ArrayList<>() ;
@@ -100,7 +113,7 @@ public class TestFace {
 	@Test
 	public void test2_distFromPoint_to_triangleface() {
 		
-	 	var testdata = triangle() ;
+	 	var testdata = triangle1() ;
 	 	var face = testdata.fst ;
 	 	var concreteVertices = testdata.snd ;
 	 	
@@ -120,6 +133,15 @@ public class TestFace {
 	 	assertTrue(dist == 0) ;
 	 	
 	 	point = new Vec3(-0.2f,0,0.1f) ;
+	 	dist = face.distFromPoint(point,concreteVertices) ;
+	 	System.out.println("** " + point + ", dist = " + dist) ;
+	 	assertTrue(dist == 0) ;
+	 	
+	 	// triangle-2:
+	 	testdata = triangle2() ;
+	 	face = testdata.fst ;
+	 	concreteVertices = testdata.snd ;
+	 	point = new  Vec3(0,2f,4) ;
 	 	dist = face.distFromPoint(point,concreteVertices) ;
 	 	System.out.println("** " + point + ", dist = " + dist) ;
 	 	assertTrue(dist == 0) ;

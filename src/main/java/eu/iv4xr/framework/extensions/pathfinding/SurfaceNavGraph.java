@@ -257,6 +257,8 @@ public class SurfaceNavGraph extends SimpleNavGraph {
 	 * where a straight line between them is unobstructed by any of the obstacles.
 	 * 
 	 * If no such F nor v can be found, the method returns null.
+	 * 
+	 * The method ignores whether the vertices of F has been seen/explored or not.
 	 */
     public Integer getNearestUnblockedVertex(Vec3 location, float faceDistThreshold) {
     	// first find a face that contains the location:
@@ -264,7 +266,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	int k = 0 ;
     	for (Face f : faces) {
     		var dist = f.distFromPoint(location, vertices) ;
-    		System.out.println(">>    Face " + k + "," + f + ", distance: " + dist) ;
+    		//System.out.println(">>    Face " + k + "," + f + ", distance: " + dist) ;
         	if (dist <= faceDistThreshold) {
     			// found one ... we'll grab it:
     			face = f ;
@@ -388,7 +390,10 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     public ArrayList<Integer> findPath(Vec3 start, Vec3 goal, float faceDistThreshold) {
     	Integer startNode = getNearestUnblockedVertex(start, faceDistThreshold) ;
     	if (startNode == null) return null ;
+    	//System.out.println("**  start-node: " + startNode) ;
     	Integer goalNode = getNearestUnblockedVertex(goal, faceDistThreshold) ;
+    	if (goalNode == null) return null ;
+    	//System.out.println("**  goal-node: " + goalNode) ;
     	return findPath(startNode,goalNode) ;
     }
     
