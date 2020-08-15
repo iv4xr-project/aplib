@@ -195,7 +195,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	 * obstacles.
 	 */
 	@Test
-	public void test_SurfaceNavGraph_pathPinfing() {
+	public void test_SurfaceNavGraph_vertex2vertex_pathPinfing() {
 		Mesh mesh = mesh0() ;
 		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
 		navgraph.setPathFinder(new AStar());
@@ -239,14 +239,20 @@ public class TestSimple_and_SurfaceNavGraph {
 	}
 
 	/**
-	 * Test vertex to vertex, memory-based path-finding on SurfaceNavGraph.
+	 * Test vertex to vertex, memory-based path-finding (exploration) on SurfaceNavGraph.
 	 */
-
 	@Test
-	public void test_SurfaceNavGraph_memory_based_pathfinding() {
+	public void test_SurfaceNavGraph_vertexlevel_exploration() {
 		Mesh mesh = mesh0() ;
 		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
 		navgraph.setPathFinder(new AStar());
+		
+		// since no nodes are initially "seen", exploration should not be possible:
+		assertTrue(navgraph.explore(0) == null) ;
+		assertTrue(navgraph.explore(1) == null) ;
+		assertTrue(navgraph.explore(2) == null) ;
+		assertTrue(navgraph.explore(5) == null) ;
+		
 		
 		// mark these as seen:
 		navgraph.markAsSeen(0,1,2,3);
@@ -368,8 +374,12 @@ public class TestSimple_and_SurfaceNavGraph {
 		assertTrue(vertex == 6) ;
 	}
 	
+	/**
+	 * Test path-finding between any Vec-3 start and goal locations (rather than vertex
+	 * to vertex).
+	 */
 	@Test
-    public void test_SurfaceNavgraph_pathfinding_from_anylocation() {
+    public void test_SurfaceNavgraph_vec3location_pathfinding() {
     	Mesh mesh = mesh0() ;
 		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
 		
@@ -403,7 +413,36 @@ public class TestSimple_and_SurfaceNavGraph {
         path = navgraph.findPath(loc_a, loc_b, 0.2f) ;
         System.out.println("** path: " + path) ;
         assertTrue(path.get(0) == 2 && path.get(path.size()-1) == 9) ;
-        
     }
+	
+	/**
+	 * Test exploration from a Vec3 location.
+	 */
+	@Test
+    public void test_SurfaceNavgraph_fromVec3Location_exploration() {
+    	Mesh mesh = mesh0() ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		
+		// since no nodes is initially marked as seen, exploration should not be possible:
+		assertTrue(navgraph.explore(new Vec3(0,0,0),0.2f) == null) ;
+		assertTrue(navgraph.explore(new Vec3(-1,0,2),0.2f) == null) ;
+		
+		// mark these as seen:
+		navgraph.markAsSeen(0,1,2,3);
+		// note that these will mark all the center-nodes to be seen as well
+		// So... only 4 and 5 are left as unseen
+		var path = navgraph.explore(new Vec3(0,0,0),0.2f) ;
+		System.out.println(">>> path: " + path) ;
+		assertTrue(path.get(0)==1 && path.get(path.size()-1) == 4) ;
+
+		path = navgraph.explore(new Vec3(-0.2f,0,0),0.2f) ;
+		System.out.println(">>> path: " + path) ;
+		assertTrue(path.get(0)==1 && path.get(path.size()-1) == 4) ;
+		
+		// (-1,2,-2) near node 2
+		path = navgraph.explore(new Vec3(-1,2,-1.8f),0.2f) ;
+		System.out.println(">>> path: " + path) ;
+		assertTrue(path.get(0)==2 && path.get(path.size()-1) == 4) ;
+	}
 	
 }
