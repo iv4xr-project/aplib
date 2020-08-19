@@ -40,6 +40,11 @@ public class Test_AutonomousBasicAgent {
 		catch(Exception e) { return null ; }
 	}
 	
+	static void createLogFile(String file) {
+		try { Files.createFile(Paths.get(file)); }
+		catch(Exception e) { }
+	}
+	
 	static void deleteLogFile(String file) {
 		try { Files.delete(Paths.get(file)); }
 		catch(Exception e) { }
@@ -102,6 +107,8 @@ public class Test_AutonomousBasicAgent {
 	@Test
 	public void test_resume_by_msg(){
 		
+		//createLogFile("mylog1.txt") ;
+		
 		Logging.attachFileAsLogHandler("mylog1.txt");
 		
 		var comNode = new ComNode() ;
@@ -146,6 +153,7 @@ public class Test_AutonomousBasicAgent {
 		agent1.stop() ; sleepx(1000) ;
 		
 		String log = readTxtFile("mylog1.txt") ;
+		System.out.println(">>>"  + log) ;
 		assertTrue(log.contains("agent1 is stopping")) ;
 		
 		// clean up
