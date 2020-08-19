@@ -162,6 +162,7 @@ public class Test_GoalStructure {
 		var h1c = SEQ(h1a,h1b) ;
 		h2 = lift(goal("")) ;
 		h3 = REPEAT(h1c) ;
+		// h4 = SEQ(REPEAT(SEQ(h1a,h1b)),h2) :
 		h4 = SEQ(h3,h2) ;
 		h1a.setStatusToSuccess("");
 		h1b.setStatusToFail("");

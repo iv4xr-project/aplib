@@ -330,6 +330,7 @@ public class BasicAgent {
 			H.budget = parent.budget ;
 			parent.subgoals.clear(); 
 			parent.subgoals.add(H) ;
+			H.parent = parent ;
 			return ;
 		}
 		else {
@@ -341,6 +342,7 @@ public class BasicAgent {
 			else {
 				currentGoal.parent.subgoals.add(k+1,G);
 			}
+			G.parent = currentGoal.parent ;
 		}
 	}
 	

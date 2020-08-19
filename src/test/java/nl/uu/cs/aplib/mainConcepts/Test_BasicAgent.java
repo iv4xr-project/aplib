@@ -219,20 +219,23 @@ public class Test_BasicAgent {
 	public void test_addingAGoal_withAddAfter() {
 		
 		var g = goal("g")
+				.toSolve((Integer i) -> i==0)
 				.withTactic(action("a")
-						.do1((MyState S) -> 0 )
+						.do1((MyState S) -> S.counter)
 						.lift())
 				.lift() ;
 		
 		var g0 = goal("g0")
+				.toSolve((Integer i) -> i==1)
 				.withTactic(action("a")
-						.do1((MyState S) -> 0)
+						.do1((MyState S) -> S.counter)
 						.lift())
 				.lift() ;
 			
 		var gnew = goal("new")
+				.toSolve((Integer i) -> i==2)
 				.withTactic(action("a")
-						.do1((MyState S) -> 0)
+						.do1((MyState S) -> S.counter)
 						.lift())
 				.lift() ;
 		
@@ -288,25 +291,105 @@ public class Test_BasicAgent {
 		assertTrue(gseq.subgoals.indexOf(gnew) == 1) ;
 		assertTrue(gseq.subgoals.indexOf(g) == 2) ;
 		
+		// simulating an agent executing a composite goal, and in the middle perform
+		// addAfter. We check simulated execution would indeed progress to the newly
+		// added goal, and when it is solved, the status is correctly propagated:
+		var gtop = SEQ(g,g0) ;
+		agent.setGoal(gtop) ;
+		agent.attachEnvironment(new Environment()) ;
+		MyState state = (MyState) agent.state ;
+		assertTrue(agent.currentGoal == g) ;
+		
+		// simulating solving g0; the current goal should advance to g:
+		agent.update();
+		assertTrue(agent.currentGoal == g0) ;
+		
+		// simulating adding gnew after g; the current goal should remain g:
+		agent.addAfter(gnew);
+		assertTrue(agent.currentGoal == g0) ;
+		
+		//simulating solving g0; the current goal should advance to gnew
+		state.counter = 1 ;
+		agent.update() ;
+		assertTrue(agent.currentGoal == gnew) ;
+		
+		// simulating solving gnew; the whole top-goal should now be solved as well:
+		state.counter = 2 ;
+		agent.update() ;
+		assertTrue(gnew.getStatus().success()) ;
+		assertTrue(gtop.getStatus().success()) ;
+		
+		
+		// another simulation with REPEAT:
+		g0 = goal("g0")
+				.toSolve((Integer i) -> i==1)
+				.withTactic(action("a")
+						.do1((MyState S) -> S.counter)
+						.lift())
+				.lift() ;
+			
+		gnew = goal("new")
+				.toSolve((Integer i) -> i==2)
+				.withTactic(action("a")
+						.do1((MyState S) -> S.counter)
+						.lift())
+				.lift() ;
+		
+		gtop = REPEAT(g0) ;
+		agent.setGoal(gtop) ;
+		state.counter = 0 ;
+		assertTrue(agent.currentGoal == g0) ;
+		gtop.printGoalStructureStatus();
+		
+		// simulate trying to solve g0, and fail. Because of the REPEAT
+		// the current goal should still be g0:
+		agent.update();
+		assertTrue(agent.currentGoal == g0) ;
+		assertTrue(g0.getStatus().inProgress()) ;
+		
+		// simulating adding gnew:
+		agent.addAfter(gnew);
+		assertTrue(agent.currentGoal == g0) ;
+		
+		// simulating solving g0, current goal should advance to gnew
+		state.counter = 1 ;
+		agent.update() ;
+		assertTrue(agent.currentGoal == gnew) ;
+		
+		// simulating solving gnew; this should now solve the top-goal:
+		state.counter = 2 ;
+		agent.update();
+		assertTrue(gnew.getStatus().success()) ;
+		assertTrue(gtop.getStatus().success()) ;
+		
+		gtop.printGoalStructureStatus();
+		
+		
 	}
 	
 	@Test
 	public void test_addingAGoal_withAddBefore() {
 		var g = goal("g")
-				.withTactic(action("a")
-						.do1((MyState S) -> 0 )
+				.toSolve((Integer i) -> i==0)
+				.withTactic(action("return counter")
+						.do1((MyState S) -> S.counter )
 						.lift())
 				.lift() ;
 		
 		var g0 = goal("g0")
-				.withTactic(action("a")
-						.do1((MyState S) -> 0)
-						.lift())
+				.toSolve((Integer i) -> i==1)
+				.withTactic(
+					SEQ(action("return counter")
+						        . do1((MyState S) -> S.counter)
+						        . lift(), 
+					    ABORT())) // deliberately make the goal to fail if it is not solved at 1st cycle
+				       
 				.lift() ;
 			
 		var gnew = goal("new")
-				.withTactic(action("a")
-						.do1((MyState S) -> 0)
+				.toSolve((Integer i) -> i==2)
+				.withTactic(action("new")
+						.do1((MyState S) -> S.counter)
 						.lift())
 				.lift() ;
 		
@@ -344,8 +427,6 @@ public class Test_BasicAgent {
 		assertTrue(gnew2.parent.parent.bmax == 10) ;
 		assertTrue(gnew2.parent.budget == 10) ;
 		
-		
-		
 		// Scenario 3: trying to add a goal that was already added:
 		agent.addBefore(gnew2);
 		//gtop.printGoalStructureStatus();
@@ -353,6 +434,42 @@ public class Test_BasicAgent {
 		assertTrue(g.parent.subgoals.size() == 2) ;
 		assertTrue(g.parent.subgoals.get(0) == gnew2) ;
 		assertTrue(g.parent.subgoals.get(1) == g) ;
+		
+		// Simulating an agent executing a composite goal, and in the middle perform
+		// addBefore. We check simulated execution would indeed cycle back to the newly
+		// added goal, and when the added REPEAT body is solved, this is properly propagated:
+		gtop = SEQ(g,g0) ;
+		agent.setGoal(gtop) ;
+		agent.attachEnvironment(new Environment()) ;
+		assertTrue(agent.currentGoal == g) ;
+		MyState state = (MyState) agent.state ;
+		
+		// simulating solving subgoal g, advancing the current goal to g0
+		agent.update();		
+		assertTrue(agent.currentGoal == g0) ;
+		
+		// simulating adding a new goal before g0; g0 should remain current:
+		agent.addBefore(gnew);
+		assertTrue(agent.currentGoal == g0) ;
+		
+		// simulating 2x step; since state.counter==0, g0 will abort on it on the 2nd step.
+		// the new goal should now become the current goal:
+		agent.update();
+		agent.update();		
+		assertTrue(agent.currentGoal == gnew) ;
+		
+		// simulating solving the new goal, the current goal should advance to g0
+		state.counter = 2 ;
+		agent.update();
+		assertTrue(gnew.getStatus().success()) ;
+		assertTrue(agent.currentGoal == g0) ;
+		
+		// simulating solving g0, this should solve the top-goal:
+		state.counter = 1 ;
+		agent.update();
+		assertTrue(g0.getStatus().success()) ;
+		assertTrue(gtop.getStatus().success()) ;		
+		//gtop.printGoalStructureStatus();
 	}
 	
 	
