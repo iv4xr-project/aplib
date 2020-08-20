@@ -226,9 +226,11 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	}
     }
     
-    public void markAsSeen(Integer ... seen) {
+    public void markAsSeen(int ... seen) {
     	List<Integer> seen_ = new LinkedList<>() ;
-    	Collections.addAll(seen_ , seen) ;
+    	for (int k : seen) {
+    		seen_.add(k) ;
+    	}
     	markAsSeen(seen_) ;
     }
     
