@@ -7,6 +7,7 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 
+
 /**
  * This describes a fragment of a virtual world in terms of how it is structurally
  * populated by in-world entities. This fragment can represent what an agent currently
@@ -176,6 +177,22 @@ public class WorldModel {
         return impactEntities ;
 	}
 	
+    
+	/**
+	 * This is used to merge an older observation into this one. E.g. it can be an observation
+	 * sent by another agent.
+	 */
+    public void mergeOldwObservationIntoWOM(WorldModel observation) {
+    	//check if the observation is not null
+        if (observation == null) throw new IllegalArgumentException("Null observation received");
+        if (observation.timestamp >= this.timestamp) 
+        	throw new IllegalArgumentException("This method expect an older WorldModel to be merged into a newer one.");
+        
+        for (WorldEntity e : observation.elements.values()) {
+        	this.updateEntity(e) ;
+        }
+    }
+
 	
 	/**
 	 * A query method that returns the set of possible interaction-types(e.g.
