@@ -108,11 +108,15 @@ public class WorldModel {
 				}
 			}
 			else { // case (2): e is older than current:
-				var prev =  e.getPreviousState() ;
+				var prev =  current.getPreviousState() ;
+				//System.out.println(">>> current: " + current.id + ", e: " + e.id
+				//		           + ", prev: " + prev) ;
 				if (prev==null || e.timestamp > prev.timestamp) {
-					current.linkPreviousState(e);
+					if(! e.hasSameState(current)) 
+						current.linkPreviousState(e);
 				}
-				return current ;
+				//System.out.println(">>> prev: " + current.getPreviousState()) ;
+		return current ;
 			}
 		}
 	}
@@ -126,7 +130,6 @@ public class WorldModel {
 	 * want to send information about an entity it knows to share it with another
 	 * agent, it should send a copy of the entity as {@link updateEntity} may
 	 * have side effect on the entity.
-	 * 
 	 * 
 	 * This method will basically
 	 * add all entities in the new observation into this WorldModel. More precisely,
@@ -146,6 +149,15 @@ public class WorldModel {
 	 * The method returns the list of entities that were identified as changing the
 	 * state of this WorldModel (e.g. either because they are new or because their
 	 * states are different).
+	 * 
+	 * IMPORTANT: note that the implemented merging algorithm is additive. That is,
+	 * it adds entities into the target WorldModel or updates existing ones, but it will 
+	 * NEVER REMOVE an entity. In theory this can be handled with some bit of reasoning,
+	 * e.g. when the agent has an unobstructed line of sight to the entity, and the
+	 * entity is within the agent's visibility range, but it is not present
+	 * in the new observation, then we can conclude that the entity is no longer in
+	 * the world, and hence can be removed from the WorldModel. Implementing this reasoning
+	 * is still TODO.
 	 */
 	public List<WorldEntity> mergeNewObservation(WorldModel observation) {
         //check if the observation is not null
@@ -182,7 +194,7 @@ public class WorldModel {
 	 * This is used to merge an older observation into this one. E.g. it can be an observation
 	 * sent by another agent.
 	 */
-    public void mergeOldwObservationIntoWOM(WorldModel observation) {
+    public void mergeOldObservation(WorldModel observation) {
     	//check if the observation is not null
         if (observation == null) throw new IllegalArgumentException("Null observation received");
         if (observation.timestamp >= this.timestamp) 
