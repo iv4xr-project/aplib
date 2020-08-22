@@ -386,11 +386,12 @@ public class TestSimple_and_SurfaceNavGraph {
 		
 		// start location near node-2, and location near node-5
 		var loc_a = new Vec3(-1,2,-1.8f) ;
-		var loc_b = new Vec3(0,2,3.8f) ;
+		var loc_b = new Vec3(0,2f,3.8f) ;
 		
 		// perfect memory, no obstacle ;
 		navgraph.perfect_memory_pathfinding = true ;
 		var path = navgraph.findPath(loc_a, loc_b, 0.2f) ;
+		
 		assertTrue(checkPath(path,2,6,7,8,9,5)) ;
 		
 		// perfect memory, adding an obstacle blocking node 8
@@ -410,7 +411,7 @@ public class TestSimple_and_SurfaceNavGraph {
         // however, finding a path to a location near 9 should work because 9 is considered
         // as explored
         loc_b = new Vec3(0f,0.66f,3f) ;
-        path = navgraph.findPath(loc_a, loc_b, 0.2f) ;
+        path = navgraph.findPath(loc_a, loc_b, 0.25f) ;
         System.out.println("** path: " + path) ;
         assertTrue(path.get(0) == 2 && path.get(path.size()-1) == 9) ;
     }

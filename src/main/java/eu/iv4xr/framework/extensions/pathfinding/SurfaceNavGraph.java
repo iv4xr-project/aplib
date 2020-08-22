@@ -264,11 +264,18 @@ public class SurfaceNavGraph extends SimpleNavGraph {
 	 */
     public Integer getNearestUnblockedVertex(Vec3 location, float faceDistThreshold) {
     	// first find a face that contains the location:
+    	//System.out.println(">> anchor location: " + location) ;
     	Face face = null ;
     	int k = 0 ;
     	for (Face f : faces) {
     		var dist = f.distFromPoint(location, vertices) ;
+    		
     		//System.out.println(">>    Face " + k + "," + f + ", distance: " + dist) ;
+    		/*
+    		for (var corner : f.vertices) {
+    			System.out.println("    " + vertices.get(corner)) ;
+    		}
+    		*/
         	if (dist <= faceDistThreshold) {
     			// found one ... we'll grab it:
     			face = f ;
@@ -278,6 +285,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	}
     	if (face == null) {
     		// well... then the location is not even in the mesh:
+    		System.out.println(">> cannot find any face close enough!") ;
     		return null ;
     	}
     	

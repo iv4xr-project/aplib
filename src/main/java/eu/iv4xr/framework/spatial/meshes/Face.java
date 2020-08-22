@@ -145,12 +145,16 @@ public class Face implements Iterable<Integer> {
     	// to favor simpler implementation.
     	//But can be improved in the future. 
     	int N = vertices.length ;
-    	var line_0_to_1 = Vec3.sub(concreteVertices.get(1),concreteVertices.get(vertices[0])) ;
-    	var line_lastNode_to_0 = Vec3.sub(concreteVertices.get(0),concreteVertices.get(vertices[N-1])) ;
+    	
+    	var vert_0 =  concreteVertices.get(vertices[0]) ;
+    	
+    	var line_0_to_1 = Vec3.sub(concreteVertices.get(vertices[1]),vert_0) ;
+    	var line_lastNode_to_0 = Vec3.sub(vert_0, concreteVertices.get(vertices[N-1])) ;
     	// the normal vector between the above two lines, which is also parallel with the
     	// face normal vector:
     	var norm = Vec3.cross(line_0_to_1, line_lastNode_to_0) ;
-    	//System.out.println(">> normal: " + norm) ;
+    	//System.out.println(">>  normal: " + norm) ;
+    	
     	// for inside outside test:
     	List<Float> d = new LinkedList<>() ;
     	
@@ -160,6 +164,7 @@ public class Face implements Iterable<Integer> {
     	
     	for (int i=0; i<N; i++) {
     		var p = concreteVertices.get(vertices[i]) ;
+    		//System.out.println("### v" + i + " " +  p) ;
     		var p_next = concreteVertices.get(vertices[(i+1) % N]) ;	
     		var line_next_to_p = Vec3.sub(p_next,p) ;
     		var line_w_to_p = Vec3.sub(w,p) ;
@@ -175,7 +180,12 @@ public class Face implements Iterable<Integer> {
     		}
     	}
     	//System.out.println(">>  Inside extruded prism: " + inside_extruded_prism) ;
-    	if (!inside_extruded_prism) {
+    	if (inside_extruded_prism) {
+    		var z = Vec3.dot(Vec3.sub(w,vert_0),norm) ;
+    		return Math.abs(z/norm.length()) ;
+        	//return (float) Math.sqrt((z*z/norm.lengthSq())) ;
+    	}
+    	else {
     		// the point is outside the prism
     		float distSq = Float.POSITIVE_INFINITY ;  // we will compare the square of distance instead
     		// iterate over all sides, to find the minimum distance :
@@ -201,14 +211,7 @@ public class Face implements Iterable<Integer> {
         		distSq = Math.min(new_distSq,distSq) ;
         	}
     		return (float) Math.sqrt(distSq) ;
-    	}
-    	
-    	var z = Vec3.dot(w,norm) ;
-    	
-    	//System.out.println(">>>> " + z/norm.length()) ;
-    	
-    	return Math.abs(z/norm.length()) ;
-    	//return (float) Math.sqrt((z*z/norm.lengthSq())) ;
+    	}	
     }
     
 	/**
