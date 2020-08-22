@@ -234,6 +234,10 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	markAsSeen(seen_) ;
     }
     
+    public int numberOfSeen() {
+    	return (int) seenVertices.stream().filter(b -> b==true).count() ;
+    }
+    
     /**
      * Check if the line from x to y is blocked by any of the
      * blocking obstacles.
