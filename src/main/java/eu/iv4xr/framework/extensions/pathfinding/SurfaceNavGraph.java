@@ -218,8 +218,13 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     		// it as "seen".
     		if (verticesType.get(v) != VertexType.CENTRE) {
     			var neighbors = edges.neighbours(v) ;
+    			var vloc = vertices.get(v) ;
     			for (Integer z : neighbors) {
-    				if (verticesType.get(z) == VertexType.CENTRE)
+    				var zloc = vertices.get(z) ;
+    				// the 2nd cond is a HACK!
+    				if (verticesType.get(z) == VertexType.CENTRE
+    						//|| Vec3.dist(vloc,zloc) <= 0.4
+    						)
     					seenVertices.set(z,true) ;	
     			}
     		}
@@ -270,6 +275,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	// first find a face that contains the location:
     	//System.out.println(">> anchor location: " + location) ;
     	Face face = null ;
+    	//float bestDistanceSofar = Float.MAX_VALUE ;
     	int k = 0 ;
     	for (Face f : faces) {
     		var dist = f.distFromPoint(location, vertices) ;
@@ -282,8 +288,8 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     		*/
         	if (dist <= faceDistThreshold) {
     			// found one ... we'll grab it:
-    			face = f ;
-    			break ;
+        		face = f ;
+        		break ;
     		}
     		k++ ;
     	}
@@ -420,8 +426,13 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * unexplored and unblocked neighbor.
      */
     List<Pair<Integer,Integer>> getFrontierVertices() {
-    	int N = vertices.size() ;
     	var frontiers = new LinkedList<Pair<Integer,Integer>>() ;
+    	if (perfect_memory_pathfinding) {
+    		// when perfect memory is assumed, all nodes are considered as explored.
+    		// so, there is no frontiers either.
+    		return frontiers ;
+    	}
+    	int N = vertices.size() ;
     	for (int v = 0 ; v<N ; v++) {
     		Vec3 vloc = vertices.get(v) ;
     		if (seenVertices.get(v))  {

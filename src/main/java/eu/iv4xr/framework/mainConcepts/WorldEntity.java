@@ -24,6 +24,13 @@ public class WorldEntity implements Serializable {
 	public long timestamp = -1 ;
 	
 	/**
+	 * The last time the state of this entity is sampled, after which its state is always sampled
+	 * to be the same as its current state (the start of stutter period towards the current state).
+	 * If the value is -1, if this time is not known.
+	 */
+	public long lastStutterTimestamp = -1 ;
+	
+	/**
 	 * The center position of this entity,
 	 */
 	public Vec3 position ;
@@ -151,6 +158,9 @@ public class WorldEntity implements Serializable {
 		return !hasSameState(previousState) ;
 	}
 	
+	public boolean hasPreviousState() {
+		return previousState != null ;
+	}
 	/**
 	 * Set the time-stamp of this Entity and its elements to the given time.
 	 */

@@ -58,7 +58,7 @@ public class WorldModel {
 
 	/**
 	 * This will add or update an entity e in this WorldModel. The entity can be an
-	 * entity observed by the agent that owns thos WorldModel, or it can also be
+	 * entity observed by the agent that owns the WorldModel, or it can also be
 	 * information sent by another agent.
 	 * 
 	 * IMPORTANT: this update may have some side effect on e itself, so e should be
@@ -95,12 +95,17 @@ public class WorldModel {
 			if (e.timestamp >= current.timestamp) {
 				// check first if there is a state change
 				if (e.hasSameState(current)) {
+					var startTimeStutter = current.lastStutterTimestamp ;
+					if (startTimeStutter<0) startTimeStutter = current.timestamp ;
 					// keep current; just update its timestamp:
 					current.assignTimeStamp(e.timestamp);
+					// update the stutter-timestamp as well:
+					current.lastStutterTimestamp = startTimeStutter ;
 					return current ;
 				}
 				else {
-					// the entity has changes its state
+					// the entity has changes its state 
+					// (its start-stutter-time should already be initialized to -1)
 					elements.put(e.id,e) ;
 					e.linkPreviousState(current);
 					//System.out.println("%%% updating " + e.id) ;
