@@ -276,7 +276,7 @@ public class GoalStructure {
 	}
 	
 	
-	private void makeInProgressAgain() {
+	void makeInProgressAgain() {
 		status.resetToInProgress();
 		for (GoalStructure G : subgoals) G.makeInProgressAgain();
 	}
@@ -382,6 +382,28 @@ public class GoalStructure {
 			goal = g ; 
 		}
 		
+		
+		// need to override these three methods to set the goal status... because we maintain it
+		// using two fields!! ANTI PATERN :( Should fix this...
+		
+		@Override
+		void setStatusToFail(String reason) {
+			goal.status.setToFail(reason);
+			super.setStatusToFail(reason);
+		}
+		
+		@Override
+		void setStatusToSuccess(String info) {
+			goal.status.setToSuccess(info);
+			super.setStatusToSuccess(info);
+		}
+		
+		@Override
+		void makeInProgressAgain() {
+			goal.status.resetToInProgress();
+			super.makeInProgressAgain();
+		}
+		
 	}
-
+	
 }
