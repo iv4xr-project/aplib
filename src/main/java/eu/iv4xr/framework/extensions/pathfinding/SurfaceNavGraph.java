@@ -108,11 +108,25 @@ public class SurfaceNavGraph extends SimpleNavGraph {
 	 */
     public int travelPreferrence = PREFER_CENTER ;
     
+    /**
+     * A threshold for the minimum area of a face to be considered when adding
+     * center points to the navigation graph. Only faces whose area is at least this
+     * threshold will have a center-point added as an extra navigation node.
+     */
+    float faceAreaThresholdToAddCenterNode ;
+    
     
     Pathfinder pathfinder ;
     
-    public SurfaceNavGraph(Mesh mesh) {
+    /**
+     * Create an intance of SurfaceNavGraph from a given mesh. Note that for each
+     * face in the mesh, this constructor will also add the center-point of the face
+     * in the created navigation graph. This is done if the face's area is large enough;
+     * that is, if it exceeds the threshold faceAreaThresholdToAddCenterNode.
+     */
+    public SurfaceNavGraph(Mesh mesh, float faceAreaThresholdToAddCenterNode) {
         super();
+        this.faceAreaThresholdToAddCenterNode = faceAreaThresholdToAddCenterNode ;
         // copying the vertices and faces:
         vertices.addAll(mesh.vertices) ;
         numberOfBaseVertices = vertices.size() ;
@@ -149,6 +163,10 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         // their corners to the corresponding center-point:
         faceToCenterIdMap = new HashMap<>() ;
         for (Face face : faces) {
+        	
+        	// don't add a center-point if the face is too small:
+        	if (face.area(mesh.vertices) < faceAreaThresholdToAddCenterNode) continue ;
+        	
         	Vec3 center = face.center(mesh.vertices) ;
         	int center_id = vertices.size() ;
         	// add the center to the set of vertices:
@@ -300,14 +318,17 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     	}
     	
     	// Find the closest vertex on the Face;
-    	// start with calculating the distance to the face center:
+    	// start with calculating the distance to the face center, if we keep track of its center:
     	Integer best = null ;
     	float best_distsq = Float.POSITIVE_INFINITY ;
-    	int v = faceToCenterIdMap.get(face) ; 
-    	var v_loc = vertices.get(v) ;
-    	if (! isBlocked(location,v_loc)) {
-    		best = v ;
-    		best_distsq = Vec3.sub(location,v_loc).lengthSq() ;
+    	Integer v = faceToCenterIdMap.get(face) ; 
+    	Vec3 v_loc = null ;
+    	if (v!=null) {
+    		v_loc = vertices.get(v) ;
+        	if (! isBlocked(location,v_loc)) {
+        		best = v ;
+        		best_distsq = Vec3.sub(location,v_loc).lengthSq() ;
+        	}
     	}
     	for(int w : face.vertices)
     	{

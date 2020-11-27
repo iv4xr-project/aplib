@@ -1,7 +1,7 @@
 package eu.iv4xr.framework.extensions.pathfinding;
 
 /**
- * Discribes a graph-like structure that can be navigated
+ * Describes a graph-like structure that can be navigated
  * by a pathfinder.
  * 
  * @author Naraenda

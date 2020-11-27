@@ -27,6 +27,7 @@ public class Face implements Iterable<Integer> {
     public int[] vertices;
 
     public Face(int[] vertices) {
+    	if (vertices.length < 3) throw new IllegalArgumentException() ;
         this.vertices = vertices;
     }
 
@@ -64,6 +65,35 @@ public class Face implements Iterable<Integer> {
     	// last edge:
     	Edge ex = new Edge(vertices[N_], vertices[0]) ;
     	return e.equals(ex) ;
+    }
+    
+    /**
+     * The area of a triangle given its corners.
+     */
+    private static float triangleArea(Vec3 a, Vec3 b, Vec3 c ){
+    	float ab = Vec3.dist(a, b) ;
+    	float ac = Vec3.dist(a, c) ;
+    	float bc = Vec3.dist(b,c) ;
+    	// using Heron formula to calculate the area https://qr.ae/pN9xEB
+    	float s = (ab + ac + bc)/2 ;
+    	return (float) Math.sqrt(s * (s - ab) * (s - ac) * (s - bc)) ;
+    }
+    
+    public float area(List<Vec3> vertexMap) {
+    	int N = vertices.length ;
+    	if(N == 3) return triangleArea(
+    			vertexMap.get(vertices[0]),
+    			vertexMap.get(vertices[1]),
+    			vertexMap.get(vertices[2])) ;
+    	// if the face has more edges:
+    	float area = 0f ;
+    	Vec3 center = center(vertexMap) ;
+    	for(int k = 0 ; k < N ; k++) {
+    		Vec3 corner1 = vertexMap.get(k) ;
+    		Vec3 nextCorner = vertexMap.get((k+1) % N) ;
+    		area += triangleArea(center,corner1, nextCorner) ;
+     	}
+    	return area ;    	
     }
     
     public String toString(ArrayList<Vec3> concreteVertices) {

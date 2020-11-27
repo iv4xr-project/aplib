@@ -119,7 +119,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	@Test
 	public void test_conversion_mesh_to_SurfaceNavGraph() {
 		Mesh mesh = mesh0() ;
-		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh,0f) ;
 		// check if all vertices in the mesh are included in the navgraph
 		assertTrue(navgraph.vertices.size() == 10) ;
 		assertTrue(navgraph.numberOfBaseVertices == 6) ;
@@ -197,7 +197,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	@Test
 	public void test_SurfaceNavGraph_vertex2vertex_pathPinfing() {
 		Mesh mesh = mesh0() ;
-		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh,0f) ;
 		navgraph.setPathFinder(new AStar());
 		// insist on perfect memory:
 		navgraph.perfect_memory_pathfinding = true ;
@@ -244,7 +244,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	@Test
 	public void test_SurfaceNavGraph_vertexlevel_exploration() {
 		Mesh mesh = mesh0() ;
-		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh,0f) ;
 		navgraph.setPathFinder(new AStar());
 		
 		// since no nodes are initially "seen", exploration should not be possible:
@@ -302,7 +302,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	@Test
 	public void test_SurfaceNavgrapg_getNearestUnblockedVertex() {
 		Mesh mesh = mesh0() ;
-		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh,0f) ;
 		
 		// without obstacles:
 	
@@ -381,7 +381,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	@Test
     public void test_SurfaceNavgraph_vec3location_pathfinding() {
     	Mesh mesh = mesh0() ;
-		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh,0f) ;
 		
 		
 		// start location near node-2, and location near node-5
@@ -422,7 +422,7 @@ public class TestSimple_and_SurfaceNavGraph {
 	@Test
     public void test_SurfaceNavgraph_fromVec3Location_exploration() {
     	Mesh mesh = mesh0() ;
-		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh) ;
+		SurfaceNavGraph navgraph = new SurfaceNavGraph(mesh,0f) ;
 		
 		// since no nodes is initially marked as seen, exploration should not be possible:
 		assertTrue(navgraph.explore(new Vec3(0,0,0),0.2f) == null) ;
