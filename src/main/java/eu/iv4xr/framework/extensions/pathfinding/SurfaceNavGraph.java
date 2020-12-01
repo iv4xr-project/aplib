@@ -189,7 +189,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
                 if (Face.isConnected(face1,face2)) {
                 	var center1 = faceToCenterIdMap.get(face1) ;
                 	var center2 = faceToCenterIdMap.get(face2) ;
-                    edges.put(new Edge(center1,center2));
+                    if (center1 != null && center2 != null) edges.put(new Edge(center1,center2));
                 }
             }
         }
