@@ -1,4 +1,31 @@
-# Aplib: an Agent Programming Library
+# iv4XR Framework and Aplib
+
+**iv4XR  Framework** is a agent-based automated testing framework. It can be used to target _any system_ as long as the agents can interface with the system (in a specific structure defined by the Framework). Our own use case is to use the Framework for automated testing of Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games; interfacing to other types of XR systems is work in progress.
+
+**Aplib** is the underlying agent programming library used by the iv4XR Framework. This library is general purpose, and can be used to program agents for purposes other than testing. Using iv4XR can be seen as a special case of using `aplib`, where you get some testing-specific extra capabilities, such as expressing test oracles.
+
+**Using `aplib` and iv4XR.** `Aplib` is a Java library. The simplest setup to use it would be:
+
+  1. create a Java method where you create one agent
+  1. formulate a goal for the agent, and program a tactic to solve it.
+  1. run the agent.
+
+Using iv4XR is just the same, with an additional step that the interface to let agents to control the System under Test must also be setup.  
+
+**Papers**
+
+  * Extended abstract: [_Aplib: An Agent Programming Library for Testing Games_](http://ifaamas.org/Proceedings/aamas2020/pdfs/p1972.pdf), I. S. W. B. Prasetya,  Mehdi Dastani, in the International Conference on Autonomous Agents and Multiagent Systems (AAMAS), 2020.
+
+  * Concepts behind agent-based automated testing:
+  [_Tactical Agents for Testing Computer Games_](https://emas2020.in.tu-clausthal.de/files/emas/papers-h/EMAS2020_paper_6.pdf)
+I. S. W. B. Prasetya, Mehdi Dastani, Rui Prada, Tanja E. J. Vos, Frank Dignum, Fitsum Kifetew,
+in Engineering Multi-Agent Systems workshop (EMAS), 2020.
+
+  * The agents' execution loop is explained  in this draft: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
+
+
+
+## Aplib: an Agent Programming Library
 
 
 * [APIs Javadoc documentation](http://www.staff.science.uu.nl/~prase101/research/projects/iv4xr/aplib/apidocs/)
@@ -8,7 +35,7 @@
     | [Tutorial 2](./docs/manual/tutorial_2.md)
     | [Tutorial 3](./docs/manual/tutorial_3.md)
    * [Prolog binding](./docs/manual/prolog.md)
-* Paper: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
+* The agents' execution loop is explained  in this draft: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
 
 `Aplib` is a Java library to program multi agent programs.
 `Aplib` is inspired by the popular [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming (e.g. `aplib` agents have 'goals' and run so-called 'deliberation' cycles).
@@ -43,7 +70,6 @@ Planned features:
 * Bounded model checking and runtime verification.
 * Reinforcement learning
 * Search algorithms for solving goals
-* Environment for controlling 3D games
 
 
 #### Some code snippets:
@@ -78,14 +104,23 @@ new AutonomousBasicAgent()
 new Thread(() -> agent.loop()) . start()
 ```
 
-#### Building with Maven
+## iv4XR Framework
+
+The iv4XR Framework is a framework to do automated testing by using agents.
+It can be used to test any target system as long as there is an interface between it and the agents. Since this interface depends on the technology used by the System under Test (SUT), the iv4XR does not offer pre-made interface; so, the SUT developers need to construct one first. Technically, this interface needs to implement a `aplib` Java Interface named `Environment`.
+
+[Tutorials and examples](./docs/iv4xr)
+   * [Testing a Java class](./docs/iv4xr/testagent_tutorial_1.md)
+   * [Testing a (simulated) external program](./docs/iv4xr/testagent_tutorial_2.md)
+
+## Building with Maven
 
 You need Java-11 or higher.
 
 You can run `mvn` (Maven) at the project root to do the things listed below. Maven will put artifacts it produces under the directory `./target` in the project root.
 
 * To compile the project: `mvn compile`
-* To run the project's unit tests: `mvn test`
+* To run the project unit tests: `mvn test`
 * To produce a jar of the project: `mvn package`. This will invoke `compile` and `test`, and then produce a jar containing the whole project. This is the jar you want to use if you want to include in your own project if you want to use `aplib`.
 * To generate the javadoc APIs documentation: `mvn javadoc:javadoc`. The resulting documentations can be found in `./target/site/apicdocs`.
 * To clean `./target`: `mvn clean`
@@ -97,7 +132,7 @@ You can run `mvn` (Maven) at the project root to do the things listed below. Mav
 * `./docs/manual` : contain some tutorials and documentations.
 * `./libs` : external jars provided for convenience. You should not need these jars if you build using Maven. They are needed if you want to work on aplib itself and want to just link the jars immediately.
 
-#### License
+## License
 
 Copyright (c) 2019, Utrecht University.
 
@@ -107,4 +142,4 @@ Copyright (c) 2019, Utrecht University.
 #### Credits
 
 Contributors:
-* Wishnu Prasetya
+* Wishnu Prasetya, Naraenda Prasetya, Saba Ansari, Samira Shirzadeh, Fitsum Kifetew.
