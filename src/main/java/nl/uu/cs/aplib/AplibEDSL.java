@@ -1,5 +1,12 @@
 package nl.uu.cs.aplib;
 
+import static nl.uu.cs.aplib.AplibEDSL.ABORT;
+import static nl.uu.cs.aplib.AplibEDSL.SEQ;
+import static nl.uu.cs.aplib.AplibEDSL.action;
+import static nl.uu.cs.aplib.AplibEDSL.goal;
+
+import java.util.function.Predicate;
+
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.*;
 import nl.uu.cs.aplib.mainConcepts.Tactic.*;
@@ -35,6 +42,49 @@ public class AplibEDSL {
     public static GoalStructure REPEAT(GoalStructure subgoal) {
 		return new GoalStructure(GoalsCombinator.REPEAT, subgoal) ;
 	}
+    
+    /**
+     * Turn a predicate over state to become a goal. When this goal becomes current,
+     * the agent will test the predicate on its state; if the predicate holds on the
+     * state, the goal is solved, and the goal is declared as failed.
+     */
+    public static <State>GoalStructure lift(Predicate<State> p) {
+   	 return goal("This predicate must hold.")
+   	            .toSolve((Boolean b) ->  b ) 
+   	            .withTactic(
+   	            		SEQ(
+   	            		action("lifting a predicate").do1((State belief)-> {
+        						return p.test(belief) ;
+        						}
+        						).lift()
+   	            		,
+   	                    ABORT()))
+   	            .lift() ;	
+    }
+    
+    /**
+     * This goal will always succeeds.
+     */
+    public static <State> GoalStructure SUCCESS() {
+   	 return goal(String.format("success"))
+        		. toSolve((State belief) -> { return true;})
+        		. withTactic(action("").do1((State state) -> state).lift()) 
+        		.lift();
+   	
+    }
+    
+    /**
+     * Repeatedly trying to solve a goal, while the given predicate is false. More precisely,
+     * the agent first check the given guard predicate g. If it holds, the loop ends. Else,
+     * it make the sugoal current and tries to solve it. If this subgoal is solved, the loop
+     * ends. Else we repeat the above steps. 
+     * 
+     * If the agent runs out of the budget to do the loop, it also leaves the loop.
+     */
+    public static <State>GoalStructure WHILE(Predicate<State> p, GoalStructure subgoal) {
+    	GoalStructure[] guard = { lift(p), SUCCESS() };
+   		return REPEAT(FIRSTof(SEQ(guard), subgoal)) ;
+   	}
 	
 	/**
 	 * Create a blank instance of {@link nl.uu.cs.aplib.mainConcepts.Goal} with the given name.
