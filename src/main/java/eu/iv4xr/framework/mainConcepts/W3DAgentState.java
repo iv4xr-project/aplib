@@ -5,16 +5,16 @@ import nl.uu.cs.aplib.agents.State ;
 
 public class W3DAgentState extends State {
 	
-	WorldModel wom ;
+	public WorldModel wom ;
 	
-	SurfaceNavGraph worldNavigation ;
+	public SurfaceNavGraph worldNavigation ;
 	
 	
 	/**
 	 * The timestamp of when a vertex becomes known to the agent. So, if vertex
 	 * i becomes known to the agent at time t, then knownVerticesTimestamps[i]= t.
 	 */
-    long[] knownVerticesTimestamps ; // move this to the NavGraph? TODO
+    // long[] knownVerticesTimestamps ; // move this to the NavGraph? TODO
 	
     /**
      * Link the given environment to this State. It will also import the 

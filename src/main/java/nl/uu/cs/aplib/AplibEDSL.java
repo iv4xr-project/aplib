@@ -46,19 +46,17 @@ public class AplibEDSL {
     /**
      * Turn a predicate over state to become a goal. When this goal becomes current,
      * the agent will test the predicate on its state; if the predicate holds on the
-     * state, the goal is solved, and the goal is declared as failed.
+     * state, the goal is solved, and else the goal is declared as failed.
      */
     public static <State>GoalStructure lift(Predicate<State> p) {
    	 return goal("This predicate must hold.")
    	            .toSolve((Boolean b) ->  b ) 
    	            .withTactic(
-   	            		SEQ(
-   	            		action("lifting a predicate").do1((State belief)-> {
-        						return p.test(belief) ;
-        						}
-        						).lift()
-   	            		,
-   	                    ABORT()))
+   	            		FIRSTof(
+   	            		   action("lifting a predicate").do1((State belief)-> true)
+   	            	 	     . on_((State belief) -> p.test(belief))
+   	            		     . lift()
+   	            		  , ABORT()))
    	            .lift() ;	
     }
     
@@ -74,16 +72,25 @@ public class AplibEDSL {
     }
     
     /**
-     * Repeatedly trying to solve a goal, while the given predicate is false. More precisely,
-     * the agent first check the given guard predicate g. If it holds, the loop ends. Else,
+     * Repeatedly trying to solve a goal, while the given predicate is true. More precisely,
+     * the agent first check the given guard predicate g. If it does not hold, the loop ends. Else,
      * it make the sugoal current and tries to solve it. If this subgoal is solved, the loop
      * ends. Else we repeat the above steps. 
      * 
      * If the agent runs out of the budget to do the loop, it also leaves the loop.
      */
     public static <State>GoalStructure WHILE(Predicate<State> p, GoalStructure subgoal) {
-    	GoalStructure[] guard = { lift(p), SUCCESS() };
-   		return REPEAT(FIRSTof(SEQ(guard), subgoal)) ;
+    	GoalStructure not_g = lift((State state) -> p.test(state)) ;
+   		return REPEAT(FIRSTof(not_g, subgoal)) ;
+   	}
+    
+    /**
+     * If this goal becomes current, it will evaluate the current state. If p holds, it
+     * will continue with the goal g1 as the goal to solve, and else g2 has to be solved.
+     */
+    public static <State>GoalStructure IFELSE(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
+    	GoalStructure not_g = lift((State state) -> p.test(state)) ;
+   		return FIRSTof(SEQ(lift(p), g1), g2) ;
    	}
 	
 	/**

@@ -2,6 +2,8 @@
 
 **iv4XR  Framework** is a agent-based automated testing framework. It can be used to target _any system_ as long as the agents can interface with the system (in a specific structure defined by the Framework). Our own use case is to use the Framework for automated testing of Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games; interfacing to other types of XR systems is work in progress.
 
+**Video** [here is a 10m video showing a demo of iv4XR](https://youtu.be/Hc8NP4NuHAk).
+
 **Aplib** is the underlying agent programming library used by the iv4XR Framework. This library is general purpose, and can be used to program agents for purposes other than testing. Using iv4XR can be seen as a special case of using `aplib`, where you get some testing-specific extra capabilities, such as expressing test oracles.
 
 **Using `aplib` and iv4XR.** `Aplib` is a Java library. The simplest setup to use it would be:
