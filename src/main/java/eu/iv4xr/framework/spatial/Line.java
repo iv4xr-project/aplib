@@ -18,6 +18,7 @@ public class Line {
 
     /**
      * Constructs a line between two point.
+     * 
      * @param a Point A
      * @param b Point B
      */

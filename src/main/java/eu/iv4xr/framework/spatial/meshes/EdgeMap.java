@@ -3,9 +3,9 @@ package eu.iv4xr.framework.spatial.meshes;
 import java.util.*;
 
 /**
- * An "EdgeMap" is actually a simple representation of a graph, which
- * consists of a set of vertices, identified by their integer-id, and 
- * edges between these vertices. The edges are undirected.
+ * An "EdgeMap" is actually a simple representation of a graph, which consists
+ * of a set of vertices, identified by their integer-id, and edges between these
+ * vertices. The edges are undirected.
  * 
  * The graph is implemented as a subclass of HashMap.
  * 
@@ -23,9 +23,9 @@ public class EdgeMap extends HashMap<Integer, HashSet<Integer>> {
      * Add the two vertices of an edge, along with its connectivity.
      */
     public void put(Edge edge) {
-        if(!this.containsKey(edge.i))
+        if (!this.containsKey(edge.i))
             this.put(edge.i, new HashSet<Integer>());
-        if(!this.containsKey(edge.j))
+        if (!this.containsKey(edge.j))
             this.put(edge.j, new HashSet<Integer>());
 
         this.get(edge.i).add(edge.j);
@@ -50,9 +50,9 @@ public class EdgeMap extends HashMap<Integer, HashSet<Integer>> {
     }
 
     public Set<Integer> vertices() {
-    	return keySet() ;
+        return keySet();
     }
-    
+
     public HashSet<Integer> neighbours(int i) {
         return this.getOrDefault(i, new HashSet<Integer>());
     }

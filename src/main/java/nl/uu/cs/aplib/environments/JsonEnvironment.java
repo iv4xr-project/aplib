@@ -1,4 +1,5 @@
 package nl.uu.cs.aplib.environments;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -16,70 +17,65 @@ import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
  * expected to be as a string in the JSON format as well, which sendCommand_
  * will then return.
  * 
- * Agents should use the wrapper method sendCommand(...) instead, which internally
- * will call sendCommand_, and parse the returned JSON string into a Java object.
+ * Agents should use the wrapper method sendCommand(...) instead, which
+ * internally will call sendCommand_, and parse the returned JSON string into a
+ * Java object.
  * 
  * @author Wish
  */
 public class JsonEnvironment extends Environment {
-	
-	/**
-	 * Json builder and parser. We use this to serialize an object to a Json string,
-	 * and conversely to parse a string in the Json format to a Java object.
-	 */
-	Gson gson ;
-	
-	/**
-	 * A constructor that will initialize the internal Json builder/parser to some
-	 * simple setup.
-	 */
-	public JsonEnvironment() { 
-		gson = new GsonBuilder().serializeNulls().create();
-	}
-	
-	/**
-	 * A constructor that will use the given Json builder/parser as its own
-	 * builder/parser.
-	 */
-	public JsonEnvironment(Gson jsonBuilderParser) {
-		gson = jsonBuilderParser ;
-	}
-	
-	/**
-	 * This method will invoke the underlying sendCommand_, that in turn is expected to
-	 * send the command as a string in the Json format to the real environment. If the
-	 * command is supposed to return anything, sendCommand_ will return this as a string
-	 * in the Json format as well.
-	 * If the parameter expectedTypeOfResult is specified, the returned string will be
-	 * parsed into an instance of the specified type.
-	 * If the parameter expectedTypeOfResult is left null, this method won't know to
-	 * what the Json string should be parsed to, so it will simply return null.	
-	 */
-	@Override
-	public Object sendCommand(
-	         String invokerId,
-	         String targetId,
-	         String command,
-	         Object arg,
-	         Class expectedTypeOfResult
-	         ) {
-		String result = (String) super.sendCommand(invokerId,targetId,command,arg,String.class) ;
-		if (expectedTypeOfResult == null) 
-			return null ;
-		return gson.fromJson(result, expectedTypeOfResult) ;
-	}
-	
-	
-	/**
-	 * Override this method. The method should send the command to the real
-	 * environment in the Json format. If the command is supposed to return some
-	 * infomation back, this method is supposed to return this information as a
-	 * string in Json format. The wrapper method sendCommand will then parse this
-	 * Json string to an object with the corresponding structure.
-	 */
-	@Override
-	protected Object sendCommand_(EnvOperation cmd) {
-		throw new UnsupportedOperationException() ;
-	}
+
+    /**
+     * Json builder and parser. We use this to serialize an object to a Json string,
+     * and conversely to parse a string in the Json format to a Java object.
+     */
+    Gson gson;
+
+    /**
+     * A constructor that will initialize the internal Json builder/parser to some
+     * simple setup.
+     */
+    public JsonEnvironment() {
+        gson = new GsonBuilder().serializeNulls().create();
+    }
+
+    /**
+     * A constructor that will use the given Json builder/parser as its own
+     * builder/parser.
+     */
+    public JsonEnvironment(Gson jsonBuilderParser) {
+        gson = jsonBuilderParser;
+    }
+
+    /**
+     * This method will invoke the underlying sendCommand_, that in turn is expected
+     * to send the command as a string in the Json format to the real environment.
+     * If the command is supposed to return anything, sendCommand_ will return this
+     * as a string in the Json format as well. If the parameter expectedTypeOfResult
+     * is specified, the returned string will be parsed into an instance of the
+     * specified type. If the parameter expectedTypeOfResult is left null, this
+     * method won't know to what the Json string should be parsed to, so it will
+     * simply return null.
+     */
+    @Override
+    public Object sendCommand(String invokerId, String targetId, String command, Object arg,
+            Class expectedTypeOfResult) {
+        String result = (String) super.sendCommand(invokerId, targetId, command, arg, String.class);
+        if (expectedTypeOfResult == null)
+            return null;
+        return gson.fromJson(result, expectedTypeOfResult);
+    }
+
+    /**
+     * Override this method. The method should send the command to the real
+     * environment in the Json format. If the command is supposed to return some
+     * infomation back, this method is supposed to return this information as a
+     * string in Json format. The wrapper method sendCommand will then parse this
+     * Json string to an object with the corresponding structure.
+     */
+    @Override
+    protected Object sendCommand_(EnvOperation cmd) {
+        throw new UnsupportedOperationException();
+    }
 
 }

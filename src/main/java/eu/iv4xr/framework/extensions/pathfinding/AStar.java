@@ -16,8 +16,8 @@ public class AStar implements Pathfinder {
     @Override
     public ArrayList<Integer> findPath(Navigatable graph, int start, int goal) {
         // Open nodes sorted by heuristic
-        PriorityQueue<Priotisable<Integer>> open = new PriorityQueue<Priotisable<Integer>>(10
-            , new PriotisableComperator<Integer>());
+        PriorityQueue<Priotisable<Integer>> open = new PriorityQueue<Priotisable<Integer>>(10,
+                new PriotisableComperator<Integer>());
         // Closed nodes with their associated measured distance
         HashMap<Integer, Float> closed = new HashMap<Integer, Float>();
         // Closed nodes with the shortest node towards it.
@@ -46,22 +46,21 @@ public class AStar implements Pathfinder {
             var distToCurrent = closed.get(current).floatValue();
 
             for (var next_ : graph.neighbours(current)) {
-            	
-            	// Unbox value
+
+                // Unbox value
                 int next = next_.intValue();
 
-                if (graph.distance(current,next) == Float.POSITIVE_INFINITY) {
-                	continue ;
+                if (graph.distance(current, next) == Float.POSITIVE_INFINITY) {
+                    continue;
                 }
-            	
-                
-               // System.out.println("## current:" + current + ", next: " + next) ;
-                
+
+                // System.out.println("## current:" + current + ", next: " + next) ;
+
                 // The distance from start to next
                 var distToNext = distToCurrent + graph.distance(current, next);
 
                 // Guard for negative distances
-                if (distToNext < 0) 
+                if (distToNext < 0)
                     distToNext = 0;
 
                 // The distance from next to goal
@@ -70,21 +69,22 @@ public class AStar implements Pathfinder {
                 if (!closed.containsKey(next)) {
                     // Unexplored node
                     closed.put(next, distToNext);
-                }
-                else if (distToNext < closed.get(next).floatValue()) {
+                } else if (distToNext < closed.get(next).floatValue()) {
                     // Already explored, but shorter route
                     closed.replace(next, distToNext);
                 } else {
                     // Already explored, but longer route
                     continue;
-                };
+                }
+                ;
 
                 if (Float.isInfinite(distToNext))
                     continue;
 
                 paths.put(next, current);
 
-                if (!open.stream().anyMatch(p -> p.item.intValue() == next) || open.removeIf(p -> p.item.intValue() == next && p.priority > heurFromNext)){
+                if (!open.stream().anyMatch(p -> p.item.intValue() == next)
+                        || open.removeIf(p -> p.item.intValue() == next && p.priority > heurFromNext)) {
                     // If not in open set, or already in open set with longer distance...
                     // put next neighbour in the open set
                     open.add(new Priotisable<Integer>(next, heurFromNext));
@@ -98,6 +98,7 @@ public class AStar implements Pathfinder {
 
 /**
  * Wraps around a type to add a float value on which can be sorted.
+ * 
  * @param <T> The type to wrap around.
  */
 class Priotisable<T> {
@@ -106,6 +107,7 @@ class Priotisable<T> {
 
     /**
      * Wrap around an item to add a priority on which can be sorted.
+     * 
      * @param item: The item to wrap around.
      * @param priority: The priority on which can be sorted.
      */

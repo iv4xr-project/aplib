@@ -1,6 +1,5 @@
 package eu.iv4xr.framework.extensions.pathfinding;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -51,12 +50,12 @@ public class TestSimpleNavGraph {
     @Test
     public void testBlocking() {
         var n = makeTriangle();
-        var o = new Sphere(0.5f, new Vec3(0, 0, 1)) ;
+        var o = new Sphere(0.5f, new Vec3(0, 0, 1));
 
         n.addObstacle(o);
         var p = new AStar();
         ArrayList<Integer> path;
-        
+
         // Check with sphere not blocking
         n.toggleBlockingOff(o);
         path = p.findPath(n, 0, 2);
@@ -75,7 +74,7 @@ public class TestSimpleNavGraph {
         assertEquals(2, path.get(2));
 
         // Check no route
-        var o2 = new Sphere(0.3f, new Vec3(0, 0.5f, 1.5f)) ;
+        var o2 = new Sphere(0.3f, new Vec3(0, 0.5f, 1.5f));
         n.addObstacle(o2);
         n.toggleBlockingOn(o2);
 

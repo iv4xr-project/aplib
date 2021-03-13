@@ -13,45 +13,64 @@ import java.util.Random;
  * is 1 (in other words, if x and y are relative prime to each other).
  */
 public class GCDGame {
-	
-	int x ;
-	int y ;
-	int gcd ;
-		
-	/**
-	 * Create an instance of the game. The player is placed in a random square.
-	 */
-	public GCDGame() {
-		Random rnd = new Random() ;
-		x = rnd.nextInt(19) + 1 ;
-		y = rnd.nextInt(19) + 1 ;
-		gcd = Calculate_GCD(x,y) ;
-	}
-	
-	/**
-	 * Move the player one square up.
-	 */
-	public void up() { y++ ; gcd = Calculate_GCD(x,y) ; }
-	
-	/**
-	 * Move the player one square down.
-	 */
-	public void down() { if (y>0) y-- ; gcd = Calculate_GCD(x,y) ; }
-	
-	public void right() { x++ ; gcd = Calculate_GCD(x,y) ; }
-	public void left() { if (x>0) x-- ; gcd = Calculate_GCD(x,y) ; }
-	
-	private int Calculate_GCD(int x,int y) {
-		if (x==y) return x ;
-		if (x==1 || y==1) return 1 ;
-		if (y != 0)
-           return Calculate_GCD(y, x % y);
+
+    int x;
+    int y;
+    int gcd;
+
+    /**
+     * Create an instance of the game. The player is placed in a random square.
+     */
+    public GCDGame() {
+        Random rnd = new Random();
+        x = rnd.nextInt(19) + 1;
+        y = rnd.nextInt(19) + 1;
+        gcd = Calculate_GCD(x, y);
+    }
+
+    /**
+     * Move the player one square up.
+     */
+    public void up() {
+        y++;
+        gcd = Calculate_GCD(x, y);
+    }
+
+    /**
+     * Move the player one square down.
+     */
+    public void down() {
+        if (y > 0)
+            y--;
+        gcd = Calculate_GCD(x, y);
+    }
+
+    public void right() {
+        x++;
+        gcd = Calculate_GCD(x, y);
+    }
+
+    public void left() {
+        if (x > 0)
+            x--;
+        gcd = Calculate_GCD(x, y);
+    }
+
+    private int Calculate_GCD(int x, int y) {
+        if (x == y)
+            return x;
+        if (x == 1 || y == 1)
+            return 1;
+        if (y != 0)
+            return Calculate_GCD(y, x % y);
         else
-    	   return x;
-	}
-	
-	/**
-	 * True if the greatest common divisor of x and y is 1.
-	 */
-	public boolean win() { return gcd == 1 ; }
+            return x;
+    }
+
+    /**
+     * True if the greatest common divisor of x and y is 1.
+     */
+    public boolean win() {
+        return gcd == 1;
+    }
 }

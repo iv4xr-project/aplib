@@ -9,11 +9,11 @@ import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
 
 /**
- * A simple container to store mesh-data. A mesh is basically a set of 
+ * A simple container to store mesh-data. A mesh is basically a set of
  * convex-polygons/faces.
  * 
- * The array "vertices" contain the 3D locations/coordinates of the corners
- * of these faces. The index of this array can be seen as the id of a 
+ * The array "vertices" contain the 3D locations/coordinates of the corners of
+ * these faces. The index of this array can be seen as the id of a
  * corner/vertex. So if v is a vertex with index i, then vertices[i] specifies
  * the 3D location of v.
  * 
@@ -26,22 +26,25 @@ import eu.iv4xr.framework.spatial.meshes.*;
  * @author Naraenda
  */
 public class Mesh {
-    public ArrayList<Vec3> vertices = new ArrayList<>() ;
-    public ArrayList<Edge> edges = new ArrayList<>() ;
-    public ArrayList<Face> faces = new ArrayList<>() ;
-    public Mesh() { }
-    
+    public ArrayList<Vec3> vertices = new ArrayList<>();
+    public ArrayList<Edge> edges = new ArrayList<>();
+    public ArrayList<Face> faces = new ArrayList<>();
+
+    public Mesh() {
+    }
+
 //    @Override
     public String toString() {
-    	System.out.println(">>> #vertices = " + vertices.size()) ; 
-    	var sb = new StringBuffer() ;
-    	int k = 0 ;
-    	for (Face face : faces) {
-    		if (k>0) sb.append("\n") ;
-    		sb.append("Face-" + k + ": " + face.toString(vertices)) ;
-    		k++ ;
-    	}
-    	return sb.toString() ;
+        System.out.println(">>> #vertices = " + vertices.size());
+        var sb = new StringBuffer();
+        int k = 0;
+        for (Face face : faces) {
+            if (k > 0)
+                sb.append("\n");
+            sb.append("Face-" + k + ": " + face.toString(vertices));
+            k++;
+        }
+        return sb.toString();
     }
-   
+
 }

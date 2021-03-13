@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
  * This class is the root class for representing agents' states (an 'agent' is
  * an instance of {@link SimpleAgent} or its subclasses). For most uses, you
@@ -47,54 +46,63 @@ import java.util.logging.Logger;
  *
  */
 public class SimpleState {
-		
-	/**
-	 * A pointer to the {@link Environment} associated to the agent that owns this state.
-	 */
-	Environment env ;
-	
-	/**
-	 * A logger. Don't set this logger yourself. When you attach this state to an agent,
-	 * the method {@link BasicAgent#attachState(SimpleState) will set this to the right
-	 * logger.
-	 */
-	Logger logger ;
-	
-	public SimpleState() { }
-	
-	/**
-	 * Every instance of this class requires an instance to the {@link Environment} that is
-	 * used by the agent that owns this state. This methods allows you to set this
-	 * state's pointer to the given environment.
-	 * 
-	 * @param env The Environment we want to associate with this state.
-	 * @return The method simply returns this state to allow it to be used in the
-	 *         Fluent Interface style.
-	 */
-	public SimpleState setEnvironment(Environment env) { this.env = env ; return this ; }
-	
-	
-	/**
-	 * This will ask the {@link Environment} associated with this state to update itself.
-	 * Since this SimpleState does not actually has any state information, being just
-	 * a 'simple' state, this method updateState() does not actually update anything.
-	 * Override this method to implement a more elaborate scheme of updating state.
-	 */
-	public void updateState() {
-		 env.refresh() ;
-	};
-	
-	/**
-	 * Return the {@link Environment} associated with the state.
-	 */
-	public Environment env() { return env ; }
-	
-	/**
-	 * Write the string to the logger attached to this state, with the specified logging level.
-	 */
-	protected void log(Level level, String s) {
-		if (logger == null) return ;
-		logger.log(level, s);
-	}
-	
+
+    /**
+     * A pointer to the {@link Environment} associated to the agent that owns this
+     * state.
+     */
+    Environment env;
+
+    /**
+     * A logger. Don't set this logger yourself. When you attach this state to an
+     * agent, the method {@link BasicAgent#attachState(SimpleState) will set this to
+     * the right logger.
+     */
+    Logger logger;
+
+    public SimpleState() {
+    }
+
+    /**
+     * Every instance of this class requires an instance to the {@link Environment}
+     * that is used by the agent that owns this state. This methods allows you to
+     * set this state's pointer to the given environment.
+     * 
+     * @param env The Environment we want to associate with this state.
+     * @return The method simply returns this state to allow it to be used in the
+     *         Fluent Interface style.
+     */
+    public SimpleState setEnvironment(Environment env) {
+        this.env = env;
+        return this;
+    }
+
+    /**
+     * This will ask the {@link Environment} associated with this state to update
+     * itself. Since this SimpleState does not actually has any state information,
+     * being just a 'simple' state, this method updateState() does not actually
+     * update anything. Override this method to implement a more elaborate scheme of
+     * updating state.
+     */
+    public void updateState() {
+        env.refresh();
+    };
+
+    /**
+     * Return the {@link Environment} associated with the state.
+     */
+    public Environment env() {
+        return env;
+    }
+
+    /**
+     * Write the string to the logger attached to this state, with the specified
+     * logging level.
+     */
+    protected void log(Level level, String s) {
+        if (logger == null)
+            return;
+        logger.log(level, s);
+    }
+
 }

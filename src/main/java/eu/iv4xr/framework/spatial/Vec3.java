@@ -24,8 +24,8 @@ public class Vec3 {
     }
 
     /**
-     * Construct a vector containg the same constant value for
-     * each of the components.
+     * Construct a vector containg the same constant value for each of the
+     * components.
      * 
      * @param c: the constant value.
      */
@@ -47,7 +47,7 @@ public class Vec3 {
      */
     public static Vec3 zero() {
         return new Vec3(0f);
-    }   
+    }
 
     /**
      * @return Vec3 {1, 1, 1}
@@ -60,30 +60,21 @@ public class Vec3 {
      * @return A + B
      */
     public static Vec3 add(Vec3 a, Vec3 b) {
-        return new Vec3(
-            a.x + b.x, 
-            a.y + b.y, 
-            a.z + b.z);
+        return new Vec3(a.x + b.x, a.y + b.y, a.z + b.z);
     }
 
     /**
      * @return A - B
      */
     public static Vec3 sub(Vec3 a, Vec3 b) {
-        return new Vec3(
-            a.x - b.x, 
-            a.y - b.y, 
-            a.z - b.z);
+        return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z);
     }
 
     /**
      * @return A * B
      */
     public static Vec3 mul(Vec3 a, Vec3 b) {
-        return new Vec3(
-            a.x * b.x, 
-            a.y * b.y, 
-            a.z * b.z);
+        return new Vec3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
 
     /**
@@ -92,10 +83,7 @@ public class Vec3 {
      * @return c * A
      */
     public static Vec3 mul(Vec3 a, float c) {
-        return new Vec3(
-            a.x * c, 
-            a.y * c, 
-            a.z * c);
+        return new Vec3(a.x * c, a.y * c, a.z * c);
     }
 
     /**
@@ -104,21 +92,14 @@ public class Vec3 {
      * @return (1/c) * A
      */
     public static Vec3 div(Vec3 a, float c) {
-        return new Vec3(
-            a.x / c, 
-            a.y / c, 
-            a.z / c);
+        return new Vec3(a.x / c, a.y / c, a.z / c);
     }
 
-    
     /**
      * @return A.x * B.x + A.y * B.y + A.z * B.z
      */
     public static float dot(Vec3 a, Vec3 b) {
-        return (
-            a.x * b.x + 
-            a.y * b.y +
-            a.z * b.z);
+        return (a.x * b.x + a.y * b.y + a.z * b.z);
     }
 
     /**
@@ -132,10 +113,7 @@ public class Vec3 {
      * @return The cross product between two vectors.
      */
     public static Vec3 cross(Vec3 a, Vec3 b) {
-        return new Vec3(
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x);
+        return new Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
     }
 
     /**
@@ -157,11 +135,11 @@ public class Vec3 {
      */
     public Vec3 normalized() {
         var s = this.length();
-        if (s == 0) 
+        if (s == 0)
             throw new ArithmeticException();
         return div(this, s);
     }
-    
+
     @Override
     public String toString() {
         return String.format("<%s,%s,%s>", x, y, z);
@@ -169,7 +147,8 @@ public class Vec3 {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Vec3)) return false;
+        if (!(obj instanceof Vec3))
+            return false;
         Vec3 v = (Vec3) obj;
         return x == v.x && y == v.y && z == v.z;
     }

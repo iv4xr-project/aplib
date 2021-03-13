@@ -9,8 +9,7 @@ import java.util.Collection;
  */
 public interface LineIntersectable {
     /**
-     * Returns a list of intersection between a line segment
-     * and an object.
+     * Returns a list of intersection between a line segment and an object.
      * 
      * @param l line segment
      * @return list of intersections.

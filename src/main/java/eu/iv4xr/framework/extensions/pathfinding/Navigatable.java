@@ -1,15 +1,13 @@
 package eu.iv4xr.framework.extensions.pathfinding;
 
 /**
- * Describes a graph-like structure that can be navigated
- * by a pathfinder.
+ * Describes a graph-like structure that can be navigated by a pathfinder.
  * 
  * @author Naraenda
  */
 public interface Navigatable {
     /**
-     * An interable that can be used by pathfinders to 
-     * explore a node's connections.
+     * An interable that can be used by pathfinders to explore a node's connections.
      * 
      * @param id the index of the vertex to inspect.
      * @return an iterable of the connected neighbours.

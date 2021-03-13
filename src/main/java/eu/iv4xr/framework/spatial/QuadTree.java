@@ -18,7 +18,7 @@ public abstract class QuadTree<T> {
 class QuadTreeLeaf<T> extends QuadTree<T> {
     public T item;
 
-    public QuadTreeLeaf(T item){
+    public QuadTreeLeaf(T item) {
         this.isLeaf = true;
         this.item = item;
     }
@@ -37,7 +37,7 @@ class QuadTreeBranch<T> extends QuadTree<T> {
         this.branches = new HashMap<QuadTreeSections, QuadTree<T>>(0);
     }
 
-    public void put(QuadTreeSections key, QuadTree<T> tree){
+    public void put(QuadTreeSections key, QuadTree<T> tree) {
         this.branches.put(key, tree);
     }
 

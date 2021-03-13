@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import eu.iv4xr.framework.spatial.Vec3;
 
 public class TestVec3 {
-    
+
     @Test
     public void testLength() {
         assertEquals(2, new Vec3(0, 0, 2).length());

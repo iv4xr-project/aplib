@@ -29,7 +29,7 @@ public class TestSphere {
     }
 
     @Test
-    public void testMiss() { 
+    public void testMiss() {
         var s = new Sphere(1, Vec3.zero());
         var l = new Line(new Vec3(2, -2, 0), new Vec3(2, 2, 0));
 
