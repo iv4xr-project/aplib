@@ -64,23 +64,33 @@ public class AplibEDSL {
      * This goal will always succeeds.
      */
     public static <State> GoalStructure SUCCESS() {
-   	 return goal(String.format("success"))
-        		. toSolve((State belief) -> { return true;})
+   	 return goal("unit-goal that always succeeds")
+        		. toSolve((State belief) ->  true)
         		. withTactic(action("").do1((State state) -> state).lift()) 
         		.lift();
    	
     }
     
     /**
+     * This goal will always fail.
+     */
+    public static <State> GoalStructure FAIL() {
+    	return goal("a goal that always fail")
+    			  . toSolve((State belief) -> false)
+    			  . withTactic(ABORT())
+    			  . lift();
+    }
+    
+    /**
      * Repeatedly trying to solve a goal, while the given predicate is true. More precisely,
-     * the agent first check the given guard predicate g. If it does not hold, the loop ends. Else,
-     * it make the sugoal current and tries to solve it. If this subgoal is solved, the loop
+     * the agent first checks the given guard predicate g. If it does not hold, the loop ends. Else,
+     * it makes the sugoal current and tries to solve it. If this subgoal is solved, the loop
      * ends. Else we repeat the above steps. 
      * 
      * If the agent runs out of the budget to do the loop, it also leaves the loop.
      */
-    public static <State>GoalStructure WHILE(Predicate<State> p, GoalStructure subgoal) {
-    	GoalStructure not_g = lift((State state) -> p.test(state)) ;
+    public static <State>GoalStructure WHILE_UNTILSUCCESS(Predicate<State> p, GoalStructure subgoal) {
+    	GoalStructure not_g = lift((State state) -> ! p.test(state)) ;
    		return REPEAT(FIRSTof(not_g, subgoal)) ;
    	}
     
