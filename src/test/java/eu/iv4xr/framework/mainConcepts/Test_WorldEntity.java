@@ -4,14 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class Test_WorldEntity {
 
     WorldEntity door(String id) {
         WorldEntity e = new WorldEntity(id, "door", true);
-        e.properties.put("isOpen", false);
+        e.getProperties().put("isOpen", false);
         return e;
     }
 
@@ -30,16 +29,16 @@ public class Test_WorldEntity {
         var door1 = door("d1");
         assertTrue(door1.hasSameState(door("d1")));
 
-        door1.properties.put("isOpen", true);
+        door1.getProperties().put("isOpen", true);
         assertFalse(door1.hasSameState(door("d1")));
 
         var bag1 = bag("bag1");
-        bag1.elements.put("excalibur", sword("excalibur"));
+        bag1.getElements().put("excalibur", sword("excalibur"));
         var bag2 = bag("bag1");
-        bag2.elements.put("excalibur", sword("excalibur"));
+        bag2.getElements().put("excalibur", sword("excalibur"));
         assertTrue(bag1.hasSameState(bag2));
 
-        bag2.elements.put("sting", sword("sting"));
+        bag2.getElements().put("sting", sword("sting"));
         assertFalse(bag1.hasSameState(bag2));
 
     }
@@ -47,8 +46,8 @@ public class Test_WorldEntity {
     @Test
     public void test_getProperty() {
         var door = door("d1");
-        door.properties.put("price", 100);
-        door.properties.put("inscription", "goaway");
+        door.getProperties().put("price", 100);
+        door.getProperties().put("inscription", "goaway");
 
         assertTrue(door.getBooleanProperty("isOpen") == false);
         assertTrue(door.getIntProperty("price") == 100);
@@ -69,7 +68,7 @@ public class Test_WorldEntity {
 
         assertFalse(door.hasChangedState());
 
-        door.properties.put("isOpen", true);
+        door.getProperties().put("isOpen", true);
 
         assertTrue(door.hasChangedState());
 
