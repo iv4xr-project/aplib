@@ -461,11 +461,13 @@ public class BasicAgent {
     /**
      * Look for enabled actions within the current strategy that would be enabled on
      * the current agent state. If there are none, the method returns. If there are
-     * multiple, the method {@link #deliberate(List)} is used to choose one. The
-     * chosen {@link Action} will then be executed for a single tick. If the Action
-     * returns a non-null proposal, this method will check is this proposal solves
-     * the current subgoal, it will be marked as such, and the next subgoal will be
-     * search. If there is none, then the topgoal is solved.
+     * multiple, the deliberation policy set by the method
+     * {@link #useDeliberation(Deliberation)} is used to choose one (the default is
+     * to just choose randomly). The chosen {@link Action} will then be executed for
+     * a single tick. If the Action returns a non-null proposal, this method will
+     * check is this proposal solves the current subgoal, it will be marked as such,
+     * and the next subgoal will be search. If there is none, then the topgoal is
+     * solved.
      * 
      * <p>
      * This method also keeps track of the computation time so far used to work on
