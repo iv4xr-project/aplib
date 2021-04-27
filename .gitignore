@@ -1,7 +1,8 @@
 /bin/
 /target/
 /.settings/
-mylog*.txt
+/.idea/
+/mylog*.txt
 .project
 .classpath
 .idea/

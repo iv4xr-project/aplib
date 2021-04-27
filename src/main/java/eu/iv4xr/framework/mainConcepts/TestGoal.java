@@ -65,7 +65,7 @@ public class TestGoal extends Goal {
 
     /**
      * Just another name for
-     * {@link #oracle(TestAgent,Function<Proposal,VerdictEvent>)}. It is used to
+     * {@link #oracle(TestAgent,Function)}. It is used to
      * specify the test-oracle associated with for this TestGoal. Note that every
      * TestGoal must have an oracle. This method will also link this teat-goal to
      * the given test-agent.
@@ -76,7 +76,7 @@ public class TestGoal extends Goal {
 
     /**
      * Just another name for
-     * {@link #oracle(TestAgent,Function<Proposal,VerdictEvent>)}. It is used to
+     * {@link #oracle(TestAgent,Function)}. It is used to
      * specify the test-oracle associated with for this TestGoal. Note that every
      * TestGoal must have an oracle. This method assumes that this test-goal has
      * been linked to some test-agent.
