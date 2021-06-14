@@ -101,7 +101,7 @@ public class Test_DynamicGoalStructure {
         }).lift();
         Goal g0 = goal("multiple3").toSolve((MyState st) -> st.x % 3 == 0).withTactic(increase);
 
-        GoalStructure mygoal = WHILE_UNTILSUCCESS((MyState st) -> st.x < 9, SEQ(g0.lift()));
+        GoalStructure mygoal = WHILEDO((MyState st) -> st.x < 9, SEQ(g0.lift()));
 
         agent.setGoal(mygoal);
 
@@ -136,7 +136,7 @@ public class Test_DynamicGoalStructure {
         }).lift();
         Goal g0 = goal("multiple3").toSolve((MyState st) -> st.x % 3 == 0).withTactic(increase);
 
-        GoalStructure mygoal = WHILE_UNTILSUCCESS((MyState st) -> st.x < 9, SEQ(g0.lift(), FAIL()));
+        GoalStructure mygoal = WHILEDO((MyState st) -> st.x < 9, SEQ(g0.lift(), FAIL()));
 
         agent.setGoal(mygoal);
 

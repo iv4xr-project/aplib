@@ -81,7 +81,7 @@ public class AplibEDSL {
      * 
      * If the agent runs out of the budget to do the loop, it also leaves the loop.
      */
-    public static <State> GoalStructure WHILE_UNTILSUCCESS(Predicate<State> p, GoalStructure subgoal) {
+    public static <State> GoalStructure WHILEDO(Predicate<State> p, GoalStructure subgoal) {
         GoalStructure not_g = lift((State state) -> !p.test(state));
         return REPEAT(FIRSTof(not_g, subgoal));
     }
