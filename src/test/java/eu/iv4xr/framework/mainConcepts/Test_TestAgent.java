@@ -91,22 +91,44 @@ public class Test_TestAgent {
         agent1.setTestDataCollector(datacollector);
         agent2.setTestDataCollector(datacollector);
 
-        var p1 = new CoveragePointEvent("p1");
-        var p2 = new CoveragePointEvent("p2");
-
+        String p1 = "p1" ;
+        String p2 = "p2" ;
         datacollector.startTrackingCoveragePoint(p1);
+        datacollector.startTrackingCoveragePoint(p2);
         assertTrue(datacollector.getCollectiveCoverage().get(p1) == 0);
         assertTrue(datacollector.getTestAgentCoverage("A1").get(p1) == 0);
         assertTrue(datacollector.getTestAgentCoverage("A2").get(p1) == 0);
+        
+        datacollector.registerVisit("A1", new CoveragePointEvent("coverage","p1"));
+        
+        assertTrue(datacollector.getCollectiveCoverage().get(p1) == 1);
+        assertTrue(datacollector.getTestAgentCoverage("A1").get(p1) == 1);
+        assertTrue(datacollector.getTestAgentCoverage("A2").get(p1) == 0);
+        
+        assertTrue(datacollector.getCollectiveCoverage().get(p2) == 0);
+        assertTrue(datacollector.getTestAgentCoverage("A1").get(p2) == 0);
+        assertTrue(datacollector.getTestAgentCoverage("A2").get(p2) == 0);
 
-        agent1.registerVisit(new CoveragePointEvent("p2"));
-        agent2.registerVisit(new CoveragePointEvent("p2"));
-        assertTrue(datacollector.getCollectiveCoverage().get(p1) == 0);
-        assertTrue(datacollector.getTestAgentCoverage("A1").get(p1) == 0);
-        assertTrue(datacollector.getTestAgentCoverage("A2").get(p1) == 0);
-        assertTrue(datacollector.getCollectiveCoverage().get(p2) == 2);
+        datacollector.registerVisit("A2", new CoveragePointEvent("coverage","p1"));
+        
+        assertTrue(datacollector.getCollectiveCoverage().get(p1) == 2);
+        assertTrue(datacollector.getTestAgentCoverage("A1").get(p1) == 1);
+        assertTrue(datacollector.getTestAgentCoverage("A2").get(p1) == 1);
+        
+        assertTrue(datacollector.getCollectiveCoverage().get(p2) == 0);
+        assertTrue(datacollector.getTestAgentCoverage("A1").get(p2) == 0);
+        assertTrue(datacollector.getTestAgentCoverage("A2").get(p2) == 0);
+        
+        datacollector.registerVisit("A1", new CoveragePointEvent("coverage","p2"));
+        
+        assertTrue(datacollector.getCollectiveCoverage().get(p1) == 2);
+        assertTrue(datacollector.getTestAgentCoverage("A1").get(p1) == 1);
+        assertTrue(datacollector.getTestAgentCoverage("A2").get(p1) == 1);
+        
+        assertTrue(datacollector.getCollectiveCoverage().get(p2) == 1);
         assertTrue(datacollector.getTestAgentCoverage("A1").get(p2) == 1);
-        assertTrue(datacollector.getTestAgentCoverage("A2").get(p2) == 1);
+        assertTrue(datacollector.getTestAgentCoverage("A2").get(p2) == 0);
+        
     }
 
 }

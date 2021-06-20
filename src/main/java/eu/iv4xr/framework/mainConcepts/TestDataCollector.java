@@ -87,7 +87,7 @@ public class TestDataCollector implements Parsable {
      */
     static class CoverageMap implements Parsable {
 
-        Map<CoveragePointEvent, Integer> coverage = new HashMap<>();
+        Map<String, Integer> coverage = new HashMap<>();
 
         @Override
         public String toString() {
@@ -100,13 +100,13 @@ public class TestDataCollector implements Parsable {
             throw new UnsupportedOperationException("TODO");
         }
 
-        Map<CoveragePointEvent, Integer> getCoverage() {
+        Map<String, Integer> getCoverage() {
             return coverage;
         }
 
-        synchronized void startTrackingCoveragePoint(CoveragePointEvent e) {
-            if (!coverage.containsKey(e)) {
-                coverage.put(e, 0);
+        synchronized void startTrackingCoveragePoint(String coveragePointId) {
+            if (!coverage.containsKey(coveragePointId)) {
+                coverage.put(coveragePointId, 0);
             }
         }
 
@@ -114,10 +114,10 @@ public class TestDataCollector implements Parsable {
             if (e == null)
                 return;
             int count = 1;
-            if (coverage.containsKey(e)) {
-                count += coverage.get(e);
+            if (coverage.containsKey(e.coveragePointId)) {
+                count += coverage.get(e.coveragePointId);
             }
-            coverage.put(e, count);
+            coverage.put(e.coveragePointId, count);
             if (collectiveCovMap != null) {
                 collectiveCovMap.registerVisit(e, null);
             }
@@ -143,12 +143,12 @@ public class TestDataCollector implements Parsable {
     protected Map<String, EventTrace> perAgentEventTrace = new HashMap<>();
 
     /**
-     * Add e to the set of coverage-points whose coverage will be tracked.
+     * Add a coverage-point to the set of coverage-points whose coverage will be tracked.
      */
-    public void startTrackingCoveragePoint(CoveragePointEvent e) {
-        collectiveCoverageMap.startTrackingCoveragePoint(e);
+    public void startTrackingCoveragePoint(String coveragePointId) {
+        collectiveCoverageMap.startTrackingCoveragePoint(coveragePointId);
         for (CoverageMap CM : perAgentCoverage.values())
-            CM.startTrackingCoveragePoint(e);
+            CM.startTrackingCoveragePoint(coveragePointId);
     }
 
     /**
@@ -163,8 +163,8 @@ public class TestDataCollector implements Parsable {
         perAgentEventTrace.put(agentUniqueId, new EventTrace());
         CoverageMap CM = new CoverageMap();
         perAgentCoverage.put(agentUniqueId, CM);
-        for (CoveragePointEvent e : collectiveCoverageMap.coverage.keySet())
-            CM.startTrackingCoveragePoint(e);
+        for (String coveragePoint : collectiveCoverageMap.coverage.keySet())
+            CM.startTrackingCoveragePoint(coveragePoint);
     }
 
     /**
@@ -206,7 +206,7 @@ public class TestDataCollector implements Parsable {
      * The integer it is mapped to is the number of times the coverage-point is
      * visited.
      */
-    public Map<CoveragePointEvent, Integer> getTestAgentCoverage(String agentUniqueId) {
+    public Map<String, Integer> getTestAgentCoverage(String agentUniqueId) {
         CoverageMap CM = perAgentCoverage.get(agentUniqueId);
         if (CM == null)
             throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.");
@@ -221,7 +221,7 @@ public class TestDataCollector implements Parsable {
      * track. The integer it is mapped to is the number of times the coverage-point
      * is visited.
      */
-    public Map<CoveragePointEvent, Integer> getCollectiveCoverage() {
+    public Map<String, Integer> getCollectiveCoverage() {
         return collectiveCoverageMap.coverage;
     }
 
