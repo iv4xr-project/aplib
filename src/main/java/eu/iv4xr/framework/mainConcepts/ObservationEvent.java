@@ -2,8 +2,12 @@ package eu.iv4xr.framework.mainConcepts;
 
 import java.io.Serializable;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
+import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.utils.Pair;
 import nl.uu.cs.aplib.utils.Parsable;
 
 /**
@@ -335,6 +339,24 @@ public class ObservationEvent implements Serializable, Parsable {
             else
                 o.verdict = false;
             return o;
+        }
+    }
+    
+    /**
+     * This event is used to record a vector of (p,vs) where p is an agent's current
+     * position and vs is a bunch of scalar-values, organized as name-value pairs.
+     */
+    public static class ScalarTracingEvent extends TimeStampedObservationEvent {
+        
+        public Vec3 position ;
+        public Map<String,Number> values = new HashMap<>();
+        
+        public ScalarTracingEvent(String familyName, String info, Vec3 position, Pair<String,Number> ... nameValuePairs) {
+            super(familyName, info);
+            this.position = position ;
+            for(var nameValue : nameValuePairs) {
+                values.put(nameValue.fst, nameValue.snd) ;
+            }
         }
     }
 

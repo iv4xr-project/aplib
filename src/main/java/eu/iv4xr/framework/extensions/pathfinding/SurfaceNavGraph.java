@@ -356,7 +356,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * be returned (so as to support the memory-based navigation).
      */
     @Override
-    public Iterable<Integer> neighbours(int id) {
+    public Iterable<Integer> neighbours(Integer id) {
         // clone the neigbor-set to prevent side effect when we next filter it:
         HashSet<Integer> neighbors = new HashSet<>();
         for (var v : edges.neighbours(id)) {
@@ -373,7 +373,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * Defining the distance between two NEIGHBORING vertices.
      */
     @Override
-    public float heuristic(int from, int to) {
+    public float heuristic(Integer from, Integer to) {
         float distance = super.heuristic(from, to);
         // System.out.println("----" + from + " --> " + to + " dist = " + distance) ;
         if (distance == Float.POSITIVE_INFINITY)

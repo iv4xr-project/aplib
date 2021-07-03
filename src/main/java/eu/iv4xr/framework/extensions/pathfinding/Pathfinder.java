@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * 
  * @author Naraenda
  */
-public interface Pathfinder {
+public interface Pathfinder<NodeId> {
     /**
      * Finds a path in a navigatable environment.
      * 
@@ -16,5 +16,5 @@ public interface Pathfinder {
      * @param goal: The goal of the pathfinder.
      * @return An arraylist with the path. Null if no path is found.
      */
-    public ArrayList<Integer> findPath(Navigatable graph, int start, int goal);
+    public ArrayList<NodeId> findPath(Navigatable<NodeId> graph, NodeId start, NodeId goal);
 }

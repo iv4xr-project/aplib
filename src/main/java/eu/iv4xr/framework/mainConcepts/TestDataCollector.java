@@ -3,8 +3,11 @@ package eu.iv4xr.framework.mainConcepts;
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import nl.uu.cs.aplib.utils.CSVUtility;
 import nl.uu.cs.aplib.utils.Parsable;
 
 /**
@@ -237,6 +240,19 @@ public class TestDataCollector implements Parsable {
             throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.");
         return ET.trace;
     }
+    
+    /**
+     * Return the trace of the specified agent, containing only of ScalarTracingEvents.
+     */
+    public List<ScalarTracingEvent> getTestAgentScalarsTrace(String agentUniqueId) {
+        EventTrace ET = perAgentEventTrace.get(agentUniqueId);
+        if (ET == null)
+            throw new IllegalArgumentException("Agent " + agentUniqueId + " is unknown.");
+        return ET.trace.stream()
+                  .filter(e -> e instanceof ScalarTracingEvent)
+                  .map(e -> (ScalarTracingEvent) e)
+                  .collect(Collectors.toList()) ;
+    }
 
     /**
      * Get the number of negative verdicts reported by the specified test-agent.
@@ -363,6 +379,47 @@ public class TestDataCollector implements Parsable {
     public static TestDataCollector readCollectedTestData(File file) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("TODO");
+    }
+    
+    /**
+     * Export the scalar-trace of an agent to a CSV-file. ';' is used as the separator.
+     */
+    public void saveTestAgentScalarsTraceAsCSV(String agentUniqueId, String filename) throws IOException {
+        
+        List<ScalarTracingEvent> trace = getTestAgentScalarsTrace(agentUniqueId) ;
+        
+        List<String> collumnNames = new LinkedList<>() ;
+
+        List<Number[]> data = new LinkedList<>() ;
+        
+        for(ScalarTracingEvent e : trace) {
+            List<Number> row = new LinkedList<>() ;
+            row.add(e.position.x) ;
+            row.add(e.position.y) ;
+            row.add(e.position.z) ;
+            for(String propertyName : e.values.keySet()) {
+                if(! collumnNames.contains(propertyName)) {
+                    collumnNames.add(propertyName) ;
+                }
+            }
+            for(String propertyName : collumnNames) {
+                Number val = e.values.get(propertyName) ;
+                row.add(val) ;
+            }
+            Number[] row__ = new Number[row.size()] ;
+            for(int k=0; k<row__.length; k++) row__[k] = row.get(k) ;
+            data.add(row__) ;
+        }
+        
+        // add the names for the first three columns:
+        collumnNames.  add(0,"positionZ") ;
+        collumnNames.  add(0,"positionY") ;
+        collumnNames.  add(0,"positionX") ;
+        
+        String[] collumnNames__ = new String[collumnNames.size()] ;
+        for(int k=0; k<collumnNames__.length; k++) collumnNames__[k] = collumnNames.get(k) ;
+        
+        CSVUtility.exportToCSVfile(';', collumnNames__, data, filename);
     }
 
 }

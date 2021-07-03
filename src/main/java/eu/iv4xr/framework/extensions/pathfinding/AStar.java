@@ -5,36 +5,61 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * A* pathfinding algorithm
  * 
  * @author Naraenda
  */
-public class AStar implements Pathfinder {
+public class AStar<NodeId> implements Pathfinder<NodeId> {
 
+    public enum SearchMode { GREEDY, DIJKSTRA, HEURISTIC } ;
+    
+    public SearchMode searchMode = SearchMode.HEURISTIC ;
+    
+    /**
+     * When this is set, this function will be use to calculate the heuristic distance between
+     * two nodes, rather than using the default heuristic-method supplied by underlying navigation
+     * graph.
+     */
+    public Function<Navigatable<NodeId>,BiFunction<NodeId,NodeId,Float>> dynamicHeuristicDistance = null ;
+    
+    
+    float getHeuristicDistance(Navigatable<NodeId> graph, NodeId a, NodeId b) {
+        if(dynamicHeuristicDistance == null) return graph.heuristic(a, b) ;
+        return dynamicHeuristicDistance.apply(graph).apply(a, b) ;
+    }
+    
     @Override
-    public ArrayList<Integer> findPath(Navigatable graph, int start, int goal) {
-        // Open nodes sorted by heuristic
-        PriorityQueue<Priotisable<Integer>> open = new PriorityQueue<Priotisable<Integer>>(10,
-                new PriotisableComperator<Integer>());
+    public ArrayList<NodeId> findPath(Navigatable<NodeId> graph, NodeId start, NodeId goal) {
+        PriorityQueue<Priotisable<NodeId>> open = new PriorityQueue<Priotisable<NodeId>>(10,
+                new PriotisableComperator<NodeId>());
         // Closed nodes with their associated measured distance
-        HashMap<Integer, Float> closed = new HashMap<Integer, Float>();
+        HashMap<NodeId, Float> closed = new HashMap<NodeId, Float>();
         // Closed nodes with the shortest node towards it.
-        HashMap<Integer, Integer> paths = new HashMap<Integer, Integer>();
+        HashMap<NodeId, NodeId> paths = new HashMap<NodeId, NodeId>();
 
-        open.add(new Priotisable<Integer>(start, 0));
+        // FIX ... this looks wrong:
+        // open.add(new Priotisable<NodeId>(start, 0));
+        
+        float fDistance_ofStart = getHeuristicDistance(graph,start,goal) ;
+        if(searchMode == SearchMode.DIJKSTRA) fDistance_ofStart = 0 ;
+        open.add(new Priotisable<NodeId>(start,fDistance_ofStart));
         closed.put(start, 0f);
 
         while (open.size() > 0) {
-            var current = open.remove().item.intValue();
+            // remove the node with the lowest "priority" from the open-list. 
+            NodeId current = open.remove().item ;
 
-            // Check if goal is reached
-            if (current == goal) {
+            // Check if goal is reached, the search stops, and the path to it is returned.
+            // In particular note that we don't search further e.g. to find a better path.
+            if (current.equals(goal)) {
                 // Reconstruct path backwards
-                var path = new ArrayList<Integer>();
+                var path = new ArrayList<NodeId>();
                 path.add(goal);
-                while (current != start) {
+                while (! current.equals(start)) {
                     current = paths.get(current);
                     path.add(current);
                 }
@@ -45,26 +70,26 @@ public class AStar implements Pathfinder {
 
             var distToCurrent = closed.get(current).floatValue();
 
-            for (var next_ : graph.neighbours(current)) {
+            for (NodeId next : graph.neighbours(current)) {
 
                 // Unbox value
-                int next = next_.intValue();
+                // int next = next_.intValue();
 
-                if (graph.distance(current, next) == Float.POSITIVE_INFINITY) {
+                float dn = graph.distance(current, next) ;
+                if (dn == Float.POSITIVE_INFINITY) 
                     continue;
-                }
-
+                
                 // System.out.println("## current:" + current + ", next: " + next) ;
 
                 // The distance from start to next
-                var distToNext = distToCurrent + graph.distance(current, next);
+                var distToNext = distToCurrent + dn ;
 
                 // Guard for negative distances
                 if (distToNext < 0)
                     distToNext = 0;
 
                 // The distance from next to goal
-                var heurFromNext = graph.heuristic(next, goal);
+                var heurFromNext = getHeuristicDistance(graph,next,goal);
 
                 if (!closed.containsKey(next)) {
                     // Unexplored node
@@ -82,12 +107,23 @@ public class AStar implements Pathfinder {
                     continue;
 
                 paths.put(next, current);
-
-                if (!open.stream().anyMatch(p -> p.item.intValue() == next)
-                        || open.removeIf(p -> p.item.intValue() == next && p.priority > heurFromNext)) {
+                float fDistance ;
+                switch(searchMode) {
+                   case DIJKSTRA : fDistance = distToNext ; break ;
+                   case GREEDY   : fDistance = heurFromNext ; break ;
+                   default : /* heuristic-mode */ fDistance = distToNext + heurFromNext ;
+                }
+                
+                if (!open.stream().anyMatch(p -> p.item.equals(next))
+                        // FIX
+                        // || open.removeIf(p -> p.item.equals(next) && p.priority > heurFromNext)) {
+                        || open.removeIf(p -> p.item.equals(next) && p.priority > fDistance)) {
                     // If not in open set, or already in open set with longer distance...
                     // put next neighbour in the open set
-                    open.add(new Priotisable<Integer>(next, heurFromNext));
+                    
+                    // FIX:
+                    // open.add(new Priotisable<NodeId>(next, heurFromNext));
+                    open.add(new Priotisable<NodeId>(next, fDistance));
                 }
             }
         }

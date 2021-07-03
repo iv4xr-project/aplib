@@ -11,7 +11,7 @@ import eu.iv4xr.framework.spatial.meshes.*;
  * 
  * @author Naraenda
  */
-public class SimpleNavGraph implements Navigatable {
+public class SimpleNavGraph implements Navigatable<Integer> {
 
     /**
      * The set of vertices that form the navigation graph. The index of the vertex
@@ -100,7 +100,7 @@ public class SimpleNavGraph implements Navigatable {
     }
 
     @Override
-    public Iterable<Integer> neighbours(int id) {
+    public Iterable<Integer> neighbours(Integer id) {
         return edges.neighbours(id);
     }
 
@@ -113,7 +113,7 @@ public class SimpleNavGraph implements Navigatable {
      * geometric distance between them.
      */
     @Override
-    public float heuristic(int from, int to) {
+    public float heuristic(Integer from, Integer to) {
         return Vec3.dist(vertices.get(from), vertices.get(to));
     }
 
@@ -122,7 +122,7 @@ public class SimpleNavGraph implements Navigatable {
      * blocked, it is deined to be their geometric distance, and else +inf.
      */
     @Override
-    public float distance(int from, int to) {
+    public float distance(Integer from, Integer to) {
         Vec3 a = vertices.get(from);
         Vec3 b = vertices.get(to);
 

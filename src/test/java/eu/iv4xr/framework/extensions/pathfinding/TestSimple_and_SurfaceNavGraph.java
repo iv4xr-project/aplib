@@ -24,12 +24,41 @@ import eu.iv4xr.framework.spatial.meshes.Face;
 import eu.iv4xr.framework.spatial.meshes.Mesh;
 
 public class TestSimple_and_SurfaceNavGraph {
-
+    
+    /**
+     * Construct a Mesh that looks like this:
+     * 
+     *                        v5(0,2,4)
+     *                       / \
+     *                      /   \
+     *                     /     \
+     *                    /       \
+     *                   /  face4  \
+     *                  /           \
+     *                 /             \
+     *                /               \
+     *               /                 \
+     *      (-1,0,2)v3-----------------v4(1,0,2)
+     *             /  \               /
+     *            /    \             /
+     *           /      \   face3   /
+     *          /        \         /
+     *         /  face2   \       /
+     *        /            \     /
+     *       /              \   /
+     *      /                \ /
+     *    v0(-2,0,0)---------v1(0,0,0)
+     *      \               /
+     *       \             /
+     *        \   face1   /
+     *         \         /
+     *          \       /
+     *           \     /
+     *            \   /
+     *             \ /
+     *              v2(-1,2,-2)
+     */
     Mesh mesh0() {
-        /*
-         * (5) / \ / 9 \ (3)-----(4) / \ 8 / / 7 \ / (0)-----(1) \ 6 / \ / (2)
-         * 
-         */
         Mesh mesh = new Mesh();
         var v0 = new Vec3(-2, 0, 0);
         var v1 = new Vec3(0, 0, 0);
@@ -109,6 +138,42 @@ public class TestSimple_and_SurfaceNavGraph {
         return sb.toString();
     }
 
+    /**
+     * When mesh0 above is converted to a surface Nav-graph, center points are added. The resulting nav-graph
+     * should look like below. Added center points are v6...v9. Each center point will be connected to the
+     * three corners of the triangle it is in, and also to neighboring center-points.
+     * 
+     * 
+     *                        v5(0,2,4)
+     *                       / \
+     *                      /   \
+     *                     /     \
+     *                    /       \
+     *                   /    v9   \
+     *                  /           \
+     *                 /             \
+     *                /               \
+     *               /                 \
+     *      (-1,0,2)v3-----------------v4(1,0,2)
+     *             /  \               /
+     *            /    \             /
+     *           /      \     v8    /
+     *          /        \         /
+     *         /    v7    \       /
+     *        /            \     /
+     *       /              \   /
+     *      /                \ /
+     *    v0(-2,0,0)---------v1(0,0,0)
+     *      \               /
+     *       \             /
+     *        \           /
+     *         \    v6   /
+     *          \       /
+     *           \     /
+     *            \   /
+     *             \ /
+     *              v2(-1,2,-2)
+     */
     @Test
     public void test_conversion_mesh_to_SurfaceNavGraph() {
         Mesh mesh = mesh0();
@@ -205,16 +270,19 @@ public class TestSimple_and_SurfaceNavGraph {
         // System.out.println(path) ;
         assertTrue(checkPath(path, 2, 6, 7, 3));
         path = navgraph.findPath(2, 5);
-        assertTrue(checkPath(path, 2, 6, 7, 8, 9, 5));
+        //System.out.println(path) ;
+        assertTrue(checkPath(path, 2, 1, 8, 9, 5));
 
         // switch to prefer border vertices:
         navgraph.travelPreferrence = SurfaceNavGraph.PREFER_BORDER;
         path = navgraph.findPath(2, 3);
-        assertTrue(checkPath(path, 2, 0, 3));
+        //System.out.println(path) ;
+        assertTrue(checkPath(path, 2, 6, 7, 3));
         path = navgraph.findPath(2, 4);
         assertTrue(checkPath(path, 2, 1, 4));
         path = navgraph.findPath(2, 5);
-        assertTrue(checkPath(path, 2, 1, 3, 5));
+        // System.out.println(path) ;
+        assertTrue(checkPath(path, 2, 6, 7, 3, 5));
         // System.out.println(path) ;
 
         navgraph.travelPreferrence = SurfaceNavGraph.PREFER_CENTER;
@@ -224,7 +292,7 @@ public class TestSimple_and_SurfaceNavGraph {
         // set the box first to be non-blocking
         navgraph.toggleBlockingOff(box);
         path = navgraph.findPath(2, 5);
-        assertTrue(checkPath(path, 2, 6, 7, 8, 9, 5));
+        assertTrue(checkPath(path, 2, 1, 8, 9, 5));
         // and now let's making the box blocking; we should now avoid node 8:
         navgraph.toggleBlockingOn(box);
         path = navgraph.findPath(2, 5);
@@ -387,7 +455,7 @@ public class TestSimple_and_SurfaceNavGraph {
         navgraph.perfect_memory_pathfinding = true;
         var path = navgraph.findPath(loc_a, loc_b, 0.2f);
 
-        assertTrue(checkPath(path, 2, 6, 7, 8, 9, 5));
+        assertTrue(checkPath(path, 2, 1, 8, 9, 5));
 
         // perfect memory, adding an obstacle blocking node 8
         var box = new Box(new Vec3(0f, 0f, 1.33f), new Vec3(0.1f, 0.1f, 0.1f));
