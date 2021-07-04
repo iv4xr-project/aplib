@@ -348,12 +348,10 @@ public class ObservationEvent implements Serializable, Parsable {
      */
     public static class ScalarTracingEvent extends TimeStampedObservationEvent {
         
-        public Vec3 position ;
         public Map<String,Number> values = new HashMap<>();
         
-        public ScalarTracingEvent(String familyName, String info, Vec3 position, Pair<String,Number> ... nameValuePairs) {
-            super(familyName, info);
-            this.position = position ;
+        public ScalarTracingEvent(Pair<String,Number> ... nameValuePairs) {
+            super("Tracing",null);
             for(var nameValue : nameValuePairs) {
                 values.put(nameValue.fst, nameValue.snd) ;
             }

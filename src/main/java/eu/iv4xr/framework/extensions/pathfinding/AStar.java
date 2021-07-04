@@ -44,6 +44,8 @@ public class AStar<NodeId> implements Pathfinder<NodeId> {
         // FIX ... this looks wrong:
         // open.add(new Priotisable<NodeId>(start, 0));
         
+        // The fDistance of the starting node does not matter actually, since it will be immediately
+        // popped from the open-set anyway.
         float fDistance_ofStart = getHeuristicDistance(graph,start,goal) ;
         if(searchMode == SearchMode.DIJKSTRA) fDistance_ofStart = 0 ;
         open.add(new Priotisable<NodeId>(start,fDistance_ofStart));

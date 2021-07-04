@@ -4,6 +4,7 @@ import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 import static eu.iv4xr.framework.mainConcepts.TestDataCollector.*;
 
 import java.util.*;
+import java.util.function.Function;
 
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.agents.State;
@@ -13,6 +14,7 @@ import nl.uu.cs.aplib.mainConcepts.Deliberation;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * This class implements a test-agent. It extents
@@ -51,7 +53,13 @@ public class TestAgent extends AutonomousBasicAgent {
 
     protected String testDesc;
     protected TestDataCollector testDataCollector;
-    protected GoalStructure goal;
+    //protected GoalStructure goal;  <-- agent already has this field!
+    
+    /**
+     * If defined, this function can be used to evaluate an agent's state, to produce a list
+     * of name-value properties of the state. The value is required to be nummeric.
+     */
+    protected Function<SimpleState,Pair<String,Number>[]> scalarInstrumenter = null ;
 
     /**
      * Create a blank instance of TestAgent. To be useful you will need to add few
@@ -198,6 +206,20 @@ public class TestAgent extends AutonomousBasicAgent {
     @Override
     public TestAgent withCostFunction(CostFunction f) {
         return (TestAgent) super.withCostFunction(f);
+    }
+    
+    public TestAgent withScalarInstrumenter(Function<SimpleState,Pair<String,Number>[]> scalarInstrumenter) {
+        this.scalarInstrumenter =  scalarInstrumenter ;
+        return this ;
+    }
+    
+    @Override
+    public void update() {
+        super.update();
+        if(testDataCollector != null && scalarInstrumenter != null) {
+            Pair<String,Number>[] properties = scalarInstrumenter.apply(state) ;
+            registerEvent(new ScalarTracingEvent(properties)) ;
+        }
     }
 
 }

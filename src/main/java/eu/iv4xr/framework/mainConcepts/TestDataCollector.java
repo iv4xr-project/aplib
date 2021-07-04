@@ -394,9 +394,6 @@ public class TestDataCollector implements Parsable {
         
         for(ScalarTracingEvent e : trace) {
             List<Number> row = new LinkedList<>() ;
-            row.add(e.position.x) ;
-            row.add(e.position.y) ;
-            row.add(e.position.z) ;
             for(String propertyName : e.values.keySet()) {
                 if(! collumnNames.contains(propertyName)) {
                     collumnNames.add(propertyName) ;
@@ -411,15 +408,10 @@ public class TestDataCollector implements Parsable {
             data.add(row__) ;
         }
         
-        // add the names for the first three columns:
-        collumnNames.  add(0,"positionZ") ;
-        collumnNames.  add(0,"positionY") ;
-        collumnNames.  add(0,"positionX") ;
-        
         String[] collumnNames__ = new String[collumnNames.size()] ;
         for(int k=0; k<collumnNames__.length; k++) collumnNames__[k] = collumnNames.get(k) ;
         
-        CSVUtility.exportToCSVfile(';', collumnNames__, data, filename);
+        CSVUtility.exportToCSVfile(',', collumnNames__, data, filename);
     }
 
 }
