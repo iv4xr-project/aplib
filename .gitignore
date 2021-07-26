@@ -7,3 +7,5 @@
 .classpath
 .idea/
 *.iml
+**/.DS_Store
+
