@@ -213,7 +213,7 @@ public class PrologReasoner {
      * Representing the result of a Prolog-query.
      */
     public static class QueryResult {
-        SolveInfo info;
+        public SolveInfo info;
 
         public QueryResult(SolveInfo info) {
             this.info = info;
@@ -256,6 +256,28 @@ public class PrologReasoner {
         if (!info.isSuccess())
             return null;
         return new QueryResult(info);
+    }
+    
+    public List<QueryResult> queryAll(String queryterm) {
+    	List<QueryResult> results = new LinkedList<>() ;
+    	QueryResult r = query(queryterm) ;
+    	if (r==null) return results ;
+    	results.add(r) ;
+    	while(true) {
+    		try {
+    			SolveInfo info = prolog.solveNext() ;
+    			if(info.isSuccess()) {
+        			results.add(new QueryResult(info)) ;
+        		}
+        		else {
+        			break ;
+        		}
+    		}
+    		catch(Exception e) {
+    			break ;
+    		}
+    	}
+    	return results ;    	
     }
 
     /**
