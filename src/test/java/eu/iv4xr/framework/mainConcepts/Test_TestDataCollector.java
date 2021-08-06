@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -82,9 +84,45 @@ public class Test_TestDataCollector {
 		assertTrue(coverage.get("button4") == 0) ;
 	}
 	
-	
 	@Test
 	public void test_scalar_tracing_and_saving() throws IOException {
+
+		var collector = new TestDataCollector();
+
+		collector.registerTestAgent("agent1");
+		collector.registerTestAgent("agent2");
+		collector.startTrackingCoveragePoint("button1");
+		collector.startTrackingCoveragePoint("button2");
+		collector.startTrackingCoveragePoint("button3");
+
+		collector.registerEvent("agent1", new ObservationEvent.ScalarTracingEvent(new Pair("x", 0), new Pair("y", 0)));
+		collector.registerEvent("agent1", new ObservationEvent.ScalarTracingEvent(new Pair("x", 1), new Pair("y", 0)));
+		collector.registerEvent("agent1", new ObservationEvent.ScalarTracingEvent(new Pair("x", 1), new Pair("y", 1)));
+		collector.registerEvent("agent2", new ObservationEvent.ScalarTracingEvent(new Pair("x", 2), new Pair("y", 2)));
+
+		// System.out.println(collector.getTestAgentTrace("agent2")) ;
+		String file1 = "target/tracefile1.csv";
+		String file2 = "target/tracefile2.csv";
+		collector.saveTestAgentScalarsTraceAsCSV("agent1",file1);
+		collector.saveTestAgentScalarsTraceAsCSV("agent2",file2);
+		
+		var data1 = CSVUtility.readCSV(',', file1);
+		var data2 = CSVUtility.readCSV(',', file2);
+
+		assertEquals(4, data1.size());
+		assertEquals(2, data2.size());
+		
+		assertEquals("[x, y]", "" + Arrays.asList(data1.get(0))) ;
+		assertEquals("[0, 0]", "" + Arrays.asList(data1.get(1))) ;
+		assertEquals("[2, 2]", "" + Arrays.asList(data2.get(1))) ;
+
+		// cleaning the created files
+		Files.delete(Paths.get(file1));
+		Files.delete(Paths.get(file2));
+	}
+	
+	@Test
+	public void test_saving_collecteddata() throws IOException {
 		
 		var collector = new TestDataCollector() ;
 		
@@ -127,17 +165,38 @@ public class Test_TestDataCollector {
 		Files.delete(Paths.get(file));
 		Files.delete(Paths.get(covFile));
 	}
-	
-	@Test
-	public void test_saving_collecteddata() {
-		var collector = new TestDataCollector() ;
-		collector.registerTestAgent("agent1") ;
-		collector.registerTestAgent("agent2") ;
 		
-		collector.registerEvent("agent1", new ObservationEvent.ScalarTracingEvent(new Pair("x",0), new Pair("y",0)));
-		collector.registerEvent("agent1", new ObservationEvent.ScalarTracingEvent(new Pair("x",1), new Pair("y",0)));
-		collector.registerEvent("agent1", new ObservationEvent.ScalarTracingEvent(new Pair("x",1), new Pair("y",1)));
-		collector.registerEvent("agent2", new ObservationEvent.ScalarTracingEvent(new Pair("x",2), new Pair("y",2)));
+	
+	
+	//@Test
+	public void for_generating_traces() throws IOException {
+		var collector = new TestDataCollector();
+		collector.registerTestAgent("agent1");
+
+		collector.registerEvent("agent1", mockScalarEvent(0, 0, 0, 0, 20));
+		collector.registerEvent("agent1", mockScalarEvent(1, 0, 0, 1, 40));
+		collector.registerEvent("agent1", mockScalarEvent(2, 0, 0, 2, 40));
+		collector.registerEvent("agent1", mockScalarEvent(2, 0, 1, 3, 20));
+		collector.registerEvent("agent1", mockScalarEvent(2, 0, 2, 4, 80));
+		collector.registerEvent("agent1", mockScalarEvent(2, 0, 1, 5, 10));
+		collector.registerEvent("agent1", mockScalarEvent(3, 0, 1, 6, 200));
+		collector.registerEvent("agent1", mockScalarEvent(3, 0, 2, 7, 100));
+		collector.registerEvent("agent1", mockScalarEvent(3, 0, 3, 8, 20));
+		collector.registerEvent("agent1", mockScalarEvent(3, 0, 4, 9, 20));
+
+		// System.out.println(collector.getTestAgentTrace("agent2")) ;
+		String file = "target/sampleTracefile.csv";
+		collector.saveTestAgentScalarsTraceAsCSV("agent1", file);
+	}
+	
+	private ObservationEvent.ScalarTracingEvent mockScalarEvent(int x, int y, int z, int t, float value) {
+		Pair<String,Number>[] data = new Pair[5] ;
+		data[0] = new Pair("posx",(Number) x) ;	
+		data[1] = new Pair("posy",(Number) y) ;	
+		data[2] = new Pair("posz",(Number) z) ;	
+		data[3] = new Pair("turn",(Number) t) ;
+		data[4] = new Pair("val",(Number) value) ;
+		return new ObservationEvent.ScalarTracingEvent(data) ;
 	}
 
 }
