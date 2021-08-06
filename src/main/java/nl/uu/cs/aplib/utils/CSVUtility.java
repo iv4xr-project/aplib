@@ -3,7 +3,12 @@ package nl.uu.cs.aplib.utils;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class CSVUtility {
     
@@ -60,10 +65,42 @@ public class CSVUtility {
             }
             k++;
         }
+        if(k>0) buf.append("\n") ;
         BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
         writer.write(buf.toString());
         writer.close();
 
+    }
+    
+    /**
+     * Replace ',' with space.
+     */
+    public static String cleanUpCommas(String s) {
+      return s.replace(',',' ') ;
+    }
+    
+    public static String readTxtFile(String fname) throws IOException {
+    	Path file = Paths.get(fname) ;
+    	return Files.readString(file) ;  
+    }
+    
+    /**
+     * Read a CSV-file.
+     */
+    public static List<String[]> readCSV(Character separator, String fname) throws IOException {
+    	Path file = Paths.get(fname) ;
+    	List<String> content = Files.readAllLines(file) ;
+    	
+    	List<String[]> data = new LinkedList<>() ;
+    	for(var row : content) {
+    		String[] cells = StringUtils.split(row,separator) ;
+    		//for(int k=0; k<cells.length; k++) {
+    		//	System.out.print("  " + cells[k]) ;
+    		//}
+    		//System.out.println("") ;
+    		data.add(cells) ;
+    	}
+    	return data ;
     }
 
 }

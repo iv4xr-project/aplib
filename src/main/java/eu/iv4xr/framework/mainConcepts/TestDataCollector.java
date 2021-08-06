@@ -359,7 +359,7 @@ public class TestDataCollector implements Parsable {
      */
     public void save(File file) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("TODO");
+        //throw new UnsupportedOperationException("TODO");
     }
 
     /**
@@ -388,30 +388,33 @@ public class TestDataCollector implements Parsable {
         
         List<ScalarTracingEvent> trace = getTestAgentScalarsTrace(agentUniqueId) ;
         
-        List<String> collumnNames = new LinkedList<>() ;
-
+        Set<String> propertyNames = new HashSet<>() ;
+        for(var e : trace) {
+        	propertyNames.addAll(e.values.keySet()) ;
+        }
+                
+        List<String> collumnNames = propertyNames.stream().collect(Collectors.toList()) ;
+        collumnNames.sort(Comparator.comparing(s -> s.toString()));
+        
+        int N = collumnNames.size() ;
+        String[] collumnNames_ = new String[N] ;
+        int k=0 ;
+        for(var name : collumnNames) {
+        	collumnNames_[k] = name ;
+        	k++ ;
+        }
+        
         List<Number[]> data = new LinkedList<>() ;
         
         for(ScalarTracingEvent e : trace) {
-            List<Number> row = new LinkedList<>() ;
-            for(String propertyName : e.values.keySet()) {
-                if(! collumnNames.contains(propertyName)) {
-                    collumnNames.add(propertyName) ;
-                }
-            }
-            for(String propertyName : collumnNames) {
-                Number val = e.values.get(propertyName) ;
-                row.add(val) ;
-            }
-            Number[] row__ = new Number[row.size()] ;
-            for(int k=0; k<row__.length; k++) row__[k] = row.get(k) ;
-            data.add(row__) ;
+        	Number[] row = new Number[N] ;
+        	for(k=0; k<N; k++) {
+        		row[k] = e.values.get(collumnNames_[k]) ;
+        	}
+        	data.add(row) ;
         }
         
-        String[] collumnNames__ = new String[collumnNames.size()] ;
-        for(int k=0; k<collumnNames__.length; k++) collumnNames__[k] = collumnNames.get(k) ;
-        
-        CSVUtility.exportToCSVfile(',', collumnNames__, data, filename);
+        CSVUtility.exportToCSVfile(',', collumnNames_, data, filename);
     }
 
 }
