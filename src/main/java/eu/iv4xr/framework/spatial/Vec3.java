@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.spatial;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -7,7 +8,10 @@ import java.util.Objects;
  * 
  * @author Naraenda
  */
-public class Vec3 {
+public class Vec3 implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
+	
     public float x, y, z;
 
     /**
