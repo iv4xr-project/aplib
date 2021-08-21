@@ -147,7 +147,7 @@ def mkHeatMap(filename,
         # combine the value of the properties by summing them:
         value = -minvalue
         for propName in selectedProperties:
-            value = value + float(r['health'])
+            value = value + float(r[propName])
         #gold   = float(r['gold'])
         #satisfaction = float(r['satisfaction'])
         #combined = 10*(hope + 1.1*joy + 1.5*satisfaction)
