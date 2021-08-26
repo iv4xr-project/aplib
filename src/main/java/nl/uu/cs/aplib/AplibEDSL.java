@@ -67,12 +67,29 @@ public class AplibEDSL {
     }
 
     /**
+     * This goal will always succeeds. The goal name can be configured as given.
+     */
+    public static <State> GoalStructure SUCCESS(String goalname) {
+        return goal(goalname).toSolve((State belief) -> true)
+                .withTactic(action("").do1((State state) -> state).lift()).lift();
+
+    }
+    
+    /**
      * This goal will always fail.
      */
     public static <State> GoalStructure FAIL() {
         return goal("a goal that always fail").toSolve((State belief) -> false).withTactic(ABORT()).lift();
     }
-
+    
+    /**
+     * This goal will always fail. The goal name can be configured as given.
+     */    
+    public static <State> GoalStructure FAIL(String goalname) {
+        return goal(goalname).toSolve((State belief) -> false).withTactic(ABORT()).lift();
+    }
+    
+    
     /**
      * Repeatedly trying to solve a goal, while the given predicate is true. More
      * precisely, the agent first checks the given guard predicate g. If it does not
