@@ -92,7 +92,8 @@ public class WorldEntity implements Serializable {
             return false;
         for (var P : properties.entrySet()) {
             var q = old.properties.get(P.getKey());
-            if (!P.getValue().equals(q))
+            var Pval = P.getValue() ;
+            if (Pval==null ?  q!=null : ! Pval.equals(q))
                 return false;
         }
         // so the entities have the same properties.. let's now check the children
