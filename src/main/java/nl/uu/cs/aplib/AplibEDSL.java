@@ -5,6 +5,7 @@ import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import static nl.uu.cs.aplib.AplibEDSL.action;
 import static nl.uu.cs.aplib.AplibEDSL.goal;
 
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import nl.uu.cs.aplib.mainConcepts.*;
@@ -51,10 +52,25 @@ public class AplibEDSL {
      * the agent will test the predicate on its state; if the predicate holds on the
      * state, the goal is solved, and else the goal is declared as failed.
      */
-    public static <State> GoalStructure lift(Predicate<State> p) {
-        return goal("This predicate must hold.").toSolve((Boolean b) -> b).withTactic(FIRSTof(
+    public static <State> GoalStructure lift(String goalname, Predicate<State> p) {
+        return goal(goalname).toSolve((Boolean b) -> b).withTactic(FIRSTof(
                 action("lifting a predicate").do1((State belief) -> true).on_((State belief) -> p.test(belief)).lift(),
                 ABORT())).lift();
+    }
+    
+    public static <State> GoalStructure lift(Predicate<State> p) {
+        return lift("some predicate must hold", p) ;
+    }
+    
+    /**
+     * Turn an action into a goal. The goal itself wil always succeeds. The action will be
+     * executed (once), that would then automatically solves this goal.
+     */
+    public static <AgentState,Proposal> GoalStructure lift(String goalname, Action a) {
+        return goal(goalname)
+                .toSolve( (Proposal p) -> true)
+                .withTactic(a.lift())
+                .lift() ;
     }
 
     /**
@@ -111,6 +127,31 @@ public class AplibEDSL {
     public static <State> GoalStructure IFELSE(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
         GoalStructure not_g = lift((State state) -> p.test(state));
         return FIRSTof(SEQ(lift(p), g1), g2);
+    }
+    
+    /**
+     * The combinator will "dynamically" deploy a goal to be executed/adopted after executing this
+     * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal G
+     * based on it, and this G is the one that is deployed. Notice that the kind of G produced can thus
+     * be made dependent on the current agent state.
+     */
+    public static <AgentState> GoalStructure  DEPLOYonce(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
+        Boolean[] deployed = {false} ;
+        GoalStructure G = goal("deploy once")
+                .toSolve((AgentState state) -> false )
+                .withTactic(FIRSTof(
+                        action("deploying a goal")
+                            .do1((AgentState state) -> {
+                                agent.addAfter(dynamicgoal.apply(state));
+                                deployed[0] = true ;
+                                //System.out.println(">>> action: deployed[0] = " + deployed[0]) ;
+                                return state ;
+                                })
+                            .on_(state -> ! deployed[0] )
+                            .lift(),
+                        ABORT())
+                ).lift();
+        return FIRSTof(G) ;
     }
 
     /**
