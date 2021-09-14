@@ -1,8 +1,12 @@
 package eu.iv4xr.framework;
 
 import eu.iv4xr.framework.mainConcepts.*;
-import nl.uu.cs.aplib.mainConcepts.Goal;
+import nl.uu.cs.aplib.mainConcepts.*;
+import static nl.uu.cs.aplib.AplibEDSL.* ;
+
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
+
+import java.util.function.Predicate;
 
 public class Iv4xrEDSL {
 
@@ -36,5 +40,26 @@ public class Iv4xrEDSL {
         if (assertion)
             return new VerdictEvent(assertionFamilyName, assertionInfo, true);
         return new VerdictEvent(assertionFamilyName, assertionInfo, false);
+    }
+    
+    /**
+     * A Goal that when selected, will cause the agent to check the given predicate.
+     */
+    public static <State> GoalStructure assertTrue_(
+    		TestAgent ta,
+    		String assertionFamilyName, String assertionInfo,
+    		Predicate<State> predicate) {
+    	
+    	TestGoal g = testgoal("Assertion is checked: " + assertionFamilyName + ", " + assertionInfo)
+    			.toSolve((State S) -> true)
+    			.invariant(ta, (State S) -> assertTrue_(assertionFamilyName,assertionInfo, predicate.test(S)))
+    			.withTactic(
+    				action("skip")
+    				.do1((State S) -> S)
+    				.lift())
+    		;
+    		 	
+    	return g.lift() ;
+    	
     }
 }

@@ -55,11 +55,11 @@ public class TestGoal extends Goal {
      * @param oracle    The oracle predicate/function.
      */
     public TestGoal oracle_(TestAgent testagent, Function<Object, VerdictEvent> oracle) {
-        if (testagent == null && this.oracle == null)
+        if (testagent == null && this.owningTestAgent == null)
             throw new IllegalArgumentException("A test goal needs to be linked to a test-agent.");
         if (testagent != null)
-            this.oracle = oracle;
-        owningTestAgent = testagent;
+        	owningTestAgent = testagent;
+        this.oracle = oracle;
         return this;
     }
 
