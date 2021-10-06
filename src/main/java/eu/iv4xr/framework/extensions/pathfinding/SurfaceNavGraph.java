@@ -485,6 +485,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      */
     public List<Integer> explore(Vec3 startLocation, float faceDistThreshold) {
         var startVertex = getNearestUnblockedVertex(startLocation, faceDistThreshold);
+        System.out.print("original explore " + startVertex);
         if (startVertex == null)
             return null;
         return explore(startVertex);
@@ -520,6 +521,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
                 return path;
             }
         }
+        System.out.println("original explore second one");
         return null;
     }
 
@@ -537,36 +539,60 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     public List<Integer> explore2(int startVertex, Vec3 destinationLocation) {
    	
     	List<Pair<Vec3, Integer>>  candidates = new LinkedList<>();
+    	int k = 0;
+    	int j = 0;
     	for (int v = 0; v < vertices.size(); v++) {
-            Vec3 vloc = vertices.get(v);
-    		if(Vec3.dist(vloc, destinationLocation) <= 5f)   						
-    					candidates.add(new Pair(vloc,v));
+    		
+    		//markAsSeen(118,146,147,148,165,82,187);
+    		if(seenVertices.get(v)) {   			
+    			k++;
+    			Vec3 vloc = vertices.get(v);
+    			//System.out.println(" seen vertices " + v + " , " + vloc);
+        		if(Vec3.dist(vloc, destinationLocation) <= 5f)   {
+        			candidates.add(new Pair(vloc,v));
+        			j++;
+        		}						
+        					
+    		}           
     	}
     	    	
-        System.out.println("vertices near the door! " + candidates.isEmpty() +" destination location "+ destinationLocation 
-        		+" agent location "+ vertices.get(startVertex));
-        for(var c:candidates) {
-        	System.out.println("candidate near the door " + c.fst);
-        }
+        System.out.println("vertices near the door is empty! " + candidates.isEmpty() +" destination location "+ destinationLocation 
+        		+" agent location "+ vertices.get(startVertex) + " number of seen vetices " + k + " number of door vertices candidates " + j);
+        
         
         Vec3 startLocation = vertices.get(startVertex);
 
         candidates.sort((p1, p2) -> Float.compare(Vec3.dist(p1.fst, destinationLocation),
                 Vec3.dist(p2.fst, destinationLocation)));
         
-           
+        for(var c:candidates) {
+        	System.out.println("candidate near the door " +  c.snd + " , " + c.fst);
+        }
+          // var x =  getNearestUnblockedVertex(startLocation, destinationLocation,4f);
+        
+        //System.out.println("***just  x "  + x);
         if(seenVertices.get(startVertex)) System.out.println("***start vertices has seen " );
         for (var c : candidates) {
         	   var path = findPath(startVertex, c.snd);          	
-               if (path != null) {
+               if (path != null && !(Vec3.dist(vertices.get(startVertex), vertices.get(c.snd)) < 0.5f)) {
                 // ok, so reaching the frontier front.fst is possible;
                 // we will also add the unexplored and unblocked neighbor of
                 // front.fst to the path:
-            	   System.out.println("***which candidator is been selected! " + c);
+            	   System.out.println("***which candidate is been selected! " + c + Vec3.dist(vertices.get(startVertex), vertices.get(c.snd)));
                 path.add(c.snd);
                 return path;
             }
         }
+//        if(x != null) {
+//        	var path = findPath(startVertex, x);          	
+//            if (path != null) {
+//             // ok, so reaching the frontier front.fst is possible;
+//             // we will also add the unexplored and unblocked neighbor of
+//             // front.fst to the path:
+//         	   System.out.println("***this is x path! " + x);
+//             path.add(x);
+//             return path;
+//        } }
         System.out.println("***end of frontier! ");
         return null;
         
