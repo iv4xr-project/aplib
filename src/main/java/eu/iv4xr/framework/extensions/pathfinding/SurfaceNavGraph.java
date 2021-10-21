@@ -8,7 +8,7 @@ import eu.iv4xr.framework.spatial.Obstacle;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
 import nl.uu.cs.aplib.utils.Pair;
-
+import eu.iv4xr.framework.mainConcepts.WorldEntity;
 
 /**
  * A navigation-graph over a 3D-surface. The surface is described by a set of
@@ -266,6 +266,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     boolean isBlocked(Vec3 x, Vec3 y) {
         for (var obs : obstacles) {
             if (obs.isBlocking && obs.obstacle.intersects(new Line(x, y))) {
+            	System.out.println("in the isBlocked: " + ((WorldEntity) obs.obstacle).id + ((WorldEntity) obs.obstacle).extent + ((WorldEntity) obs.obstacle).position);
                 return true;
             }
         }
@@ -566,7 +567,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
                 Vec3.dist(p2.fst, destinationLocation)));
         
         for(var c:candidates) {
-        	System.out.println("candidate near the door " +  c.snd + " , " + c.fst);
+        //	System.out.println("candidate near the door " +  c.snd + " , " + c.fst);
         }
           // var x =  getNearestUnblockedVertex(startLocation, destinationLocation,4f);
         
@@ -696,6 +697,121 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         return best;
     }
 
-    
+    /**
+     * The same as the other findPath. This will return a path from a vertex v0
+     * , to a vertex to the given goal location. The difference is that instead 
+     * of selecting the closet vertex, we will go with all possible vertices
+     * from the start position to a goal position. That is to say, we will
+     * check all possible candidates of vertex around the two given positions.
+     * Candidates are sorted based on the closest vertex to the position.
+     * 
+     * The method calculates the start and goal-nodes such that the straight line
+     * between them and the corresponding start and goal locations are not blocked
+     * by any of the blocking obstacles.
+     * 
+     * The parameter faceDistThreshold is a threshold defining how far the Face F0
+     * on which v0 is from the start location is allowed to be. And similarly how
+     * far the face Fn on which vn is, from the goal location is allowed to be.
+     */
+    public ArrayList<Integer> expensiveFindPath(Vec3 start, Vec3 goal, float faceDistThreshold) {
+        List<Integer> startNode = getUnblockedVertex(start, faceDistThreshold);
+        System.out.println("startnode: " + startNode);
+        if (startNode == null)
+            return null;
+        // System.out.println("** start-node: " + startNode) ;
+        List<Integer> goalNode = getUnblockedVertex(goal, faceDistThreshold);
+        System.out.println("goal node: " + goalNode);
+        if (goalNode == null)
+            return null;
+        // System.out.println("** goal-node: " + goalNode) ;
+        ArrayList<Integer> path =null;
+        System.out.println("expensiveFindPAth, nodes around the start node and the goal" + startNode.size() + goalNode.size());
+        for(int i=0; i<startNode.size(); i++) {
+        	for(int j=0; j< goalNode.size(); j++)
+        	{
+        		System.out.println("khar ast" + startNode.get(i) + goalNode.get(j));
+        		path = findPath(startNode.get(i), goalNode.get(j));
+        		if(path != null) {
+        			break;
+        		}
+        	} 	
+        }
+        return path;
+    }
 
+    /**
+     * This method returns a set of vertices v in the navgraph which are in the same Face
+     * that the position. such that the straight line between the location and this
+     * vertex v is unobstructed.
+     * 
+     * To find a set of v, the method first searches for a face F, whose distance to the
+     * given location is below the threshold faceDistThreshold. Then the set of v is searched
+     * among the vertices on this face F. The method returns all possible vertexes which is sorted based on the distance.
+     * where a straight line between them is unobstructed by any of the obstacles.
+     * 
+     * If no such F nor v can be found, the method returns null.
+     * 
+     * The method ignores whether the vertices of F has been seen/explored or not.
+     */
+    public List<Integer> getUnblockedVertex(Vec3 location, float faceDistThreshold) {
+        // first find a face that contains the location:
+        // System.out.println(">> anchor location: " + location) ;
+        Face face = null;
+        // float bestDistanceSofar = Float.MAX_VALUE ;
+        int k = 0;
+       // System.out.println(">> Face ????? " + location) ;
+        for (Face f : faces) {
+            var dist = f.distFromPoint(location, vertices);
+
+            // System.out.println(">> Face " + k + "," + f + ", distance: " + dist) ;
+            /*
+             * for (var corner : f.vertices) { System.out.println("    " +
+             * vertices.get(corner)) ; }
+             */
+            if (dist <= faceDistThreshold) {
+                // found one ... we'll grab it:
+                face = f;
+                break;
+            }
+            k++;
+        }
+        if (face == null) {
+            // well... then the location is not even in the mesh:
+            System.out.println(">> cannot find any face close enough!");
+            return null;
+        }    
+        // Find the closest vertex on the Face;
+        // start with calculating the distance to the face center, if we keep track of
+        // its center:
+        List<Integer> best = new LinkedList<>();;
+        float best_distsq = Float.POSITIVE_INFINITY;
+        Integer v = faceToCenterIdMap.get(face);
+        System.out.println(">> get the v!" + v);
+        Vec3 v_loc = null;
+        if (v != null) {
+            v_loc = vertices.get(v);
+       //     if (!isBlocked(location, v_loc)) {
+            	System.out.println(">> firts best!" + v + seenVertices.get(v));
+                best.add(v);              
+        //    }
+        }
+        for (int w : face.vertices) {
+            // System.out.println("=== " + w) ;
+            v = w;
+            v_loc = vertices.get(v);
+             System.out.println(">> " + location + " --> " + v + " " + v_loc + ": blocked " + isBlocked(location,v_loc) + seenVertices.get(v)) ;
+        //    if (isBlocked(location, v_loc))
+          //      continue;
+           
+          //   best.add(v);
+  
+        }
+       // var distsq = Vec3.sub(location, v_loc).lengthSq();
+     best.sort((p1, p2) -> Float.compare(Vec3.dist(vertices.get(p1), location),
+            Vec3.dist(vertices.get(p2), location)));
+        //System.out.println("best vertex in faces " + best);
+   
+    
+        return best;
+    }
 }
