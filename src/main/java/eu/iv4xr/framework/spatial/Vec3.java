@@ -107,10 +107,19 @@ public class Vec3 implements Serializable {
     }
 
     /**
-     * @return The distance between two vectors.
+     * @return The distance between two vectors a and b. This is the length of the vector
+     * a - b.
      */
     public static float dist(Vec3 a, Vec3 b) {
         return Vec3.sub(a, b).length();
+    }
+    
+    /**
+     * If d is the length of the vector a - b (so, the distance between them), this method
+     * returns d*d. This is cheaper to compute that d itself.
+     */
+    public static float distSq(Vec3 a, Vec3 b) {
+        return Vec3.sub(a, b).lengthSq();
     }
 
     /**
