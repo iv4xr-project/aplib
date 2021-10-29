@@ -545,7 +545,6 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * If such a v and w can be found, this method returns a path to w (with w itself at the
      * end of the path), else the method returns null.
      * */
-    
     public List<Integer> explore(Vec3 startLocation, 
     		Vec3 targetLocation, 
     		float faceDistThreshold, 
@@ -613,7 +612,11 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     }
     
     
-    /**
+    /*
+     * COMMENTED out. Not used. Note the implementation is not correct yet wrt to
+     * the described functionality.
+     * 
+     * 
      * This is based on the original getNearestUnblockedVertex method, but the destination
      * location is also considered to select a vertex.
      * This method returns a vertex v in the navgraph which is 'nearest' to the
@@ -629,7 +632,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * If no such F nor v can be found, the method returns null.
      * 
      * The method ignores whether the vertices of F has been seen/explored or not.
-     */
+     *
     public Integer getNearestUnblockedVertex(Vec3 location,Vec3 currentDestination, float faceDistThreshold) {
         // first find a face that contains the location:
         //System.out.println(">> get Nearest Unblocked Vertex " + location +" , "+ currentDestination) ;
@@ -687,31 +690,39 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         }
         return best;
     }
+    */
 
     /**
-     * The same as the original findPath. This will return a path from a vertex v0
-     * , to a vertex to the given goal location. The difference is that instead 
-     * of selecting the closet vertex, we will go with all possible vertices
-     * from the start position to a goal position. That is to say, we will
-     * check all possible candidates of vertex around the two given positions.
-     * Candidates are sorted based on the closest vertex to the position.
+     * Similar to the other findPath method, this will search for a path from a vertex v0,
+     * close to the start-location,  to a vertex v1 close to the given goal location. 
+     * The nodes v0 and v1 are chosen such that the straight line between them and the 
+     * corresponding start and goal locations are not blocked by any of the blocking 
+     * obstacles. If such a path exists, it will be returned, and else null is returned.
      * 
-     * The method calculates the start and goal-nodes such that the straight line
-     * between them and the corresponding start and goal locations are not blocked
-     * by any of the blocking obstacles.
+     * The other findPath method will always the node closest to the start-location 
+     * respectively the goal-location as the v0 and v1. Sometimes this does not yield
+     * a path, e.g. because v1 is not seen yet.
      * 
-     * The parameter faceDistThreshold is a threshold defining how far the Face F0
-     * on which v0 is from the start location is allowed to be. And similarly how
-     * far the face Fn on which vn is, from the goal location is allowed to be.
+     * This variant of findPath considers all possible vertices around the start position 
+     * and the goal position. For example if S and T are the set of vertices around the
+     * start p0 and goal-location q, respectively, they are first sorted based on their
+     * distance to p0 and q respectively. The S and T will be searched for the first
+     * (hence the closest to p0 and q) for which a path exists between them. This path
+     * is then returned.
+     * 
+     * The vertices in S and T are determined by first finding faces F and G closest to
+     * p0 and q. The vertices are the just the vertices of these faces, respectively.
+     * The parameter faceDistThreshold is a threshold defining how far the Face S/T
+     * from p0/q is allowed to be. 
      */
-    public ArrayList<Integer> enhanceFindPath(Vec3 start, Vec3 goal, float faceDistThreshold) {
-        List<Integer> startNode = enhancedGetUnblockedVertex(start, faceDistThreshold);
-        System.out.println("startnode: " + startNode + " ,position of start " + start );
+    public ArrayList<Integer> enhancedFindPath(Vec3 start, Vec3 goal, float faceDistThreshold) {
+        List<Integer> startNode = getNearestUnblockedVertices(start, faceDistThreshold);
+        //System.out.println("startnode: " + startNode + " ,position of start " + start );
         if (startNode == null)
             return null;
         // System.out.println("** start-node: " + startNode) ;
-        List<Integer> goalNode = enhancedGetUnblockedVertex(goal, faceDistThreshold);
-        System.out.println("goal node: " + goalNode + " ,position of goal " + goal);
+        List<Integer> goalNode = getNearestUnblockedVertices(goal, faceDistThreshold);
+        //System.out.println("goal node: " + goalNode + " ,position of goal " + goal);
         if (goalNode == null)
             return null;
         ArrayList<Integer> path =null;
@@ -719,12 +730,12 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         for(int i=0; i<startNode.size(); i++) {
         	for(int j=0; j< goalNode.size(); j++)
         	{
-        		System.out.println("find a path between two nodes" + startNode.get(i) + " , " +  vertices.get(startNode.get(i))+ goalNode.get(j) + " , " +  vertices.get(goalNode.get(j)));
-        		this.debugCheckPath_withAllNodesMadeVisible(startNode.get(i), goalNode.get(j));
+        		//System.out.println("find a path between two nodes" + startNode.get(i) + " , " +  vertices.get(startNode.get(i))+ goalNode.get(j) + " , " +  vertices.get(goalNode.get(j)));
+        		//this.debugCheckPath_withAllNodesMadeVisible(startNode.get(i), goalNode.get(j));
         		//this.perfect_memory_pathfinding = true ;
         		path = findPath(startNode.get(i), goalNode.get(j));
         		//this.perfect_memory_pathfinding = false ;
-        		System.out.println("Path: " + path) ;
+        		//System.out.println("Path: " + path) ;
         		if(path != null) {
         			// break ;
         			return path ;
@@ -736,20 +747,20 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     }
 
     /**
-     * This method returns a set of vertices v in the navgraph which are in the same Face
-     * that the position. such that the straight line between the location and this
-     * vertex v is unobstructed.
+     * This method search for a Face f that "contains" the given position p. The method then 
+     * returns the vertices v of this face f, for which the line between p and v is unobstructed
+     * by some obstacle. The list is also sorted by the vertices' distance to p.
      * 
-     * To find a set of v, the method first searches for a face F, whose distance to the
-     * given location is below the threshold faceDistThreshold. Then the set of v is searched
-     * among the vertices on this face F. The method returns all possible vertexes which is sorted based on the distance.
-     * where a straight line between them is unobstructed by any of the obstacles.
+     * The method ignores whether the vertices of f has been seen/explored or not.
      * 
-     * If no such F nor v can be found, the method returns null.
+     * To be more precise, the method searches for the first face f that is within some
+     * small threshold-distance to p. This is less accurate than searching literally for the
+     * containing face, but faster.
      * 
-     * The method ignores whether the vertices of F has been seen/explored or not.
+     * If no such f can be found, the method returns null.
+     * 
      */
-    public List<Integer> enhancedGetUnblockedVertex(Vec3 location, float faceDistThreshold) {
+    public List<Integer> getNearestUnblockedVertices(Vec3 location, float faceDistThreshold) {
         // first find a face that contains the location:
         // System.out.println(">> anchor location: " + location) ;
         Face face = null;  
@@ -780,7 +791,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         // Find the closest vertex on the Face;
         // start with calculating the distance to the face center, if we keep track of
         // its center:
-        List<Integer> best = new LinkedList<>();;
+        List<Integer> candidates = new LinkedList<>();;
         float best_distsq = Float.POSITIVE_INFINITY;
         Integer v = faceToCenterIdMap.get(face);
         Vec3 v_loc = null;
@@ -788,7 +799,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
             v_loc = vertices.get(v);
             if (!isBlocked(location, v_loc)) {
             	//System.out.println(">> the center of the face" + v + seenVertices.get(v));
-                best.add(v);              
+                candidates.add(v);              
             }
         }
         for (int w : face.vertices) {
@@ -797,15 +808,14 @@ public class SurfaceNavGraph extends SimpleNavGraph {
             // System.out.println(">> " + location + " --> " + v + " " + v_loc + ": blocked " + isBlocked(location,v_loc) + seenVertices.get(v)) ;
             if (isBlocked(location, v_loc))
                 continue;
-             best.add(v);
+             candidates.add(v);
   
         }
     
-     best.sort((p1, p2) -> Float.compare(Vec3.dist(vertices.get(p1), location),
-            Vec3.dist(vertices.get(p2), location)));  
+        candidates.sort((p1, p2) -> Float.compare(Vec3.distSq(vertices.get(p1), location),
+                                                  Vec3.distSq(vertices.get(p2), location)));  
    
-    
-        return best;
+        return candidates;
     }
     
     /**
