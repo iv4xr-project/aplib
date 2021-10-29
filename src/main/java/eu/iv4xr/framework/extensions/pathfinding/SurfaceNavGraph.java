@@ -633,15 +633,8 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     public Integer getNearestUnblockedVertex(Vec3 location,Vec3 currentDestination, float faceDistThreshold) {
         // first find a face that contains the location:
         //System.out.println(">> get Nearest Unblocked Vertex " + location +" , "+ currentDestination) ;
-        Face face = null;
         ArrayList<Face> faceList = new ArrayList();
-        int k = 0;
-        float distance   = Float.valueOf(0); 
-        Vec3 v_loc = null;
-        Integer selecedFace = null;
-        Integer best = null;
-
-        
+    
         // first find a face that contains the location:
         // System.out.println(">> anchor location: " + location) ;
         // float bestDistanceSofar = Float.MAX_VALUE ;
@@ -649,12 +642,10 @@ public class SurfaceNavGraph extends SimpleNavGraph {
             var dist = f.distFromPoint(location, vertices);  
             if (dist <= faceDistThreshold) {
             	// System.out.println("a face in the threshold distance" + f);
-                face = f;
-                faceList.add(face);
+                faceList.add(f);
             }
-            k++;
         }
-        if (face == null) {
+        if (faceList.isEmpty()) {
             // well... then the location is not even in the mesh:
             System.out.println(">> cannot find any face close enough!");
             return null;
@@ -664,34 +655,31 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         // start with calculating the distance to the face center, if we keep track of
         // its center:
         float best_distsq = Float.POSITIVE_INFINITY;
-       
+        Face face = null ;  
         for(Face f : faceList) {        
 	        Integer v = faceToCenterIdMap.get(f);
 	        if (v != null) {
-	            v_loc = vertices.get(v);
+	            var v_loc = vertices.get(v);
 	            if (!isBlocked(location, v_loc)) {
-	                best = v;
-	                best_distsq = Vec3.sub(location, v_loc).lengthSq();
-	                var distToDestination = Vec3.dist(v_loc, currentDestination);
-	                if(distance == 0) {  
-	               // 	System.out.println("faces near to the start location" + f + v + distToDestination);
-	                	distance = distToDestination; best = v;  face = f;
-	                }else {
-	               // 	System.out.println("faces near to the destination location" + f + v + distToDestination);
-	                	if(distToDestination<distance) { distance = distToDestination; best = v;  face = f;}
+	                best_distsq = Vec3.distSq(location, v_loc);
+	                var distSquareToDestination = Vec3.distSq(v_loc, currentDestination);
+	                if(distSquareToDestination < best_distsq) { 
+	                   best_distsq = distSquareToDestination ; 
+	                   face = f;
 	                }
 	            }
 	        }
         }
         
-       // System.out.println("face which is near to the door " + face +" face D3 location "+ best +" distance to the start location "+ distance);
-        
+        // System.out.println("face which is near to the door " + face +" face D3 location "+ best +" distance to the start location "+ distance);
+        Integer best = null;
+        best_distsq = Float.POSITIVE_INFINITY;
         for (int w :  face.vertices) {               
-            v_loc = vertices.get(w);
-         //    System.out.println(">> find a better node in the face" + location + " --> " + w + " " + v_loc + ": blocked" + isBlocked(location,v_loc)) ;
+            var v_loc = vertices.get(w);
+            //    System.out.println(">> find a better node in the face" + location + " --> " + w + " " + v_loc + ": blocked" + isBlocked(location,v_loc)) ;
             if (isBlocked(location, v_loc))
                 continue;
-            var distsq = Vec3.sub(location, v_loc).lengthSq();
+            var distsq = Vec3.distSq(location, v_loc) ;
             if (distsq < best_distsq) {
                 best = w;
                 best_distsq = distsq;
