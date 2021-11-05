@@ -24,7 +24,7 @@ import alice.tuprolog.Theory;
  */
 public class PrologReasoner {
 
-    Prolog prolog = new Prolog();
+    public Prolog prolog = new Prolog();
 
     /**
      * A representation of a predicate-name.
@@ -237,9 +237,13 @@ public class PrologReasoner {
         public String str_(String varname) {
             try {
                 Term t = info.getVarValue(varname);
-                if (!t.isAtom())
-                    throw new IllegalArgumentException();
-                return ((Struct) t).getName();
+                if (t.isAtom()) {
+                	return ((Struct) t).getName();
+                }
+                else return t.toString() ;
+                //if (!t.isAtom())
+                //    throw new IllegalArgumentException();
+                
             } catch (NoSolutionException e) {
                 return null;
             }
