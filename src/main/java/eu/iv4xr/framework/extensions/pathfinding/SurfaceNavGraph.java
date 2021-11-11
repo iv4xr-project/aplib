@@ -548,13 +548,13 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     public List<Integer> explore(Vec3 startLocation, 
     		Vec3 targetLocation, 
     		float faceDistThreshold, 
-    		float viewDistance) {
+    		float viewDistance,
+    		List<Vec3> selectedVertises) {
     	
         var startVertex = getNearestUnblockedVertex(startLocation, faceDistThreshold);                   
-        
         if (startVertex == null)
             return null;
-        return explore(startVertex,targetLocation, viewDistance);
+        return explore(startVertex,targetLocation, viewDistance, selectedVertises);
     }
     
     
@@ -569,15 +569,15 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * If such v can be found, the method returns path to v (including v itself, at the end
      * of the path), else the method returns null.
      * */
-    public List<Integer> explore(int startVertex, Vec3 targetLocation, float viewDistance) {
+    public List<Integer> explore(int startVertex, Vec3 targetLocation, float viewDistance, List<Vec3> selectedVertises) {
    	
     	List<Pair<Vec3, Integer>>  candidates = new LinkedList<>();
     	float viewDistanceSq = viewDistance*viewDistance ;
     	for (int v = 0; v < vertices.size(); v++) {    			
     		if(seenVertices.get(v)) {   			
     			Vec3 vloc = vertices.get(v);
-    			//System.out.println(" seen vertices " + v + " , " + vloc);
-        		if(Vec3.distSq(vloc, targetLocation) <= viewDistanceSq) {
+    			//System.out.println(" seen vertices " + v + " , " + vloc + " , " + selectedVertises.contains(vloc));
+        		if(Vec3.distSq(vloc, targetLocation) <= viewDistanceSq && !selectedVertises.contains(vloc)) {
         			candidates.add(new Pair(vloc,v));
         		}										
     		}           
@@ -596,16 +596,20 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         } */
          
         for (var c : candidates) {
-        	   var path = findPath(startVertex, c.snd);    
+        	//System.out.println("start location and candidat location " + startLocation + c.fst);
+        	if(!isBlocked(startLocation, c.fst)) {
+        	   var path = findPath(startVertex, c.snd);    	   
+        	 //  System.out.println("frontier path " + path +" frontier vertices: "+ c.fst + startVertex + "start location" + startLocation +c.snd);
         	   // WP: using c.fst should be the same, and use distSq
                // Original: if (path != null && !(Vec3.dist(vertices.get(startVertex), vertices.get(c.snd)) < 0.5f)) {
-               if (path != null && !(Vec3.distSq(vertices.get(startVertex),c.fst) < 0.25f)) {	   
+               if (path != null && !(Vec3.distSq(vertices.get(startVertex),c.fst) < 0.25f) && (Vec3.distSq(vertices.get(startVertex),c.fst) > 0.12f)) {	   
             	   // ok, so reaching the frontier front.fst is possible;
                    // we will also add the unexplored and unblocked neighbor of
-                   // front.fst to the path:
-            	   System.out.println("***which candidate is been selected! " + c + Vec3.dist(vertices.get(startVertex), vertices.get(c.snd)));
+                   // front.fst to the path:     
+            	   System.out.println("***which candidate is selected! " + c + Vec3.dist(vertices.get(startVertex), vertices.get(c.snd)));
                    path.add(c.snd);
                    return path;
+               }
             }
         }   
         return null;       

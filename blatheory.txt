@@ -1,0 +1,9 @@
+sailor(X) :-
+	pirate(X).
+
+pirate(davy).
+
+pirate(jack).
+
+pirate(jack).
+
