@@ -4,10 +4,13 @@ import static nl.uu.cs.aplib.AplibEDSL.*;
 
 import org.junit.jupiter.api.Test;
 
+import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.logging.Level;
 
 public class Test_GoalStructure {
 
@@ -421,6 +424,60 @@ public class Test_GoalStructure {
         assertTrue(g.getStatus().inProgress());
         assertTrue(g2.getBudget() == Double.POSITIVE_INFINITY);
         assertTrue(g.getBudget() == Double.POSITIVE_INFINITY);
+    }
+    
+    @Test
+    public void test_InvalidGoalStructureDetection() {
+    	
+    	BasicAgent agent = new BasicAgent() ;
+    	agent.id = "Bob" ;
+
+    	var g0 = goal("g0").toSolve((Integer i) -> i == 0).withTactic(action("a").lift()).lift() ;
+    	var g1 = goal("g1").toSolve((Integer i) -> i == 0).withTactic(action("a").lift()).lift() ;
+
+    	// a goal with null as subgoals-field:
+    	var gx1 = goal("goal with null subgoals").toSolve((Integer i) -> i == 0).withTactic(action("a").lift()).lift() ;	;
+    	gx1.subgoals = null ;
+    	try {
+    		agent.setGoal(SEQ(g0,SEQ(g1,gx1))) ;
+    		assertTrue(false) ;
+    	}
+    	catch(Exception e) {
+    		assertTrue(e instanceof IllegalArgumentException) ;
+    	}
+    	
+    	// a goal that cycle back to its parent
+    	var gcycle = goal("goal that cycles back").toSolve((Integer i) -> i == 0).withTactic(action("a").lift()).lift() ;	
+    	gcycle.subgoals.add(gcycle) ;
+    	try {
+    		agent.setGoal(SEQ(g0,SEQ(g1,gcycle))) ;
+    		assertTrue(false) ;
+    	}
+    	catch(Exception e) {
+    		assertTrue(e instanceof IllegalArgumentException) ;
+    	}
+    	
+    	// a goal that cycle back to its ancestor:
+    	var g3 = SEQ(g0, SEQ(g1,gcycle)) ;
+    	gcycle.subgoals.clear();
+    	gcycle.subgoals.add(g3) ;
+    	try {
+    		agent.setGoal(g3) ;
+    		assertTrue(false) ;
+    	}
+    	catch(Exception e) {
+    		assertTrue(e instanceof IllegalArgumentException) ;
+    	}
+    	
+    	// a goal structure with multiple parents trying to share the same sub-goal
+    	try {
+    		agent.setGoal(SEQ(g0,SUCCESS(),SEQ(g1,SUCCESS(),g0))) ;
+    		assertTrue(false) ;
+    	}
+    	catch(Exception e) {
+    		assertTrue(e instanceof IllegalArgumentException) ;
+    	}
+    	
     }
 
 }

@@ -544,17 +544,20 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * 
      * If such a v and w can be found, this method returns a path to w (with w itself at the
      * end of the path), else the method returns null.
+     * 
+     * The list of excluded vertices specify which candidates should NOT be considered for v
+     * (e.g. because they have been considered earlier).
      * */
     public List<Integer> explore(Vec3 startLocation, 
     		Vec3 targetLocation, 
     		float faceDistThreshold, 
     		float viewDistance,
-    		List<Vec3> selectedVertises) {
+    		List<Vec3> excludedVertises) {
     	
         var startVertex = getNearestUnblockedVertex(startLocation, faceDistThreshold);                   
         if (startVertex == null)
             return null;
-        return explore(startVertex,targetLocation, viewDistance, selectedVertises);
+        return explore(startVertex,targetLocation, viewDistance, excludedVertises);
     }
     
     
@@ -568,8 +571,14 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * 
      * If such v can be found, the method returns path to v (including v itself, at the end
      * of the path), else the method returns null.
+     * 
+     * The list of excluded vertices specify which candidates should NOT be considered for v
+     * (e.g. because they have been considered earlier).
      * */
-    public List<Integer> explore(int startVertex, Vec3 targetLocation, float viewDistance, List<Vec3> selectedVertises) {
+    public List<Integer> explore(int startVertex, 
+    		Vec3 targetLocation, 
+    		float viewDistance, 
+    		List<Vec3> excludedVertises) {
    	
     	List<Pair<Vec3, Integer>>  candidates = new LinkedList<>();
     	float viewDistanceSq = viewDistance*viewDistance ;
@@ -577,7 +586,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     		if(seenVertices.get(v)) {   			
     			Vec3 vloc = vertices.get(v);
     			//System.out.println(" seen vertices " + v + " , " + vloc + " , " + selectedVertises.contains(vloc));
-        		if(Vec3.distSq(vloc, targetLocation) <= viewDistanceSq && !selectedVertises.contains(vloc)) {
+        		if(Vec3.distSq(vloc, targetLocation) <= viewDistanceSq && !excludedVertises.contains(vloc)) {
         			candidates.add(new Pair(vloc,v));
         		}										
     		}           

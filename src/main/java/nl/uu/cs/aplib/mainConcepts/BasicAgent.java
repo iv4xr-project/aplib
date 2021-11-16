@@ -171,6 +171,9 @@ public class BasicAgent {
         goal = g;
         if (!allGoalsHaveTactic(g))
             throw new IllegalArgumentException("Agent " + id + ": some goal has no tactic.");
+        if (!g.checkIfWellformed())
+        	throw new IllegalArgumentException("Agent " + id + ": is given a goal-structure that is not well-formed.");
+        
         currentGoal = goal.getDeepestFirstPrimGoal_andAllocateBudget();
         if (currentGoal == null)
             throw new IllegalArgumentException("Agent " + id + ": is gievn a goal structure with NO goal.");

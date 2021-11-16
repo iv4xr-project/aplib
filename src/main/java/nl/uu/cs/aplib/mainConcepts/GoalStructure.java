@@ -3,6 +3,7 @@ package nl.uu.cs.aplib.mainConcepts;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exception.AplibError;
 
 /**
@@ -107,6 +108,33 @@ public class GoalStructure {
      */
     public boolean isTopGoal() {
         return parent == null;
+    }
+    public boolean checkIfWellformed() {
+    	return checkIfWellformedWorker(new LinkedList<GoalStructure>(), new LinkedList<GoalStructure>()) ;
+    }
+    
+    private boolean checkIfWellformedWorker(List<GoalStructure>  ancestors, List<GoalStructure> seen) {
+    	if(subgoals==null) {
+    		Logging.getAPLIBlogger().info("A goal has null subgoals-field (use empty instead).");
+    		return  false ;
+    	}
+    	if (ancestors.contains(this)) {
+			Logging.getAPLIBlogger().info("The goal-structure has a cycle. This is not allowed).");
+			return false ;
+		}
+    	if (seen.contains(this)) {
+			Logging.getAPLIBlogger().info("The goal-structure has a goal shared by multiple parents. This is not allowed).");
+			return false ;
+		}
+    	ancestors.add(this) ;
+    	seen.add(this) ;
+    	for(var G : subgoals) {
+    		if(! G.checkIfWellformedWorker(ancestors,seen)) {
+    			return false ;
+    		}
+    	}
+		ancestors.remove(this) ;
+    	return true ;
     }
 
     /**
