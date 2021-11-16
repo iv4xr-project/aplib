@@ -522,7 +522,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
                 return path;
             }
         }
-        System.out.println("original explore second one");
+        //System.out.println("original explore second one");
         return null;
     }
 
