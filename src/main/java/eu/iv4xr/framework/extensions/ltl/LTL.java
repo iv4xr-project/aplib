@@ -1,175 +1,268 @@
 package eu.iv4xr.framework.extensions.ltl;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Predicate;
 
-import eu.iv4xr.framework.extensions.ltl.BoundedLTL.LTLVerdict;
-import eu.iv4xr.framework.extensions.ltl.BoundedLTL.LTLVerdictInfo;
+import eu.iv4xr.framework.extensions.ltl.LTL.LTLVerdictInfo;
+import eu.iv4xr.framework.extensions.ltl.SequencePredicate.SATVerdict;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
- * Representing an LTL formula.
+ * Representing an LTL formula. An LTL formula is a predicate over
+ * sequences of states. Such a formula can be checked/evaluated whether
+ * it holds on a given sequence (whether it is satisfied by the sequence).
+ * The evaluation results in either SAT, UNSAT, or UNKNOWN if neither
+ * SAT nor UNSAT can be decided.
+ * 
+ * In this implementation, only checking over finite sequence is implemented.
+ * 
+ * The checking is done recursively over the structure of the LTL, essentially
+ * following the recursive semantics of LTL formulas. We start by evaluating
+ * the atomic propositions in the formula over the given sequence, and then 
+ * bottom-up towards the root LTL.
+ * 
+ * @author Wish
  */
-public abstract class LTL {
+public abstract class LTL<State> extends SequencePredicate<State> {
 
     /**
-     * Abstractly representing the finite execution on which this LTL is
-     * interpreted.
+     * If sigma is the sequence of states that is under evaluation. Calling sat()
+     * will check/evaluates. This evaluation is recursive over the structure of
+     * the LTL formula. To facilitate this, it is necessary to also store intermediate
+     * results. 
+     * This field evals is a sequence, such that evals(i) is the value of this LTL
+     * (satisfied or not satisfied) formula, evaluated on the suffix of sigma, starting at 
+     * sigma(i).
+     * 
+     * (this implies that validity of this LTL on the whole sigma can be obtained
+     * by looking at the value of evals(0)) 
      */
-    LinkedList<LTLVerdictInfo> absexecution = new LinkedList<>();
+    LinkedList<LTLVerdictInfo> evals = new LinkedList<>();
+    
+    // Just a wrapper over vedict, to allow the value inside to be conveniently
+    // updated while being in the evals-list above:
+    static class LTLVerdictInfo {
+	    public SequencePredicate.SATVerdict verdict;
+	
+	    LTLVerdictInfo(SequencePredicate.SATVerdict v) {
+	        verdict = v;
+	    }
+	}
+    
+    /**
+     * When the true then this formula is considered to have been fully evaluated. 
+     * Invoking sat() will not trigger new-re-evaluation.
+     */
+    public boolean fullyEvaluated = false ; 
 
     LTL() {
     }
-
-    abstract void resettracking();
-
-    /**
-     * Check if {@link #absexecution} satisfies this LTL formula.
-     */
-    abstract LTLVerdict sat();
+    
 
     /**
-     * Evaluate the atoms of this LTL formula on the given env (concrete state), and
-     * add the verdict at the end of {@link #absexecution}.
+     * Evaluate the atoms of this LTL formula on the given current state, and
+     * add the verdict at the end of {@link #evals} of those atoms.
      */
-    abstract void evalAtomSat(Environment env);
+    abstract void evalAtomSat(State state);
+    
+    /**
+     * Invoke this first before start checking this LTL formula on an execution; this
+     * will rest the internal state of this formula, making it ready to check a new 
+     * sequence.
+     */
+    @Override
+    public void startChecking() {
+    	evals.clear();
+    	fullyEvaluated = false ;
+    }
+    
+	/**
+     * Use this to check this LTL formula on a sequence of states by feeding the 
+     * states one state at a time. The typical setup is if the execution under evaluation 
+     * does not allow states to be serialized or cloned. This means that we cannot collect
+     * those states in some collection and therefore the execution has to be checked
+     * incrementally by feeding this predicate one state (the current state) at a time.
+     */
+    @Override
+    public void checkNext(State state) {
+    	evalAtomSat(state) ;
+    }
+    
+    /**
+     * Call this to mark that the last state of the execution under evaluation has
+     * been fed to this predicate. So, we can now call sat() to inspect whether this
+     * predicate holds on the execution or not.
+     */
+    @Override
+    public void endChecking() {
+    	sat() ;
+    	fullyEvaluated = true ;
+    }
+         
 
     /**
      * Construct the LTL formula "phi Until psi", where phi is this LTL formula.
      */
-    public LTL ltlUntil(LTL psi) {
-        var ltl = new Until();
+    public LTL<State> ltlUntil(LTL<State> psi) {
+        var ltl = new Until<State>();
         ltl.phi1 = this;
         ltl.phi2 = psi;
         return ltl;
     }
 
-    public static class Atom extends LTL {
-        Predicate<Environment> p;
+    public LTL<State> ltlUntil(Predicate<State> psi) {
+    	return ltlUntil(now(psi)) ;
+    }
+    
+    public LTL<State> ltlImplies(LTL<State> psi) {
+    	return ltlNot(ltlAnd(this, ltlNot(psi))) ;
+    }
+    
+    public static class Now<State> extends LTL<State> {
+    	
+        Predicate<State> p;
+        
+        Now() { super() ; }
 
-        void check(Environment env) {
-
+        @Override
+        public void startChecking() {
+        	super.startChecking() ;
         }
 
         @Override
-        void resettracking() {
-            absexecution.clear();
+        public SequencePredicate.SATVerdict sat() {
+            return evals.getFirst().verdict;
         }
 
         @Override
-        LTLVerdict sat() {
-            return absexecution.getFirst().verdict;
-        }
-
-        @Override
-        void evalAtomSat(Environment env) {
-            if (p.test(env))
-                absexecution.add(new LTLVerdictInfo(LTLVerdict.SAT));
+        void evalAtomSat(State state) {
+            if (p.test(state))
+                evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.SAT));
             else
-                absexecution.add(new LTLVerdictInfo(LTLVerdict.UNSAT));
+                evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNSAT));
         }
     }
 
-    public static class Not extends LTL {
-        LTL phi;
+    public static class Not<State> extends LTL<State> {
+        LTL<State> phi;
+        
+        Not() { super() ; }
 
         @Override
-        void resettracking() {
-            absexecution.clear();
-            phi.resettracking();
+        public void startChecking() {
+            super.startChecking();
+            phi.startChecking();
         }
 
         @Override
-        LTLVerdict sat() {
+        public SequencePredicate.SATVerdict sat() {
+        	
+        	if(fullyEvaluated) 
+        		return evals.getFirst().verdict;
+        	
             phi.sat();
-            var iterator = absexecution.descendingIterator();
-            var iteratorPhi = phi.absexecution.descendingIterator();
+            var iterator = evals.descendingIterator();
+            var iteratorPhi = phi.evals.descendingIterator();
 
             while (iterator.hasNext()) {
                 var psi = iterator.next();
                 var p = iteratorPhi.next().verdict;
                 switch (p) {
                 case SAT:
-                    psi.verdict = LTLVerdict.UNSAT;
+                    psi.verdict = SequencePredicate.SATVerdict.UNSAT;
                     break;
                 case UNSAT:
-                    psi.verdict = LTLVerdict.SAT;
+                    psi.verdict = SequencePredicate.SATVerdict.SAT;
                     break;
                 }
             }
 
-            return absexecution.getFirst().verdict;
+            return evals.getFirst().verdict;
         }
 
         @Override
-        void evalAtomSat(Environment env) {
-            absexecution.add(new LTLVerdictInfo(LTLVerdict.UNKNOWN));
-            phi.evalAtomSat(env);
+        void evalAtomSat(State state) {
+            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            phi.evalAtomSat(state);
         }
     }
 
-    public static class And extends LTL {
-        LTL[] conjuncts;
+    public static class And<State> extends LTL<State> {
+        LTL<State>[] conjuncts;
+        
+        And() { super() ; }
 
         @Override
-        void resettracking() {
-            absexecution.clear();
-            for (LTL phi : conjuncts)
-                phi.resettracking();
+        public void startChecking() {
+        	super.startChecking() ;
+            for (LTL<State> phi : conjuncts)
+                phi.startChecking();
         }
 
         @Override
-        LTLVerdict sat() {
-            for (LTL phi : conjuncts)
+        public SequencePredicate.SATVerdict sat() {
+        	
+        	if(fullyEvaluated) 
+        		return evals.getFirst().verdict;
+        	
+            for (LTL<State> phi : conjuncts)
                 phi.sat();
-            var iterator = absexecution.descendingIterator();
+            var iterator = evals.descendingIterator();
             var N = conjuncts.length;
-            Iterator<LTLVerdictInfo>[] conjuntIterators = new Iterator[N];
+            Iterator<LTL.LTLVerdictInfo>[] conjuntIterators = new Iterator[N];
             for (int k = 0; k < N; k++)
-                conjuntIterators[k] = conjuncts[k].absexecution.descendingIterator();
+                conjuntIterators[k] = conjuncts[k].evals.descendingIterator();
 
             while (iterator.hasNext()) {
                 var psi = iterator.next();
                 boolean allSat = true;
                 for (int k = 0; k < N; k++) {
                     var p = conjuntIterators[k].next().verdict;
-                    allSat = allSat && (p == LTLVerdict.SAT);
+                    allSat = allSat && (p == SequencePredicate.SATVerdict.SAT);
                 }
                 if (allSat)
-                    psi.verdict = LTLVerdict.SAT;
+                    psi.verdict = SequencePredicate.SATVerdict.SAT;
                 else
-                    psi.verdict = LTLVerdict.UNSAT;
+                    psi.verdict = SequencePredicate.SATVerdict.UNSAT;
             }
-            return absexecution.getFirst().verdict;
+            return evals.getFirst().verdict;
         }
 
         @Override
-        void evalAtomSat(Environment env) {
-            absexecution.add(new LTLVerdictInfo(LTLVerdict.UNKNOWN));
-            for (LTL phi : conjuncts)
-                phi.evalAtomSat(env);
+        void evalAtomSat(State state) {
+            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            for (LTL<State> phi : conjuncts)
+                phi.evalAtomSat(state);
         }
     }
 
-    public static class Until extends LTL {
-        LTL phi1;
-        LTL phi2;
+    public static class Until<State> extends LTL<State> {
+        LTL<State> phi1;
+        LTL<State> phi2;
+        
+        Until() { super() ; }
 
         @Override
-        void resettracking() {
-            absexecution.clear();
-            phi1.resettracking();
-            phi2.resettracking();
+        public void startChecking() {
+        	super.startChecking();
+            phi1.startChecking();
+            phi2.startChecking();
         }
 
         @Override
-        LTLVerdict sat() {
+        public SequencePredicate.SATVerdict sat() {
+        	
+        	if(fullyEvaluated) 
+        		return evals.getFirst().verdict;
+        
             phi1.sat();
             phi2.sat();
-            var iterator = absexecution.descendingIterator();
-            var iteratorPhi1 = phi1.absexecution.descendingIterator();
-            var iteratorPhi2 = phi2.absexecution.descendingIterator();
+            var iterator = evals.descendingIterator();
+            var iteratorPhi1 = phi1.evals.descendingIterator();
+            var iteratorPhi2 = phi2.evals.descendingIterator();
 
             // keep track if phi1 untill phi2 holds at sigma(k+1)
             boolean nextSat = false;
@@ -180,47 +273,53 @@ public abstract class LTL {
                 var psi = iterator.next();
                 var p = iteratorPhi1.next().verdict;
                 var q = iteratorPhi2.next().verdict;
-                if (q == LTLVerdict.SAT) {
-                    psi.verdict = LTLVerdict.SAT;
+                if (q == SequencePredicate.SATVerdict.SAT) {
+                    psi.verdict = SequencePredicate.SATVerdict.SAT;
                     nextSat = true;
                 } else {
-                    if (nextSat && p == LTLVerdict.SAT)
-                        psi.verdict = LTLVerdict.SAT;
+                    if (nextSat && p == SequencePredicate.SATVerdict.SAT)
+                        psi.verdict = SequencePredicate.SATVerdict.SAT;
                     else {
-                        psi.verdict = LTLVerdict.UNSAT;
+                        psi.verdict = SequencePredicate.SATVerdict.UNSAT;
                         nextSat = false;
                     }
                 }
             }
-            return absexecution.getFirst().verdict;
+            return evals.getFirst().verdict;
         }
 
         @Override
-        void evalAtomSat(Environment env) {
-            absexecution.add(new LTLVerdictInfo(LTLVerdict.UNKNOWN));
-            phi1.evalAtomSat(env);
-            phi2.evalAtomSat(env);
+        void evalAtomSat(State state) {
+            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            phi1.evalAtomSat(state);
+            phi2.evalAtomSat(state);
         }
     }
 
-    public static class Next extends LTL {
+    public static class Next<State> extends LTL<State> {
 
-        LTL phi;
+        LTL<State> phi;
+        
+        Next() { super() ; }
 
         @Override
-        void resettracking() {
-            absexecution.clear();
-            phi.resettracking();
+        public void startChecking() {
+            super.startChecking();
+            phi.startChecking();
         }
 
         @Override
-        LTLVerdict sat() {
+        public SequencePredicate.SATVerdict sat() {
+        	
+        	if(fullyEvaluated) 
+        		return evals.getFirst().verdict;
+        	
             phi.sat();
-            var iterator = absexecution.descendingIterator();
-            var iteratorPhi = phi.absexecution.descendingIterator();
+            var iterator = evals.descendingIterator();
+            var iteratorPhi = phi.evals.descendingIterator();
 
             var psi = iterator.next();
-            psi.verdict = LTLVerdict.UNSAT; // always unsat at the last state
+            psi.verdict = SequencePredicate.SATVerdict.UNSAT; // always unsat at the last state
 
             // calculate phi1 until phi2 holds on every sigma(k); we calculate this
             // backwards for every state in the interval:
@@ -229,58 +328,81 @@ public abstract class LTL {
                 var q = iteratorPhi.next().verdict;
                 switch (q) {
                 case SAT:
-                    psi.verdict = LTLVerdict.SAT;
+                    psi.verdict = SequencePredicate.SATVerdict.SAT;
                     break;
                 case UNSAT:
-                    psi.verdict = LTLVerdict.UNSAT;
+                    psi.verdict = SequencePredicate.SATVerdict.UNSAT;
                 }
             }
 
-            return absexecution.getFirst().verdict;
+            return evals.getFirst().verdict;
         }
 
         @Override
-        void evalAtomSat(Environment env) {
-            absexecution.add(new LTLVerdictInfo(LTLVerdict.UNKNOWN));
-            phi.evalAtomSat(env);
+        void evalAtomSat(State state) {
+            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            phi.evalAtomSat(state);
         }
 
     }
 
-    public static <E> LTL now(Predicate<E> p) {
-        var a = new Atom();
-        a.p = env -> p.test((E) env);
+   
+
+	public static <State>  LTL<State> now(Predicate<State> p) {
+        var a = new Now<State>();
+        a.p = p ;
         return a;
     }
 
-    public static LTL next(LTL phi) {
-        var ltl = new Next();
+    public static <State>  LTL<State> next(LTL<State> phi) {
+        var ltl = new Next<State>();
+        ltl.phi = phi;
+        return ltl;
+    }
+    
+    public static <State>  LTL<State> next(Predicate<State> phi) {
+        return next(now(phi)) ;
+    }
+
+    public static <State>  LTL<State> ltlNot(LTL<State> phi) {
+        var ltl = new Not<State>();
         ltl.phi = phi;
         return ltl;
     }
 
-    public static LTL ltlNot(LTL phi) {
-        var ltl = new Not();
-        ltl.phi = phi;
-        return ltl;
-    }
-
-    public static LTL ltlAnd(LTL... phis) {
+    public static <State>  LTL<State> ltlAnd(LTL<State>... phis) {
         if (phis == null)
             throw new IllegalArgumentException();
         if (phis.length < 2)
             throw new IllegalArgumentException();
-        var ltl = new And();
+        var ltl = new And<State>();
         ltl.conjuncts = phis;
         return ltl;
     }
-
-    public static LTL eventually(LTL phi) {
-        return now((Environment env) -> true).ltlUntil(phi);
+    
+    public static <State>  LTL<State> ltlOr(LTL<State>... phis) {
+    	if (phis == null)
+            throw new IllegalArgumentException();
+        for(int k=0; k<phis.length; k++) {
+        	phis[k] = ltlNot(phis[k]) ;
+        }
+        return ltlNot(ltlAnd(phis)) ;    	
     }
 
-    public static LTL always(LTL phi) {
+    public static <State>  LTL<State> eventually(LTL<State> phi) {
+        return now((State state) -> true).ltlUntil(phi);
+    }
+    
+    public static <State>  LTL<State> eventually(Predicate<State> phi) {
+        return eventually(now(phi)) ;
+    }
+
+    public static <State> LTL<State> always(LTL<State> phi) {
         return ltlNot(eventually(ltlNot(phi)));
+    }
+    
+    public static <State> LTL<State> always(Predicate<State> phi) {
+        return always(now(phi)) ;
     }
 
 }
