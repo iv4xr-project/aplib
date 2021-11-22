@@ -65,6 +65,14 @@ public class Test_BoundedLTL {
     	return sequence(steps).stream().map(step -> cast(step)).collect(Collectors.toList()) ;
     }
     
+    static void checkWitness(BoundedLTL phi, int[] expectedWitness) {
+    	var witness = phi.getWitness() ;
+		assertEquals(expectedWitness.length, witness.trace.size());
+		for (int i=0; i < expectedWitness.length; i++) {
+			assertEquals("val=" + expectedWitness[i], witness.trace.get(i).snd) ;
+		}
+    }
+    
     @Test
     public void test1() {
     	
@@ -87,7 +95,7 @@ public class Test_BoundedLTL {
     			) ;
     	
     	BoundedLTL phi = new BoundedLTL()
-    			.thereIs(eventually((MyState S) -> S.val == 8)) 
+    			.thereIs(eventually(S -> ((MyState) S).val == 8)) 
     			.when(S -> ((MyState) S).val==2)
     			.until(S -> ((MyState) S).val==7) ;
     	
@@ -101,8 +109,11 @@ public class Test_BoundedLTL {
 		assertEquals(SATVerdict.SAT, phi.sat()) ;
 		assertEquals(SATVerdict.SAT, phi.sat()) ;
 		assertTrue(phi.getWitness() != null) ;
-		
+
 		System.out.println(phi.getWitness().toString()) ;
+
+		int[] expectedWitness = {2,3,8,7} ;
+		checkWitness(phi,expectedWitness) ;
 		
 		assertEquals(SATVerdict.UNSAT, phi.sat(seq2)) ;
 		assertTrue(phi.getWitness() == null) ;
@@ -110,7 +121,148 @@ public class Test_BoundedLTL {
 		assertTrue(phi.getWitness() != null) ;
     	
     }
+    
+    @Test
+    public void test_when_thereare_multiple_sat_segments() {
+    	
+    	BoundedLTL phi = new BoundedLTL()
+    			.thereIs(eventually(S -> ((MyState) S).val == 3)) 
+    			.when(S -> ((MyState) S).val==2)
+    			.until(S -> ((MyState) S).val>2 && ((MyState) S).val<5) ;
+    	
+    	var seq = sequence_(
+    			step(init,state(0)),
+    			step(inc,state(1)),
+    			step(inc,state(2)),   // Satisfying segment 1
+    			step(skip,state(2)),  // Satisfying segment 1
+    			step(inc,state(3)),   // Satisfying segment 1
+       			step(dec,state(2)),   // Satisfying segment 2   	
+       			step(dec,state(1)),   // Satisfying segment 2	
+       			step(inc,state(3))    // Satisfying segment 2	
+    			) ;
+    	
+    	assertEquals(SATVerdict.SAT, phi.sat(seq)) ;
+    	// check that it is the first segment that is returned as the witness;
+    	// also checking that the witness allow multiple instances of p in
+    	// the segment, but the maximal one will be returned
+    	int[] expectedWitness = {2,2,3} ;
+    	checkWitness(phi,expectedWitness) ;
+    }
+    
+    @Test
+    public void test_when_p_or_q_holds_immediately() {
+    	
+    	BoundedLTL phi1 = new BoundedLTL()
+    			.thereIs(always(S -> ((MyState) S).val >= 2)) 
+    			.when(S -> ((MyState) S).val==2)
+    			.until(S -> ((MyState) S).val==3) ;
+    	
+    	var seq = sequence_(
+    			step(init,state(2)),
+    			step(inc,state(3)),
+    			step(dec,state(0)),   
+    			step(skip,state(0))
+    			) ;
+    	
+    	// we have a satisfying segment that starts immediately:
+    	assertEquals(SATVerdict.SAT, phi1.sat(seq)) ;
+    	int[] expectedWitness1 = {2,3} ;
+    	checkWitness(phi1,expectedWitness1) ;
+    	
+    	BoundedLTL phi2a = new BoundedLTL()
+    			.thereIs(always(S -> true)) 
+    			.when(S -> ((MyState) S).val==3)
+    			.until(S -> ((MyState) S).val<5) ;
+    	
+    	BoundedLTL phi2b = new BoundedLTL()
+    			.thereIs(always(S -> false)) 
+    			.when(S -> ((MyState) S).val==3)
+    			.until(S -> ((MyState) S).val<5) ;
+    	
+    	// we have a q that is implied by p; so the segment is just of size 1:
+    	assertEquals(SATVerdict.SAT, phi2a.sat(seq)) ;
+    	int[] expectedWitness2 = {3} ;
+    	checkWitness(phi2a,expectedWitness2) ;
+    	
+    	assertEquals(SATVerdict.UNSAT, phi2b.sat(seq)) ;
+		
+    }
+    
+    /**
+     * Testing different cases of unsat.
+     */
+    @Test
+    public void test_UNSAT() {
+    	
+    	// the case when there are pq-segments, but none satisfy phi
+    	BoundedLTL phi1 = new BoundedLTL()
+    			.thereIs(always(S -> false)) 
+    			.when(S -> ((MyState) S).val==2)
+    			.until(S -> ((MyState) S).val==3) ;
+    	
+    	var seq1 = sequence_(
+    			step(init,state(2)),
+    			step(inc,state(3)),
+    			step(dec,state(2)),   
+    			step(skip,state(2)),
+    			step(inc,state(3))
+    			) ;
+    	assertEquals(SATVerdict.UNSAT, phi1.sat(seq1)) ;
+    	
+    	BoundedLTL phi2 = new BoundedLTL()
+    			.thereIs(always(S -> true)) 
+    			.when(S -> ((MyState) S).val==2)
+    			.until(S -> ((MyState) S).val==3) ;
 
+    	// the case when there is no pq-segment
+    	var seq2 = sequence_(
+    			step(init,state(2)),
+    			step(inc,state(5)),
+    			step(dec,state(2)),   
+    			step(skip,state(2)),
+    			step(inc,state(2))
+    			) ;
+    	assertEquals(SATVerdict.UNSAT, phi2.sat(seq2)) ;
+    }
+
+    @Test
+    public void test_upperbound_on_segment_length() {
+    	
+    	BoundedLTL phi1 = new BoundedLTL()
+    			.thereIs(always(S -> true)) 
+    			.when(S -> ((MyState) S).val==2)
+    			.until(S -> ((MyState) S).val==3)
+    			.withMaxLength(2) ;
+    	
+    	var seq1 = sequence_(
+    			step(init,state(2)),
+    			step(skip,state(2)),
+    			step(inc,state(3)),
+    			step(dec,state(0)),   
+    			step(inc,state(2)),
+    			step(inc,state(3)),
+    			step(dec,state(0))   
+    			) ;
+       assertEquals(SATVerdict.SAT, phi1.sat(seq1)) ;
+       assertEquals(2,phi1.getWitness().trace.size()) ;
+      
+       int[] expectedWitness = {2,3} ;
+  	   checkWitness(phi1,expectedWitness) ;
+  	   
+  	 var seq2 = sequence_(
+ 			step(init,state(2)),
+ 			step(skip,state(2)),
+ 			step(inc,state(3)),
+ 			step(dec,state(0)),   
+ 			step(inc,state(2)),
+ 			step(skip,state(2)),
+ 			step(inc,state(3)),
+ 			step(dec,state(0))   
+ 			) ;
+  	 
+  	assertEquals(SATVerdict.UNSAT, phi1.sat(seq2)) ;
+  	  
+    }
     
 
 }

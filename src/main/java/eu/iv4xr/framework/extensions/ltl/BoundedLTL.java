@@ -3,6 +3,7 @@ package eu.iv4xr.framework.extensions.ltl;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import static eu.iv4xr.framework.extensions.ltl.LTL.ltlNot; 
 
 import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.Environment.EnvironmentInstrumenter;
@@ -14,12 +15,12 @@ import nl.uu.cs.aplib.utils.Pair;
  * s represents a state, and tr represents the transition that was done out in
  * the system under evaluation, that results in the state s.
  *  
- * A BLTL formula F can be thought a tuple (ltl,p,q,n), where ltl is an LTL formula,
+ * A BLTL formula F can be thought a tuple (phi,p,q,n), where phi is an LTL formula,
  * p,q are state-predicates, and n (if provided) is a natural number. To construct
  * F we do:
  * 
  *    var F = new BoundedLTL()
- *      .thereIs(ltl)
+ *      .thereIs(phi)
  *      .when(p)
  *      .until(q)
  *      .withMaxLength(n) ; 
@@ -43,15 +44,16 @@ import nl.uu.cs.aplib.utils.Pair;
  * 
  * Note that the interpretation of F is indeed existensial (it is satisfied if 
  * there is a pq-segment in the sequence that satisfies F's ltl). But we can
- * also check a universal interpretation. To check that no pq-segment satisfies
- * an ltl property phi, we would then check the BLTL (p,q, ltlNot(phi),n)).
+ * also check a universal interpretation. To checks whether ALL pq-segment satisfies 
+ * an ltl-formula phi, we instead check the BLTL (p,q, ltlNot(phi),n)).
+ * If this results in UNSAT, the all pq-segments in the target sequence satisfies
+ * phi (and else, there is one segment that does not satisfy phi).
  * 
  * @author Wish
- *
  */
 public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
 
-    LTL ltl;
+    LTL<IState> ltl;
     Predicate<IState> startf;
     Predicate<IState> endf;
     Integer maxlength = null;
@@ -69,7 +71,7 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
     public <State> BoundedLTL() {
     }
 
-    public BoundedLTL thereIs(LTL F) {
+    public BoundedLTL thereIs(LTL<IState> F) {
         ltl = F;
         return this;
     }
