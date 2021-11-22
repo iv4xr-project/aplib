@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import eu.iv4xr.framework.extensions.ltl.LTL.LTLVerdictInfo;
-import eu.iv4xr.framework.extensions.ltl.SequencePredicate.SATVerdict;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
@@ -45,9 +44,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     // Just a wrapper over vedict, to allow the value inside to be conveniently
     // updated while being in the evals-list above:
     static class LTLVerdictInfo {
-	    public SequencePredicate.SATVerdict verdict;
+	    public SATVerdict verdict;
 	
-	    LTLVerdictInfo(SequencePredicate.SATVerdict v) {
+	    LTLVerdictInfo(SATVerdict v) {
 	        verdict = v;
 	    }
 	}
@@ -133,16 +132,16 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
 
         @Override
-        public SequencePredicate.SATVerdict sat() {
+        public SATVerdict sat() {
             return evals.getFirst().verdict;
         }
 
         @Override
         void evalAtomSat(State state) {
             if (p.test(state))
-                evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.SAT));
+                evals.add(new LTL.LTLVerdictInfo(SATVerdict.SAT));
             else
-                evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNSAT));
+                evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNSAT));
         }
     }
 
@@ -158,7 +157,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
 
         @Override
-        public SequencePredicate.SATVerdict sat() {
+        public SATVerdict sat() {
         	
         	if(fullyEvaluated) 
         		return evals.getFirst().verdict;
@@ -172,10 +171,10 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 var p = iteratorPhi.next().verdict;
                 switch (p) {
                 case SAT:
-                    psi.verdict = SequencePredicate.SATVerdict.UNSAT;
+                    psi.verdict = SATVerdict.UNSAT;
                     break;
                 case UNSAT:
-                    psi.verdict = SequencePredicate.SATVerdict.SAT;
+                    psi.verdict = SATVerdict.SAT;
                     break;
                 }
             }
@@ -185,7 +184,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
 
         @Override
         void evalAtomSat(State state) {
-            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi.evalAtomSat(state);
         }
     }
@@ -203,7 +202,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
 
         @Override
-        public SequencePredicate.SATVerdict sat() {
+        public SATVerdict sat() {
         	
         	if(fullyEvaluated) 
         		return evals.getFirst().verdict;
@@ -221,19 +220,19 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 boolean allSat = true;
                 for (int k = 0; k < N; k++) {
                     var p = conjuntIterators[k].next().verdict;
-                    allSat = allSat && (p == SequencePredicate.SATVerdict.SAT);
+                    allSat = allSat && (p == SATVerdict.SAT);
                 }
                 if (allSat)
-                    psi.verdict = SequencePredicate.SATVerdict.SAT;
+                    psi.verdict = SATVerdict.SAT;
                 else
-                    psi.verdict = SequencePredicate.SATVerdict.UNSAT;
+                    psi.verdict = SATVerdict.UNSAT;
             }
             return evals.getFirst().verdict;
         }
 
         @Override
         void evalAtomSat(State state) {
-            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             for (LTL<State> phi : conjuncts)
                 phi.evalAtomSat(state);
         }
@@ -253,7 +252,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
 
         @Override
-        public SequencePredicate.SATVerdict sat() {
+        public SATVerdict sat() {
         	
         	if(fullyEvaluated) 
         		return evals.getFirst().verdict;
@@ -273,14 +272,14 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 var psi = iterator.next();
                 var p = iteratorPhi1.next().verdict;
                 var q = iteratorPhi2.next().verdict;
-                if (q == SequencePredicate.SATVerdict.SAT) {
-                    psi.verdict = SequencePredicate.SATVerdict.SAT;
+                if (q == SATVerdict.SAT) {
+                    psi.verdict = SATVerdict.SAT;
                     nextSat = true;
                 } else {
-                    if (nextSat && p == SequencePredicate.SATVerdict.SAT)
-                        psi.verdict = SequencePredicate.SATVerdict.SAT;
+                    if (nextSat && p == SATVerdict.SAT)
+                        psi.verdict = SATVerdict.SAT;
                     else {
-                        psi.verdict = SequencePredicate.SATVerdict.UNSAT;
+                        psi.verdict = SATVerdict.UNSAT;
                         nextSat = false;
                     }
                 }
@@ -290,7 +289,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
 
         @Override
         void evalAtomSat(State state) {
-            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi1.evalAtomSat(state);
             phi2.evalAtomSat(state);
         }
@@ -309,7 +308,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
 
         @Override
-        public SequencePredicate.SATVerdict sat() {
+        public SATVerdict sat() {
         	
         	if(fullyEvaluated) 
         		return evals.getFirst().verdict;
@@ -319,7 +318,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             var iteratorPhi = phi.evals.descendingIterator();
 
             var psi = iterator.next();
-            psi.verdict = SequencePredicate.SATVerdict.UNSAT; // always unsat at the last state
+            psi.verdict = SATVerdict.UNSAT; // always unsat at the last state
 
             // calculate phi1 until phi2 holds on every sigma(k); we calculate this
             // backwards for every state in the interval:
@@ -328,10 +327,10 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 var q = iteratorPhi.next().verdict;
                 switch (q) {
                 case SAT:
-                    psi.verdict = SequencePredicate.SATVerdict.SAT;
+                    psi.verdict = SATVerdict.SAT;
                     break;
                 case UNSAT:
-                    psi.verdict = SequencePredicate.SATVerdict.UNSAT;
+                    psi.verdict = SATVerdict.UNSAT;
                 }
             }
 
@@ -340,7 +339,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
 
         @Override
         void evalAtomSat(State state) {
-            evals.add(new LTL.LTLVerdictInfo(SequencePredicate.SATVerdict.UNKNOWN));
+            evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi.evalAtomSat(state);
         }
 

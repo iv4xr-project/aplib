@@ -8,8 +8,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import eu.iv4xr.framework.extensions.ltl.SequencePredicate.SATVerdict;
-
 
 public class Test_LTL {
 	

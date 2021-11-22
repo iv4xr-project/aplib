@@ -135,6 +135,7 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
             return trace.get(k).snd ;
         }
 
+        @Override
         public String toString() {
             int k = 0;
             String s = "";
@@ -186,7 +187,7 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
                     // the interval ends immediately
                 	ltl.endChecking();
                     var verdict = ltl.sat();
-                    if (verdict == SequencePredicate.SATVerdict.SAT) {
+                    if (verdict == SATVerdict.SAT) {
                         bltlState = BLTLstate.SATFOUND;
                     } else {
                         trace.reset();
@@ -205,7 +206,7 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
                 // end marker holds; then force full evaluation of the ltl
             	ltl.endChecking();
                 var verdict = ltl.sat();
-                if (verdict == SequencePredicate.SATVerdict.SAT) {
+                if (verdict == SATVerdict.SAT) {
                     bltlState = BLTLstate.SATFOUND;
                 } else {
                     trace.reset();
@@ -246,7 +247,7 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
      * The witness can be obtained through the method getWitness().
      */
     @Override
-    public SequencePredicate.SATVerdict sat(List<Pair<ITransition,IState>> sequence) {
+    public SATVerdict sat(List<Pair<ITransition,IState>> sequence) {
     	this.startChecking();
     	for(var step : sequence) {
     		checkNext(step) ;
@@ -262,10 +263,10 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
      * has been seen).
      */
     @Override
-    public SequencePredicate.SATVerdict sat() {
+    public SATVerdict sat() {
         if (bltlState == BLTLstate.SATFOUND)
-            return SequencePredicate.SATVerdict.SAT;
-        return SequencePredicate.SATVerdict.UNSAT;
+            return SATVerdict.SAT;
+        return SATVerdict.UNSAT;
     }
 
     /**

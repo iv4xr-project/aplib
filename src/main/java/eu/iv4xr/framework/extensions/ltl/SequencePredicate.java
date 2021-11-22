@@ -24,7 +24,8 @@ import java.util.List;
  *        (b) feed the state one at a time using checkNext(state)
  *        (c) at the end invoke endChecking()
  *        (d) invoke sat() to get the result.
- *        
+ *       
+ * @author Wish       
  */
 public abstract class SequencePredicate<State> {
 	
@@ -85,9 +86,5 @@ public abstract class SequencePredicate<State> {
     	endChecking() ;
     	return sat() ;
     }
-    
-	public enum SATVerdict {
-	    SAT, UNSAT, UNKNOWN
-	}
 
 }
