@@ -19,8 +19,9 @@ public class ModelChecker {
 		this.model = model ;
 	}
 	
-	static class Path {
-		List<Pair<ITransition,IExplorableState>> path = new LinkedList<>() ;
+	public static class Path {
+		
+		public List<Pair<ITransition,IExplorableState>> path = new LinkedList<>() ;
 		
 		void addInitialState(IExplorableState state) {
 		    path.add(new Pair(null,state)) ;	
@@ -74,13 +75,29 @@ public class ModelChecker {
 	}
 	
 	public Path findShortest(Predicate<IExplorableState> q, int maxDepth) {
-		for(int depth=0; depth<=maxDepth; depth++) {
-			Path path = find(q,depth) ;
-			if(path != null) {
-				return path ;
+		if (maxDepth < 0) 
+			throw new IllegalArgumentException() ;
+		int lowbound = 0 ;
+		int upbound = maxDepth+1 ;
+		
+		Path bestpath = null ;
+		while (upbound > lowbound) {
+			int mid = lowbound + (upbound - lowbound)/2 ;
+			Path path = find(q,mid) ;
+			if (path != null) {
+				upbound = mid ;
+				bestpath = path ;
+			}
+			else {
+				if(mid==lowbound) {
+				   upbound = mid ;
+				}
+				else {
+					lowbound = mid ;
+				}
 			}
 		}
-		return null ;		
+		return bestpath ;	
 	}
 	
 	
