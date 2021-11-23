@@ -27,6 +27,11 @@ public class Test_AutonomousBasicAgent {
 
     static class MyState extends State {
         int counter = 0;
+        
+        @Override
+        public void updateState(String agentId) {
+        	// do nothing since we dont have a real env
+        }
     }
 
     void sleepx(long t) {

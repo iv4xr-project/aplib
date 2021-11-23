@@ -17,6 +17,11 @@ public class Test_DynamicGoalStructure {
         void reset() {
             x = 0;
         }
+        
+        @Override
+        public void updateState(String agentId) {
+        	// do nothing since we dont have a real env
+        }
     }
 
     static Goal mk_goal1() {

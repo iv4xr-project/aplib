@@ -23,6 +23,11 @@ public class Test_InterAgentCommunication {
             super.setEnvironment(env);
             return this;
         }
+        
+        @Override
+        public void updateState(String agentId) {
+        	// do nothing as we have no real env
+        }
     }
 
     @Test

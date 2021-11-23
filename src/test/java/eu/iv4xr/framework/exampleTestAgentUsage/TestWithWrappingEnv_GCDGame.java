@@ -26,17 +26,16 @@ import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
  * This means, to test {@link GCDGame} we will also have to do it through an
  * instance of this Environment. More precisely, we will have to create our own
  * subclass of {@link nl.uu.cs.aplib.mainConcepts.Environment} which is
- * custom-made to facilitate interaction with {@link GCDGame}. To make the
- * interfacing easy, here we will just wrap the instance of {@link GCDGame} that
- * is to be tested inside our instance of Environment, so that the test-agent
- * can directly access this GCDGame through the Environment.
+ * custom-made to facilitate interactions with {@link GCDGame}. This
+ * architecture is meant primarily for testing systems which are outside the
+ * agent's JVM. However for testing another Java class we can use a lighter
+ * architecture. We show an example here.
  * 
  * <p>
- * While the above mentioned wrapping approach gives a simple interfacing, note
- * that if the program-under-test is for example a service running elsewhere
- * then this wrapping approach will of course not work; we will then have to
- * really implement some interface to enable the Environment to communicate with
- * the service-under-test.
+ * In this example we will show an architecture that essentially bypasses the
+ * Environment so that the agent directly access the APIs and the state of the
+ * target class-under-test (CUT). We will still use an 'Environment', but only
+ * as a wrapper to hold a reference to an instance of the CUT.
  *
  */
 public class TestWithWrappingEnv_GCDGame {
@@ -46,7 +45,7 @@ public class TestWithWrappingEnv_GCDGame {
      * program-under-test. Here, we will choose to simply wrap the environment over
      * the program-under-test.
      */
-    static class GCDEnv extends Environmentxxxx {
+    static class GCDEnv extends Environment {
         /**
          * The instance of GCDGame that is to be tested, wrapped inside this
          * Environment.
@@ -56,7 +55,7 @@ public class TestWithWrappingEnv_GCDGame {
         GCDEnv(GCDGame gcdgame) {
             gcdgameUnderTest = gcdgame;
         }
-
+        
         @Override
         public String toString() {
             return "(" + gcdgameUnderTest.x + "," + gcdgameUnderTest.y + "), gcd=" + gcdgameUnderTest.gcd + ", win="
@@ -76,6 +75,15 @@ public class TestWithWrappingEnv_GCDGame {
         @Override
         public GCDEnv env() {
             return (GCDEnv) super.env();
+        }
+        
+        /**
+         * Override this method to do NOTHING, since the agent already has
+         * direct access to the game-state via the env.
+         */
+        @Override
+        public void updateState(String agentId) {
+        	// do nothing
         }
     }
 

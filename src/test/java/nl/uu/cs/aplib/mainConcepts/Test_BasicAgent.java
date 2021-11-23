@@ -21,6 +21,11 @@ public class Test_BasicAgent {
         MyState() {
             super();
         }
+        
+        @Override
+        public void updateState(String agentId) {
+        	// do nothing since we dont have a real env
+        }
     }
 
     @Test
