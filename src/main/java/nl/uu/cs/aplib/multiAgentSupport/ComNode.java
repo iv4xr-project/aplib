@@ -10,7 +10,7 @@ import nl.uu.cs.aplib.multiAgentSupport.Acknowledgement.AckType;
  * message routing between agents. To use it, agents first need to register
  * themselves to a ComNode. The ComNode maintains an address book that maps
  * agents' names to pointers to these agents. A plain
- * {@link nl.uu.cs.aplib.MainConcepts.SimpleAgent} has no method to register to
+ * {@link nl.uu.cs.aplib.MainConcepts.BasicAgent} has no method to register to
  * ComNode. However, {@link nl.uu.cs.aplib.agents.AutonomousBasicAgent} can
  * register to a ComNode, but keep in mind that an AutonomousBasicAgent can only
  * be a member of at most one ComNode. Access to this ComNode is provided

@@ -41,7 +41,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * 
  * <ul>
  * <li><b>Verdicts</b>. A verdict is an instance of
- * {@link TestDataCollector.VerdictEvent}.
+ * {@link ObservationEvent.VerdictEvent}.
  * </ul>
  * 
  * 

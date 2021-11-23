@@ -15,7 +15,7 @@ import nl.uu.cs.aplib.mainConcepts.Tactic.*;
 /**
  * Provide a set of convenience static methods to be used as
  * operators/combinators for constructing
- * {@link nl.uu.cs.aplib.mainConcepts.GoalStructure} and§
+ * {@link nl.uu.cs.aplib.mainConcepts.GoalStructure} and
  * {@link nl.uu.cs.aplib.mainConcepts.Tactic}.
  * 
  * @author wish

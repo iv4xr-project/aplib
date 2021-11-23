@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 /**
  * This class is the root class for representing agents' states (an 'agent' is
- * an instance of {@link SimpleAgent} or its subclasses). For most uses, you
+ * an instance of {@link BasicAgent} or its subclasses). For most uses, you
  * will need to <b>extend/subclass</b> this class to enable your agents to track
  * whatever domain specific information that your agents need to track.
  * 

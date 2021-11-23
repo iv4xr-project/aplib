@@ -18,26 +18,35 @@ import eu.iv4xr.framework.mainConcepts.WorldEntity;
  * connected to f's center point. For each two Faces f1 and f2 that are
  * connected (having a common edge), we also connect their center-points.
  * 
- * This navigation-graph also supports few additional features:
+ * <p>Note: this class extends {@link SimpleNavGraph}, but note that whereas
+ * the latter use faces' centers as the nodes, this class uses both the
+ * centers and the faces' corners as nodes. So, it can find a path that
+ * {@link SimpleNavGraph} cannot find when an obstacle only covers the
+ * center of a target face, but not all its corners.
  * 
- * (1) It includes a PathFinder to calculate a path from one vertex in the
+ * <p> This navigation-graph also supports few additional features:
+ * 
+ * <ul>
+ * <li>(1) It includes a PathFinder to calculate a path from one vertex in the
  * nav-graph to another. By default, an A* PathFinder is used, though you can
  * change that.
  * 
- * (2) An option to do memory-based navigation. This option is by default
+ * <li>(2) An option to do memory-based navigation. This option is by default
  * turned-on. Under this navigation mode, all vertices are initially marked as
  * unseen. An agent can then incrementally mark vertices as "seen". Navigation
  * is only possible over the part of the graph that were previously seen.
  * 
- * (3) An option to prefer travel through the faces' center points, or to travel
+ * <li>(3) An option to prefer travel through the faces' center points, or to travel
  * along border edges. This is done my increasing the cost/distance of going to
  * unpreferred vertices.
  * 
- * (4) This navigation-graph additionally marks vertices which are on the
+ * <li>(4) This navigation-graph additionally marks vertices which are on the
  * border-edges. A border-edge is an edge that is not shared by multiple Faces.
  * The type of a vertex can asked via verticesType.get(i), which will return the
  * type of vertex i. This returns either BORDER (if i is a border vertex),
  * CENTER (if it is the center of a Face), or OTHER.
+ * 
+ * </ul>
  * 
  * @author Wish
  *

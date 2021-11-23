@@ -6,8 +6,21 @@ import eu.iv4xr.framework.spatial.*;
 import eu.iv4xr.framework.spatial.meshes.*;
 
 /**
- * A simple navigatable graph with edges that can be blocked by obstacles. The
- * graph consists only of 3D vertices connected with edges.
+ * This class is provides an implementation of {@link Navigatable} that facilitates
+ * pathfinding over a 3D-surface defined by a surface-mesh with obstacles. By 3D
+ * surface we mean that it is a surface in a 3D space. To convert
+ * a surface-mesh to an instance of this class, use the method:
+ * 
+ *     <blockquote>
+ *     {@link #fromMeshFaceAverage(Mesh)}
+ *     </blockquote>
+ * 
+ * The center of the faces in the surface-mesh will be converted the nodes of this 
+ * navigation-graph. Two nodes are connected by an edge if the original faces they
+ * belong to are adjacent. Travel is assumed to be possible by following such edges.
+ * 
+ * <p>An obstacle is an object that can block travel along one or more edges.
+ * It moreover may have a dynamic state, which is either blocking, or non-blocking.
  * 
  * @author Naraenda
  */

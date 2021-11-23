@@ -65,6 +65,7 @@ public class ModelChecker {
 	
 	public Path find(Predicate<IExplorableState> q, int maxDepth) {
 		model.reset();
+		stats.clear(); 
 		Path path = new Path() ;
 		Collection<IExplorableState> visitedStates = new HashSet<>() ;
 		IExplorableState state = model.getCurrentState() ;
@@ -106,6 +107,7 @@ public class ModelChecker {
 	public static class MCStatistics {
 		public int numberOfStatesExplored = 0 ;
 		public int numberOfTransitionsExplored = 0 ;
+		
 		public void clear() {
 			numberOfStatesExplored = 0 ;
 			numberOfTransitionsExplored = 0 ;
@@ -116,7 +118,7 @@ public class ModelChecker {
 			return "Number of states explored: " + numberOfStatesExplored
 					+ "\nNumber of transitions explored: " + numberOfTransitionsExplored ;
 		}
-		
+
 	}
 		
 	Path dfs(Predicate<IExplorableState> whatToFind, 

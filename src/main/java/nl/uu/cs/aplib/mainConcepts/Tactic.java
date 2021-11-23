@@ -29,7 +29,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure.GoalsCombinator;
  * 
  * <li>A tactic T of the type SEQ(T1,T2,T3,...) where T1,T2,.. are tactics.
  * Executing T will execute the subtactics in sequence. Note however that an
- * agent (instance of {@link SimpleAgent}) always executes a tactic one action
+ * agent (instance of {@link BasicAgent}) always executes a tactic one action
  * per tick. For example, if T1 is a SEQ of three actions, and T2 is an ANYOF
  * two actions, and T3 is a single action, then T2 will execute at the 4th tick,
  * and T3 at the 5th tick.
