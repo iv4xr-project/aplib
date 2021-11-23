@@ -25,7 +25,7 @@ import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
  * {@link #exec1(SimpleState)}, passing to it its (the Agent's) state. This
  * method should only be invoked if the Action's guard evaluates to true on the
  * current agent's state. This requirement is not imposed by this implementation
- * of Action. However the implementation of {@link SimpleAgent} does impose
+ * of Action. However the implementation of {@link BasicAgent} does impose
  * this.
  * 
  * @author wish

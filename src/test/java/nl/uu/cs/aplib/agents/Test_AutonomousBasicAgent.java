@@ -18,6 +18,7 @@ import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.agents.Test_InterAgentCommunication.MyState;
 import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.environments.NullEnvironment;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.multiAgentSupport.ComNode;
 import nl.uu.cs.aplib.multiAgentSupport.Message;
@@ -27,11 +28,6 @@ public class Test_AutonomousBasicAgent {
 
     static class MyState extends State {
         int counter = 0;
-        
-        @Override
-        public void updateState(String agentId) {
-        	// do nothing since we dont have a real env
-        }
     }
 
     void sleepx(long t) {
@@ -74,7 +70,7 @@ public class Test_AutonomousBasicAgent {
 
         Logging.attachFileAsLogHandler("mylog.txt");
 
-        var state = (MyState) (new MyState().setEnvironment(new Environment()));
+        var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent = new AutonomousBasicAgent("agent", "sentinel").attachState(state).setSamplingInterval(100);
 
         var a0 = action("a0").do1((MyState S) -> {
@@ -126,12 +122,12 @@ public class Test_AutonomousBasicAgent {
         Logging.attachFileAsLogHandler("mylog1.txt");
 
         var comNode = new ComNode();
-        var state = (MyState) (new MyState().setEnvironment(new Environment()));
+        var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent1 = new AutonomousBasicAgent("agent1", "sentinel").attachState(state).setSamplingInterval(100)
                 .registerTo(comNode);
 
         var agent2 = new AutonomousBasicAgent("neo", "programmer")
-                .attachState(new MyState().setEnvironment(new Environment())).registerTo(comNode);
+                .attachState(new MyState().setEnvironment(new NullEnvironment())).registerTo(comNode);
 
         var a0 = action("a0").do1((MyState S) -> {
             S.counter++;
@@ -181,7 +177,7 @@ public class Test_AutonomousBasicAgent {
         // by setgoal
         Logging.attachFileAsLogHandler("mylog2.txt");
 
-        var state = (MyState) (new MyState().setEnvironment(new Environment()));
+        var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent = new AutonomousBasicAgent("agent", "sentinel").attachState(state).setSamplingInterval(100);
 
         var a0 = action("a0").do1((MyState S) -> {
@@ -211,7 +207,7 @@ public class Test_AutonomousBasicAgent {
     @Test
     public void test_waitUntilTheGoalIsConcluded() {
 
-        var state = (MyState) (new MyState().setEnvironment(new Environment()));
+        var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent = new AutonomousBasicAgent("agent", "sentinel").attachState(state).setSamplingInterval(100);
 
         var a0 = action("a0").do1((MyState S) -> {
@@ -237,7 +233,7 @@ public class Test_AutonomousBasicAgent {
         // test that when an agent sleeps between ticks, a msg will awaken it
 
         var comNode = new ComNode();
-        var state = (MyState) (new MyState().setEnvironment(new Environment()));
+        var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent1 = new AutonomousBasicAgent("agent1", "sentinel").attachState(state).setSamplingInterval(60000) // set
                                                                                                                   // a
                                                                                                                   // very
@@ -247,7 +243,7 @@ public class Test_AutonomousBasicAgent {
                 .registerTo(comNode);
 
         var agent2 = new AutonomousBasicAgent("neo", "programmer")
-                .attachState(new MyState().setEnvironment(new Environment())).registerTo(comNode);
+                .attachState(new MyState().setEnvironment(new NullEnvironment())).registerTo(comNode);
 
         var a0 = action("a0").do1((MyState S) -> {
             S.counter++;

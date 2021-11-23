@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"eu.iv4xr.framework.exception"},{"l":"nl.uu.cs.aplib.environments"},{"l":"nl.uu.cs.aplib.exampleUsages"},{"l":"nl.uu.cs.aplib.exampleUsages.fiveGame"},{"l":"nl.uu.cs.aplib.exception"},{"l":"nl.uu.cs.aplib.multiAgentSupport"},{"l":"nl.uu.cs.aplib.utils"}];updateSearchResults();

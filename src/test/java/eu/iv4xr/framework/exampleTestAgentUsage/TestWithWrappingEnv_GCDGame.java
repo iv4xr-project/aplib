@@ -8,6 +8,7 @@ import static nl.uu.cs.aplib.AplibEDSL.*;
 import eu.iv4xr.framework.mainConcepts.*;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.agents.State;
+import nl.uu.cs.aplib.environments.NullEnvironment;
 import nl.uu.cs.aplib.mainConcepts.*;
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
@@ -45,7 +46,7 @@ public class TestWithWrappingEnv_GCDGame {
      * program-under-test. Here, we will choose to simply wrap the environment over
      * the program-under-test.
      */
-    static class GCDEnv extends Environment {
+    static class GCDEnv extends NullEnvironment {
         /**
          * The instance of GCDGame that is to be tested, wrapped inside this
          * Environment.
@@ -77,14 +78,7 @@ public class TestWithWrappingEnv_GCDGame {
             return (GCDEnv) super.env();
         }
         
-        /**
-         * Override this method to do NOTHING, since the agent already has
-         * direct access to the game-state via the env.
-         */
-        @Override
-        public void updateState(String agentId) {
-        	// do nothing
-        }
+
     }
 
     // Construct a tactic to auto-drive the player to position X,Y:

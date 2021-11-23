@@ -1,16 +1,18 @@
 # iv4XR Core and Aplib (and iv4XR Framework)
 
-**iv4XR  Core** This project contains _iv4XR Core_, which is the core of the agent-based automated testing 'Framework' for testing highly interactive systems such as computer games or computer simulators. Our own use case is to use the framework for automated testing of Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games; interfacing to other types of XR systems is work in progress. The difference between the Core and the Framework is shown in the picture below:
+**iv4XR  Core** This project contains _iv4XR Core_, which is the **core** of the agent-based automated testing 'Framework' for testing highly interactive systems such as computer games or computer simulators. Our own use case is to use the framework for automated testing of Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games; interfacing to other types of XR systems is work in progress. Outside these use cases, iv4XR is generic enough to target other types of interactive systems, even services or Java classes as long as these entities can be viewed as interactable systems.
+
+The difference between the **Core** and the **Framework** is shown in the picture below:
 
 <img src="./docs/iv4xr-architecture.png" width="60%">
 
-The Core provides the agent-based testing infrastructure. The pure agent-part is provided by a package (in the Core) called `aplib` (stands for Agent Programming Library). The Core adds testing-related functionalities and few other extra functionalities like world representation on top of `aplib`. In the picture above, 'setup-2' is a lean setup where we only use the Core to target a System Under Test (SUT), shown as 'setup-2' in the picture above. In contrast, 'setup-1' uses the entire Framework. The 'Framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then at your disposal.
+The **Core** provides the agent-based testing infrastructure. The pure agent-part is provided by a package (in the Core) called `aplib` (stands for Agent Programming Library). The Core adds testing-related functionalities and few other extra functionalities like world representation on top of `aplib`. In the picture above, 'setup-2' is a lean setup where we only use the Core to target a System Under Test (SUT). In contrast, 'setup-1' uses the entire Framework. The 'Framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then also at your disposal.
 
 iv4XR is intended to be generic: it can be used to target _any system_ as long as the agents can interface with the system (in a specific structure defined by iv4XR, this is explained later).
 
 **Video** [here is a 10m video showing a demo of iv4XR](https://youtu.be/Hc8NP4NuHAk).
 
-**Aplib** is the underlying agent programming library used by the iv4XR Framework. This library is general purpose, and can be used to program agents for purposes other than testing. Using iv4XR can be seen as a special case of using `aplib`, where you get some testing-specific extra capabilities, such as expressing test oracles.
+**Aplib** is the underlying agent programming library underneath iv4XR Framework/Core. This library is general purpose, and can be used to program agents for purposes other than testing. Using iv4XR can be seen as a special case of using `aplib`, where you get some testing-specific extra capabilities, such as expressing test oracles.
 
 **Using `aplib` and iv4XR Core.** `Aplib` is a Java library. The simplest setup to use it would be:
 
@@ -18,7 +20,7 @@ iv4XR is intended to be generic: it can be used to target _any system_ as long a
   1. formulate a goal for the agent, and program a tactic to solve it.
   1. run the agent.
 
-Using iv4XR is just the same, with an additional step that the interface to let agents to control the System under Test must also be setup.  
+Using iv4XR Core is just the same, with an additional step that the interface to let agents to control the System under Test must also be setup.  
 
 **Papers**
 
@@ -69,8 +71,9 @@ comparable to providing a hint for the agent). A tactic can be composed declarat
 * Combinators for **high level goal and tactical programming**.
 * **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
 * **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
-* **Prolog binding**: allowing agents to do prolog-based reasoning.
-* **Bounded LTL** for automated property based testing.
+* **Prolog binding**: allowing agents to do prolog-based reasoning to help them solving goals.
+* **A model checker**: also to help solving goals, when models of the problem is known.
+* **Bounded LTL**: for expressing temporal properties that can be checked during testing.
 
 
 Planned features:

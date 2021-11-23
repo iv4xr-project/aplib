@@ -9,7 +9,7 @@ In this Tutorial-2 we will show how to do the same as in Tutorial-1, but where t
 
 The main difference is in how you should build your custom Environment to let your test-agent control the program-under-test. As this is different, this also impacts the way you write goals and tactics.
 
-**For impatient ones,** see the code in this example: [TestWithRemotingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithRemotingEnv_GCDGame.java).
+**For impatient ones,** see the code in this example: [Test_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/Test_GCDGame.java).
 
 ### Example: GCDGame
 
@@ -42,7 +42,7 @@ static class GCDEnv extends Environment {
   int x ; int y ; int gcd ; boolean win ;
 ... }
 ```
-You will need a way to sync the above information with the actual program-under-test's state. Additionally you need a way to let the agent control the program-under-test. To do these, there are two methods of `Environment` that you should override: `refreshWorker()` and `sendCommand_(cdm)`.
+You will need a way to sync the above information with the actual program-under-test's state. Additionally you need a way to let the agent control the program-under-test. To do these, there are two methods of `Environment` that you should override: `observe()` and `sendCommand_(cdm)`.
 
 Here is a template to do it:  
 
@@ -50,12 +50,10 @@ Here is a template to do it:
 static class GCDEnv extends Environment {
 		int x ; int y ; int gcd ; boolean win ;
 
-		@Override
-		public void refreshWorker() {
-			x = ... get x from the GCDGame instance under test
-			y = ...
-			gcd = ... get gcd from the GCDGame instance under test
-			win = ... get win() from the GCDGame instance under test
+
+        @Override
+		public Object[] observe(String agentId) {
+			return (Object[]) this.sendCommand(agentId, null, "observe", null);
 		}
 
 		@Override
@@ -64,6 +62,7 @@ static class GCDEnv extends Environment {
 			   case "up"   : gameUnderTest.up() ; break ;
 			   case "down" : gameUnderTest.down() ; break ;
                ...		
+               case "observe" : ... // return the game state      
 			}
 			// we'll re-sync this Environment after the command:
 			refreshWorker() ; return null ;

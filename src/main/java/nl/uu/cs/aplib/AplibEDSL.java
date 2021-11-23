@@ -192,7 +192,7 @@ public class AplibEDSL {
     }
 
     /**
-     * Creating a {@link nl.uu.cs.aplib.MainConcepts.PrimitiveTactic} that wraps
+     * Creating a {@link nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic} that wraps
      * over an Abort action.
      */
     public static PrimitiveTactic ABORT() {
@@ -215,7 +215,7 @@ public class AplibEDSL {
 
     /**
      * Lift an {@link nl.uu.cs.aplib.mainConcepts.Action} to become a
-     * {@link nl.uu.cs.aplib.MainConcepts.PrimitiveTactic}.
+     * {@link nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic}.
      */
     public static PrimitiveTactic lift(Action a) {
         return new PrimitiveTactic(a);

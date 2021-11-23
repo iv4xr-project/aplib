@@ -12,7 +12,7 @@ Author: Wishnu Prasetya
 `iv4xr` is an **agent-based framework for automated testing**. The original usecase of `iv4xr` is to test so-called _Extended Reality_ systems, such as computer games, simulators, and VR or AR based systems. Currently this is still an on-going project, but in any case `iv4xr` is actually generic enough to target other types of software, such as a class or a service.
 
 **What is the difference between iv4xr and aplib?**
-`aplib` is the underlying agent-library underneath `iv4xr`. `aplib` is a general purpose agent-library, whereas `iv4xr` is a framework/library specifically for testing. E.g. `iv4xr` adds testing-related functionalities to `aplib` agents so that these agents can be used to test other software.
+`aplib` is the underlying agent-library underneath `iv4xr`. `aplib` is a general purpose agent-library, whereas `iv4xr` is a framework specifically for testing. E.g. `iv4xr` adds testing-related functionalities to `aplib` agents so that these agents can be used to test other software.
 
 ### What is agent-based testing?
 
@@ -20,9 +20,10 @@ Well, it is just performing testing where you use software agents to drive the t
 
 ### Example: testing a Java class GCDGame
 
-In this tutorial we will look how to use an `iv4xr` agent to test a Java class. The approach is a bit different if the program-under-test has to run on a different runtime environment than the one the test-agent uses. For the latter you need to consult another tutorial (to-do) or checks the example [TestWithRemotingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithRemotingEnv_GCDGame.java).
+In this tutorial we will look how to use an `iv4xr` agent to test a **Java class**. Testing another Java class is a bit different than testing a program that runs on a different runtime environment than the one the test-agent uses. Although the idea is the same, the architecture used to hook the agent is different.
+For testing an 'external' program you need to consult [another tutorial](./testagent_tutorial_2.md)  or checks the example [Test_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/Test_GCDGame.java).
 
-As the example, consider the class below. It implements a simple game called _GCD-game_. The game is played on an imaginary 2D grid space. The game maintains three variables/fields: (x,y,gcd). The fields x,y represent
+Now, back to our example: we want to target another Java class. As the example, consider the class below. It implements a simple game called _GCD-game_. The game is played on an imaginary 2D grid space. The game maintains three variables/fields: (x,y,gcd). The fields x,y represent
 the current position of the player in the 2D grid. Any non-negative x,y are valid. The greatest common divisor of these x and y is stored in the field gcd.
 The player can move up, down, left or right, one square at at time. The player wins if he/she manage to find a square whose greatest common divisor is 1 (in other words, if x and y are relative prime to each other).
 
@@ -46,24 +47,26 @@ Imagine now that we want to test this class. To do this with `iv4xr` we would ne
 
 **For impatient ones:**
 * 'Wrapping' approach, suitable for testing a Java class: see [TestWithWrappingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithWrappingEnv_GCDGame.java).
-* 'Remoting' approach, suitable for testing an external program that does not run in the same JVM as the test agent: see [TestWithRemotingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithRemotingEnv_GCDGame.java).
+* 'Remoting' approach, suitable for testing an external program that does not run in the same JVM as the test agent: see [Test_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/Test_GCDGame.java).
 
 To test `GCDGame` with a test agent, roughly the steps are as follows:
 
-1. The agent will need a **custom 'Environment'** to interact with the program-under-test, which in the case is the class `GCDGame`. So, we need to define one.
+1. By its definition, the agent needs an **'Environment'** to interact with the program-under-test. In this example, because the program-under-test is just a Java class, the agent would have direct access to it, so it does not really need an Environment to as an intermediary. But since it must have one, we will create a 'dummy' Environment.
 1. The agent will also need a state to hold the Environment and whatever other information it needs to keep track, if there is any. So, we need to define this state.
 1. We need to specify the testing task. This amounts to specifying at least one goal, a tactic on how to solve the goal, and the correctness property to check when the goal is solved.
 1. We can now run the test agent and collect the findings.
 
 
-### Step 1: Defining Your Custom Environment
+### Step 1: Defining an Environment
 
-Although an `iv4xr` agent can be made to directly call `GCDGame`, this is not the proper way to use an agent-based approach. In an agent-based architecture, agents should control the program-under-test (or any program, for that matters) **through** an 'Environment'. Every program-under-test will likely need its own custom Environment, which can be created by **subclassing** the class [`Environment`](../../src/test/java/nl/uu/cs/aplib/mainConcepts/Environment.java), or any of its subclasses provided in `aplib`. Here is an Environment for our example `GCDGame`:
+In an agent-based architecture, agents are meant to control the program-under-test (or any program, for that matters) **through** an 'Environment'. Every program-under-test will likely need its own custom Environment, which can be created by **subclassing** the class [`Environment`](../../src/test/java/nl/uu/cs/aplib/mainConcepts/Environment.java), or any of its subclasses provided in `aplib`.
 
-<<**NOTE for IV4XR TEAM**: below is NOT how you should interface your 3D game/simulator to iv4xr. See instead the example [TestWithRemotingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithRemotingEnv_GCDGame.java).>>
+For this example, a [`NullEnvironment`](../../src/main/java/nl/uu/cs/aplib/environments/NullEnvironment.java) that simply holds a reference to a`GCDGame` will do. In this way, when the agent access the environment, it also gets access to the `GCDGame`. Here is the definition of this dummy Environment:
+
+<<**NOTE for IV4XR TEAM**: below is NOT how you should interface your 3D game/simulator to iv4xr. See instead the example [Test_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/Test_GCDGame.java).>>
 
 ```java
-static class GCDEnv extends Environment {
+static class GCDEnv extends NullEnvironment {
   GCDGame gcdgameUnderTest;
   GCDEnv(GCDGame gcdgame) { gcdgameUnderTest = gcdgame; }
 }

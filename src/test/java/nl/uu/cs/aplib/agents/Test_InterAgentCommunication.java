@@ -8,6 +8,7 @@ import static nl.uu.cs.aplib.AplibEDSL.*;
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.environments.ConsoleEnvironment;
+import nl.uu.cs.aplib.environments.NullEnvironment;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.multiAgentSupport.ComNode;
 import nl.uu.cs.aplib.multiAgentSupport.Message;
@@ -23,11 +24,7 @@ public class Test_InterAgentCommunication {
             super.setEnvironment(env);
             return this;
         }
-        
-        @Override
-        public void updateState(String agentId) {
-        	// do nothing as we have no real env
-        }
+
     }
 
     @Test
@@ -39,7 +36,7 @@ public class Test_InterAgentCommunication {
 
         // agent-1 will be sending 3x messages, 1x singlecase, 1x broadcase, and 1x
         // rolecast:
-        var state1 = new MyState().setEnvironment(new Environment());
+        var state1 = new MyState().setEnvironment(new NullEnvironment());
         var agent1 = new AutonomousBasicAgent("D1", "teacher").attachState(state1).registerTo(comNode);
         var a0 = action("a0").do1((MyState S) -> {
             S.messenger.send("D1", 0, MsgCastType.SINGLECAST, "P1", "SC");
@@ -60,7 +57,7 @@ public class Test_InterAgentCommunication {
         agent1.setGoal(g1);
 
         // agent 2 will receive 1x, of category BC:
-        var state2 = new MyState().setEnvironment(new Environment());
+        var state2 = new MyState().setEnvironment(new NullEnvironment());
         var agent2 = new AutonomousBasicAgent("P1", "student").attachState(state2).registerTo(comNode);
 
         var b1 = action("b1").do1((MyState S) -> S.messenger().retrieve(M -> M.getMsgName().equals("BC")))
@@ -72,7 +69,7 @@ public class Test_InterAgentCommunication {
         // agent 3 does nothing, though it will still register to the comNode, hence
         // receiving
         // messages:
-        var state3 = new MyState().setEnvironment(new Environment());
+        var state3 = new MyState().setEnvironment(new NullEnvironment());
         var agent3 = new AutonomousBasicAgent("P2", "unknown").attachState(state3).registerTo(comNode);
 
         // ------------------ round 1, agent-1 sends to agent-2, but agent-2 cant
@@ -116,11 +113,11 @@ public class Test_InterAgentCommunication {
 
         // agent-1 will be sending 3x messages, 1x singlecase, 1x broadcase, and 1x
         // rolecast:
-        var state1 = new MyState().setEnvironment(new Environment());
+        var state1 = new MyState().setEnvironment(new NullEnvironment());
         var agent1 = new AutonomousBasicAgent("D1", "teacher").attachState(state1).registerTo(comNode);
 
         // create agent-2, NOT registered to the comNode
-        var state2 = new MyState().setEnvironment(new Environment());
+        var state2 = new MyState().setEnvironment(new NullEnvironment());
         var agent2 = new AutonomousBasicAgent("P1", "student").attachState(state2);
 
         var ack = agent1.messenger().send("D1", 0, MsgCastType.SINGLECAST, "P1", "blabla");

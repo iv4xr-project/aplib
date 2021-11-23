@@ -6,7 +6,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 
 /**
  * An instance of this class represents a goal that can be given to an agent (an
- * instance of {@link SimpleAgent} or its subclasses). To be more precise, an
+ * instance of {@link BasicAgent} or its subclasses). To be more precise, an
  * agent expects a {@link GoalStructure}, and a {@code Goal} is the
  * simplest/primitive form a {@link GoalStructure}. Note that when a
  * {@code Goal} is given to an agent, the agent will expect the the goal to be
@@ -210,12 +210,12 @@ public class Goal {
     }
 
     /**
-     * To lift this goal to become an instance of {@link Solution}. Conceptually, a
-     * Goal is a simplest type of {@link Solution}. Technically, to be more precise,
-     * Goal is not a subclass of {@link Solution}. The corresponding representation
-     * of Goal as a Solution is called {@link PrimitiveGoal}, which is a subclass of
-     * {@link Solution}. So, this method will lift this goal to a
-     * {@link PrimitiveGoal}.
+     * To lift this goal to become an instance of {@link GoalStructure}. Conceptually, a
+     * Goal is a simplest type of {@link GoalStructure}. Technically, to be more precise,
+     * Goal is not a subclass of {@link GoalStructure}. The corresponding representation
+     * of Goal as a GoalStructure is called {@link PrimitiveGoal}, which is a subclass of
+     * {@link GoalStructure}. So, this method will lift this goal to a
+     * {@link GoalStructure.PrimitiveGoal}.
      * 
      * @return A new instance of {@link PrimitiveGoal} that wrap around this goal.
      */

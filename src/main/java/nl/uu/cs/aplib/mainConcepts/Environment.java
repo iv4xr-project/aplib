@@ -15,7 +15,7 @@ import nl.uu.cs.aplib.Logging;
  * the class {@link nl.uu.cs.aplib.environments.ConsoleEnvironment}.
  * 
  * <p> Let's call the environment that we try to interact with
- * through this class <i>the actual environment<i>. To interact an agent
+ * through this class <i>the actual environment</i>. To interact an agent
  * (or anything else) invoke the method {@link #sendCommand(String, String, String, Object)},
  * specifying the name of the command and an object to be sent along as a
  * parameter, if we have one. The method returns an object that the actual
@@ -39,7 +39,7 @@ import nl.uu.cs.aplib.Logging;
  *    passing to it the right parameters that correspond to an 'observe' command.
  *    
  *    <li> {@link #resetWorker()} to reset the state of your actual environment.
- *    <li>
+ *    </ol>
  * 
  * <p>
  * An implementation of Environment can in principle provide more methods to

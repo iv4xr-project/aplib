@@ -82,6 +82,8 @@ var agent1 = new AutonomousBasicAgent("A1","teacher")
             . registerTo(comNode) ;
 ```
 
+In this environment the agents will ony interact with each other, and not with any actual environment. So, we use the `NullEnvironment` as the Environment (a `NullEnvironment` does nothing).
+
 Above, the string "A1" is a unique ID we assign to `agent1` and "teacher" is a string we use to identify its **role**. Multiple agents can have the same role.
 
 Let's now create another agent, and register it to the same communication node:

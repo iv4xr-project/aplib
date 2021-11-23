@@ -231,10 +231,10 @@ In a multi agent setup we have mutiple agents operating on the same shared envir
 
 ### Verifying correctness
 
-The semantic of an agent-based system can be defined in terms of how the state of its environment evolves. For example if we assume that this environment only allows its state to be changed through a set of _atomic_ primitives ('atomic' here means that during the invocation of such a primitive it can assume to have exclusive access to the environment, that no other primitive can in the mean time changes the environment state), then we can use LTL to express the correctness of an agent-based system. With proper instrumentation on the environment, the following verification methods are thinkable, all would require at least three-valued LTL (with judgement of valid, invalid, and inconclusive):
+The semantic of an agent-based system can be defined in terms of how the state of its environment evolves. For example if we assume that this environment only allows its state to be changed through a set of _atomic_ primitives ('atomic' here means that during the invocation of such a primitive it can assume to have exclusive access to the environment, that no other primitive can in the mean time changes the environment state), then we can use LTL to express the correctness of an agent-based system. `Aplib` does provide an implementation of LTL. It allows LTL formulas to be constructed and evaluated either on a sequence of states, or they can be evaluated incrementally by giving them one state at a time (so, there is no need to keep track of a 'history' of states, which can be expensive). LTL properties can be used for these purposes, for example:
 
-* Runtime verification of LTL properties, wrapped around the environment.
+* To do runtime verification. We can hook LTL formulas as correctness specifications. We can adjust the agent to make it send its current state to these formulas at each tick.
 
-* Using LTL properties as oracles during testing (with the extra challenge of searching for executions that would elimnate 'inconclusive' judgement).
+* We can use LTL formulas as oracles during testing.
 
-* Bounded model checking. `aplib` allows autonomous agents to be deployed as subservient agents, and hence be ticked under the full control of a model checker. If we can also control the pace of the environment, we can basically do model checking.
+* Bounded model checking. `aplib` allows autonomous agents to be deployed as subservient agents, and hence they can be ticked under the full control of a model checker. If we can also control the pace of the environment, we can basically do model checking.
