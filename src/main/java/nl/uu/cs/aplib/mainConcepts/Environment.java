@@ -10,29 +10,36 @@ import nl.uu.cs.aplib.Logging;
  * 
  * In aplib, agents (instances of {@link BasicAgent} or its subclasses) are used
  * to interact and control an environment. This class is a root class for
- * representing this environment. This class is meant to be
+ * representing this environment. This class is just a template, and is meant to be
  * <b>extended/subclassed</b>. For a minimalistic example implementation, see
  * the class {@link nl.uu.cs.aplib.environments.ConsoleEnvironment}.
  * 
- * <p>
- * The idea is that this class, or rather, your subclass of this class, should
- * provide snapshot information on the current state of whatever actual
- * information that your agents try to control. You do not have to provide all
- * information. Instead, you only need to provide information that is relevant
- * for the logic of your agents. You also need to provide methods to allow your
- * agents to send commands to the actual environment. This class suggests one
- * method called {@link #sendCommand_(EnvOperation)} that you can use as the
- * primitive to implement your own set of methods to command the actual
- * environment.
+ * <p> Let's call the environment that we try to interact with
+ * through this class <i>the actual environment<i>. To interact an agent
+ * (or anything else) invoke the method {@link #sendCommand(String, String, String, Object)},
+ * specifying the name of the command and an object to be sent along as a
+ * parameter, if we have one. The method returns an object that the actual
+ * environment sends back as the reply to the given command.
  * 
- * <p>
- * This class provides the method {@link #refresh()}. In an actual
- * implementation of Environment, this method is expected to inspect the state
- * of the real environment, and to reflect this in this representation of
- * environment. This method is implicitly called by agents every time their
- * {@code update()} method is invoked. Agents will also want to send commands to
- * the actual environment. You can implement the method
- * {@link #sendCommand_(EnvOperation)} to facilitate this.
+ * <p>Being just a template, this class does not know
+ * what commands are available, nor does it know how to send it to the actual
+ * environment. This depends on the concrete actual environment that you use.
+ * Therefore, it is your responsibilty to implement sendCommand in your
+ * concrete subclass of this class Environment. More precisely you need
+ * to implement the method {@link #sendCommand_(EnvOperation)} (rather than
+ * the previously said sendCommand).
+ * 
+ * <p>Additionally you need to provide implementations of:
+ * 
+ *    <ol>
+ *    
+ *    <li> {@link #observe(String)} to ask the real environment to send back
+ *    information about its state. It is recommended that you implement this
+ *    method by calling {@link Environment#sendCommand(String, String, String, Object)},
+ *    passing to it the right parameters that correspond to an 'observe' command.
+ *    
+ *    <li> {@link #resetWorker()} to reset the state of your actual environment.
+ *    <li>
  * 
  * <p>
  * An implementation of Environment can in principle provide more methods to
@@ -71,27 +78,10 @@ public class Environment {
     public Environment() {
     }
 
-    /**
-     * Call {@link #refreshWorker()} to inspect the actual environment and reflect
-     * its actual state into this abstract representation. This will also implicitly
-     * call {@link #instrument(String)}.
-     */
-    public final void refresh() {
-        refreshWorker();
-        instrument(REFRESH_CMD);
-    }
-
-    /**
-     * Inspect the actual environment and reflect its actual state into this
-     * abstract representation. Override this method when implementing your own
-     * specific Environment.
-     */
-    public void refreshWorker() {
-    }
 
     /**
      * This will will call [@link #resetWorker()} and additionally reset this
-     * Environment's active instrumentaters.
+     * Environment's active instrumenters.
      */
     public final void resetAndInstrument() {
         logger.info("Environment reset is called.");
@@ -155,6 +145,22 @@ public class Environment {
      */
     public Object sendCommand(String invokerId, String targetId, String command, Object arg) {
         return sendCommand(invokerId, targetId, command, arg, null);
+    }
+    
+    /**
+     * Ask the real environment to return an observation (the state of the real 
+     * environment) from the perspective of the invokerId. E.g. this id may
+     * identifies a simulated player in a game. The returned observation would
+     * then be the game state as seen by the player rather than the state of
+     * the entire game.
+     * 
+     * <p>You have to provide a concrete implementation of this method. Do
+     * implement it by calling the method {@link #sendCommand(String, String, String, Object)},
+     * passing to it the right parameters that is needed to make the environment
+     * to send back an observation.
+     */
+    public Object observe(String invokerId) {
+    	throw new UnsupportedOperationException();
     }
 
     /**
@@ -270,8 +276,6 @@ public class Environment {
         }
     }
 
-    private EnvOperation REFRESH_CMD = new EnvOperation("ENV", null, "refresh", null, null);
-
     EnvOperation lastOperation = null;
 
     List<EnvironmentInstrumenter> instrumenters = new LinkedList<EnvironmentInstrumenter>();
@@ -320,13 +324,6 @@ public class Environment {
          * state.
          */
         public void reset();
-    }
-
-    /**
-     * Return true if the last operation of this environment was a refresh().
-     */
-    public boolean lastOperationWasRefresh() {
-        return lastOperation == REFRESH_CMD;
     }
 
 }

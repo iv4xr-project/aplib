@@ -32,8 +32,16 @@ public class ConsoleEnvironment extends Environment {
             System.out.println((String) cmd.arg);
             o = consoleInput.nextLine();
             return o;
+        case "observe":
+            return null ;
         }
+        
         throw new IllegalArgumentException();
+    }
+    
+    @Override
+    public Object observe(String agentId)  {
+    	return sendCommand("ANONYMOUS", null, "observe", null);
     }
 
     /**

@@ -16,9 +16,8 @@ public class Test_Environment {
         int y = 0;
 
         @Override
-        public void refreshWorker() {
-            x = 0;
-            y = 0;
+        public MyEnv observe(String agentId) {
+            return (MyEnv) this.sendCommand(agentId, null, "observe",null) ;
         }
 
         @Override
@@ -29,6 +28,9 @@ public class Test_Environment {
                 break;
             case "incry":
                 y++;
+                break ;
+            case "observe" :
+            	break ;
             }
             return this;
         }
@@ -92,34 +94,28 @@ public class Test_Environment {
         env.turnOnDebugInstrumentation();
 
         assertTrue(env.getLastOperation() == null);
-        assertFalse(env.lastOperationWasRefresh());
 
-        env.refresh();
-        assertTrue(env.getLastOperation().command.equals("refresh"));
-        assertTrue(env.lastOperationWasRefresh());
+        env.observe("bla");
+        assertTrue(env.getLastOperation().command.equals("observe"));
         assertTrue(instrumenter.history.size() == 1);
         assertTrue(instrumenter.last().x == 0 && instrumenter.last().y == 0);
-        env.refresh();
-        assertTrue(env.getLastOperation().command.equals("refresh"));
-        assertTrue(env.lastOperationWasRefresh());
+        env.observe("bla");
+        assertTrue(env.getLastOperation().command.equals("observe"));
         assertTrue(instrumenter.history.size() == 2);
         assertTrue(instrumenter.last().x == 0 && instrumenter.last().y == 0);
 
         env.sendCommand("originId", "targetId", "incrx", null);
         assertTrue(env.getLastOperation().command.equals("incrx"));
-        assertFalse(env.lastOperationWasRefresh());
         assertTrue(instrumenter.history.size() == 3);
         assertTrue(instrumenter.last().x == 1 && instrumenter.last().y == 0);
 
         env.sendCommand("originId", "targetId", "incry", null);
         assertTrue(env.getLastOperation().command.equals("incry"));
-        assertFalse(env.lastOperationWasRefresh());
         assertTrue(instrumenter.history.size() == 4);
         assertTrue(instrumenter.last().x == 1 && instrumenter.last().y == 1);
 
         env.resetAndInstrument();
         assertTrue(env.getLastOperation() == null);
-        assertFalse(env.lastOperationWasRefresh());
         assertTrue(instrumenter.history.size() == 0);
 
     }

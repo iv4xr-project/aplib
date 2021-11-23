@@ -509,7 +509,7 @@ public class BasicAgent {
     private void updateWorker() {
 
         // update the agent's state:
-        state.updateState();
+        state.updateState(id);
 
         var candidates = currentTactic.getFirstEnabledActions(state);
         if (candidates.isEmpty()) {

@@ -33,6 +33,9 @@ public class FiveGame_withAgent {
     static PredicateName set4Move = predicate("set4Move");
 
     static class MyState extends State {
+    	
+    	FiveGame.SQUARE[][] board ;
+    	int boardsize ;
 
         /**
          * Constructor. It will also create a prolog-engine and attach it to this state.
@@ -56,9 +59,8 @@ public class FiveGame_withAgent {
         @Override
         public MyState setEnvironment(Environment env) {
             super.setEnvironment(env);
-
-            FiveGame.SQUARE[][] board = env().board;
-            var boardsize = board.length;
+            board = env().thegame.board ;
+            boardsize = board.length;
             var prolog = prolog();
 
             // The strategy to play the next move is controlled by the following set of
@@ -129,16 +131,9 @@ public class FiveGame_withAgent {
         }
 
         @Override
-        public void updateState() {
-            super.updateState();
-            var lastmove = env().lastmove;
-            if (lastmove != null) {
-                try {
-
-                    markMove_(lastmove.sq, lastmove.x, lastmove.y);
-                } catch (Exception e) {
-                }
-            }
+        public void updateState(String agentID) {
+        	var obs = env().observe(agentID) ;
+        	board = obs.snd ;
         }
 
         void markMove(SQUARE sq, int x, int y) {
@@ -161,27 +156,27 @@ public class FiveGame_withAgent {
         }
 
         void markMove_(SQUARE sq, int x, int y) throws InvalidTheoryException {
-            env().board[x][y] = sq;
+            //env().board[x][y] = sq;
             prolog().facts(occupied.on(sqtype(sq), x, y));
             if (x > 0) {
                 prolog().facts(eastNeighbor.on(sqtype(sq), x - 1, x, y));
             }
-            if (x < env().boardsize - 1 && env().board[x + 1][y] != SQUARE.EMPTY) {
-                prolog().facts(eastNeighbor.on(sqtype(env().board[x + 1][y]), x, x + 1, y));
+            if (x < boardsize - 1 && board[x + 1][y] != SQUARE.EMPTY) {
+                prolog().facts(eastNeighbor.on(sqtype(board[x + 1][y]), x, x + 1, y));
             }
             if (y > 0) {
                 prolog().facts(northNeighbor.on(sqtype(sq), x, y - 1, y));
             }
-            if (y < env().boardsize - 1 && env().board[x][y + 1] != SQUARE.EMPTY) {
-                prolog().facts(northNeighbor.on(sqtype(env().board[x][y + 1]), x, y, y + 1));
+            if (y < boardsize - 1 && board[x][y + 1] != SQUARE.EMPTY) {
+                prolog().facts(northNeighbor.on(sqtype(board[x][y + 1]), x, y, y + 1));
             }
         }
 
         List<Square_> getEmptySquares() {
             var r = new LinkedList<Square_>();
-            for (int x = 0; x < env().boardsize; x++)
-                for (int y = 0; y < env().boardsize; y++) {
-                    if (env().board[x][y] == SQUARE.EMPTY) {
+            for (int x = 0; x < boardsize; x++)
+                for (int y = 0; y < boardsize; y++) {
+                    if (board[x][y] == SQUARE.EMPTY) {
                         r.add(new Square_(SQUARE.EMPTY, x, y));
                     }
                 }
@@ -189,13 +184,13 @@ public class FiveGame_withAgent {
         }
 
         boolean hasHVCrossNeighbor(int x, int y) {
-            if (x > 0 && env().board[x - 1][y] == SQUARE.CROSS)
+            if (x > 0 && board[x - 1][y] == SQUARE.CROSS)
                 return true;
-            if (x + 1 < env().boardsize && env().board[x + 1][y] == SQUARE.CROSS)
+            if (x + 1 < boardsize && board[x + 1][y] == SQUARE.CROSS)
                 return true;
-            if (y > 0 && env().board[x][y - 1] == SQUARE.CROSS)
+            if (y > 0 && board[x][y - 1] == SQUARE.CROSS)
                 return true;
-            if (y + 1 < env().boardsize && env().board[x][y + 1] == SQUARE.CROSS)
+            if (y + 1 < boardsize && board[x][y + 1] == SQUARE.CROSS)
                 return true;
             return false;
         }

@@ -46,7 +46,7 @@ public class TestWithWrappingEnv_GCDGame {
      * program-under-test. Here, we will choose to simply wrap the environment over
      * the program-under-test.
      */
-    static class GCDEnv extends Environment {
+    static class GCDEnv extends Environmentxxxx {
         /**
          * The instance of GCDGame that is to be tested, wrapped inside this
          * Environment.

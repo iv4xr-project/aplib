@@ -58,28 +58,17 @@ public class TestWithRemotingEnv_GCDGame {
      */
     static class GCDEnv extends Environment {
 
-        // Define the relevant state of the program-under-test that this
-        // Environment wants to maintain:
-
-        int x;
-        int y;
-        int gcd;
-        boolean win;
 
         public GCDEnv() {
             super();
         }
 
         /**
-         * Implement the method to sync this Environment's view on the
-         * program-under-test with the real state of the program-under-test:
-         */
+         * Return the current state of the game-under-test.
+         */ 
         @Override
-        public void refreshWorker() {
-            x = gameUnderTest.x;
-            y = gameUnderTest.y;
-            gcd = gameUnderTest.gcd;
-            win = gameUnderTest.win();
+        public Object[]  observe(String agentId) {
+        	return (Object[]) this.sendCommand(agentId, null, "observe", null) ;
         }
 
         /**
@@ -92,26 +81,28 @@ public class TestWithRemotingEnv_GCDGame {
             switch (cmd.command) {
             case "up":
                 gameUnderTest.up();
-                break;
+                return null ;
             case "down":
                 gameUnderTest.down();
-                break;
+                return null ;
             case "right":
                 gameUnderTest.right();
-                break;
+                return null ;
             case "left":
                 gameUnderTest.left();
-                break;
+                return null ;
+            case "observe" :
+            	Object[] obs = new Object[4] ;
+            	obs[0] = gameUnderTest.x;
+                obs[1] = gameUnderTest.y;
+                obs[2] = gameUnderTest.gcd;
+                obs[3] = gameUnderTest.win();
+            	return obs ;
             }
-            // we'll re-sync this Environment after the command:
-            refreshWorker();
-            return null;
+            throw new IllegalArgumentException() ;
         }
 
-        @Override
-        public String toString() {
-            return "(" + x + "," + y + "), gcd=" + gcd;
-        }
+
     }
 
     ////////// New State structure//////MyState Class///////////
@@ -120,9 +111,16 @@ public class TestWithRemotingEnv_GCDGame {
      * actually need a new state-structure, but let's just pretend that we do.
      */
     static class MyState extends State {
+    	
         // int counter = 0 ;
         // String last = null ;
         // int result = 0 ;
+    	
+    	int x;
+        int y;
+        int gcd;
+        boolean win;
+        
         MyState() {
             super();
         }
@@ -131,35 +129,55 @@ public class TestWithRemotingEnv_GCDGame {
         public GCDEnv env() {
             return (GCDEnv) super.env();
         }
+        
+        @Override
+        public void updateState(String agentId) {
+        	Object[] obs = env().observe(agentId) ;
+        	x = (int) obs[0] ;
+        	y = (int) obs[1] ;
+        	gcd = (int) obs[2] ;
+        	win = (boolean) obs[3] ;
+            //System.out.println(">>> x=" + x) ;
+        }
+        
+        @Override
+        public String toString() {
+            return "(" + x + "," + y + "), gcd=" + gcd;
+        }
+    }
+    
+    Tactic skip()  {
+    	return action("skip").do1((MyState S) -> S).lift() ;
     }
 
     // Construct a tactic to auto-drive the player to position X,Y:
     Tactic navigateTo(int X, int Y) {
         Action up = action("action_up").do1((MyState S) -> {
             S.env().sendCommand(null, null, "up", null);
-            Logging.getAPLIBlogger().info("new state: " + S.env());
+            Logging.getAPLIBlogger().info("new state: " + S);
             return S;
         });
         Action down = action("action_down").do1((MyState S) -> {
             S.env().sendCommand(null, null, "down", null);
-            Logging.getAPLIBlogger().info("new state: " + S.env());
+            Logging.getAPLIBlogger().info("new state: " + S);
             return S;
         });
         Action right = action("action_up").do1((MyState S) -> {
             S.env().sendCommand(null, null, "right", null);
-            Logging.getAPLIBlogger().info("new state: " + S.env());
+            Logging.getAPLIBlogger().info("new state: " + S);
             return S;
         });
         Action left = action("action_left").do1((MyState S) -> {
             S.env().sendCommand(null, null, "left", null);
-            Logging.getAPLIBlogger().info("new state: " + S.env());
+            Logging.getAPLIBlogger().info("new state: " + S);
             return S;
         });
 
-        return FIRSTof(up.on_((MyState S) -> ((GCDEnv) S.env()).y < Y).lift(),
-                down.on_((MyState S) -> ((GCDEnv) S.env()).y > Y).lift(),
-                right.on_((MyState S) -> ((GCDEnv) S.env()).x < X).lift(),
-                left.on_((MyState S) -> ((GCDEnv) S.env()).x > X).lift());
+        return FIRSTof(up.on_((MyState S) -> S.y < Y).lift(),
+                down.on_((MyState S) -> S.y > Y).lift(),
+                right.on_((MyState S) -> S.x < X).lift(),
+                left.on_((MyState S) -> S.x > X).lift(),
+                skip());
     }
 
     /**
@@ -186,7 +204,7 @@ public class TestWithRemotingEnv_GCDGame {
         // (4) Define what is the testing task as a goal (to be solved by the agent):
         var topgoal = testgoal("tg")
                 // the goal is to drive the game to get it to position (X,Y):
-                .toSolve((MyState S) -> S.env().x == X && S.env().y == Y)
+                .toSolve((MyState S) -> S.x == X && S.y == Y)
                 // specify the tactic to solve the above goal:
                 .withTactic(navigateTo(X, Y))
                 // assert the correctness property that must hold on the state where the goal is
@@ -194,7 +212,7 @@ public class TestWithRemotingEnv_GCDGame {
                 // we will check that the gcd field and win() have correct values:
                 .oracle(agent,
                         (MyState S) -> assertTrue_("", info,
-                                S.env().gcd == expectedGCD && S.env().win == expectedWinConclusion))
+                                S.gcd == expectedGCD && S.win == expectedWinConclusion))
                 // finally we lift the goal to become a GoalStructure, for technical reason.
                 .lift();
 

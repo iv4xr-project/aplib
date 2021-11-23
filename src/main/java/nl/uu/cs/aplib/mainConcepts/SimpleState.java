@@ -78,14 +78,18 @@ public class SimpleState {
     }
 
     /**
-     * This will ask the {@link Environment} associated with this state to update
-     * itself. Since this SimpleState does not actually has any state information,
+     * This method should send an observe() command to the {@link Environment} 
+     * (that is attached to this state) to send back a new observation from the
+     * perspective of the specified agent. This method subsequently uses
+     * this fresh observation to update itself.
+     * 
+     * <p>Since this SimpleState does not actually has any state information,
      * being just a 'simple' state, this method updateState() does not actually
      * update anything. Override this method to implement a more elaborate scheme of
      * updating state.
      */
-    public void updateState() {
-        env.refresh();
+    public void updateState(String agentId) {
+        env.observe(agentId);
     };
 
     /**

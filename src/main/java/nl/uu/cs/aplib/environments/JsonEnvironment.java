@@ -10,16 +10,27 @@ import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
  * A root class of an Environment that communicates with the real environment by
  * exchanging JSON objects. This class is intended to be subclassed by a real
  * implementation. At least you must provide an implementation of (you must
- * override) the method
+ * override) the methods:
+ * 
+ * <ol>
+ * <li>
  * {@link nl.uu.cs.aplib.mainConcepts.Environment#sendCommand_(EnvOperation)}
  * This method should serialize the given command to a string in the JSON format
  * and send it to the real environment. If the environment replies, this is
  * expected to be as a string in the JSON format as well, which sendCommand_
  * will then return.
  * 
+ * <p>
  * Agents should use the wrapper method sendCommand(...) instead, which
  * internally will call sendCommand_, and parse the returned JSON string into a
  * Java object.
+ * 
+ * <li>{@link nl.uu.cs.aplib.mainConcepts.Environment#observe(String)} to ask
+ * the real environment to send back an observation from the perspective of a
+ * given agent.
+ * 
+ * </ol>
+ * 
  * 
  * @author Wish
  */
