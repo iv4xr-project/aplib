@@ -59,6 +59,7 @@ public class W3DEnvironment extends Environment {
      * @return An instance of WorldModel representing what the specified agent
      *         observes.
      */
+    @Override
     public WorldModel observe(String agentId) {
         return (WorldModel) sendCommand(agentId, null, OBSERVE_CMDNAME, null, WorldModel.class);
     }
