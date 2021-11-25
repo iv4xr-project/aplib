@@ -83,12 +83,10 @@ public class BuchiModelChecker {
 			
 			if (witnessPath != null) {
 				Path<Pair<IExplorableState,String>> witness_ = new Path<>() ;
-				witness_.path = witnessPath.path.stream()
-						.map(step -> new Pair(step.fst, // the transition leading to the new state
-								              // the new state is a pair of state in target and state in Buchi:
-								              new Pair(step.snd.fst, buchi.decoder[step.snd.snd])))
-						.collect(Collectors.toList()) ;
-				
+				// compiler complains when using strea().map; so doing it the old way:
+				for(var step : witnessPath.path) {
+					witness_.addTransition(step.fst, new Pair(step.snd.fst, buchi.decoder[step.snd.snd]));
+				}
 				return witness_ ;
 			}
 			
