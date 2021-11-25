@@ -83,7 +83,7 @@ public class Test_LTL {
 		var seq1 = sequence(0, 1, 2, 3, 4, 5) ;
 		var seq2 = sequence(0, 1, 2, 2, 2, 2) ;
 		
-		LTL<Integer> phi = now((Integer i) -> i < 3).ltlUntil(now((Integer i) -> i==3)) ;
+		LTL<Integer> phi = now((Integer i) -> i < 3).until(now((Integer i) -> i==3)) ;
 		
 		try {
 			phi.sat() ;
@@ -103,12 +103,12 @@ public class Test_LTL {
 		
 		assertEquals(SATVerdict.UNSAT, phi.sat(seq2)) ;
 		
-		LTL<Integer> phi2b = now((Integer i) -> i>=3 && i < 5).ltlUntil(now((Integer i) -> i==5)) ;
-		LTL<Integer> phi2 = now((Integer i) -> i<3).ltlUntil(phi2b) ;
+		LTL<Integer> phi2b = now((Integer i) -> i>=3 && i < 5).until(now((Integer i) -> i==5)) ;
+		LTL<Integer> phi2 = now((Integer i) -> i<3).until(phi2b) ;
 		assertEquals(SATVerdict.SAT, phi2.sat(seq1)) ;
 		
-		LTL<Integer> phi3b = now((Integer i) -> false).ltlUntil(now((Integer i) -> i==3)) ;
-		LTL<Integer> phi3 = now((Integer i) -> i<3).ltlUntil(phi3b) ;
+		LTL<Integer> phi3b = now((Integer i) -> false).until(now((Integer i) -> i==3)) ;
+		LTL<Integer> phi3 = now((Integer i) -> i<3).until(phi3b) ;
 		assertEquals(SATVerdict.SAT, phi3.sat(seq1)) ;
 		
 		assertEquals(SATVerdict.SAT, eventually((Integer i) -> i>=4).sat(seq1)) ;
@@ -122,7 +122,7 @@ public class Test_LTL {
 		var seq1 = sequence(0, 1, 2, 3, 4, 5) ;
 		var seq2 = sequence(0, 1, 2, 2, 2, 2) ;
 		
-		LTL<Integer> phi = now((Integer i) -> i < 6).ltlUntil((Integer i) -> i==6) ;
+		LTL<Integer> phi = now((Integer i) -> i < 6).until((Integer i) -> i==6) ;
 		LTL<Integer> psi = ltlNot(phi) ;
 		
 		try {
@@ -152,7 +152,7 @@ public class Test_LTL {
 		var seq1 = sequence(0, 1, 2, 3, 4, 5) ;
 		var seq2 = sequence(0, 1, 2, 2, 2, 2) ;
 		
-		LTL<Integer> phi1 = now((Integer i) -> i < 5).ltlUntil((Integer i) -> i==4) ;
+		LTL<Integer> phi1 = now((Integer i) -> i < 5).until((Integer i) -> i==4) ;
 		LTL<Integer> phi2 = always((Integer i) -> i <= 5) ;
 		LTL<Integer> psi = ltlAnd(phi1,phi2) ;
 		
@@ -193,13 +193,13 @@ public class Test_LTL {
             .sat(seq1)) ;
 		
 		assertEquals(SATVerdict.SAT, eventually((Integer i) -> i>5)
-				.ltlImplies(eventually((Integer i) -> false))
+				.implies(eventually((Integer i) -> false))
             .sat(seq1)) ;
 		assertEquals(SATVerdict.SAT, eventually((Integer i) -> i>3)
-				.ltlImplies(eventually((Integer i) -> i>=5))
+				.implies(eventually((Integer i) -> i>=5))
             .sat(seq1)) ;
 		assertEquals(SATVerdict.UNSAT, eventually((Integer i) -> i>3)
-				.ltlImplies(eventually((Integer i) -> i>5))
+				.implies(eventually((Integer i) -> i>5))
             .sat(seq1)) ;
 		
 	}

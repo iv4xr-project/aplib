@@ -105,18 +105,24 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     /**
      * Construct the LTL formula "phi Until psi", where phi is this LTL formula.
      */
-    public LTL<State> ltlUntil(LTL<State> psi) {
+    public LTL<State> until(LTL<State> psi) {
         var ltl = new Until<State>();
         ltl.phi1 = this;
         ltl.phi2 = psi;
         return ltl;
     }
+    
+    public LTL<State> weakUntil(LTL<State> psi) {
+        var ltl = new WeakUntil<State>();
+        ltl.encoding = ltlOr(always(this), this.until(psi)) ;
+        return ltl;
+    }
 
-    public LTL<State> ltlUntil(Predicate<State> psi) {
-    	return ltlUntil(now(psi)) ;
+    public LTL<State> until(Predicate<State> psi) {
+    	return until(now(psi)) ;
     }
     
-    public LTL<State> ltlImplies(LTL<State> psi) {
+    public LTL<State> implies(LTL<State> psi) {
     	return ltlNot(ltlAnd(this, ltlNot(psi))) ;
     }
     
@@ -294,6 +300,46 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             phi2.evalAtomSat(state);
         }
     }
+    
+    /**
+     * Weak-until is not primitive in LTL-sense, but we add it as a separate class
+     * so that we can structurally recognize that a formula is a weak-until formula.
+     */
+    public static class WeakUntil<State> extends LTL<State> {
+        LTL<State> encoding; // f1 W f2 = always(f1) || f1 U f2
+        
+        WeakUntil() { super() ; }
+
+        @Override
+        public void startChecking() {
+        	super.startChecking();
+        	encoding.startChecking();
+        }
+
+        @Override
+        public SATVerdict sat() {
+        	
+        	if(fullyEvaluated) 
+        		return evals.getFirst().verdict;
+        
+            encoding.sat();
+            var iterator = evals.descendingIterator();
+            var iteratorEncoding = encoding.evals.descendingIterator();
+
+            // just copy the evaluation of the encoding:
+            while (iterator.hasNext()) {
+                var f = iterator.next();
+                f.verdict = iteratorEncoding.next().verdict;
+            }
+            return evals.getFirst().verdict;
+        }
+
+        @Override
+        void evalAtomSat(State state) {
+            evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
+            encoding.evalAtomSat(state);
+        }
+    }
 
     public static class Next<State> extends LTL<State> {
 
@@ -389,7 +435,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     }
 
     public static <State>  LTL<State> eventually(LTL<State> phi) {
-        return now((State state) -> true).ltlUntil(phi);
+        return now((State state) -> true).until(phi);
     }
     
     public static <State>  LTL<State> eventually(Predicate<State> phi) {
