@@ -117,8 +117,10 @@ public class BasicModelChecker {
 	}
 	
 	/**
-	 * Check if the target program has an finite execution that ends in a state satisfying
-	 * the predicate q. If so, it returns SAT, and else UNSAT.
+	 * Check if the target program has an finite execution that ends in a state
+	 * satisfying the predicate q. If so, it returns SAT, and else UNSAT. <b>Be
+	 * careful</b> that this method may not terminate if the target program has an
+	 * infinite state space. Use {@link #sat(Predicate, int)} instead.
 	 */
 	public SATVerdict sat(Predicate<IExplorableState> q) {
 		var path = find(q,Integer.MAX_VALUE) ;
@@ -129,9 +131,7 @@ public class BasicModelChecker {
 	/**
 	 * Check if the target program has an finite execution of the specified maximum
 	 * length, that ends in a state satisfying the predicate q. If so, it returns
-	 * SAT, and else UNSAT. <b>Be careful</b> that this method may not terminate
-	 * if the target program has an infinite state space. Use {@link #sat(Predicate, int)}
-	 * instead.
+	 * SAT, and else UNSAT.
 	 */
 	public SATVerdict sat(Predicate<IExplorableState> q, int maxDepth) {
 		var path = find(q,maxDepth) ;

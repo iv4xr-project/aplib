@@ -29,7 +29,12 @@ public class Test_SimpleModelChecker {
 		public String toString() { return name ; } 
 	}
 	
-	// Some program we use as target for testing model-checker:
+	/**
+	 * Some program we use as target for testing model-checker. The program has two
+	 * "transitions", one (incx) increases the value of x by 1, and the other (incy)
+	 * is enabled when x<y, and would increase the value of y by 1.
+	 * They wont increase x and y beyond 8.
+	 */
 	public static class MyProgram implements ITargetModel, IExplorableState {
 		
 		public int x = 0 ;
@@ -38,7 +43,7 @@ public class Test_SimpleModelChecker {
 		List<MyProgram> history = new LinkedList<>() ;
 		
 		public void incx() { 
-			x++ ; 
+			if (x<8) x++ ; 
 			//System.out.println(">> incx:" + this) ;
 		}
 		public void incy() { 
@@ -130,7 +135,7 @@ public class Test_SimpleModelChecker {
 		
 	}
 	
-	static MyProgram cast(IExplorableState S) { return (MyProgram) S ; }
+	public static MyProgram cast(IExplorableState S) { return (MyProgram) S ; }
 	
 	boolean isWellFormed(Path<IExplorableState> path) {
 		//System.out.println(">>>> path: " + path) ;

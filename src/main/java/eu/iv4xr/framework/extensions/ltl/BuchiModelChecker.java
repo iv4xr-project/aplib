@@ -57,11 +57,23 @@ public class BuchiModelChecker {
 	}
 	
 	/**
-	 * Check if the target 'program' {@link #model} can produce an infinite execution that
-	 * would be accepted by the given Buchi automaton. If so SAT is returned, and else UNSAT.
+	 * Check if the target 'program' {@link #model} can produce an infinite
+	 * execution that would be accepted by the given Buchi automaton. If so SAT is
+	 * returned, and else UNSAT. <b>Be careful</b> that this method may not
+	 * terminate if the target program has an infinite state space. Use
+	 * {@link #sat(Predicate, int)} instead.
 	 */
 	public SATVerdict sat(Buchi buchi) {
-		var path = find(buchi,Integer.MAX_VALUE) ;
+		return sat(buchi, Integer.MAX_VALUE) ; 
+	}
+	
+	/**
+	 * Check if the target program has an finite execution of the specified maximum
+	 * length, that ends in a state satisfying the predicate q. If so, it returns
+	 * SAT, and else UNSAT.
+	 */
+	public SATVerdict sat(Buchi buchi, int maxDepth) {
+		var path = find(buchi,maxDepth) ;
 		if(path == null) return SATVerdict.UNSAT ;
 		return SATVerdict.SAT ;
 	}
@@ -80,7 +92,7 @@ public class BuchiModelChecker {
 		stats.clear(); 
 		buchi.reset();
 		
-		IExplorableState targetInitialState = model.getCurrentState() ;
+		IExplorableState targetInitialState = model.getCurrentState().clone() ;
 		Set<Pair<IExplorableState,Integer>> visitedStates = new HashSet<>() ;
 		
 		// although the model only has one initial state, its lock-step execution
@@ -176,6 +188,11 @@ public class BuchiModelChecker {
 			int remainingDepth			
 			) 
 	{	
+		//System.out.println(">>> DFS to state: " + state + ", remaining depth=" + remainingDepth) ;
+		//System.out.println("    path-so-far: " + pathSoFar) ;
+		//System.out.println("    cycle-prefix: " + statesInPathToStartOfPossibleCycle) ;
+		
+		
 		if(remainingDepth==0) return null ;
 
 		stats.numberOfTransitionsExplored++ ;
@@ -206,37 +223,51 @@ public class BuchiModelChecker {
 			// Return the path:
 			return pathSoFar.copy() ;	
 		}
-		
-		// now we recurse to successor-states:
+
+		// below we recurse to next-states..
 		
 		var enabledModelTransitions = model.availableTransitions() ;
-		var enabledBuchiTransitions = buchi.getEnabledTransitions(model.getCurrentState()) ;
+		
+		for(var trModel : enabledModelTransitions) {
 			
-		for(var trBuchi : enabledBuchiTransitions) {
+			model.execute(trModel);
 			
-			buchi.transitionTo(trBuchi.snd);			
+			var modelNextState = model.getCurrentState().clone() ;
+			var enabledBuchiTransitions = buchi.getEnabledTransitions(modelNextState) ;
 			
-			for (var trModel : enabledModelTransitions) {
-				model.execute(trModel);
+			for (var trBuchi : enabledBuchiTransitions) { 
+				
+				// now we recurse to successor-states:
+				int buchiCurrentState = buchi.currentState ;
+				buchi.transitionTo(trBuchi.snd);			
+				int buchiNextState = buchi.currentState ;
+				
 				// so now we have executed both the model and the Buchi;
 				// construct the combine next-state:
-				var modelNextState = model.getCurrentState() ;
-				Pair<IExplorableState,Integer> combinedNextState = new Pair<>(modelNextState,buchi.currentState) ;			
+				
+				Pair<IExplorableState,Integer> combinedNextState = new Pair<>(modelNextState,buchiNextState) ;			
 				
 				// extending path-sofar:
-				pathSoFar.addTransition(trModel, combinedNextState);
+				pathSoFar.addTransition(trModel,combinedNextState);
 				
 				// if the state is an omega accepting state of the Buchi, we then
 				// start cycle detection:
-				if(buchi.omegaAcceptingStates.contains(buchi.currentState)) {
+				if(buchi.omegaAcceptingStates.contains(buchiCurrentState)) // yes, give it the state before the combinedNextState
+				{
+					
+					//System.out.println(">>> encountering omage-state " + buchiCurrentState + ", remaining depth=" + remainingDepth) ;
+					//System.out.println(">>> next state to check " + combinedNextState) ;
+					
 					// we will do a fresh DFS run with its own tacking of visited states:
 					Set<Pair<IExplorableState,Integer>> freshVisitedStates = new HashSet<>() ;
 					Set<Pair<IExplorableState,Integer>> statesInPathSoFar = new HashSet<>() ;
+					// We need to add all states in the pathSoFar, except the last one we just
+					// added above :(
+					// Ok so let's do it like this then:
+					pathSoFar.removeLastTransition();
 					statesInPathSoFar.addAll(pathSoFar.getStateSequence()) ;
-					// BUT REMOVE the combinedNextState from this set, the DFS recursion
-					// below will wrongly say it finds a cycle:
-					statesInPathSoFar.remove(combinedNextState) ;
-					
+					pathSoFar.addTransition(trModel,combinedNextState);
+
 					var path = dfsBuchi(buchi,
 							pathSoFar,
 							statesInPathSoFar, 
@@ -264,11 +295,10 @@ public class BuchiModelChecker {
 					return path ;
 				}	
 				pathSoFar.removeLastTransition();
-				model.backTrackToPreviousState() ;
+				buchi.backtrackToPreviousState();
 			}
 			
-			buchi.backtrackToPreviousState();
-			
+			model.backTrackToPreviousState() ;
 		}
 		// if we reach this point then no solution was found:
 		return null ;
