@@ -4,28 +4,39 @@ import java.util.List;
 
 
 /**
- * A general class representing a predicate over finite sequences. Since
- * we typically use such a sequence to represent an execution of some 
- * system through a series of states, elements of the sequence will be
- * called 'states'. These states can be thought as representing
- * the series of states passed by some execution of a system.
+ * An abstract class representing a predicate over finite sequences, defining a
+ * minimum interface needed to evaluate such a predicate on a given sequence.
+ * The class itself does not provide an implementation for the predicate.
+ * 
+ * <p>
+ * Since we typically use such a sequence to represent an execution of some
+ * system through a series of states, elements of the sequence will be called
+ * 'states'. These states can be thought as representing the series of states
+ * passed by some execution of a system.
  * 
  * Note this class does not in itself restrict what a 'state' is. For example,
- * if we need to express a predicate over pairs of (transition,state), then
- * we can use a sequence of such pairs as our 'path'. 
+ * if we need to express a predicate over pairs of (transition,state), then we
+ * can use a sequence of such pairs as our 'path'.
  * 
- * There are two modes to check a sequence:
+ * <p>
+ * Two modes for checking/evaluating a sequence predicate on a sequence are
+ * supported:
  * 
- *    (1) Invoke sat(sequence)
- *    (2) However, giving a sequence of states is not always possible. Assuming
- *        we can still give the states one at a time, we can do it like this:
- *        
- *        (a) invoke startChecking()
- *        (b) feed the state one at a time using checkNext(state)
- *        (c) at the end invoke endChecking()
- *        (d) invoke sat() to get the result.
- *       
- * @author Wish       
+ * <ul>
+ * <li>(1) Invoke {@link #sat(List)}, giving the sequence to it.
+ * <li>(2) However, giving a sequence of states is not always possible. Assuming
+ * we can still give the states one at a time, we can do the checking incrementally like this:
+ * 
+ *   <ol>
+ *   <li>(a) invoke {@link #startChecking()} 
+ *   <li>(b) feed the state one at a time using {@link #checkNext(Object)}
+ *   <li>(c) when there is no more state to check (so, we are at the end of the sequence), 
+ *           invoke {@link #endChecking()}
+ *   <li>(d) invoke {@link #sat()} to get the result.
+ *   </ol>
+ * </ol>
+ * 
+ * @author Wish
  */
 public abstract class SequencePredicate<State> {
 	
@@ -55,10 +66,12 @@ public abstract class SequencePredicate<State> {
      * sequence given to it. The the sequence was given one state at a time using
      * checkNext(), sat() should be called after endChecking() was called.
      * 
-     * The method returns SAT if this predicate holds on the sequence (it is satisfied
-     * by the sequence). 
-     * UNSAT if the sequence does not satisfy this predicate.
-     * UNKNOWN if neither SAT nor UNSAT can be decided.
+     * <ul> 
+     * <li> The method returns SAT if this predicate holds on the sequence (it is satisfied
+     * by the sequence):
+     * <li> UNSAT if the sequence does not satisfy this predicate.
+     * <li> UNKNOWN if neither SAT nor UNSAT can be decided.
+     * </ul>
      */
     public abstract SATVerdict sat();
     
@@ -68,10 +81,12 @@ public abstract class SequencePredicate<State> {
      * endChecking(). A verdict is returned, saying whether this predicate holds on
      * the given sequence.
      * 
-     * The method returns SAT if this predicate holds on the sequence (it is satisfied
+     * <ul>
+     * <li>The method returns SAT if this predicate holds on the sequence (it is satisfied
      * by the sequence). 
-     * UNSAT if the sequence does not satisfy this predicate.
-     * UNKNOWN if neither SAT nor UNSAT can be decided.
+     * <li>UNSAT if the sequence does not satisfy this predicate.
+     * <li>UNKNOWN if neither SAT nor UNSAT can be decided.
+     * </ul> 
      * 
      * Note that the states in the sequence typically represent the states of some
      * system at different points in time, and as such they should not contain shared 

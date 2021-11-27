@@ -16,14 +16,20 @@ import nl.uu.cs.aplib.utils.Pair;
  * such a witness means that ~q holds globally on all states within the maximum
  * depth from the model's initial state.
  * 
- * Additional functionalities are provided e.g. to find a minimum length witness
+ * <p>Additional functionalities are provided e.g. to find a minimum length witness
  * and to produce a test-suite that covers all states of the model.
+ * 
+ * 
+ * 
  * 
  * @author Wish
  *
  */
 public class BasicModelChecker {
 	
+	/**
+	 * The 'program' or 'model of a program' that we want to target in model-checking.
+	 */
 	public ITargetModel model ;
 	
     public MCStatistics stats = new MCStatistics() ;
@@ -71,6 +77,10 @@ public class BasicModelChecker {
 				z.addTransition(step.fst, step.snd);
 			}
 			return z ;
+		}
+		
+		public List<State> getStateSequence() {
+			return path.stream().map(step -> step.snd).collect(Collectors.toList()) ;
 		}
 		
 		@Override

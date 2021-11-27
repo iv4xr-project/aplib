@@ -10,18 +10,32 @@ import eu.iv4xr.framework.extensions.ltl.LTL.LTLVerdictInfo;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
- * Representing an LTL formula. An LTL formula is a predicate over
- * sequences of states. Such a formula can be checked/evaluated whether
- * it holds on a given sequence (whether it is satisfied by the sequence).
- * The evaluation results in either SAT, UNSAT, or UNKNOWN if neither
- * SAT nor UNSAT can be decided.
+ * Provides a representation LTL formulas and a DSL for constructing them. An
+ * LTL formula is a predicate over sequences of states.
  * 
- * In this implementation, only checking over finite sequence is implemented.
  * 
+ * <p>
+ * Additionally methods are provided to evaluate an LTL formula over a finite
+ * sequence of states (evaluating over an infinite sequence is obviously
+ * impossible). Evaluating an LTL formula on a sequence sigma means checking
+ * whether the formula holds on sigma (whether sigma satisfies the formula). The
+ * evaluation results in either SAT, UNSAT, or UNKNOWN if neither SAT nor UNSAT
+ * can be decided.
+ * 
+ * <p>
  * The checking is done recursively over the structure of the LTL, essentially
- * following the recursive semantics of LTL formulas. We start by evaluating
- * the atomic propositions in the formula over the given sequence, and then 
- * bottom-up towards the root LTL.
+ * following the recursive 'semantics' of LTL formulas. We start by evaluating
+ * the atomic propositions in the formula over the given sequence, and then
+ * bottom-up towards the root LTL. The semantics used is mostly as usual, see
+ * e.g. Baier's Principles of Model Checking. However, we define the meaning of
+ * Xp on [s] (a sequence that contains of only one state) is always UNSAT
+ * (even for Xtrue), because the sequence has no next-state. A subtle consequence
+ * of this is the property not(X phi), when interpreted over finite sequences,
+ * is not equivalent to X(not phi) (which they are, when interpreted on infinite 
+ * sequences).
+ * 
+ * <p>For steps needed to evaluate an LTL formula on a sequence, see the documentation
+ * of {@link SequencePredicate}. This class LTL extends SequencePredicate.
  * 
  * @author Wish
  */
@@ -70,7 +84,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     /**
      * Invoke this first before start checking this LTL formula on an execution; this
      * will rest the internal state of this formula, making it ready to check a new 
-     * sequence.
+     * sequence. 
      */
     @Override
     public void startChecking() {
@@ -103,7 +117,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
          
 
     /**
-     * Construct the LTL formula "phi Until psi", where phi is this LTL formula.
+     * phi.Until(psi) constructs the LTL formula "phi U psi".
      */
     public LTL<State> until(LTL<State> psi) {
         var ltl = new Until<State>();
@@ -111,7 +125,10 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         ltl.phi2 = psi;
         return ltl;
     }
-    
+
+    /**
+     * phi.weakUntil(psi) constructs the LTL formula "phi W psi".
+     */
     public LTL<State> weakUntil(LTL<State> psi) {
         var ltl = new WeakUntil<State>();
         ltl.encoding = ltlOr(always(this), this.until(psi)) ;
@@ -122,20 +139,37 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     	return until(now(psi)) ;
     }
     
+    /**
+     * phi.implies(psi) constructs the LTL formula "phi --> psi".
+     */
     public LTL<State> implies(LTL<State> psi) {
     	return ltlNot(ltlAnd(this, ltlNot(psi))) ;
     }
     
-    public static class Now<State> extends LTL<State> {
+    /**
+     * Representing the LTL formula "now(true)".
+     */
+    public static class TT<State> extends LTL<State> {
     	
-        Predicate<State> p;
-        
-        Now() { super() ; }
+    	public TT() { super() ; }
+    	
+        @Override
+        public SATVerdict sat() {
+            return SATVerdict.SAT ;
+        }
 
         @Override
-        public void startChecking() {
-        	super.startChecking() ;
+        void evalAtomSat(State state) {
+            evals.add(new LTL.LTLVerdictInfo(SATVerdict.SAT));
         }
+    	
+    }
+    
+    public static class Now<State> extends LTL<State> {
+    	
+        public Predicate<State> p;
+        
+        Now() { super() ; }
 
         @Override
         public SATVerdict sat() {
@@ -152,7 +186,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     }
 
     public static class Not<State> extends LTL<State> {
-        LTL<State> phi;
+    	public LTL<State> phi;
         
         Not() { super() ; }
 
@@ -196,7 +230,8 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     }
 
     public static class And<State> extends LTL<State> {
-        LTL<State>[] conjuncts;
+        
+    	public LTL<State>[] conjuncts;
         
         And() { super() ; }
 
@@ -245,8 +280,8 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     }
 
     public static class Until<State> extends LTL<State> {
-        LTL<State> phi1;
-        LTL<State> phi2;
+    	public LTL<State> phi1;
+    	public LTL<State> phi2;
         
         Until() { super() ; }
 
@@ -306,7 +341,8 @@ public abstract class LTL<State> extends SequencePredicate<State> {
      * so that we can structurally recognize that a formula is a weak-until formula.
      */
     public static class WeakUntil<State> extends LTL<State> {
-        LTL<State> encoding; // f1 W f2 = always(f1) || f1 U f2
+        
+    	public LTL<State> encoding; // f1 W f2 = always(f1) || f1 U f2
         
         WeakUntil() { super() ; }
 
@@ -343,7 +379,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
 
     public static class Next<State> extends LTL<State> {
 
-        LTL<State> phi;
+    	public LTL<State> phi;
         
         Next() { super() ; }
 
@@ -392,29 +428,43 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     }
 
    
-
+    /**
+     * If p is a state-predicate, this construct the LTL formula "now(p)".
+     */
 	public static <State>  LTL<State> now(Predicate<State> p) {
         var a = new Now<State>();
         a.p = p ;
         return a;
     }
 
+	/**
+	 * If p is a state-predicate, next(p) constructs the LTL formula "X now(p)".
+	 */
     public static <State>  LTL<State> next(LTL<State> phi) {
         var ltl = new Next<State>();
         ltl.phi = phi;
         return ltl;
     }
     
+    /**
+     * next(phi) constructs the LTL formula "X phi".
+     */
     public static <State>  LTL<State> next(Predicate<State> phi) {
         return next(now(phi)) ;
     }
 
+    /**
+     * ltlNot(phi) constructs the LTL formula "not phi".
+     */
     public static <State>  LTL<State> ltlNot(LTL<State> phi) {
         var ltl = new Not<State>();
         ltl.phi = phi;
         return ltl;
     }
 
+    /**
+     * ltlAnd(phi1, ..., phin ) constructs the LTL formula "phi1 && phi2 ... && phin".
+     */
     public static <State>  LTL<State> ltlAnd(LTL<State>... phis) {
         if (phis == null)
             throw new IllegalArgumentException();
@@ -425,6 +475,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         return ltl;
     }
     
+    /**
+     * ltlOr(phi1, ..., phin ) constructs the LTL formula "phi1 || phi2 ... || phin".
+     */
     public static <State>  LTL<State> ltlOr(LTL<State>... phis) {
     	if (phis == null)
             throw new IllegalArgumentException();
@@ -434,18 +487,32 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         return ltlNot(ltlAnd(phis)) ;    	
     }
 
+    /**
+     * evenatually(phi) constructs the LTL formula "F phi" (also written "diamond phi").
+     */
     public static <State>  LTL<State> eventually(LTL<State> phi) {
         return now((State state) -> true).until(phi);
     }
     
+    /**
+     * if p is a state-predicate, evenatually(p) constructs the LTL formula 
+     * "F noq(p)" (also written "diamond now(p)").
+     */
     public static <State>  LTL<State> eventually(Predicate<State> phi) {
         return eventually(now(phi)) ;
     }
 
+    /**
+     * always(phi) constructs the LTL formula "G phi" (also written "[] phi").
+     */
     public static <State> LTL<State> always(LTL<State> phi) {
         return ltlNot(eventually(ltlNot(phi)));
     }
     
+    /**
+     * If p is a state-predicate, always(phi) constructs the LTL formula 
+     * "G now(p)" (also written "[] now(p)").
+     */
     public static <State> LTL<State> always(Predicate<State> phi) {
         return always(now(phi)) ;
     }
