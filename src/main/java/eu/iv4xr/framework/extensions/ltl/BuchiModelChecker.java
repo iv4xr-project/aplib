@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.extensions.ltl.BasicModelChecker.MCStatistics;
 import eu.iv4xr.framework.extensions.ltl.BasicModelChecker.Path;
 import nl.uu.cs.aplib.utils.Pair;
 
@@ -12,48 +13,67 @@ import nl.uu.cs.aplib.utils.Pair;
  * Provide an explicit-state bounded and lazy model checker that can be used to
  * check if a model M has an execution, of up to some maximum length, that would
  * satisfy a certain property. The property is encoded as a Buchi automaton B.
- * An execution of M satisfies this property if it is accepted by B. If such an
- * execution can be found, it can be retrieved as a witness. Note that failing
+ * We implement the double DFS model checking algorithm, similar to the one used
+ * by the SPIN model checker.
+ * 
+ * <p>An infinite execution of M satisfies this property if it is accepted by the 
+ * Buchi automated B. B does not literally check infinite executions, as this would
+ * be impossible. Instead, B is used to look for a witness that it can accept.
+ * A witness is a finite execution, but it implicitly extensible to a set of
+ * infinite exectutions, all of them would be accepted by B. The model-checker
+ * only needs to find such a witness. 
+ * 
+ * <p> For practicality, the model-checking is made 'bounded'. This means that it only
+ * searches for witness of some given maximum length. This allows us to handle
+ * an M that has infinite state space.
+ * 
+ * <p>When a witness is found (so M can produce an infinite execution that satisfies B),
+ * the witness will be returned. Note that failing
  * to find such a witness means that the negation of the property induced by B
- * therefore holds globally on all states within the maximum depth from the
+ * therefore holds globally on all executions of M within the maximum depth from the
  * model's initial state.
  * 
+ * <p>The model checker can be used to target any 'program' or 'model of program'
+ * that implements the interface {@link ITargetModel}.
+ * 
  * @author Wish
- *
+ * 
  */
 public class BuchiModelChecker {
 	
+	/**
+	 * The 'program' or 'model of a program' that we want to target in model-checking.
+	 */
 	public ITargetModel model ;
 	
+	/**
+	 * Hold some basic statistics over the last model-checking run.
+	 */
     public MCStatistics stats = new MCStatistics() ;
 	
-	public static class MCStatistics {
-		public int numberOfStatesExplored = 0 ;
-		public int numberOfTransitionsExplored = 0 ;
-		
-		public void clear() {
-			numberOfStatesExplored = 0 ;
-			numberOfTransitionsExplored = 0 ;
-		}
-		
-		@Override
-		public String toString() {
-			return "Number of states explored: " + numberOfStatesExplored
-					+ "\nNumber of transitions explored: " + numberOfTransitionsExplored ;
-		}
-
-	}
 	
 	public BuchiModelChecker(ITargetModel model) {
 		this.model = model ;
 	}
 	
+	/**
+	 * Check if the target 'program' {@link #model} can produce an infinite execution that
+	 * would be accepted by the given Buchi automaton. If so SAT is returned, and else UNSAT.
+	 */
 	public SATVerdict sat(Buchi buchi) {
 		var path = find(buchi,Integer.MAX_VALUE) ;
 		if(path == null) return SATVerdict.UNSAT ;
 		return SATVerdict.SAT ;
 	}
 	
+	/**
+	 * Check if the target 'program' {@link #model} can produce an infinite execution that
+	 * would be accepted by the given Buchi automaton. If so a witness is returned, and else
+	 * null.
+	 * 
+	 * <p>A 'witness' is a finite execution, that can be 'extended' to a finite execution
+	 * accepted by the Buchi. Further explanation about this can be found here: {@link Buchi}.
+	 */
 	public Path<Pair<IExplorableState,String>> find(Buchi buchi, int maxDepth) {
 		
 		model.reset();
@@ -112,7 +132,14 @@ public class BuchiModelChecker {
 		
 	/**
 	 * The worker of our LTL model-checking algorithm. It is a depth-first search
-	 * (DSF) algorithm. The same algorithm
+	 * (DSF) algorithm. The same algorithm as used in the SPIN model checker.
+	 * It actually perforsm a double-DFS search. To search a witness (an execution
+	 * of the 'program' that would be accepted by the given Buchi), the algorithm
+	 * uses DSF to find either a reachable state that would be non-omega-accepted by
+	 * the Buchi, or to find a reachable cycle that is omega-accepted by the Buchi.
+	 * In the second case, DFS is used to find an O-accepting state o, and then
+	 * a second DSF is used if to check if there is a path that starts from o
+	 * and cycle back to o (which means that we would then have omega acceptance).
 	 * 
 	 * @param buchi                              The Buchi automaton that defines
 	 *                                           the property to check.
