@@ -1,7 +1,7 @@
 package eu.iv4xr.framework.extensions.ltl;
 
 /**
- * Should be hashable and implements equals as well...
+ * Should be hashable and implements equals as well!
  * 
  * @author iswbprasetya
  *
@@ -9,6 +9,6 @@ package eu.iv4xr.framework.extensions.ltl;
 
 public interface IExplorableState extends IState{
 	
-	public IState clone() ;
+	public IExplorableState clone() ;
 
 }

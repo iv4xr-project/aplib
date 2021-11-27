@@ -97,6 +97,11 @@ public class BasicModelChecker {
 			return path.stream().map(step -> step.snd).collect(Collectors.toList()) ;
 		}
 		
+		public State getLastState() {
+			var seq = getStateSequence() ;
+			return seq.get(seq.size() - 1) ;
+		}
+		
 		@Override
 		public String toString() {
 			int k = 0;
@@ -104,7 +109,7 @@ public class BasicModelChecker {
             for (var tr : path) {
                 if (k > 0)
                     s += "\n";
-                s += k + ": action:" + tr.fst + " --> state:" + tr.snd + ">";
+                s += k + ": action:" + tr.fst + " --> state:" + tr.snd ;
                 k++;
             }
             return s;
@@ -122,6 +127,19 @@ public class BasicModelChecker {
 	}
 	
 	/**
+	 * Check if the target program has an finite execution of the specified maximum
+	 * length, that ends in a state satisfying the predicate q. If so, it returns
+	 * SAT, and else UNSAT. <b>Be careful</b> that this method may not terminate
+	 * if the target program has an infinite state space. Use {@link #sat(Predicate, int)}
+	 * instead.
+	 */
+	public SATVerdict sat(Predicate<IExplorableState> q, int maxDepth) {
+		var path = find(q,maxDepth) ;
+		if(path == null) return SATVerdict.UNSAT ;
+		return SATVerdict.SAT ;
+	}
+	
+	/**
 	 * Do model-checking to find a finite execution (of the given max-length) of the
 	 * target program that ends in a state satisfying the predicate q. If so, it
 	 * returns this execution, and else null.
@@ -131,11 +149,9 @@ public class BasicModelChecker {
 		stats.clear(); 
 		Path<IExplorableState> path = new Path<>() ;
 		Collection<IExplorableState> visitedStates = new HashSet<>() ;
-		IExplorableState state = model.getCurrentState() ;
-		path.addInitialState(state);
-		
-		return dfs(q,path,visitedStates,state,maxDepth+1) ;
-		
+		IExplorableState state = model.getCurrentState().clone() ;
+		path.addInitialState(state);	
+		return dfs(q,path,visitedStates,state,maxDepth+1) ;	
 	}
 	
 	/**
@@ -213,7 +229,7 @@ public class BasicModelChecker {
 		var nextTransitions = model.availableTransitions() ;
 		for(var tr: nextTransitions) {
 			model.execute(tr);
-			var nextState = model.getCurrentState() ;
+			var nextState = (IExplorableState) model.getCurrentState().clone() ;
 			pathSoFar.addTransition(tr, nextState);
 			// recurse to the next state:
 			Path result = dfs(whatToFind,pathSoFar,visitedStates,nextState,remainingDepth-1) ;
@@ -249,12 +265,14 @@ public class BasicModelChecker {
 		public List<Pair<Path,CoverageItem>> tests = new LinkedList<>() ;
 		
 		/**
-		 * All coverage-targets that are covered by this test-suite.
+		 * All coverage 'targets' that are covered by this test-suite. It will also include
+		 * targets that were not specified in {@link #targets} but happen to be covered by
+		 * the test-suite.
 		 */
 		public List<CoverageItem> covered = new LinkedList<>() ;
 		
 		/**
-		 * Give all targets that are still left uncovered.
+		 * Give all targets specified by {@link #targets} that are still left uncovered.
 		 */
 		public List<CoverageItem> notCovered() {
 			return targets.stream().filter(st -> ! covered.contains(st)).collect(Collectors.toList()) ;
@@ -262,10 +280,14 @@ public class BasicModelChecker {
 		
 		/**
 		 * Return the coverage degree, which is a number in [0..1]; it is 1 if all
-		 * targets are covered.
+		 * targets from {@link #targets} are covered.
 		 */
 		public float coverage() {
-			return ((float) covered.size() ) / (float) targets.size() ;
+			
+			// the number of actual targets that are covered:
+			long net_covered = this.targets.stream().filter(t -> covered.contains(t)).count() ;
+					
+			return ((float) net_covered ) / (float) targets.size() ;
 		}
 	}
 	
@@ -346,8 +368,11 @@ public class BasicModelChecker {
 					.collect(Collectors.toList())) ;				
 			
 		}
-		
+				
 		suite.covered.addAll(covered) ;
+		
+		//System.out.println(">>> #covered =" + covered.size()) ;
+		//System.out.println(">>> #covered2 =" + suite.covered.size()) ;
 		
 		return suite ;
 	}
