@@ -53,6 +53,8 @@ public class TestAgent extends AutonomousBasicAgent {
 
     protected String testDesc;
     protected TestDataCollector testDataCollector;
+    protected SyntheticEventsProducer syntheticEventsProducer ;
+    
     //protected GoalStructure goal;  <-- agent already has this field!
     
     /**
@@ -97,6 +99,16 @@ public class TestAgent extends AutonomousBasicAgent {
 
     public TestDataCollector getTestDataCollector() {
         return testDataCollector;
+    }
+    
+    public TestAgent attachSyntheticEventsProducer(SyntheticEventsProducer syntheticEventsProducer) {
+    	this.syntheticEventsProducer = syntheticEventsProducer ;
+    	syntheticEventsProducer.agent = this ;
+    	return this ;
+    }
+    
+    public SyntheticEventsProducer getSyntheticEventsProducer() {
+    	return this.syntheticEventsProducer ;
     }
 
     /**
@@ -219,6 +231,9 @@ public class TestAgent extends AutonomousBasicAgent {
         if(testDataCollector != null && scalarInstrumenter != null) {
             Pair<String,Number>[] properties = scalarInstrumenter.apply(state) ;
             registerEvent(new ScalarTracingEvent(properties)) ;
+        }
+        if(this.syntheticEventsProducer != null) {
+        	syntheticEventsProducer.generateCurrentEvents();
         }
     }
 
