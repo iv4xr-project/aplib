@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import eu.iv4xr.framework.extensions.ltl.LTL.TT;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
@@ -254,28 +253,5 @@ public class Buchi {
 		       . filter(tr -> tr.fst.condition.test(state))
 		       . collect(Collectors.toList()) ;
 	}
-	
-	
-	public static boolean isTT_Until_Now_q(LTL phi) {
-		if(! (phi instanceof LTL.Until)) return false ;
-		LTL.Until phi_ = (LTL.Until) phi ;
-		return phi_.phi1 instanceof LTL.TT && phi_.phi2 instanceof LTL.Now ;
-	}
-	
-	public static <State> LTL.Now<State> getqFrom_TT_Until_Now_q(LTL<State> phi) {
-		LTL.Until<State> phi_ = (LTL.Until<State>) phi ;
-		return (LTL.Now<State>) phi_.phi2 ;		
-	}
-	
-	/*
-	public static Buchi ltlToBuchi(LTL phi) {
-		if (isTT_Until_Now_q(phi)) {
-			var q = getqFrom_TT_Until_Now_q(phi) ;
-			
-			Buchi buchi = new Buchi() ;
-		}
-		
-	}
-	*/
 
 }

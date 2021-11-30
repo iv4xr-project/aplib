@@ -131,8 +131,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
      */
     public LTL<State> weakUntil(LTL<State> psi) {
         var ltl = new WeakUntil<State>();
-        ltl.encoding = ltlOr(always(this), this.until(psi)) ;
-        return ltl;
+        ltl.phi1 = this ;
+        ltl.phi2 = psi ;
+        return ltl ;
     }
 
     public LTL<State> until(Predicate<State> psi) {
@@ -146,24 +147,6 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     	return ltlNot(ltlAnd(this, ltlNot(psi))) ;
     }
     
-    /**
-     * Representing the LTL formula "now(true)".
-     */
-    public static class TT<State> extends LTL<State> {
-    	
-    	public TT() { super() ; }
-    	
-        @Override
-        public SATVerdict sat() {
-            return SATVerdict.SAT ;
-        }
-
-        @Override
-        void evalAtomSat(State state) {
-            evals.add(new LTL.LTLVerdictInfo(SATVerdict.SAT));
-        }
-    	
-    }
     
     public static class Now<State> extends LTL<State> {
     	
@@ -183,6 +166,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             else
                 evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNSAT));
         }
+        
+        @Override 
+        public String toString() { return "p" ; }
     }
 
     public static class Not<State> extends LTL<State> {
@@ -227,6 +213,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi.evalAtomSat(state);
         }
+        
+        @Override 
+        public String toString() { return "~(" + phi + ")" ; }
     }
 
     public static class And<State> extends LTL<State> {
@@ -277,6 +266,90 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             for (LTL<State> phi : conjuncts)
                 phi.evalAtomSat(state);
         }
+        
+        @Override 
+        public String toString() { 
+        	String z = "" ;
+        	int k=0 ;
+        	for(var f : conjuncts) {
+        		if(k>0) {
+        			z += " && " ;
+        		}
+        		z += "(" + f + ")" ;
+        	}
+        	return z ; 
+        }
+    }
+    
+    /**
+     * For representing "phi || psi". We could define this as
+     * a derived operator "not(not phi && not psi)", but for
+     * e.g. translation to Buchi we need to be able to structurally
+     * identify the "phi || psi" pattern. So we add this explicit
+     * representation.
+     */
+    public static class Or<State> extends LTL<State> {
+    	
+        public LTL<State>[] disjuncts;
+        
+        Or() { super() ; }
+
+        @Override
+        public void startChecking() {
+        	super.startChecking() ;
+            for (LTL<State> phi : disjuncts)
+                phi.startChecking();
+        }
+
+        @Override
+        public SATVerdict sat() {
+        	
+        	if(fullyEvaluated) 
+        		return evals.getFirst().verdict;
+        	
+            for (LTL<State> phi : disjuncts)
+                phi.sat();
+            var iterator = evals.descendingIterator();
+            var N = disjuncts.length;
+            Iterator<LTL.LTLVerdictInfo>[] disjunctIterators = new Iterator[N];
+            for (int k = 0; k < N; k++)
+            	disjunctIterators[k] = disjuncts[k].evals.descendingIterator();
+
+            while (iterator.hasNext()) {
+                var psi = iterator.next();
+                boolean someSat = false;
+                for (int k = 0; k < N; k++) {
+                    var p = disjunctIterators[k].next().verdict;
+                    someSat = p == SATVerdict.SAT ;
+                    if (someSat) break ;
+                }
+                if (someSat)
+                    psi.verdict = SATVerdict.SAT;
+                else
+                    psi.verdict = SATVerdict.UNSAT;
+            }
+            return evals.getFirst().verdict;
+        }
+
+		@Override
+		void evalAtomSat(State state) {
+			evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
+            for (LTL<State> phi : disjuncts)
+                phi.evalAtomSat(state);
+		}
+		
+		@Override 
+        public String toString() { 
+        	String z = "" ;
+        	int k=0 ;
+        	for(var f : disjuncts) {
+        		if(k>0) {
+        			z += " || " ;
+        		}
+        		z += "(" + f + ")" ;
+        	}
+        	return z ; 
+        }
     }
 
     public static class Until<State> extends LTL<State> {
@@ -304,7 +377,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             var iteratorPhi1 = phi1.evals.descendingIterator();
             var iteratorPhi2 = phi2.evals.descendingIterator();
 
-            // keep track if phi1 untill phi2 holds at sigma(k+1)
+            // keep track if phi1 until phi2 holds at sigma(k+1)
             boolean nextSat = false;
 
             // calculate phi1 until phi2 holds on every sigma(k); we calculate this
@@ -334,6 +407,11 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             phi1.evalAtomSat(state);
             phi2.evalAtomSat(state);
         }
+        
+        @Override 
+        public String toString() { 
+        	return "(" + phi1 + ") U (" + phi2 + ")" ; 
+        }
     }
     
     /**
@@ -342,14 +420,16 @@ public abstract class LTL<State> extends SequencePredicate<State> {
      */
     public static class WeakUntil<State> extends LTL<State> {
         
-    	public LTL<State> encoding; // f1 W f2 = always(f1) || f1 U f2
+    	public LTL<State> phi1 ;
+    	public LTL<State> phi2 ;
         
         WeakUntil() { super() ; }
 
         @Override
         public void startChecking() {
         	super.startChecking();
-        	encoding.startChecking();
+        	phi1.startChecking();
+        	phi2.startChecking();
         }
 
         @Override
@@ -357,7 +437,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         	
         	if(fullyEvaluated) 
         		return evals.getFirst().verdict;
-        
+        	
+        	LTL<State> encoding = ltlOr(always(phi1), phi1.until(phi2)) ;
+      
             encoding.sat();
             var iterator = evals.descendingIterator();
             var iteratorEncoding = encoding.evals.descendingIterator();
@@ -373,7 +455,13 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         @Override
         void evalAtomSat(State state) {
             evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
-            encoding.evalAtomSat(state);
+            phi1.evalAtomSat(state);
+            phi2.evalAtomSat(state);
+        }
+        
+        @Override 
+        public String toString() { 
+        	return "(" + phi1 + ") W (" + phi2 + ")" ; 
         }
     }
 
@@ -424,7 +512,11 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi.evalAtomSat(state);
         }
-
+        
+        @Override 
+        public String toString() { 
+        	return "X(" + phi + ")" ; 
+        }
     }
 
    
@@ -481,10 +573,11 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     public static <State>  LTL<State> ltlOr(LTL<State>... phis) {
     	if (phis == null)
             throw new IllegalArgumentException();
-        for(int k=0; k<phis.length; k++) {
-        	phis[k] = ltlNot(phis[k]) ;
-        }
-        return ltlNot(ltlAnd(phis)) ;    	
+    	if (phis.length < 2)
+            throw new IllegalArgumentException();
+    	var ltl = new Or<State>();
+        ltl.disjuncts = phis;
+        return ltl ;   	
     }
 
     /**
