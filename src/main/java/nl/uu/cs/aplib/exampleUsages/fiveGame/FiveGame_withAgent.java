@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 import alice.tuprolog.InvalidTheoryException;
 import alice.tuprolog.MalformedGoalException;
 import alice.tuprolog.NoSolutionException;
-import alice.tuprolog.SolveInfo;
-import alice.tuprolog.Term;
-import nl.uu.cs.aplib.agents.PrologReasoner;
+//import alice.tuprolog.SolveInfo;
+//import alice.tuprolog.Term;
+//import nl.uu.cs.aplib.agents.PrologReasoner;
 import nl.uu.cs.aplib.agents.State;
 
 import static nl.uu.cs.aplib.agents.PrologReasoner.*;
@@ -309,5 +309,6 @@ public class FiveGame_withAgent {
             System.out.println("(press a ENTER to continue)");
             consoleInput.nextLine();
         }
+        consoleInput.close();
     }
 }

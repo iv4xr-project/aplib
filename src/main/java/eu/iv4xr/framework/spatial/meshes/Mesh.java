@@ -1,12 +1,7 @@
 package eu.iv4xr.framework.spatial.meshes;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import eu.iv4xr.framework.spatial.Vec3;
-import eu.iv4xr.framework.spatial.meshes.*;
 
 /**
  * A simple container to store mesh-data. A mesh is basically a set of

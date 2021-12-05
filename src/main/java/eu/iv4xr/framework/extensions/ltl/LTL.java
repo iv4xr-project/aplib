@@ -1,13 +1,9 @@
 package eu.iv4xr.framework.extensions.ltl;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.function.Predicate;
 
-import eu.iv4xr.framework.extensions.ltl.LTL.LTLVerdictInfo;
-import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
  * Provides a representation LTL formulas and a DSL for constructing them. An
@@ -248,14 +244,17 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             while (iterator.hasNext()) {
                 var psi = iterator.next();
                 boolean allSat = true;
+                boolean someUnsat = false ;
                 for (int k = 0; k < N; k++) {
                     var p = conjuntIterators[k].next().verdict;
                     allSat = allSat && (p == SATVerdict.SAT);
+                    someUnsat = someUnsat || (p == SATVerdict.UNSAT) ;
                 }
                 if (allSat)
-                    psi.verdict = SATVerdict.SAT;
-                else
-                    psi.verdict = SATVerdict.UNSAT;
+                     psi.verdict = SATVerdict.SAT;
+                else if (someUnsat)
+                	 psi.verdict = SATVerdict.UNSAT ;
+                else psi.verdict = SATVerdict.UNKNOWN ;
             }
             return evals.getFirst().verdict;
         }
@@ -318,15 +317,18 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             while (iterator.hasNext()) {
                 var psi = iterator.next();
                 boolean someSat = false;
+                boolean allUnsat = true ;
                 for (int k = 0; k < N; k++) {
                     var p = disjunctIterators[k].next().verdict;
-                    someSat = p == SATVerdict.SAT ;
-                    if (someSat) break ;
+                    someSat = someSat || (p == SATVerdict.SAT) ;
+                    allUnsat = allUnsat && (p == SATVerdict.UNSAT) ;
                 }
                 if (someSat)
                     psi.verdict = SATVerdict.SAT;
-                else
-                    psi.verdict = SATVerdict.UNSAT;
+                else if (allUnsat)
+                	psi.verdict = SATVerdict.UNSAT;
+                else 
+                    psi.verdict = SATVerdict.UNKNOWN ;
             }
             return evals.getFirst().verdict;
         }

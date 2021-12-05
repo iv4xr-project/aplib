@@ -2,7 +2,6 @@ package eu.iv4xr.framework.spatial;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 
 /**
  * Representing a 3D rectangular shape. For now, we don't support rotation.

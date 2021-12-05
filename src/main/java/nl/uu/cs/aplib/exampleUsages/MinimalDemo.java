@@ -1,7 +1,5 @@
 package nl.uu.cs.aplib.exampleUsages;
 
-import static nl.uu.cs.aplib.AplibEDSL.ANYof;
-import static nl.uu.cs.aplib.AplibEDSL.FIRSTof;
 import static nl.uu.cs.aplib.AplibEDSL.action;
 import static nl.uu.cs.aplib.AplibEDSL.goal;
 

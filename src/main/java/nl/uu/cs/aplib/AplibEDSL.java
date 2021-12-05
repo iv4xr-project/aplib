@@ -1,10 +1,5 @@
 package nl.uu.cs.aplib;
 
-import static nl.uu.cs.aplib.AplibEDSL.ABORT;
-import static nl.uu.cs.aplib.AplibEDSL.SEQ;
-import static nl.uu.cs.aplib.AplibEDSL.action;
-import static nl.uu.cs.aplib.AplibEDSL.goal;
-
 import java.util.function.Function;
 import java.util.function.Predicate;
 

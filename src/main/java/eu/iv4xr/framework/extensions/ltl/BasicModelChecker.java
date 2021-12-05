@@ -74,19 +74,19 @@ public class BasicModelChecker {
 		public List<Pair<ITransition,State>> path = new LinkedList<>() ;
 		
 		void addInitialState(State state) {
-		    path.add(new Pair(null,state)) ;	
+		    path.add(new Pair<ITransition,State>(null,state)) ;	
 		}
 		
 		void addTransition(ITransition tr, State state) {
-			path.add(new Pair(tr,state)) ;
+			path.add(new Pair<ITransition,State>(tr,state)) ;
 		}
 		
 		void removeLastTransition() {
 			path.remove(path.size() - 1) ;
 		}
 		
-		Path copy() {
-			Path z = new Path() ;
+		Path<State> copy() {
+			Path<State> z = new Path<>() ;
 			for(var step : this.path) {
 				z.addTransition(step.fst, step.snd);
 			}
@@ -232,7 +232,7 @@ public class BasicModelChecker {
 			var nextState = (IExplorableState) model.getCurrentState().clone() ;
 			pathSoFar.addTransition(tr, nextState);
 			// recurse to the next state:
-			Path result = dfs(whatToFind,pathSoFar,visitedStates,nextState,remainingDepth-1) ;
+			Path<IExplorableState> result = dfs(whatToFind,pathSoFar,visitedStates,nextState,remainingDepth-1) ;
 			if(result != null) {
 				// a solving path is found! Return the path:
 				return result ;
@@ -320,7 +320,7 @@ public class BasicModelChecker {
 	 * 
 	 * @return The resulting test-suite.
 	 */
-	public <CoverageItem> TestSuite testSuite(
+	public <CoverageItem> TestSuite<CoverageItem> testSuite(
 			List<CoverageItem> itemsToCover, 
 			Function<IExplorableState,CoverageItem> coverageFunction,
 			int maxLength, 
@@ -361,7 +361,7 @@ public class BasicModelChecker {
 				System.out.println(" YES") ;
 			}
 			
-			suite.tests.add(new Pair(path,target)) ;
+			suite.tests.add(new Pair<Path,CoverageItem>(path,target)) ;
 			
 			covered.addAll(path.path.stream()
 					.map(step -> coverageFunction.apply(step.snd))

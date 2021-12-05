@@ -1,10 +1,7 @@
 package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.exception.AplibError;
 
 /**
  * A GoalStructure is a generalization of a {@link Goal}. It is a tree-shaped

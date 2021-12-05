@@ -69,11 +69,11 @@ public class LTL2Buchi {
 	// Bunch of functions to recognize patterns and deconstruct them
 	// ======
 	
-	public static boolean isAtom(LTL phi) {
+	public static <State> boolean isAtom(LTL<State> phi) {
 		return phi instanceof Now ;
 	}
 	
-	public static boolean isNotAtom(LTL phi) {
+	public static <State> boolean isNotAtom(LTL<State> phi) {
 		return !(phi instanceof Now) ;
 	}
 	
@@ -215,7 +215,7 @@ public class LTL2Buchi {
 		}
 		// case not(phi W psi)
 		WeakUntil<State> phi_case7 = isNotWeakUntil(f) ;
-		if(phi_case6 != null) {
+		if(phi_case7 != null) {
 					
 			var psi1 = pushNegations(ltlAnd(phi_case7.phi1, 
 					                    ltlNot(phi_case7.phi2))) ;

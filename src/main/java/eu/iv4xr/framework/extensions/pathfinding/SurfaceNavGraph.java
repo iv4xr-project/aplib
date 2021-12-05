@@ -1,14 +1,11 @@
 package eu.iv4xr.framework.extensions.pathfinding;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.Line;
-import eu.iv4xr.framework.spatial.Obstacle;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.*;
 import nl.uu.cs.aplib.utils.Pair;
-import eu.iv4xr.framework.mainConcepts.WorldEntity;
 
 /**
  * A navigation-graph over a 3D-surface. The surface is described by a set of
@@ -123,7 +120,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      */
     float faceAreaThresholdToAddCenterNode;
 
-    Pathfinder pathfinder;
+    Pathfinder<Integer> pathfinder;
 
     /**
      * Create an intance of SurfaceNavGraph from a given mesh. Note that for each
@@ -150,7 +147,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         for (int k = 0; k < numberOfBaseVertices; k++) {
             verticesType.add(VertexType.OTHER);
         }
-        Set<Integer> borderVertices;
+        //Set<Integer> borderVertices;
         for (Edge e : mesh.edges) {
             int countMembership = 0;
             for (Face face : mesh.faces) {
@@ -210,7 +207,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         wipeOutMemory();
 
         // setting A* as the default pathfinder:
-        pathfinder = new AStar();
+        pathfinder = new AStar<Integer>();
     }
 
     /**
@@ -224,7 +221,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         }
     }
 
-    public void setPathFinder(Pathfinder pf) {
+    public void setPathFinder(Pathfinder<Integer> pf) {
         pathfinder = pf;
     }
 
@@ -244,9 +241,9 @@ public class SurfaceNavGraph extends SimpleNavGraph {
             // it as "seen".
             if (verticesType.get(v) != VertexType.CENTRE) {
                 var neighbors = edges.neighbours(v);
-                var vloc = vertices.get(v);
+                //var vloc = vertices.get(v);
                 for (Integer z : neighbors) {
-                    var zloc = vertices.get(z);
+                    //var zloc = vertices.get(z);
                     // the 2nd cond is a HACK!
                     if (verticesType.get(z) == VertexType.CENTRE
                     // || Vec3.dist(vloc,zloc) <= 0.4
@@ -471,7 +468,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
             if (seenVertices.get(v)) {
                 for (Integer z : edges.neighbours(v)) {
                     if (!seenVertices.get(z) && !isBlocked(vloc, vertices.get(z))) {
-                        frontiers.add(new Pair(v, z));
+                        frontiers.add(new Pair<Integer, Integer>(v, z));
                         break;
                     }
                 }
@@ -596,7 +593,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     			Vec3 vloc = vertices.get(v);
     			//System.out.println(" seen vertices " + v + " , " + vloc + " , " + selectedVertises.contains(vloc));
         		if(Vec3.distSq(vloc, targetLocation) <= viewDistanceSq && !excludedVertises.contains(vloc)) {
-        			candidates.add(new Pair(vloc,v));
+        			candidates.add(new Pair<Vec3, Integer>(vloc,v));
         		}										
     		}           
     	}
@@ -814,7 +811,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         // start with calculating the distance to the face center, if we keep track of
         // its center:
         List<Integer> candidates = new LinkedList<>();;
-        float best_distsq = Float.POSITIVE_INFINITY;
+        //float best_distsq = Float.POSITIVE_INFINITY;
         Integer v = faceToCenterIdMap.get(face);
         Vec3 v_loc = null;
         if (v != null) {

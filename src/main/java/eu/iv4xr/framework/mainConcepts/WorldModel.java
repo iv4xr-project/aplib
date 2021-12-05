@@ -1,10 +1,8 @@
 package eu.iv4xr.framework.mainConcepts;
 
-import java.io.Serializable;
 import java.util.*;
 
 import eu.iv4xr.framework.spatial.Vec3;
-import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**
  * This describes a fragment of a virtual world in terms of how it is

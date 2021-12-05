@@ -1,11 +1,8 @@
 package eu.iv4xr.framework.environments;
 
-import eu.iv4xr.framework.exception.Iv4xrError;
 import eu.iv4xr.framework.mainConcepts.Iv4xrEnvironment;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
 import eu.iv4xr.framework.spatial.Vec3;
-import eu.iv4xr.framework.spatial.meshes.Mesh;
-import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * An additional interface that can be added when sub-classing {@link Iv4xrEnvironment}.

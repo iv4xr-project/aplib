@@ -2,7 +2,6 @@ package eu.iv4xr.framework.environments;
 
 import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
-import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 
 /**

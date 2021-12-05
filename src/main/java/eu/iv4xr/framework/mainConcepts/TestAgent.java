@@ -1,14 +1,10 @@
 package eu.iv4xr.framework.mainConcepts;
 
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
-import static eu.iv4xr.framework.mainConcepts.TestDataCollector.*;
-
-import java.util.*;
 import java.util.function.Function;
 
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.agents.State;
-import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.CostFunction;
 import nl.uu.cs.aplib.mainConcepts.Deliberation;
 import nl.uu.cs.aplib.mainConcepts.Environment;

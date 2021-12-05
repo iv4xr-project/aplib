@@ -1,6 +1,6 @@
 package nl.uu.cs.aplib.multiAgentSupport;
 
-import java.util.Comparator;
+//import java.util.Comparator;
 import java.util.Date;
 
 /**

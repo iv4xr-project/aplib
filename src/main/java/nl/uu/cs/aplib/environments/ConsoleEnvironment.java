@@ -3,7 +3,6 @@ package nl.uu.cs.aplib.environments;
 import java.util.Scanner;
 
 import nl.uu.cs.aplib.mainConcepts.Environment;
-import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
 /**
  * A simple implementation of {@link nl.uu.cs.aplib.mainConcepts.Environment}

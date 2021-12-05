@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import nl.uu.cs.aplib.mainConcepts.Environment;
-import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 
 /**
  * A root class of an Environment that communicates with the real environment by

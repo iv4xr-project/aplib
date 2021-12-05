@@ -65,7 +65,7 @@ public class SimpleNavGraph implements Navigatable<Integer> {
 	}
 
 	public void removeObstacle(LineIntersectable tobeRemoved) {
-		Obstacle q = null;
+		Obstacle<LineIntersectable> q = null;
 		for (var o : obstacles) {
 			if (o.obstacle == tobeRemoved) {
 				q = o;

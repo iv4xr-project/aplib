@@ -2,7 +2,6 @@ package nl.uu.cs.aplib.agents;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 
 import nl.uu.cs.aplib.mainConcepts.*;

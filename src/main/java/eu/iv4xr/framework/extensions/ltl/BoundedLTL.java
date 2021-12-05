@@ -116,7 +116,7 @@ public class BoundedLTL extends SequencePredicate<Pair<ITransition,IState>> {
         List<Pair<String,String>> trace = new LinkedList<>();
 
         public void register(ITransition transitionLabel, IState resultingState) {
-            trace.add(new Pair(transitionLabel.getId(),resultingState.showState())) ;
+            trace.add(new Pair<String,String>(transitionLabel.getId(),resultingState.showState())) ;
         }
 
         public void reset() {

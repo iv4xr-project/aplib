@@ -1,9 +1,5 @@
 package nl.uu.cs.aplib.mainConcepts;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,10 +9,6 @@ import nl.uu.cs.aplib.exception.AplibError;
 import nl.uu.cs.aplib.mainConcepts.Action.Abort;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.GoalsCombinator;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
-import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
-import nl.uu.cs.aplib.multiAgentSupport.ComNode;
-import nl.uu.cs.aplib.multiAgentSupport.Message;
-import nl.uu.cs.aplib.multiAgentSupport.Messenger;
 import nl.uu.cs.aplib.utils.Time;
 
 /**

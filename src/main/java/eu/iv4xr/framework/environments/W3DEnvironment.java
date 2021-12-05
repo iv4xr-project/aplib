@@ -1,12 +1,10 @@
 package eu.iv4xr.framework.environments;
 
 import eu.iv4xr.framework.exception.Iv4xrError;
-import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
 import eu.iv4xr.framework.mainConcepts.Iv4xrEnvironment;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.Mesh;
-import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
@@ -93,7 +91,7 @@ public class W3DEnvironment extends Iv4xrEnvironment implements IW3DEnvironment 
      */
     @Override
     public WorldModel moveToward(String agentId, Vec3 agentLocation, Vec3 targetLocation) {
-        return (WorldModel) sendCommand(agentId, null, MOVETOWARD_CMDNAME, new Pair(agentLocation, targetLocation),
+        return (WorldModel) sendCommand(agentId, null, MOVETOWARD_CMDNAME, new Pair<Vec3,Vec3>(agentLocation, targetLocation),
                 WorldModel.class);
     }
 
