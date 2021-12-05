@@ -212,94 +212,12 @@ public class WorldModel {
     }
 
     /**
-     * A query method that returns the set of possible interaction-types(e.g.
-     * "push", "pick-up") that an agent can do on in-world entities. For each
-     * interaction-type I, the method also returns a mapping to the type of entities
-     * that interactions of type I would be applicable, e.g. "push" would be
-     * applicable to "button"s. The set of available interaction types and their
-     * mapping to entities-types depend on the specific game under test, but this
-     * set and mapping should be static.
-     * 
-     * Note that when e.g. "pick-up" is applicable to entities of type "flower", it
-     * only means that the agent can potentially pick up a flower. Whether this is
-     * actually possible still depends on e.g. the agent state, e.g. if it stands
-     * close enough to the flower. The logic of state-dependent applicability can be
-     * queried through the method canInteract(). Note that even then, it is still up
-     * to the game under test to have the final say whether the interaction, when
-     * attempted, would be successful.
-     * 
-     * This method should be implemented by the subclass. So, override this.
-     */
-    public Map<String, Set<String>> availableInteractionTypes() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * A query method that checks whether it would be possible for the agent to do
-     * an interaction of type ity (e.g. "push") on the specified target entity. The
-     * method will inspect both the agent state (e.g. its position) and the target
-     * entity's state (as far as these informations are available in this
-     * WorldModel) to infer if the interaction would be possible.
-     * 
-     * Note that the inference done by this method would be based on the information
-     * available in this WorldModel, which may only partially represent the actual
-     * game state. So, even if this method returns a "true", executing the
-     * interaction on the game under test may still be unsuccessful.
-     * 
-     * This method should be implemented by the subclass. So, override this.
-     */
-    public boolean canInteract(String interactionType, WorldEntity e) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * A query method that checks whether the given entity can block movement. If
      * so, it returns true, and else false. This method should be implemented by the
      * subclass. So, override this.
      */
     public boolean isBlocking(WorldEntity e) {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Execute an interaction of the specified type on the given target entity. This
-     * means that the command to do the interaction will actually be sent to the
-     * game under test. The method also expects an instance of Environment because
-     * it is needed as the party that will actually send commands to the game.
-     * 
-     * It returns an observation of the real environment, sampled just after the
-     * interaction.
-     */
-    public Object interact(W3DEnvironment env, String interactionType, WorldEntity e) {
-        return env.interact(agentId, e.id, interactionType);
-    }
-
-    // some examples of standard actions that the agent can do, other than
-    // interacting
-    // with in-game entities:
-
-    /**
-     * Sample the world around the agent. This will return an instance of
-     * WorldModel, representing the part of the world that the agent currently sees.
-     */
-    public WorldModel observe(W3DEnvironment env) {
-        return env.observe(agentId);
-    }
-
-    /**
-     * The agent will move some (small) distance is towards the given target
-     * location. This method will NOT deal with obstacles in-between. Assuming that
-     * the space between the agent and the target location is clear of obstacle,
-     * whether the agent can cover the full distance or only some of it depends on
-     * the speed of the agent. E.g. is the speed is fixed and the distance is more
-     * than what this speed can cover in a single "cycle", then obviously the full
-     * distance will not be covered.
-     * 
-     * It returns an observation of the real environment, sampled at the end of the
-     * move.
-     */
-    public WorldModel moveToward(W3DEnvironment env, Vec3 targetLocation) {
-        return env.moveToward(agentId, position, targetLocation);
     }
 
 }

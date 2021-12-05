@@ -254,6 +254,13 @@ public class BasicAgent {
         state.logger = this.logger;
         return this;
     }
+    
+    /**
+     * Return the agent's state.
+     */
+    public SimpleState state() {
+    	return state ;
+    }
 
     /**
      * Attach an Environment to this agent. To be more precise, to attach the
@@ -265,6 +272,13 @@ public class BasicAgent {
             throw new IllegalArgumentException("The agent needs to have a state to attach an environment to it.");
         state.setEnvironment(env);
         return this;
+    }
+    
+    /**
+     * Return the environment attached to this agent.
+     */
+    public Environment env() {
+    	return state.env() ;
     }
 
     /**

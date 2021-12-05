@@ -59,7 +59,7 @@ public class TestAgent extends AutonomousBasicAgent {
     
     /**
      * If defined, this function can be used to evaluate an agent's state, to produce a list
-     * of name-value properties of the state. The value is required to be nummeric.
+     * of name-value properties of the state. The value is required to be numeric.
      */
     protected Function<SimpleState,Pair<String,Number>[]> scalarInstrumenter = null ;
 
@@ -220,11 +220,34 @@ public class TestAgent extends AutonomousBasicAgent {
         return (TestAgent) super.withCostFunction(f);
     }
     
+	/**
+	 * Attach an instrumentation function. This is a function can be used to
+	 * evaluate an agent's state, to produce a list of name-value properties of the
+	 * state. The value is required to be numeric.
+	 */
     public TestAgent withScalarInstrumenter(Function<SimpleState,Pair<String,Number>[]> scalarInstrumenter) {
         this.scalarInstrumenter =  scalarInstrumenter ;
         return this ;
     }
     
+	/**
+	 * This will invoke the stadard update() function of the agent. This is defined
+	 * by {@link nl.uu.cs.aplib.mainConcepts.BasicAgent#update()}; e.g. this decides
+	 * which action is to take next and execute that action. If the action solves
+	 * the current goal, the next goal will be decided.
+	 * 
+	 * <p>
+	 * Additionally, in this update() the following updates are also performed:
+	 * 
+	 * <ul>
+	 * <li>If there is a data-collector {@link #testDataCollector} and a
+	 * scalar-instrumenter {@link #scalarInstrumenter} attached to this state, the
+	 * instrumenter will be invoked, and the resulting data are registered into the
+	 * data-collector.
+	 * <li>If there is a synthetic event-producer {@link #syntheticEventsProducer}
+	 * attached to this state, it will be invoked.
+	 * </ul>
+	 */
     @Override
     public void update() {
         super.update();

@@ -1,22 +1,25 @@
-package eu.iv4xr.framework.mainConcepts;
+package eu.iv4xr.framework.environments;
 
 import eu.iv4xr.framework.exception.Iv4xrError;
 import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
+import eu.iv4xr.framework.mainConcepts.Iv4xrEnvironment;
+import eu.iv4xr.framework.mainConcepts.WorldModel;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.Mesh;
-import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.Environment.EnvOperation;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
- * An extension of {@link nl.uu.cs.aplib.mainConcepts.Environment}. It adds
+ * An extension of {@link eu.iv4xr.framework.mainConcepts.Iv4xrEnvironment}. It adds
  * methods typical for interacting with a 3D-virtual-world environment. Examples
  * of such an environment are 3D games or simulators.
+ * This class provides only a partial implementation of Iv4xrEnvironment.
+ * You still need to implement the method {@link #sendCommand_(EnvOperation)}.
  * 
  * @author Wish
  *
  */
-public class W3DEnvironment extends Environment {
+public class W3DEnvironment extends Iv4xrEnvironment implements IW3DEnvironment {
 
     static public String LOADWORLD_CMDNAME = "LoadWorld";
     static public String OBSERVE_CMDNAME = "Observe";
@@ -26,7 +29,16 @@ public class W3DEnvironment extends Environment {
      * A polygon-mesh describing the navigable surface of the 3D-world represented
      * by this environment.
      */
-    public Mesh worldNavigableMesh;
+    Mesh worldNavigableMesh;
+    
+    /**
+     * Return the polygon-mesh describing the navigable surface of the 3D-world represented
+     * by this environment. This is the mesh stored in {@link #worldNavigableMesh}. 
+     */
+    @Override
+    public Mesh worldNavigableMesh() {
+    	return worldNavigableMesh ;
+    }
 
     /**
      * Execute an interaction of the specified type on the given target entity in
@@ -45,6 +57,7 @@ public class W3DEnvironment extends Environment {
      * @param agentId  The id of the agent that does the interaction.
      * @param targetId The id of the entity that is the target of the interaction.
      */
+    @Override
     public WorldModel interact(String agentId, String targetId, String interactionType) {
         return (WorldModel) sendCommand(agentId, targetId, interactionType, null, WorldModel.class);
     }
@@ -78,6 +91,7 @@ public class W3DEnvironment extends Environment {
      * The method should return a new observation, sampled at the end of its
      * movement.
      */
+    @Override
     public WorldModel moveToward(String agentId, Vec3 agentLocation, Vec3 targetLocation) {
         return (WorldModel) sendCommand(agentId, null, MOVETOWARD_CMDNAME, new Pair(agentLocation, targetLocation),
                 WorldModel.class);
@@ -88,6 +102,7 @@ public class W3DEnvironment extends Environment {
      * navigation-mesh of its 3D world. This mesh is assumed to be static (does not
      * change through out the agents' runs).
      */
+    @Override
     public void loadWorld() {
         worldNavigableMesh = (Mesh) sendCommand(null, null, LOADWORLD_CMDNAME, null, Mesh.class);
         if (worldNavigableMesh == null)
