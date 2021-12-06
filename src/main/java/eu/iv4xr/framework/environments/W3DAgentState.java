@@ -27,8 +27,9 @@ public class W3DAgentState extends Iv4xrAgentState<Integer> {
 
 	// public SurfaceNavGraph worldNavigation;
 
+	@Override
 	public SurfaceNavGraph worldNavigation() {
-		return (SurfaceNavGraph) worldNavigation();
+		return (SurfaceNavGraph) super.worldNavigation();
 	}
 
 	/*
@@ -49,6 +50,12 @@ public class W3DAgentState extends Iv4xrAgentState<Integer> {
 	 * faceAreaThresholdToAddCenterNode.
 	 */
 	public W3DAgentState setEnvironment(W3DEnvironment env, float faceAreaThresholdToAddCenterNode) {
+		if(env == null) {
+			throw new IllegalArgumentException("Cannot attach a null environment to a state.") ;
+		}
+		if (!(env instanceof W3DEnvironment)) {
+			throw new IllegalArgumentException("This class requires an W3DEnvironment as its environment.");
+		}
 		super.setEnvironment(env);
 		setWorldNavigation(new SurfaceNavGraph(env.worldNavigableMesh(), faceAreaThresholdToAddCenterNode)) ;
 		return this;
@@ -62,10 +69,7 @@ public class W3DAgentState extends Iv4xrAgentState<Integer> {
 	 * faceAreaThresholdToAddCenterNode set to 1.0.
 	 */
 	@Override
-	public W3DAgentState setEnvironment(Environment env) {
-		if (!(env instanceof W3DEnvironment)) {
-			throw new IllegalArgumentException("This class requires an W3DEnvironment as its environment.");
-		}
+	public W3DAgentState setEnvironment(Environment env) {	
 		return setEnvironment((W3DEnvironment) env, 1.0f);
 	}
 

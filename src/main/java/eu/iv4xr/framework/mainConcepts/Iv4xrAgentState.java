@@ -85,6 +85,9 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 */
 	@Override
 	public Iv4xrAgentState<NavgraphNode> setEnvironment(Environment env) {
+		if(env == null) {
+			throw new IllegalArgumentException("Cannot attach a null environment to a state.") ;
+		}
 		if (!(env instanceof Iv4xrEnvironment)) {
 			throw new IllegalArgumentException("This class requires an Iv4xrEnvironment as its environment.");
 		}

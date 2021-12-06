@@ -27,7 +27,7 @@ public class W3DEnvironment extends Iv4xrEnvironment implements IW3DEnvironment 
      * A polygon-mesh describing the navigable surface of the 3D-world represented
      * by this environment.
      */
-    Mesh worldNavigableMesh;
+    protected Mesh worldNavigableMesh;
     
     /**
      * Return the polygon-mesh describing the navigable surface of the 3D-world represented
