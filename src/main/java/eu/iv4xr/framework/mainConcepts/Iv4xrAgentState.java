@@ -30,7 +30,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	/**
 	 * Representing the current state of the target world.
 	 */
-	public WorldModel wom;
+	public WorldModel worldmodel;
 
 	/**
 	 * A navigation graph for navigating the the target world. Every node represent
@@ -59,12 +59,12 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	}
 
 	/**
-	 * Return the value in {@link #wom}.
+	 * Return the value in {@link #worldmodel}.
 	 * 
 	 * @return
 	 */
-	public WorldModel wom() {
-		return wom;
+	public WorldModel worldmodel() {
+		return worldmodel;
 	}
 
 	/**
@@ -98,15 +98,18 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	/**
 	 * This will call the observe() method of the environment attached to this state
 	 * to obtain a fresh observation, and then uses it to update this state. If
-	 * {@link #wom} exists, this new observation will be merged into the
-	 * {@link #wom}.
+	 * {@link #worldmodel} exists, this new observation will be merged into the
+	 * {@link #worldmodel}.
 	 */
 	@Override
 	public void updateState(String agentId) {
-		// note: intentionally NOTE calling super.updateState()
+		// note: intentionally NOT calling super.updateState()
 		var newObs = env().observe(agentId);
-		if (wom != null) {
-			wom.mergeNewObservation(newObs);
+		if (worldmodel != null) {
+			worldmodel.mergeNewObservation(newObs);
+		}
+		else {
+			worldmodel = newObs ;
 		}
 	}
 

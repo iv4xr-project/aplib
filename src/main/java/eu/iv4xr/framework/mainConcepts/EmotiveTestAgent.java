@@ -23,7 +23,7 @@ public class EmotiveTestAgent extends TestAgent {
 	 * Attach an emotion state to this agent. By this we mean attaching a structure
 	 * that can represent the agent's emotion.
 	 */
-	public EmotiveTestAgent attachEmptionState(IEmotionState estate) {
+	public EmotiveTestAgent attachEmotionState(IEmotionState estate) {
 		this.estate = estate;
 		return this;
 	}
