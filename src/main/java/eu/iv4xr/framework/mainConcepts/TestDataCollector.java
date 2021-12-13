@@ -84,6 +84,17 @@ public class TestDataCollector implements Parsable {
             // TODO Auto-generated method stub
             throw new UnsupportedOperationException("TODO");
         }
+        
+        /**
+         * Clear the trace and reset verdict-counts to 0.
+         */
+        public void reset() {
+        	trace.clear(); 
+            numOfPassVerdicts = 0;
+            numOfUndecidedVerdicts = 0;
+            numOfFailVerdicts = 0;
+            lastFailVerdict = null;
+        }
     }
 
     /**
@@ -125,6 +136,16 @@ public class TestDataCollector implements Parsable {
             if (collectiveCovMap != null) {
                 collectiveCovMap.registerVisit(e, null);
             }
+        }
+        
+        /**
+         * Reset all counts to 0.
+         */
+        synchronized void reset() {
+        	for(var e : coverage.entrySet()) {
+        		e.setValue(0) ;
+        	}
+        	
         }
 
     }
@@ -431,6 +452,20 @@ public class TestDataCollector implements Parsable {
 		}
 	}
     
+	/**
+	 * Reset the agents' traces recorded in this data-collector, and also reset all
+	 * coverage information tracked by this data-collector (that means reseting their
+	 * visit-counts to 0). 
+	 */
+	public void reset() {
+		for (var tr : this.perAgentEventTrace.values()) {
+			tr.reset(); 
+		}
+		for (var cmap : this.perAgentCoverage.values()) {
+			cmap.reset(); 
+		}
+		this.collectiveCoverageMap.reset(); 
+	}
 
     /**
      * Merge two sets of collected test data. The merged data is put into a new
