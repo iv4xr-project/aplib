@@ -18,6 +18,15 @@ public class EmotiveTestAgent extends TestAgent {
 	public EmotiveTestAgent() {
 		super();
 	}
+	
+	/**
+     * Create a plain instance of emotive-TestAgent with the given id and role. To be useful
+     * you will need to add few other things to it, e.g. a state and a goal. You
+     * also need to link it to a {@link TestDataCollector}.
+     */
+    public EmotiveTestAgent(String id, String role) {
+        super(id, role);
+    }
 
 	/**
 	 * Attach an emotion state to this agent. By this we mean attaching a structure
