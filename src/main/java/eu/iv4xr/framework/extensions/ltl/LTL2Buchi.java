@@ -65,6 +65,38 @@ import java.util.stream.Collectors;
  */
 public class LTL2Buchi {
 	
+	
+	public static <State> LTL<State> arg(LTL<State> phi) {
+		if (phi instanceof Not) {
+			return ((Not<State>) phi).phi ;
+		}
+		if (phi instanceof Next) {
+			return ((Next<State>) phi).phi ;
+		}
+		throw new IllegalArgumentException("Formula " + phi + " has no LTL-arg") ;
+	}
+	
+	public static <State> LTL<State> argL(LTL<State> phi) {
+		if (phi instanceof Until) {
+			return ((Until<State>) phi).phi1 ;
+		}
+		if (phi instanceof WeakUntil) {
+			return ((Until<State>) phi).phi1 ;
+		}
+		throw new IllegalArgumentException("Formula " + phi + " has no LTL-argL") ;
+	}
+	
+	public static <State> LTL<State> argR(LTL<State> phi) {
+		if (phi instanceof Until) {
+			return ((Until<State>) phi).phi2 ;
+		}
+		if (phi instanceof WeakUntil) {
+			return ((Until<State>) phi).phi2 ;
+		}
+		throw new IllegalArgumentException("Formula " + phi + " has no LTL-argR") ;
+	}
+	
+	
 	// ======
 	// Bunch of functions to recognize patterns and deconstruct them
 	// ======
@@ -78,7 +110,7 @@ public class LTL2Buchi {
 	}
 	
 	/**
-	 * To recognize and destruct "now p".
+	 * To recognize and destruct "now p". Returns p.
 	 */
 	public static <State> Predicate<State> isNow(LTL<State> phi) {
 		if(isNotAtom(phi)) return null ;
@@ -86,59 +118,79 @@ public class LTL2Buchi {
 	}
 
 	/**
-	 * To recognize and destruct "not(now p)".
+	 * To recognize and destruct "not(now p)". Returns now p.
 	 */
 	public static <State> Now<State> isNotNow(LTL<State> phi) {
-		if(! (phi instanceof Not)) return null ;
-		var f = (Not<State>) phi ;
-		if(isNotAtom(f.phi)) return null ;
-		return (Now<State>) f.phi ;
+		if (!(phi instanceof Not))
+			return null;
+		var f = (Not<State>) phi;
+		if (isNotAtom(f.phi))
+			return null;
+		return (Now<State>) arg(phi);
 	}
 	
 	/**
 	 * To recognize and destruct "not(phi)" pattern, where phi
-	 * is non-atomic.
+	 * is non-atomic. This returns phi.
 	 */
 	public static <State> LTL<State> isNotPhi(LTL<State> phi) {
 		if(! (phi instanceof Not)) return null ;
 		var f = (Not<State>) phi ;
 		if(isAtom(f.phi)) return null ;
-		return f.phi ;
+		return arg(phi) ;
 	}
 	
+	/**
+	 * Recognize "not(next(psi))". Return "next psi".
+	 */
 	public static <State> Next<State> isNotNext(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
 		if(f==null || ! (f instanceof Next)) return null ;
 		return (Next<State>) f ;
 	}
 	
+	/**
+	 * Recognize "not(not(phi))". Return "not phi".
+	 */
 	public static <State> Not<State> isNotNot(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
 		if(f==null || ! (f instanceof Not)) return null ;
 		return (Not<State>) f ;
 	}
 	
+	/**
+	 * Recognize "not(p && ... && q)" . Returns "p && ... && q".
+	 */
 	public static <State> And<State> isNotAnd(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
 		if(f==null || ! (f instanceof And)) return null ;
 		return (And<State>) f ;
 	}
 	
+	/**
+	 * Recognize "not(p || ... || q)" . Returns "p || ... || q".
+	 */
 	public static <State> Or<State> isNotOr(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
 		if(f==null || ! (f instanceof Or)) return null ;
 		return (Or<State>) f ;
 	}
 	
+	/**
+	 * Recognize "not(p U q)" . Returns "p U q".
+	 */
 	public static <State> Until<State> isNotUntil(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
 		if(f==null || ! (f instanceof Until)) return null ;
 		return (Until<State>) f ;
 	}
 	
+	/**
+	 * Recognize "not(p W q)" . Returns "p W q".
+	 */
 	public static <State> WeakUntil<State> isNotWeakUntil(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
-		if(f==null || ! (f instanceof Until)) return null ;
+		if(f==null || ! (f instanceof WeakUntil)) return null ;
 		return (WeakUntil<State>) f ;
 	}
 	
@@ -148,8 +200,44 @@ public class LTL2Buchi {
 	 */
 	public static <State> LTL<State> pushNegations(LTL<State> f) {
 		
-		// case atom
+		// (1) case atom
 		if(isNow(f) != null) return f ;
+		
+		// (2) cases when we have no outer not, we recurse:
+		if (f instanceof Next) {
+			var f_ = (Next<State>) f ;
+			f_.phi = pushNegations(f_.phi) ;
+			return f_ ;
+		}
+		if (f instanceof And) {
+			var f_ = (And<State>) f ;
+			for(int k=0; k<f_.conjuncts.length; k++) {
+				f_.conjuncts[k] = pushNegations(f_.conjuncts[k]) ;
+			}
+			return f_ ;
+		}
+		if (f instanceof Or) {
+			var f_ = (Or<State>) f ;
+			for(int k=0; k<f_.disjuncts.length; k++) {
+				f_.disjuncts[k] = pushNegations(f_.disjuncts[k]) ;
+			}
+			return f_ ;
+		}
+		if (f instanceof Until) {
+			var f_ = (Until<State>) f ;
+			f_.phi1 = pushNegations(f_.phi1) ;
+			f_.phi2 = pushNegations(f_.phi2) ;
+			return f_ ;
+			
+		}
+		if (f instanceof WeakUntil) {
+			var f_ = (WeakUntil<State>) f ;
+			f_.phi1 = pushNegations(f_.phi1) ;
+			f_.phi2 = pushNegations(f_.phi2) ;
+			return f_ ;
+		}
+		
+		// (3) cases when f starts wit a negation
 		
 		// case not p:
 		Now<State> phi_case1 = isNotNow(f) ;
@@ -170,6 +258,8 @@ public class LTL2Buchi {
 		// case not not phi:
 		Not<State> phi_case3 = isNotNot(f) ; // this gives not phi
 		if(phi_case3 != null) {
+			//System.out.println(">>> f:" + f) ;
+			//System.out.println(">>> phi_case3:" + phi_case3) ;
 			return pushNegations(phi_case3.phi) ; // this returns the phi
 		}
 		
@@ -177,11 +267,13 @@ public class LTL2Buchi {
 		And<State> phi_case4 = isNotAnd(f) ;
 		if(phi_case4 != null) {
 			
+			LTL<State>[] dummy = (LTL<State>[]) new LTL[0] ;
+			
 			var inners = Arrays.asList(phi_case4.conjuncts)
 			   .stream()
 			   .map((LTL<State> g) -> pushNegations(ltlNot(g)))
 			   .collect(Collectors.toList())
-			   .toArray() 
+			   .toArray(dummy) 
 			;
 			
 			return ltlOr((LTL<State>[]) inners) ;
@@ -191,11 +283,13 @@ public class LTL2Buchi {
 		Or<State> phi_case5 = isNotOr(f) ;
 		if(phi_case5 != null) {
 					
+			LTL<State>[] dummy = (LTL<State>[]) new LTL[0] ;
+			
 			var inners = Arrays.asList(phi_case5.disjuncts)
 				.stream()
 				.map((LTL<State> g) -> pushNegations(ltlNot(g)))
 				.collect(Collectors.toList())
-				.toArray() 
+				.toArray(dummy)
 				;
 					
 			return ltlAnd((LTL<State>[]) inners) ;
@@ -204,12 +298,12 @@ public class LTL2Buchi {
 		// case not(phi U psi)
 		Until<State> phi_case6 = isNotUntil(f) ;
 		if(phi_case6 != null) {
-					
+			
 			var psi1 = pushNegations(ltlAnd(phi_case6.phi1, 
-					                    ltlNot(phi_case6.phi2))) ;
+					                        ltlNot(phi_case6.phi2))) ;
 			
 			var psi2 = pushNegations(ltlAnd(ltlNot(phi_case6.phi1), 
-                                        ltlNot(phi_case6.phi2))) ;
+                                            ltlNot(phi_case6.phi2))) ;
 					
 			return psi1.weakUntil(psi2) ;
 		}
