@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import nl.uu.cs.aplib.utils.Pair;
+
 /**
  * For translating an LTL formula to a Buchi automaton. For now, we
  * exclude the following patterns:
@@ -98,7 +100,7 @@ public class LTL2Buchi {
 	
 	
 	// ======
-	// Bunch of functions to recognize patterns and deconstruct them
+	// Bunch of functions to recognize patterns and de-construct them
 	// ======
 	
 	public static <State> boolean isAtom(LTL<State> phi) {
@@ -244,6 +246,12 @@ public class LTL2Buchi {
 		if(phi_case1 != null) {
 			Now<State> f2 = new Now<>() ;
 			f2.p = S -> ! phi_case1.p.test(S) ;
+			if(phi_case1.name != null) {
+				f2.name = "~" + phi_case1.name ;
+			}
+			else {
+				f2.name = "~p" ;
+			}
 			return f2 ;
 		}
 		
@@ -328,11 +336,122 @@ public class LTL2Buchi {
 	/**
 	 * Translate the given LTL formula to a Buchi automaton.
 	 */
-	public static <State> Buchi getBuchi(LTL<State> phi) {
+	static Pair<Buchi,Integer> getBuchiWorker(int buchiNr, LTL<IExplorableState> phi) {
 		throw new UnsupportedOperationException();
 	}
 	
+	static String atomName(LTL ltl) {
+		if (!(ltl instanceof Now)) {
+			throw new IllegalArgumentException() ;
+		}
+		var ltl_ = (Now) ltl ;
+		return ltl_.toString() ;
+	}
 	
+	static Predicate<IExplorableState> atomPred(LTL<IExplorableState> ltl) {
+		if (!(ltl instanceof Now)) {
+			throw new IllegalArgumentException() ;
+		}
+		var ltl_ = (Now<IExplorableState>) ltl ;
+		return ltl_.p ;
+	}
+	
+	
+	/**
+	 * Construct the Buchi of "now p". 
+	 */
+	static Pair<Buchi,Integer> getBuchiFromNow(int buchiNr, Now<IExplorableState> phi) {
+		Buchi B = new Buchi() ;
+		String S = "S" + buchiNr ;
+		String A = "A" + buchiNr ;
+		B.withStates(S,A) 
+		.withInitialState(S)
+		.withNonOmegaAcceptance(A) ;
+		B.withTransition(S,A, atomName(phi), phi.p) ;
+		return new Pair<Buchi,Integer> (B, buchiNr+1) ;
+	}
+	
+	/**
+	 * Construct the Buchi of "p U psi" where p is a state predicates. 
+	 */
+	static Pair<Buchi,Integer> getBuchiFromUntil(int buchiNr, Until<IExplorableState> phi) {
+		if (!isAtom(phi.phi1)) {
+			throw new IllegalArgumentException("Expecting p in p U psi to be an atom") ;
+		}
+		var rec = getBuchiWorker(buchiNr+1, phi.phi2) ;
+		Buchi BF = rec.fst.treeClone() ;
+		int nextbuchiNr = rec.snd ;
+		
+		
+		String S = "S" + buchiNr ;
+		String A = "A" + buchiNr ;
+		BF.insertNewState(S) ;
+		BF.insertNewState(A) ;
+		
+		int oldInitialState = BF.initialState ;
+		BF.initialState = BF.states.get(S) ;
+		BF.withTransition(S,S,atomName(phi.phi1),atomPred(phi.phi1)) ;
+		
+		// transitions that branch out from BF's original init:
+		var initArrowsOut = BF.transitions.get(oldInitialState) ;
+		for(var tr : initArrowsOut) {
+			var tr_ = tr.fst ;
+			String target = BF.decoder[tr.snd] ;
+			BF.withTransition(S, target, tr_.id, tr_.condition) ;
+		}
+							
+		return new Pair<Buchi,Integer>(BF,nextbuchiNr) ;
+	}
+	
+	
+	/**
+	 * Construct the Buchi of "p U (phi " where p and q are state predicates.
+	 */
+	static Buchi getBuchiFromSimpleUntil(Until<IExplorableState> phi) {
+		if (!isAtom(phi.phi1) || !isAtom(phi.phi2)) {
+			throw new IllegalArgumentException("Expecting atoms in p U q") ;
+		}
+		Buchi B = new Buchi() ;
+		B.withStates("S","A") 
+		.withInitialState("S")
+		.withNonOmegaAcceptance("A") ;
+		B.withTransition("S","S",atomName(phi.phi1),atomPred(phi.phi1)) ;
+		B.withTransition("S","A",atomName(phi.phi2),atomPred(phi.phi2)) ;
+		return B ;
+	}
+	
+	/**
+	 * Construct the Buchi of "p W q" where p and q are state predicates.
+	 */
+	static Buchi getBuchiFromSimpleWeakUntil(WeakUntil<IExplorableState> phi) {
+		if (!isAtom(phi.phi1) || !isAtom(phi.phi2)) {
+			throw new IllegalArgumentException("Expecting atoms in p W q") ;
+		}
+		Buchi B = new Buchi() ;
+		B.withStates("S","A") 
+		.withInitialState("S")
+		.withNonOmegaAcceptance("A")
+		.withOmegaAcceptance("S") ;
+		B.withTransition("S","S",atomName(phi.phi1),atomPred(phi.phi1)) ;
+		B.withTransition("S","A",atomName(phi.phi2),atomPred(phi.phi2)) ;
+		return B ;
+	}
 
+	
+	/**
+	 * Construct the Buchi of "Xp" where p is a state predicate.
+	 */
+	static Buchi getBuchiFromSimpleNext(Next<IExplorableState> phi) {
+		if (!isAtom(phi.phi)) {
+			throw new IllegalArgumentException("Expecting atoms in p W q") ;
+		}
+		Buchi B = new Buchi() ;
+		B.withStates("S","T","A") 
+		.withInitialState("S")
+		.withNonOmegaAcceptance("A") ;
+		B.withTransition("S","T","*",S -> true) 
+		 .withTransition("T","A",atomName(phi.phi),atomPred(phi.phi)) ;
+		return B ;
+	}
 
 }

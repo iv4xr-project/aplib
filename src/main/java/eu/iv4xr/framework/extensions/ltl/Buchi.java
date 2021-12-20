@@ -208,7 +208,11 @@ public class Buchi {
 		buf.append("States (" + states.size() + ") :") ;
 		int k = 0 ;
 		for(var st : states.entrySet()) {
-			buf.append("\n   " + st.getValue() + ":" + st.getKey()) ;
+			buf.append("\n   " + st.getValue() + ":") ;
+			if (st.getValue() == this.initialState) {
+				buf.append(">") ;
+			}
+			buf.append(st.getKey().toString()) ;
 			if(this.omegaAcceptingStates.contains(st.getValue())) {
 				buf.append("  (OA)") ;
 			}
@@ -227,6 +231,91 @@ public class Buchi {
 			}
 		}
 		return buf.toString() ;
+	}
+	
+	/**
+	 * Construct a new Buchi that is a "clone" of this Buchi. he states and transitions
+	 * will be cloned, but the underlying predicates that form the transitions' conditions
+	 * are not cloned.
+	 */
+	public Buchi treeClone() {
+		var B = new Buchi() ;
+		for (var st : this.states.entrySet()) {
+			B.states.put(st.getKey(), st.getValue()) ;
+		}
+		B.decoder = Arrays.copyOf(this.decoder,this.decoder.length) ;
+		for (var st : this.omegaAcceptingStates) {
+			B.omegaAcceptingStates.add(st) ;
+		}
+		for (var st : this.traditionalAcceptingStates) {
+			B.traditionalAcceptingStates.add(st) ;
+		}
+		B.withInitialState(this.decoder[this.initialState]) ;
+		for (var trgroup : this.transitions.entrySet()) {		
+			List<Pair<BuchiTransition,Integer>> outArrows = new LinkedList<>() ;
+			B.transitions.put(trgroup.getKey(), outArrows) ;
+			for(var tr : trgroup.getValue()) {
+				var trClone = new BuchiTransition() ;
+				trClone.id = "" + tr.fst.id ;
+				trClone.condition = tr.fst.condition ;
+				outArrows.add(new Pair<BuchiTransition,Integer>(trClone,tr.snd)) ;
+			}
+		}
+		return B;
+	}
+	
+	/**
+	 * Rename the states in this Buchi, by adding the given string as a suffix to
+	 * each state-name. It then returns the resulting Buchi.
+	 */
+	Buchi appendStateNames(String suffix) {
+		var states__ = this.states ;
+		this.states = new HashMap<String,Integer>() ;
+		for(var st : states__.entrySet()) {
+			String newName = st.getKey() + suffix ;
+			this.states.put(newName,st.getValue()) ;
+		}
+		for (int k=0; k<decoder.length; k++) {
+			decoder[k] = decoder[k] + suffix ;
+		}
+		return this ;
+	}
+	
+	Buchi insertNewState(String st) {
+		var oldDecoder = this.decoder ;
+		this.decoder = new String[this.decoder.length+1] ;
+		this.decoder[0] = st ;
+		for(int k=0; k<oldDecoder.length; k++) {
+			this.decoder[k+1] = oldDecoder[k] ;
+		}
+		for (var st_ : this.states.entrySet()) {
+			this.states.put(st_.getKey(), st_.getValue() + 1) ;
+		}
+		this.states.put(st,0) ;
+		
+		this.initialState++ ;
+		
+		var oldOmegaAcceptingStates = this.omegaAcceptingStates ;
+		this.omegaAcceptingStates = new HashSet<>() ;
+		for (var s : oldOmegaAcceptingStates) {
+			this.omegaAcceptingStates.add(s+1) ;
+		}
+		var oldTraditionalAcceptingStates = this.traditionalAcceptingStates ;
+		this.traditionalAcceptingStates = new HashSet<>() ;
+		for (var s : oldTraditionalAcceptingStates) {
+			this.traditionalAcceptingStates.add(s+1) ;
+		}
+		
+		var oldTransitions = this.transitions ;
+		this.transitions = new HashMap<>() ;
+		transitions.put(0, new LinkedList<Pair<BuchiTransition,Integer>>()) ;
+		for (var trgroup : oldTransitions.entrySet()) {
+			transitions.put(trgroup.getKey()+1, trgroup.getValue()) ;
+			for (var tr : trgroup.getValue()) {
+				tr.snd = tr.snd + 1 ;
+			}
+		}
+		return this ;
 	}
 	
 	/**
