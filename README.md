@@ -1,30 +1,49 @@
-# iv4XR Core and Aplib (and iv4XR Framework)
+# iv4XR-core and aplib (and iv4XR Framework)
 
-**iv4XR  Core** This project contains _iv4XR Core_, which is the **core** of the agent-based automated testing 'Framework' for testing highly interactive systems such as computer games or computer simulators. Our own use case is to use the framework for automated testing of Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games; interfacing to other types of XR systems is work in progress. Outside these use cases, iv4XR is generic enough to target other types of interactive systems, even services or Java classes as long as these entities can be viewed as interactable systems.
+**iv4XR-core:** This project contains *iv4XR-core* (which we will also refer to as the 'Core'), which is the core of the agent-based automated testing 'iv4xr Framework' for testing highly interactive systems.
+Our own use case is to use the framework for testing Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games. The framework itself is generic: it can be used to target *any system* (even systems that are not interactive, such as a collection of APIs) as long as the agents can interface with the system. To do this, an interface needs to be provided, which boils down to implementing a certain interface-like class.
 
-The difference between the **Core** and the **Framework** is shown in the picture below:
+**Video:** [10m demo of iv4XR](https://youtu.be/Hc8NP4NuHAk).
 
-<img src="./docs/iv4xr-architecture.png" width="60%">
+The position of the iv4xr-core in the **Framework** is shown in the picture below:
 
-The **Core** provides the agent-based testing infrastructure. The pure agent-part is provided by a package (in the Core) called `aplib` (stands for Agent Programming Library). The Core adds testing-related functionalities and few other extra functionalities like world representation on top of `aplib`. In the picture above, 'setup-2' is a lean setup where we only use the Core to target a System Under Test (SUT). In contrast, 'setup-1' uses the entire Framework. The 'Framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then also at your disposal.
+   <img src="./docs/iv4xr-architecture.png" width="60%">
 
-iv4XR is intended to be generic: it can be used to target _any system_ as long as the agents can interface with the system (in a specific structure defined by iv4XR, this is explained later).
+The **Core** provides the agent-based testing infrastructure. The pure agent-programming part is provided by a package (in the Core) called **aplib** (it stands for Agent Programming Library) within the Core. This library is actually general purpose, and can be used to program agents for purposes other than testing.
+On top of aplib, the Core adds testing-related functionalities and few other extra functionalities like a common world representation.
+Using iv4XR Core can be seen as a special case of using aplib, where you get some testing-specific extra capabilities, such as expressing test oracles.
 
-**Video** [here is a 10m video showing a demo of iv4XR](https://youtu.be/Hc8NP4NuHAk).
+In the picture above, *setup-2* is a setup where we only use the Core to target a System Under Test (SUT). This is possible, and we will have access to aplib's agent programming to program the test automation.
+When the entire Framework is ready, *setup-1* uses the entire Framework. The 'Framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then also at your disposal.
 
-**Aplib** is the underlying agent programming library underneath iv4XR Framework/Core. This library is general purpose, and can be used to program agents for purposes other than testing. Using iv4XR can be seen as a special case of using `aplib`, where you get some testing-specific extra capabilities, such as expressing test oracles.
+The entire iv4xr-core is a Java library. The simplest setup to use iv4xr is:
 
-**Using `aplib` and iv4XR Core.** `Aplib` is a Java library. The simplest setup to use it would be:
+  1. Create a Java method m() where you create one agent a.
+  1. An agent is typically used to control some environment (e.g. a game). Attach an interface that would connect the agent a to the environment.
+  1. formulate a goal for the agent a (e.g. to win the game), and program a tactic to accomplish/solve the goal.
+  1. run the method m().
 
-  1. create a Java method where you create one agent
-  1. formulate a goal for the agent, and program a tactic to solve it.
-  1. run the agent.
+When the agent is used for testing, then we need an agent that is also a test agent; this would have some extra functionalities such as collecting test verdicts.
 
-Using iv4XR Core is just the same, with an additional step that the interface to let agents to control the System under Test must also be setup.  
+See [the Documentation page](./docs/README.md) for examples of how to actually do these steps.
+
+**Features:**
+
+* **Fluent interface** style of APIs.
+* BDI-inspired agents: they have their own states (their belief) and goals. The latter allows them to be programmed in a goal-oriented way.
+* Combinators for **high level goal and tactical programming**.
+* **Multi agent**: programming multiple agents controlling the a shared environment and communicating through channels.
+* **Prolog binding**: allowing agents to do prolog-based reasoning to help them solving goals.
+* **Bounded LTL**: for expressing temporal properties that can be checked during testing.
+* **A model checker**: also to help solving goals, when models of the problem is known.
+* Data collection: agents can collect traces for post-mortem data analyses.
+
+Planned features:
+
+* Reinforcement learning
+* Search algorithms for solving goals
 
 **Papers**
-
-  * Extended abstract: [_Aplib: An Agent Programming Library for Testing Games_](http://ifaamas.org/Proceedings/aamas2020/pdfs/p1972.pdf), I. S. W. B. Prasetya,  Mehdi Dastani, in the International Conference on Autonomous Agents and Multiagent Systems (AAMAS), 2020.
 
   * Concepts behind agent-based automated testing:
   [_Tactical Agents for Testing Computer Games_](https://emas2020.in.tu-clausthal.de/files/emas/papers-h/EMAS2020_paper_6.pdf)
@@ -33,65 +52,19 @@ in Engineering Multi-Agent Systems workshop (EMAS), 2020.
 
   * The agents' execution loop is explained  in this draft: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
 
+  * Extended abstract: [_Aplib: An Agent Programming Library for Testing Games_](http://ifaamas.org/Proceedings/aamas2020/pdfs/p1972.pdf), I. S. W. B. Prasetya,  Mehdi Dastani, in the International Conference on Autonomous Agents and Multiagent Systems (AAMAS), 2020.
 
-
-## Aplib: an Agent Programming Library
-
-
-* [APIs Javadoc documentation](http://www.staff.science.uu.nl/~prase101/research/projects/iv4xr/aplib/apidocs/)
-* [Tutorials and additional documentations](./docs/manual)
-   * [Concepts](./docs/manual/aplibConcepts.md)
-   * [Tutorial 1](./docs/manual/tutorial_1.md)
-    | [Tutorial 2](./docs/manual/tutorial_2.md)
-    | [Tutorial 3](./docs/manual/tutorial_3.md)
-   * [Prolog binding](./docs/manual/prolog.md)
-* The agents' execution loop is explained  in this draft: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
-
-`Aplib` is a Java library to program multi agent programs.
-`Aplib` is inspired by the popular [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming (e.g. `aplib` agents have 'goals' and run so-called 'deliberation' cycles).
-`Aplib` provides an architecture and a design pattern for programming agents, enabling you to program agents more abstractly, in terms of goals and tactics. You will have to program the tactics yourself, but you do not have to worry about the underlying infrastructure such as tactic execution and support for inter-agent communication; these are provided by `aplib`. `Aplib` also tries to offer high level APIs, so that you can program
-your agents as cleanly as possible, with least possible boilerplate code.
-
-
-
-_Note:_ as it is now, `aplib` is still under development. As we go, we will add more supports to integrate AI into your agents.
-
-There are indeed many dedicated agent programming languages, but most of them do not have enough features, support, and tooling to facilitate integration with real life applications. We therefore intentionally develop `aplib` as a library in Java, so that by extension `aplib` programmers get first class access to Java's lrich library supports, software tools, and language features (e.g. rich data types and OO, whereas in contrast many dedicated agent programming languages only have a limited set of data types).
-
-`Aplib` views an agent system as a system consisting of an '_environment_' where one or more agents operate to influence this environment towards certain goals. This _environment_ can be another program, or some hardware, or a human user interacting through some interface. While some environment may be passive, completely controlled by the agents, some others may be autonomous and non-deterministic, which makes the task of controlling it indeed more challenging for the agents.
-
-`Aplib` allows **an agent to be programmed by specifying a goal that it has to solve, and a tactic to solve it**. There are 'combinators' (constructors) available to compose a complex goal from subgoals (or in other words, to break a complex goal into subgoals; providing a subgoal is
-comparable to providing a hint for the agent). A tactic can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex tactic from simpler ones.
-
-
-
-**Features:**
-
-* **Fluent interface** style of APIs.
-* Combinators for **high level goal and tactical programming**.
-* **Subservient** agents (running on the same thread as `main`) as well as **autonomous** agents (running on their own threads).
-* **Multi agent**: programming multiple autonomous agents controlling the a shared environment and communicating through channels.
-* **Prolog binding**: allowing agents to do prolog-based reasoning to help them solving goals.
-* **A model checker**: also to help solving goals, when models of the problem is known.
-* **Bounded LTL**: for expressing temporal properties that can be checked during testing.
-
-
-Planned features:
-
-* Bounded model checking and runtime verification.
-* Reinforcement learning
-* Search algorithms for solving goals
-
+**Manuals, Reference, and Tutorials**: see [this Documentation page](./docs/README.md).
 
 #### Some code snippets:
 
-* Specifying a goal:
+* Specifying a goal. The goal below is solved when offered a value x == 10.
 
 ```java
-goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 10)
+goal("Magic number is guessed!").toSolve((Integer x) -> x == 10)
 ```
 
-* Specifying a tactic:
+* Specifying a tactic. A tactic specifies a program/heuristic for solving a goal. It could look like this:
 
 ```java
 FIRSTof(guessLowerbound.on_((Belief belief) -> ! belief.feelingVeryLucky() ,
@@ -114,15 +87,6 @@ new AutonomousBasicAgent()
 ```java
 new Thread(() -> agent.loop()) . start()
 ```
-
-## iv4XR Core
-
-The iv4XR Core is a library to do automated testing by using agents.
-It can be used to test any target system **as long as there is an interface between it and the agents**. Since this interface depends on the technology used by the System under Test (SUT), the iv4XR does not offer pre-made interface; so, the SUT developers need to construct one first. Technically, this interface needs to implement a `aplib` Java Interface named `Environment`.
-
-[Tutorials and examples](./docs/iv4xr)
-   * [Testing a Java class](./docs/iv4xr/testagent_tutorial_1.md)
-   * [Testing a (simulated) external program](./docs/iv4xr/testagent_tutorial_2.md)
 
 ## Building with Maven
 
