@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.mainConcepts;
 
+import java.io.Serializable;
 import java.util.*;
 
 import eu.iv4xr.framework.spatial.Vec3;
@@ -11,7 +12,7 @@ import eu.iv4xr.framework.spatial.Vec3;
  * the agent's belief on how the world is structured; this may incorporate its
  * past knowledge which may no longer be up to date.
  */
-public class WorldModel {
+public class WorldModel implements Serializable {
 
     /**
      * The id of the agent that owns this World Model.

@@ -1,6 +1,6 @@
 # aplib and iv4xr-core Documentation
 
-Aplib is the underlying agent-programming library of iv4xr-core. The core adds testing-related features on top of aplib. The entire core is provided a Java library.
+Aplib is the underlying agent-programming library of iv4xr-core. The core adds testing-related features on top of aplib. The entire core is provided a Java library. Using test-agent is explained in the core-part, but we recommend to first read the underlying concepts of aplib agent-programming and its tutorials (see below).
 
   * [Build instructions](../README.md)
   * [APIs Javadoc documentation](http://www.staff.science.uu.nl/~prase101/research/projects/iv4xr/aplib/apidocs/)
@@ -8,7 +8,7 @@ Aplib is the underlying agent-programming library of iv4xr-core. The core adds t
   * [iv4xr-core manuals](README.md#core)
 
 
-### Aplib: an Agent Programming Library <a name="aplib"></a>
+### Agent programming with aplib <a name="aplib"></a>
 
 * [Main concepts](./manual/aplibConcepts.md)
 * [Tutorial 1: a minimalistic agent](./manual/tutorial_1.md)
@@ -31,11 +31,11 @@ There are indeed many dedicated agent programming languages, but most of them do
 `Aplib` allows **an agent to be programmed by specifying a goal that it has to solve, and a tactic to solve it**. There are 'combinators' (constructors) available to compose a complex goal from subgoals (or in other words, to break a complex goal into subgoals; providing a subgoal is
 comparable to providing a hint for the agent). A tactic can be composed declaratively, by specifying when different actions that make up the strategy can be executed, without having to specify the exact order in which these actions are to be executed. There are also combinators available to compose a complex tactic from simpler ones.
 
-### iv4xr-core for agent-based testing <a name="core"></a>
+### Agent-based testing with iv4xr-core <a name="core"></a>
 
 The Core includes aplib. It adds testing related features on top of aplib. For example, with just aplib we can create agent. With the Core we can create a test-agent. A test-agent has some additional features, e.g. it can check oracles/invariants and collect their verdicts (pass/fail). It also can collect traces e.g. for data analyses and visualization,or to be checked against LTL properties.
 
-Iv4xr test-agents can be used to test any target system **as long as there is an interface between it and the agents**. Since this interface depends on the technology used by the System under Test (SUT), the iv4XR does not offer pre-made interface; so, the SUT developers need to construct one first. Technically, this interface needs to implement an `aplib` Java Interface named `Environment`. More manuals will come :wink:.
+Iv4xr test-agents can be used to test any target system **as long as there is an interface between it and the agents**. Since this interface depends on the technology used by the System under Test (SUT), the iv4XR does not offer pre-made interface; so, the SUT developers need to construct one first. Technically, this interface needs to implement an `aplib` Java Interface named `Environment`. The tutorials below should guide you through the steps of testing with iv4xr agents --it may be helpful to [first read the basics of aplib programming](README.md#aplib).
 
   * [Tutorial 1: testing a Java class with iv4xr](./iv4xr/testagent_tutorial_1.md)
   * [Tutorial 2: testing an external program with iv4xr](./iv4xr/testagent_tutorial_2.md)
