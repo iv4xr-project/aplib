@@ -105,7 +105,7 @@ var agent = new TestAgent().attachState(state);
 Imagine a simple testing scenario for `GCDGame` where we drive the game to location (x,y) = (1,1). At this position we expect the valur of gcd to be 1 and the method `win()` to return true. We will later generalize this scenario, but let's for now just focus on this scenario. The scenario has two key parts:
 
 * The agent needs to drive the program-under-test to a specific state, namely (x,y)=(1,1). This is called a **goal**.
-* The correctness property to assert is: **when** (x,y)=(1,1) **then** gcd is expected to be 1 and `win()` is expected to be true. This is called **oracle**.
+* The correctness property to assert is: **when** (x,y)=(1,1) **then** gcd is expected to be 1 and `win()` is expected to be true. This is called **invariant** or **oracle**.
 
 Notice that essentially a test checks if the state predicate _goal ⇒ oracle_ is valid.
 
@@ -122,8 +122,8 @@ var topgoal = testgoal("tg")
 	. toSolve((MyState S) -> S.env().gcdgameUnderTest.x == X && S.env().gcdgameUnderTest.y == Y)
 	// specify the tactic to solve the above goal:
 	. withTactic( ... WE NEED a tactic ...)
-	// assert the oracle :
-	. oracle(agent, (MyState S) ->
+	// assert the invariant/oracle :
+	. invariant(agent, (MyState S) ->
 				      assertTrue_("",info,
                          S.env().gcdgameUnderTest.gcd == expectedGC
                          && S.env().gcdgameUnderTest.win() == expectedWinConclusion))
