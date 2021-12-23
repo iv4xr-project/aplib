@@ -13,7 +13,7 @@ Despite the packaging name 'aplib' this project should be called *iv4XR-core*, o
 **Iv4xr-core** (which we will also refer to as the 'Core') forms the core of a bigger framework with the same name: **iv4xr Framework**, and hence the name 'core'. Outside the Framework, both the Core and its aplib part can also be used independently.
 
 Iv4xr Framework aims to provide tools for agent-based automated testing for testing highly interactive systems. The Core provides the underlying agent-based programming and agent-based testing infrastructure.
-Our own use case is to use the framework for testing Extended Reality (XR) systems. Within this use case, the Framework has been piloted for testing 3D games. The framework itself is generic: it can be used to target *any system* (even systems that are not interactive, such as a collection of APIs) as long as the agents can interface with the system. To do this, an interface needs to be provided, which boils down to implementing a certain interface-like class.
+Our own use case is to use the framework for testing Extended Reality (XR) systems. Within this use case, the framework has been piloted for testing 3D games. The framework itself is generic: it can be used to target *any system* (even systems that are not interactive, such as a collection of APIs) as long as the agents can interface with the system. To do this, an interface needs to be provided, which boils down to implementing a certain interface-like class.
 
 
 
@@ -26,7 +26,7 @@ On top of aplib, the Core adds testing-related functionalities and few other ext
 Using iv4xr-core can be seen as a special case of using aplib, where you get some testing-specific extra capabilities, such as expressing test oracles.
 
 In the picture above, *setup-2* is a setup where we only use the Core to target a System Under Test (SUT). This is possible, and we will have access to aplib's agent programming to program the test automation.
-When the entire Framework is ready, *setup-1* uses the entire Framework. The 'Framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then also at your disposal.
+When the entire framework is ready, *setup-1* uses the entire framework. The 'framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then also at your disposal.
 
 The entire iv4xr-core is a Java library. The simplest setup to use iv4xr is:
 

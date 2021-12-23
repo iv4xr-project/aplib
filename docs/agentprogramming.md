@@ -10,7 +10,7 @@ This document explains the pure agent-programming part of iv4xr-core. For [the a
 * The agents' execution loop is explained  in this draft: [I.S.W.B. Prasetya, _Aplib: Tactical Programming of Intelligent Agents_, draft. 2019.](https://arxiv.org/pdf/1911.04710)
 * [Domain Specific Language (DSL) for formulating goals and tactics](./manual/DSL.md)
 * [Prolog binding](./manual/prolog.md)
-* [Few more examples](./Fewmore_simpleExamples.md)
+* [Few more examples](./manual/Fewmore_simpleExamples.md)
 
 Agent programming is mainly provided by the `aplib` part of iv4xr-core. Since the Core is a Java library, so is its aplib part.
 `Aplib` (it stands for _Agent Programming Library_) is inspired by the popular [Belief Desire Intention](https://en.wikipedia.org/wiki/Belief%E2%80%93desire%E2%80%93intention_software_model) (BDI) model of agent programming (e.g. `aplib` agents have 'goals' and run so-called 'deliberation' cycles).

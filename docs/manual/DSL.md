@@ -6,7 +6,7 @@
 
 A **tactic** is a program for solving a goal. Every leaf-goal in a goal structure must have a tactic associated with it. In turn, a tactic can be composed from **actions**. An action can be guarded, which defines if it is executable or not.
 
-For explanation on how tactics are executed to solve a goal (or in other words: agents' execution model), [see this document ](README.md#aplib).
+For explanation on how tactics are executed to solve a goal (or in other words: agents' execution model), [see this document ](aplibConcepts.md).
 
 
 ### Goal
