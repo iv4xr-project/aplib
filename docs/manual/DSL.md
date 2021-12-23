@@ -8,22 +8,6 @@ A **tactic** is a program for solving a goal. Every leaf-goal in a goal structur
 
 For explanation on how tactics are executed to solve a goal (or in other words: agents' execution model), [see this document ](README.md#aplib).
 
-### Tactic and action
-
-The syntax of tactics and actions is shown below.
-
-_tactic_ ::=
-  * _action_**.lift()**
-  * **ABORT()**
-  * **ANYof(** _tactic_+ **)**
-  * **FIRSTof(** _tactic_+ **)**
-  * **SEQ(** _tactic_+ **)**
-
-_action_ ::=
-  * **action(** _name_ **).do1(** _function_ **).on(** _predicate_ **)**
-  * **action(** _name_ **).do2(** _bifunction_ **).on(** _query_ **)**
-
-A _function_ is a Java-function, which can be formed with a lambda expression. For example `(int x) -> x*x` constructs a function that returns _2x_ given an integer _x_ as input. A bi-function is a Java-function that takes two arguments. Similarly, it can be constructed using a lambda-expression.
 
 ### Goal
 
@@ -31,6 +15,12 @@ The syntax of goals is shown below.
 
 _goal_ ::=
   * **goal(** _name_ **).toSolve(** _predicate_ **).withTactic(** _tactic_ **)**
+
+A _predicate_ is a Java-function that returns a boolean. It can be constructed using a lambda-expression. For example `(int x) -> x==10` is a predicate that is true when given a integer value 10. If this predicate is used as a goal, it specifies when the goal is considered as solved.
+
+A goal needs a tactic; it specifies how to solve it.  The syntax of tactics is given later.
+
+A goal-structure is a composition of goals, e.g. it can be a sequence of sub-goals that should be achieved in the order as the sequence specifies.
 
 _goal-structure_ ::=
   * _goal_**.lift()**
@@ -69,6 +59,23 @@ The syntax of testing goals:
 * **assertTrue_(** _test-agent_ **,** _assertion-name_ **,** _assertion-info_ **,** _predicate_ **)**  
 
    This is actually a test-goal with a trivial 'true' as the goal to solve (so it will always be solved), and the asserted predicate as the invariant to check. Effectively, this checks whether the current agent state satisfies the invariant.
+
+   ### Tactic and action
+
+   The syntax of tactics and actions is shown below.
+
+   _tactic_ ::=
+     * _action_**.lift()**
+     * **ABORT()**
+     * **ANYof(** _tactic_+ **)**
+     * **FIRSTof(** _tactic_+ **)**
+     * **SEQ(** _tactic_+ **)**
+
+   _action_ ::=
+     * **action(** _name_ **).do1(** _function_ **).on(** _predicate_ **)**
+     * **action(** _name_ **).do2(** _bifunction_ **).on(** _query_ **)**
+
+   A _function_ is a Java-function, which can be formed with a lambda expression. For example `(int x) -> x*x` constructs a function that returns _2x_ given an integer _x_ as input. A bi-function is a Java-function that takes two arguments. Similarly, it can be constructed using a lambda-expression.
 
 
 # DSL for expressing LTL specifications/properties
