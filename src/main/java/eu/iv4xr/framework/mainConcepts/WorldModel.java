@@ -14,7 +14,9 @@ import eu.iv4xr.framework.spatial.Vec3;
  */
 public class WorldModel implements Serializable {
 
-    /**
+	private static final long serialVersionUID = 1L;
+
+	/**
      * The id of the agent that owns this World Model.
      */
     public String agentId;
