@@ -14,6 +14,6 @@ The tutorials below should guide you through the steps of testing with iv4xr age
      * [Tutorial 1: testing a Java class with iv4xr](./iv4xr/testagent_tutorial_1.md)
      * [Tutorial 2: testing an external program with iv4xr](./iv4xr/testagent_tutorial_2.md)
   * Reference for the Test Specification Language for specifying tests: [see aplib DSL](./manual/DSL.md)
-  * Collecting data and visualizing them
-  * Testing against LTL properties
+  * [Collecting data and visualizing them](./iv4xr/datacollection.md)
+  * [Using LTL properties](./iv4xr/testagent_tutorial_3.md)
   

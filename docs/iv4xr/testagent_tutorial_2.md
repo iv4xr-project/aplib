@@ -1,4 +1,4 @@
-# iv4xr Tutorial 2: Testing an External Program with Test Agent
+# iv4xr-core Tutorial 2: Testing an External Program with Test Agent
 Author: Wishnu Prasetya
 
 **Prerequisite:** you have read at least the following tutorials:

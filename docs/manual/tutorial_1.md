@@ -1,4 +1,4 @@
-# Aplib Tutorial: Coding a Minimalistic Agent-X
+# Aplib Tutorial 1: Coding a Minimalistic Agent-X
 Author: Wishnu Prasetya
 
 `Aplib` is implemented in Java-11, so you need it.
