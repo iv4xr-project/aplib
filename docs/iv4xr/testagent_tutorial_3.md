@@ -10,17 +10,17 @@ LTL stands for 'Linear Temporal Logic'. We will not use the 'logic' part as it i
 
 In LTL we have operators like these:
 
-  * ϕ~1~ = _[] s.x > 0_ ("**always** p")to say that the value of s.x is always positive.
-  * ϕ~2~ = _<> s.x <= 0_ ("**eventually** p") to say that eventually the value of s.x will drop to 0 or less.
-  * ϕ~3~ = _**X** s.x == 1_ ("**next** p") to say that in the next state the value of s.x would be 1.
-  * They can be nested, e.g. ϕ~4~ = _<>[] s.x>2_ to say that eventually the value of s.x will be >2, and afterwhich it will remain so.
+  * ϕ1 = _[] s.x > 0_ ("**always** p")to say that the value of s.x is always positive.
+  * ϕ2 = _<> s.x <= 0_ ("**eventually** p") to say that eventually the value of s.x will drop to 0 or less.
+  * ϕ3 = _**X** s.x == 1_ ("**next** p") to say that in the next state the value of s.x would be 1.
+  * They can be nested, e.g. ϕ4 = _<>[] s.x>2_ to say that eventually the value of s.x will be >2, and afterwhich it will remain so.
 
 For example, given a sequence σ = [1,0,2,2,3,3,4] of the value of s.x, we have:
 
-  * ϕ~1~.**sat**(σ) = UNSAT
-  * ϕ~2~.**sat**(σ) = SAT
-  * ϕ~3~.**sat**(σ) = UNSAT
-  * ϕ~4~.**sat**(σ) = SAT
+  * ϕ1.**sat**(σ) = UNSAT
+  * ϕ2.**sat**(σ) = SAT
+  * ϕ3.**sat**(σ) = UNSAT
+  * ϕ4.**sat**(σ) = SAT
 
 We can configure a test-agent so that it collects the **trace** of its execution when it is run. A trace is not literally a sequence of states passed during the execution, but rather a sequence of 'data point', and each data-point is a set of name-value pairs. Each data point can be thought as representing some selected part of the program actual state. E.g. it could store the value of s.x and s.z, but not s.y.
 
