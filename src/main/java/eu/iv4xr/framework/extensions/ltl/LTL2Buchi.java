@@ -559,5 +559,83 @@ public class LTL2Buchi {
 		
 		return new Pair<>(BF0,nextbuchiNr) ;
 	}
+	
+	private static <State> LTL<State> andRewrite(LTL<State> f) {
+		throw new UnsupportedOperationException() ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Now<State> f1, Now<State> f2) {
+		String name = "(" + f1.name + ") && (" + f2.name + ")" ;
+		return now(name, S -> f1.p.test(S) && f2.p.test(S)) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(LTL<State> f1, Or<State> f2) {
+		Or<State> g = new Or<>() ;
+		g.disjuncts = new LTL[f2.disjuncts.length] ;
+		for(int k=0; k < f2.disjuncts.length; k++) {
+			g.disjuncts[k] = andRewrite(ltlAnd(f1,f2.disjuncts[k])) ;
+		}
+		return g ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Now<State> f1, Until<State> f2) {
+		LTL<State> g1 = andRewrite(ltlAnd(f1,f2.phi2)) ;
+		LTL<State> g2 = andRewrite(ltlAnd(f1,f2.phi1,next(f2))) ;		
+		return ltlOr(g1,g2) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Now<State> f1, WeakUntil<State> f2) {
+		LTL<State> g1 = andRewrite(ltlAnd(f1,f2.phi2)) ;
+		LTL<State> g2 = andRewrite(ltlAnd(f1,f2.phi1,next(f2))) ;		
+		return ltlOr(g1,g2) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Next<State> f1, Next<State> f2) {
+		LTL<State> g = andRewrite(ltlAnd(f1.phi,f2.phi)) ;
+		return next(g) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Next<State> f1, Until<State> f2) {
+		LTL<State> g1 = andRewrite(ltlAnd(f1,f2.phi2)) ;
+		LTL<State> g2 = andRewrite(ltlAnd(f2.phi1, next(ltlAnd(f1.phi, f2)))) ;		
+		return ltlOr(g1,g2) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Next<State> f1, WeakUntil<State> f2) {
+		LTL<State> g1 = andRewrite(ltlAnd(f1,f2.phi2)) ;
+		LTL<State> g2 = andRewrite(ltlAnd(f2.phi1, next(ltlAnd(f1.phi, f2)))) ;		
+		return ltlOr(g1,g2) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Until<State> f1, Until<State> f2) {
+		LTL<State> a = f1.phi1 ;
+		LTL<State> b = f1.phi2 ;
+		LTL<State> p = f2.phi1 ;
+		LTL<State> q = f2.phi2 ;
+		LTL<State> g1 = andRewrite(ltlAnd(a,p).until(ltlAnd(b,f2))) ;
+		LTL<State> g2 = andRewrite(ltlAnd(a,p).until(ltlAnd(q,f1))) ;
+		return ltlOr(g1,g2) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(Until<State> f1, WeakUntil<State> f2) {
+		LTL<State> a = f1.phi1 ;
+		LTL<State> b = f1.phi2 ;
+		LTL<State> p = f2.phi1 ;
+		LTL<State> q = f2.phi2 ;
+		// note that both middle operators should be UNTIL:
+		LTL<State> g1 = andRewrite(ltlAnd(a,p).until(ltlAnd(b,f2))) ;
+		LTL<State> g2 = andRewrite(ltlAnd(a,p).until(ltlAnd(q,f1))) ;
+		return ltlOr(g1,g2) ;
+	}
+	
+	private static <State> LTL<State> andRewrite(WeakUntil<State> f1, WeakUntil<State> f2) {
+		LTL<State> a = f1.phi1 ;
+		LTL<State> b = f1.phi2 ;
+		LTL<State> p = f2.phi1 ;
+		LTL<State> q = f2.phi2 ;
+		LTL<State> g1 = andRewrite(ltlAnd(a,p).weakUntil(ltlAnd(b,f2))) ;
+		LTL<State> g2 = andRewrite(ltlAnd(a,p).weakUntil(ltlAnd(q,f1))) ;
+		return ltlOr(g1,g2) ;
+	}
 
 }
