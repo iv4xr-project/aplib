@@ -10,7 +10,11 @@ import static eu.iv4xr.framework.extensions.ltl.LTL2Buchi.* ;
 import static eu.iv4xr.framework.extensions.ltl.Test_LTL.* ;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class Test_LTL2Buchi {
+//
+// Testing the rewrite function that rewrite LTL ~phi by recursively pushing ~ as far
+// as possible inside phi.
+//
+public class Test_LTL_not_rewriting {
 	
 	void test_pushNeg(LTL<Integer> phi, List<Integer> ... seqs) {
         System.out.println("------") ;

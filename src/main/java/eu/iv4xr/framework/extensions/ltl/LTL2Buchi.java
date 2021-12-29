@@ -336,8 +336,44 @@ public class LTL2Buchi {
 	/**
 	 * Translate the given LTL formula to a Buchi automaton.
 	 */
+	public static Buchi getBuchi(LTL<IExplorableState> phi) {
+		return getBuchiWorker(0,phi).fst ;
+	}
+	
+	/**
+	 * The worker function to translate the given LTL formula to a Buchi automaton.
+	 * The translation builds the Buchi recursively. Since we will then need to
+	 * generate unique states, the variable buchiNr is used to keep track the number
+	 * of the next sub-Buchi to generate. This number is unique, and is used as part
+	 * of the ids of the states and transitions inside the sub-Buchi.
+	 * 
+	 * The worker returns a pair (B,i) where B is the resulting Buchi, and i is the
+	 * next unique number of buchiNr.
+	 */
 	static Pair<Buchi,Integer> getBuchiWorker(int buchiNr, LTL<IExplorableState> phi) {
-		throw new UnsupportedOperationException();
+		if (phi instanceof Now) {
+			return getBuchiFromNow(buchiNr, (Now<IExplorableState>) phi) ;
+		}
+		if (phi instanceof Next) {
+			return getBuchiFromNext(buchiNr, (Next<IExplorableState>) phi) ;
+		}
+		if (phi instanceof Until) {
+			return getBuchiFromUntil(buchiNr, (Until<IExplorableState>) phi) ;
+		}
+		if (phi instanceof WeakUntil) {
+			return getBuchiFromWeakUntil(buchiNr, (WeakUntil<IExplorableState>) phi) ;
+		}
+		if (phi instanceof Or) {
+			return getBuchiFromOr(buchiNr, (Or<IExplorableState>) phi) ;
+		}
+		if (phi instanceof And) {
+			throw new IllegalArgumentException("Coverting f && g to Buchi is not supported yet.") ;
+		}
+		if (phi instanceof Not) {
+			throw new IllegalArgumentException("Cannot convert ~f to Buchi. Remove negations by rewriting the formula first.") ;
+		}
+		// should not reach this point
+		throw new IllegalArgumentException() ;
 	}
 	
 	static String atomName(LTL ltl) {
@@ -348,11 +384,11 @@ public class LTL2Buchi {
 		return ltl_.toString() ;
 	}
 	
-	static Predicate<IExplorableState> atomPred(LTL<IExplorableState> ltl) {
+	static <State> Predicate<State> atomPred(LTL<State> ltl) {
 		if (!(ltl instanceof Now)) {
 			throw new IllegalArgumentException() ;
 		}
-		var ltl_ = (Now<IExplorableState>) ltl ;
+		var ltl_ = (Now<State>) ltl ;
 		return ltl_.p ;
 	}
 	
@@ -360,15 +396,16 @@ public class LTL2Buchi {
 	/**
 	 * Construct the Buchi of "now p". 
 	 */
-	static Pair<Buchi,Integer> getBuchiFromNow(int buchiNr, Now<IExplorableState> phi) {
+	static <State> Pair<Buchi,Integer> getBuchiFromNow(int buchiNr, Now<IExplorableState> phi) {
 		Buchi B = new Buchi() ;
 		String S = "S" + buchiNr ;
 		String A = "A" + buchiNr ;
 		B.withStates(S,A) 
 		.withInitialState(S)
 		.withNonOmegaAcceptance(A) ;
-		B.withTransition(S,A, atomName(phi), phi.p) ;
-		return new Pair<Buchi,Integer> (B, buchiNr+1) ;
+		String tid = "t_" + S + "_" + A ;
+		B.withTransition(S,A, tid, atomName(phi), phi.p) ;
+		return new Pair<> (B, buchiNr+1) ;
 	}
 	
 	/**
@@ -381,8 +418,7 @@ public class LTL2Buchi {
 		var rec = getBuchiWorker(buchiNr+1, phi.phi2) ;
 		Buchi BF = rec.fst.treeClone() ;
 		int nextbuchiNr = rec.snd ;
-		
-		
+				
 		String S = "S" + buchiNr ;
 		String A = "A" + buchiNr ;
 		BF.insertNewState(S) ;
@@ -390,68 +426,138 @@ public class LTL2Buchi {
 		
 		int oldInitialState = BF.initialState ;
 		BF.initialState = BF.states.get(S) ;
-		BF.withTransition(S,S,atomName(phi.phi1),atomPred(phi.phi1)) ;
+		var t0Id = "t_" + S + "_" + S ;
+		BF.withTransition(S,S,t0Id,atomName(phi.phi1),atomPred(phi.phi1)) ;
 		
 		// transitions that branch out from BF's original init:
 		var initArrowsOut = BF.transitions.get(oldInitialState) ;
+		int tid = 1 ;
 		for(var tr : initArrowsOut) {
 			var tr_ = tr.fst ;
 			String target = BF.decoder[tr.snd] ;
-			BF.withTransition(S, target, tr_.id, tr_.condition) ;
+			String tid_ = "t" + buchiNr + "_" + tid ;
+			BF.withTransition(S, target, tid_, tr_.name , tr_.condition) ;
+			tid++ ;
 		}
 							
-		return new Pair<Buchi,Integer>(BF,nextbuchiNr) ;
-	}
-	
-	
-	/**
-	 * Construct the Buchi of "p U (phi " where p and q are state predicates.
-	 */
-	static Buchi getBuchiFromSimpleUntil(Until<IExplorableState> phi) {
-		if (!isAtom(phi.phi1) || !isAtom(phi.phi2)) {
-			throw new IllegalArgumentException("Expecting atoms in p U q") ;
-		}
-		Buchi B = new Buchi() ;
-		B.withStates("S","A") 
-		.withInitialState("S")
-		.withNonOmegaAcceptance("A") ;
-		B.withTransition("S","S",atomName(phi.phi1),atomPred(phi.phi1)) ;
-		B.withTransition("S","A",atomName(phi.phi2),atomPred(phi.phi2)) ;
-		return B ;
+		return new Pair<>(BF,nextbuchiNr) ;
 	}
 	
 	/**
-	 * Construct the Buchi of "p W q" where p and q are state predicates.
+	 * Construct the Buchi of "p W psi" where p is a state predicates. 
 	 */
-	static Buchi getBuchiFromSimpleWeakUntil(WeakUntil<IExplorableState> phi) {
-		if (!isAtom(phi.phi1) || !isAtom(phi.phi2)) {
-			throw new IllegalArgumentException("Expecting atoms in p W q") ;
+	static Pair<Buchi,Integer> getBuchiFromWeakUntil(int buchiNr, WeakUntil<IExplorableState> phi) {
+		if (!isAtom(phi.phi1)) {
+			throw new IllegalArgumentException("Expecting p in p W psi to be an atom") ;
 		}
-		Buchi B = new Buchi() ;
-		B.withStates("S","A") 
-		.withInitialState("S")
-		.withNonOmegaAcceptance("A")
-		.withOmegaAcceptance("S") ;
-		B.withTransition("S","S",atomName(phi.phi1),atomPred(phi.phi1)) ;
-		B.withTransition("S","A",atomName(phi.phi2),atomPred(phi.phi2)) ;
-		return B ;
+		
+		// We will first construct a Buchi of p U psi, then add its initial state as an 
+		// omega-accepting state.
+		
+		Until<IExplorableState> untilVariant = (Until<IExplorableState>) phi.phi1.until(phi.phi2) ;
+		
+		Pair<Buchi,Integer> rec = getBuchiFromUntil(buchiNr, untilVariant) ;
+		
+		Buchi BF = rec.fst ;
+		
+		int S0 = BF.initialState ;
+		// turn BF to a Buchi of weak-until by making S0 omega-accepting:
+		BF.omegaAcceptingStates.add(S0) ;
+		
+		return new Pair<>(BF,rec.snd) ;	
 	}
+		
+	/**
+	 * Construct the Buchi of "X phi".
+	 */
+	static Pair<Buchi,Integer> getBuchiFromNext(int buchiNr, Next<IExplorableState> phi) {
+		
+		var rec = getBuchiWorker(buchiNr+1, phi.phi) ;
+		Buchi BF = rec.fst.treeClone() ;
+		int nextbuchiNr = rec.snd ;
+		
+		String S = "S" + buchiNr ;
+		BF.insertNewState(S) ;
+		
+		int oldInitialState = BF.initialState ;
+		String oldInitialStateName = BF.decoder[oldInitialState] ;
+		BF.initialState = BF.states.get(S) ;
+		var tId = "t_" + S + "_" +  oldInitialStateName ;
+		BF.withTransition(S,oldInitialStateName,tId,"true", state -> true) ;
 
+		return new Pair<>(BF,nextbuchiNr) ;
+	}
 	
 	/**
-	 * Construct the Buchi of "Xp" where p is a state predicate.
+	 * Construct a Buchi B which represents B1 || B2 (disjunction). It should accept
+	 * any execution that can be accepted by either B1 or B2. States and transitions'
+	 * ids of B1 and B2 are assumed to be disjoint. 
 	 */
-	static Buchi getBuchiFromSimpleNext(Next<IExplorableState> phi) {
-		if (!isAtom(phi.phi)) {
-			throw new IllegalArgumentException("Expecting atoms in p W q") ;
+	private static Buchi union(Buchi B1, Buchi B2) {
+		
+		Buchi B2_ = B2.treeClone() ;
+		
+		for(int k=B1.decoder.length-1 ; 0<=k; k--) {
+			String stateName = B1.decoder[k] ;
+			B2_.insertNewState(stateName) ;
 		}
-		Buchi B = new Buchi() ;
-		B.withStates("S","T","A") 
-		.withInitialState("S")
-		.withNonOmegaAcceptance("A") ;
-		B.withTransition("S","T","*",S -> true) 
-		 .withTransition("T","A",atomName(phi.phi),atomPred(phi.phi)) ;
-		return B ;
+				
+		String B1initState = B1.decoder[B1.initialState] ;	
+		B2_.initialState = B2_.states.get(B1initState) ;
+		
+		for(var f : B1.traditionalAcceptingStates) {
+			String fname = B1.decoder[f] ;
+			int f_newindex = B2_.states.get(fname) ;
+			B2_.traditionalAcceptingStates.add(f_newindex) ;
+		}
+		
+		for(var f : B1.omegaAcceptingStates) {
+			String fname = B1.decoder[f] ;
+			int f_newindex = B2_.states.get(fname) ;
+			B2_.omegaAcceptingStates.add(f_newindex) ;
+		}
+		
+		var B1_ = B1.treeClone() ;
+		for (var tr : B1_.transitions.entrySet()) {
+			B2_.transitions.put(tr.getKey(), tr.getValue()) ;
+		}
+		
+		String B2initState = B2.decoder[B2.initialState] ;
+		int B2initState_newIndex = B2_.states.get(B2initState) ;
+		
+		var B2initArrowsOut = B2_.transitions.get(B2initState_newIndex) ;
+		// need some number to assign to the ids of the new transitions...
+		int tid = B1.transitions.get(B1.initialState).size() ;
+		for(var tr : B2initArrowsOut) {
+			var tr_ = tr.fst ;
+			String target = B2_.decoder[tr.snd] ;
+			String tid_ = "t_" + B1initState + "_" + tid ;
+			B2_.withTransition(B1initState, target, tid_, tr_.name , tr_.condition) ;
+			tid++ ;
+		}	
+		return B2_ ;
+	}
+	
+	static Pair<Buchi,Integer> getBuchiFromOr(int buchiNr, Or<IExplorableState> phi) {
+		if (phi.disjuncts == null || phi.disjuncts.length == 0) {
+			throw new IllegalArgumentException("Or(..) but it contains no disjunct.") ;
+		}
+		if (phi.disjuncts.length == 1) {
+			return getBuchiWorker(buchiNr,phi.disjuncts[0]) ;
+		}
+		// case where we have 2 or more disjuncts:
+		
+		var rec = getBuchiWorker(buchiNr, phi.disjuncts[0]) ;
+		Buchi BF0 = rec.fst.treeClone() ;
+		int nextbuchiNr = rec.snd ;		
+		for (int k=1; k < phi.disjuncts.length; k++) {
+			rec = getBuchiWorker(nextbuchiNr, phi.disjuncts[k]) ;
+			Buchi BF1 = rec.fst.treeClone() ;
+			nextbuchiNr = rec.snd ;
+			BF0 = union(BF0,BF1) ;
+		}
+		
+		return new Pair<>(BF0,nextbuchiNr) ;
 	}
 
 }
