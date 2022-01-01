@@ -30,13 +30,6 @@ public class Test_LTL_not_rewriting {
 		}
 	}
 	
-	void evalAndPrint(String name, LTL<Integer> phi, List<Integer> seq) {
-		System.out.println(">>> " + name + ": " + phi.sat(seq)) ;
-		for(int k=0; k<phi.evals.size(); k++) {
-		    System.out.println("   " + k + " : " + phi.evals.get(k).verdict);	
-		}
-	}
-	
 	@Test
 	public void test_pushNeg() {
 		

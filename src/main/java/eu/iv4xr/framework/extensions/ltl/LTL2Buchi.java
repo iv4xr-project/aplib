@@ -337,7 +337,9 @@ public class LTL2Buchi {
 	 * Translate the given LTL formula to a Buchi automaton.
 	 */
 	public static Buchi getBuchi(LTL<IExplorableState> phi) {
-		return getBuchiWorker(0,phi).fst ;
+		LTL<IExplorableState> phi2 = pushNegations(phi) ;
+		LTL<IExplorableState> phi3 = andRewrite(phi2) ;
+		return getBuchiWorker(0,phi3).fst ;
 	}
 	
 	/**
@@ -367,7 +369,7 @@ public class LTL2Buchi {
 			return getBuchiFromOr(buchiNr, (Or<IExplorableState>) phi) ;
 		}
 		if (phi instanceof And) {
-			throw new IllegalArgumentException("Coverting f && g to Buchi is not supported yet.") ;
+			return getBuchiFromAnd(buchiNr, (And<IExplorableState>) phi) ;
 		}
 		if (phi instanceof Not) {
 			throw new IllegalArgumentException("Cannot convert ~f to Buchi. Remove negations by rewriting the formula first.") ;
@@ -560,6 +562,35 @@ public class LTL2Buchi {
 		return new Pair<>(BF0,nextbuchiNr) ;
 	}
 	
+	private static Pair<Buchi,Integer> getBuchiFromAnd(int buchiNr, And<IExplorableState> phi) {
+		
+		if(! isIrreducibleConj(phi)) {
+			throw new IllegalArgumentException("Not an irreducible conjunction: " + phi) ;
+		}
+		
+		// re-arrange the args:
+		if(phi.conjuncts[0] instanceof Next) {
+			LTL<IExplorableState> tmp = phi.conjuncts[0] ;
+			phi.conjuncts[0] = phi.conjuncts[1] ;
+			phi.conjuncts[1] = tmp ;
+		}
+		
+		var rec = getBuchiWorker(buchiNr, phi.conjuncts[1]) ;
+		Buchi BF = rec.fst.treeClone() ;
+		int nextbuchiNr = rec.snd ;		
+		
+		String S = "S" + buchiNr ;
+		BF.insertNewState(S) ;
+		
+		int oldInitialState = BF.initialState ;
+		String oldInitialStateName = BF.decoder[oldInitialState] ;
+		BF.initialState = BF.states.get(S) ;
+		Now<IExplorableState> p = (Now<IExplorableState>) phi.conjuncts[0] ;
+		var tId = "t_" + S + "_" +  oldInitialStateName ;
+		BF.withTransition(S,oldInitialStateName, tId, "" + p , p.p) ;
+		return new Pair<>(BF,nextbuchiNr) ;
+	}
+	
 	private static <A> Pair<A,A> swap(Pair<A,A> pair) {
 		A tmp = pair.fst ;
 		pair.fst = pair.snd ;
@@ -567,6 +598,33 @@ public class LTL2Buchi {
 		return pair ;
 	}
 	
+	/**
+	 * Normalize an LTL formula by rewriting conjunctions. It follows the following
+	 * rewrite rules:
+	 * 
+	 * <ul>
+	 *    <li> p && q         =  (\s -> p(s) && q(s))
+	 *    <li> f && (g || h)  = (f && g) || (f && h)
+	 *    <li> p && (f U g)   = (p && g) || (p && f && X(f U g))
+	 *    <li> p && (f W g)   = (p && g) || (p && f && X(f W g))
+	 *    <li> Xf && Xg       = X(f && g)
+	 *    <li> (*) Xf && (g U h)  = (Xf && h) || (g && X(f && (g U h))
+	 *    <li> (*) Xf && (g W h)  = (Xf && h) || (g && X(f && (g W h)))
+	 *    <li> (a U b)  && (f U g)  = (a && f  U  (b && (f U g)))  ||  (a && f  U  (g && (a U b)))
+	 *    <li> (a U b)  && (f W g)  = (a && f  U  (b && (f W g)))  ||  (a && f  U  (g && (a U b)))  ... notice that two U in the middle. They are correct.
+	 *    <li> (a W b)  && (f W g)  = (a && f  W  (b && (f W g)))  ||  (a && f  W  (g && (a U b)))
+	 * </ul>
+	 * 
+	 * IMPORTANT: the rewrites in (*) unroll the U/W into a X-formula. This 
+	 * assumes that the input sequence is long enough. For example if the sequence is only
+	 * one length, the resulting formula is NOT equivalent.
+	 * 
+	 * 
+	 * @param f An LTL formula. It should not contain any negation. Apply {@link #pushNegations(LTL)} firsrt
+	 *          to normalize an LTL by pushing all negations inside until they all disappear inside
+	 *          atoms.
+	 * @return
+	 */
 	public static <State> LTL<State> andRewrite(LTL<State> f) {
 		if (f instanceof Now)
 			return f;
@@ -732,7 +790,7 @@ public class LTL2Buchi {
 	 * Check if the cunjunction is irreducible. It is irreducible if it is of the form
 	 * p && Xphi. Such a form cannot be further rewritten.
 	 */
-	private static <State>  boolean isIrreducibleConj(And<State> phi) {
+	public static <State>  boolean isIrreducibleConj(And<State> phi) {
 		if (phi.conjuncts.length != 2) return false ;
 		if (phi.conjuncts[0] instanceof Now) {
 			return phi.conjuncts[1] instanceof Next ;
