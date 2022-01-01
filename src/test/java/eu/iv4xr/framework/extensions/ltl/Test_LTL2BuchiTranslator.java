@@ -37,7 +37,7 @@ public class Test_LTL2BuchiTranslator {
 		assertEquals(expectedVerdict,BM.sat(B)) ;
 	}
 	
-	@Test
+	//@Test
 	public void test_now_and_next() {
 		
 		LTL<IExplorableState> f = now(S -> cast(S).x==0)  ; 	
@@ -56,7 +56,7 @@ public class Test_LTL2BuchiTranslator {
 	}
 	
 	
-	@Test
+	//@Test
 	public void test_until() {
 		LTL<IExplorableState> f = now("x<8 && y=0", (IExplorableState S) -> cast(S).x < 8 && cast(S).y == 0)
 				.until(now("x=8", S -> cast(S).x == 8));
@@ -76,7 +76,7 @@ public class Test_LTL2BuchiTranslator {
 		testBuchi(f, SATVerdict.UNSAT);
 	}
 	
-	@Test
+	//@Test
 	public void test_weakuntil() {
 		LTL<IExplorableState> f = now("x<8 && y=0", (IExplorableState S) -> cast(S).x < 8 && cast(S).y == 0)
 				.weakUntil(now("x=8", S -> cast(S).x == 8));
@@ -107,7 +107,7 @@ public class Test_LTL2BuchiTranslator {
 		
 	}
 	
-	@Test
+	//@Test
 	public void test_or() {
 		LTL<IExplorableState> f = ltlOr(
 				now("x=1",S -> cast(S).x==1),
@@ -146,6 +146,98 @@ public class Test_LTL2BuchiTranslator {
 				now("x=1",S -> cast(S).x==1)
 				)  ; 
 		testBuchi(f, SATVerdict.UNSAT);
+	}
+	
+	@Test
+	public void test_and() {
+		// now && now
+		LTL<IExplorableState> f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				now("y=0",S -> cast(S).y==0))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		// now && X
+		f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				next(now("y=1",S -> cast(S).y==1)))  ; 
+		testBuchi(f, SATVerdict.UNSAT);
+		
+		f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				next(now("x=1",S -> cast(S).x==1)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		
+		// now && U
+		f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				now("x<=3",(IExplorableState S) -> cast(S).x<=3)
+				     .until(now("x=3 and y=3", S -> cast(S).x == 3 && cast(S).y == 3)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				now("x>3",(IExplorableState S) -> cast(S).x>3)
+				     .until(now("x=y", S -> cast(S).x == cast(S).y)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		// now && W
+		f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				now("x<=3",(IExplorableState S) -> cast(S).x<=3)
+				     .weakUntil(now("x=3 and y=3", S -> cast(S).x == 3 && cast(S).y == 3)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		f = ltlAnd(
+				now("x=0",S -> cast(S).x==0),
+				now("x<=8",(IExplorableState S) -> cast(S).x<=8)
+				     .weakUntil(now("x<y", S -> cast(S).x < cast(S).y)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		// X && X
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				next(now("y<x",S -> cast(S).y < cast(S).x)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				next(now("y=x",S -> cast(S).y == cast(S).x)))  ; 
+		testBuchi(f, SATVerdict.UNSAT);
+		
+		// X && U
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				now("x<=3",(IExplorableState S) -> cast(S).x<=3)
+				     .until(now("x=3 and y=3", S -> cast(S).x == 3 && cast(S).y == 3)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				now("x<=3",(IExplorableState S) -> cast(S).x<=3)
+				     .until(now("x<y", S -> cast(S).x < cast(S).y)))  ; 
+		testBuchi(f, SATVerdict.UNSAT);
+		
+		// X && W
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				now("x<=3",(IExplorableState S) -> cast(S).x<=3)
+				     .weakUntil(now("x=3 and y=3", S -> cast(S).x == 3 && cast(S).y == 3)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				now("x<=8",(IExplorableState S) -> cast(S).x<=8)
+				     .weakUntil(now("false", S -> false)))  ; 
+		testBuchi(f, SATVerdict.SAT);
+		
+		f = ltlAnd(
+				next(now("x=1",S -> cast(S).x==1)),
+				now("x<8",(IExplorableState S) -> cast(S).x<8)
+				     .weakUntil(now("y=8", S -> cast(S).y==8)))  ; 
+		testBuchi(f, SATVerdict.UNSAT);
+
+
 	}
 
 }

@@ -339,6 +339,8 @@ public class LTL2Buchi {
 	public static Buchi getBuchi(LTL<IExplorableState> phi) {
 		LTL<IExplorableState> phi2 = pushNegations(phi) ;
 		LTL<IExplorableState> phi3 = andRewrite(phi2) ;
+		//System.out.println("==== phi : " + phi) ;
+		//System.out.println("==== phi3: " + phi3) ;
 		return getBuchiWorker(0,phi3).fst ;
 	}
 	
@@ -575,7 +577,8 @@ public class LTL2Buchi {
 			phi.conjuncts[1] = tmp ;
 		}
 		
-		var rec = getBuchiWorker(buchiNr, phi.conjuncts[1]) ;
+		LTL<IExplorableState> q = ((Next<IExplorableState>) phi.conjuncts[1]).phi ;
+		var rec = getBuchiWorker(buchiNr+1,q) ;
 		Buchi BF = rec.fst.treeClone() ;
 		int nextbuchiNr = rec.snd ;		
 		
@@ -757,7 +760,7 @@ public class LTL2Buchi {
 			// ===== ELSE case-6
 			// The cases that remain are the following:
 			// (1) one of the the args is a reducible conjunction
-			// or (2) one the args is a reducible conjunction, but the other is not atom nor
+			// or (2) one the args is a ireducible conjunction, but the other is not atom nor
 			// a next-f formula
 			// In either case, we merge the two args in a bigger conjunction and recursvely
 			// apply
@@ -807,10 +810,10 @@ public class LTL2Buchi {
 	}
 	
 	/**
-	 * This is irreducible. Return f1 && f2.
+	 * This is irreducible. Return f1 && andRewrite(f2).
 	 */
 	private static <State> LTL<State> andRewrite(Now<State> f1, Next<State> f2) {
-		return ltlAnd(f1,f2) ;
+		return ltlAnd(f1,andRewrite(f2)) ;
 	}
 	
 	private static <State> LTL<State> andRewrite(Now<State> f1, Until<State> f2) {
@@ -840,6 +843,7 @@ public class LTL2Buchi {
 			f2_.conjuncts[1] = tmp ;
 		}
 		f2_.conjuncts[0] = andRewrite(f1,(Now<State>) f2_.conjuncts[0]) ;
+		f2_.conjuncts[1] = andRewrite(f2_.conjuncts[1]) ;
 		return f2_ ;
 	}
 	

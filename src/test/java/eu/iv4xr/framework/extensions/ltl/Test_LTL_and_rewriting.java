@@ -20,7 +20,7 @@ public class Test_LTL_and_rewriting {
 			var verdictPhi = phi.sat(seqs[k]) ;
 			var verdictPhi__ = phi__.sat(seqs[k]) ;
 			System.out.println(">>  seq-" + k + " passed:" + verdictPhi 
-					+ " vs " + verdictPhi + "; aggree:" + (verdictPhi == verdictPhi__)) ;
+					+ " vs " + verdictPhi__ + "; aggre:" + (verdictPhi == verdictPhi__)) ;
 			assertEquals(verdictPhi,verdictPhi__) ;
 		}
 	}
@@ -170,7 +170,7 @@ public class Test_LTL_and_rewriting {
 		var seq0 = sequence(0,1,2,3,4) ;
 		var seq1 = sequence(2,2,3,4) ;
 		var seq2 = sequence(3) ;
-		var seq2b = sequence(3,3) ;
+		var seq2b = sequence(3,3,3) ;
 		var seq3 = sequence(3,2,5) ;
 		
 		LTL<Integer> nextLTE2 = next(now("i<=2",i -> i<=2)) ;
