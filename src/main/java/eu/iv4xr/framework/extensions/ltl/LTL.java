@@ -146,6 +146,10 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     	return until(now(psi)) ;
     }
     
+    public WeakUntil<State> weakUntil(Predicate<State> psi) {
+    	return weakUntil(now(psi)) ;
+    }
+    
     /**
      * phi.implies(psi) constructs the LTL formula "phi --> psi".
      */
