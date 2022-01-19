@@ -132,7 +132,7 @@ public class ObservationEvent implements Serializable, Parsable {
          */
         protected String info;
 
-        TimeStampedObservationEvent() {
+        public TimeStampedObservationEvent() {
             super();
         }
 
@@ -239,7 +239,7 @@ public class ObservationEvent implements Serializable, Parsable {
          */
         protected Boolean verdict = null;
 
-        VerdictEvent() {
+        public VerdictEvent() {
             super();
         }
 

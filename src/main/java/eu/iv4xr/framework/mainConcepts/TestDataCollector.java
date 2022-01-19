@@ -492,9 +492,8 @@ public class TestDataCollector implements Parsable {
     public void saveTestAgentScalarsTraceAsCSV(String agentUniqueId, String filename) throws IOException {
         
         List<ScalarTracingEvent> trace = getTestAgentScalarsTrace(agentUniqueId) ;
-        
         Set<String> propertyNames = new HashSet<>() ;
-        for(var e : trace) {
+        for(var e : trace) {        	
         	propertyNames.addAll(e.values.keySet()) ;
         }
                 
@@ -504,7 +503,7 @@ public class TestDataCollector implements Parsable {
         int N = collumnNames.size() ;
         String[] collumnNames_ = new String[N] ;
         int k=0 ;
-        for(var name : collumnNames) {
+        for(var name : collumnNames) {       	
         	collumnNames_[k] = name ;
         	k++ ;
         }
@@ -513,13 +512,51 @@ public class TestDataCollector implements Parsable {
         
         for(ScalarTracingEvent e : trace) {
         	Number[] row = new Number[N] ;
-        	for(k=0; k<N; k++) {
+        	for(k=0; k<N; k++) {       		
         		row[k] = e.values.get(collumnNames_[k]) ;
-        	}
+        	}        	
         	data.add(row) ;
         }
         
         CSVUtility.exportToCSVfile(',', collumnNames_, data, filename);
     }
-
+   public void saveTestAgentEventsTraceAsCSV(String agentUniqueId, String filename) throws IOException {
+        
+        List<TimeStampedObservationEvent> trace = getTestAgentTrace(agentUniqueId) ;       
+        
+        Set<String> propertyNames = new HashSet<>() ;
+        for(var e : trace) {        
+        	if(e.familyName != null)
+        	propertyNames.add(e.familyName) ;
+        }
+                
+        List<String> collumnNames = propertyNames.stream().collect(Collectors.toList()) ;
+        
+        collumnNames.sort(Comparator.comparing(s -> s.toString()));
+        
+        int N = collumnNames.size() ;
+        String[] collumnNames_ = new String[N] ;
+        int k=0 ;
+        List<String[]> data = new LinkedList<>() ;
+        
+        for(var name : collumnNames) {
+        	if(!name.equals("Tracing")) {
+	        	collumnNames_[k] = name ;
+	        	k++ ;
+	        	}
+        }
+        data.add(collumnNames_) ;   
+        
+        for(TimeStampedObservationEvent e : trace) {
+        	String[] row = new String[N] ;
+        	
+        	for(k=0; k<N; k++) {          		
+        		if(e.familyName != null && e.familyName.equals(collumnNames_[k]))
+        		row[k]= e.getTimestamp().toString();
+        	}          	
+        	data.add(row) ;
+        }
+        
+        CSVUtility.exportToCSVfile(',', data, filename);
+    }
 }
