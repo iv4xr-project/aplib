@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 public class Test_LTL {
 	
 	
-	static List<Integer> sequence(int... s) {
+	public static List<Integer> sequence(int... s) {
 		LinkedList<Integer> seq = new LinkedList<>() ;
 		for(int i=0; i<s.length; i++) {
 			seq.add(s[i]) ;
@@ -51,8 +51,7 @@ public class Test_LTL {
 	
 	@Test
     public void test_ltl_next() {
-        // Test an ltl of the form now(p)
-		
+        
 		var seq1 = sequence(0, 1, 2, 3, 4, 5) ;
 		
 		LTL<Integer> phi = next(next(now(i -> i == 2))) ;
@@ -78,8 +77,7 @@ public class Test_LTL {
 	
 	@Test
     public void test_ltlUntil() {
-        // Test an ltl of the form now(p)
-		
+        
 		var seq1 = sequence(0, 1, 2, 3, 4, 5) ;
 		var seq2 = sequence(0, 1, 2, 2, 2, 2) ;
 		
@@ -116,6 +114,22 @@ public class Test_LTL {
 		assertEquals(SATVerdict.UNSAT, eventually((Integer i) -> i>5).sat(seq1)) ;
 		assertEquals(SATVerdict.UNSAT, always((Integer i) -> i<5).sat(seq1)) ;
     }
+	
+	@Test
+    public void test_ltlWeakUntil() {
+        
+		var seq1 = sequence(0, 1, 2, 3, 4, 5) ;
+		var seq2 = sequence(0, 1, 2, 2, 2, 2) ;
+		var seq3 = sequence(0, 1, 2, 4, 5) ;
+		var seq4 = sequence(4,5,3) ;
+		
+		LTL<Integer> phi = now((Integer i) -> i < 3).weakUntil(now((Integer i) -> i==3)) ;
+		
+		assertEquals(SATVerdict.SAT, phi.sat(seq1)) ;
+		assertEquals(SATVerdict.SAT, phi.sat(seq2)) ;
+		assertEquals(SATVerdict.UNSAT, phi.sat(seq3)) ;
+		assertEquals(SATVerdict.UNSAT, phi.sat(seq4)) ;
+	}
 	
 	@Test
     public void test_ltlNot() {

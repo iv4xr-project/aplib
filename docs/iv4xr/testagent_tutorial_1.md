@@ -1,4 +1,4 @@
-# iv4xr Tutorial 1: Testing a Java Class with Test Agent
+# iv4xr-core Tutorial 1: Testing a Java Class with Test Agent
 Author: Wishnu Prasetya
 
 **Prerequisite:** you have read at least the following tutorials:
@@ -7,12 +7,7 @@ Author: Wishnu Prasetya
 * [ `Aplib` Tutorial 1](../manual/tutorial_1.md), showing a simple example of creating an agent.
 * [ `Aplib` Tutorial 2](../manual/tutorial_2.md), a brief introduction to _goal_ and _tactic_.
 
-### What is iv4xr ?
-
-`iv4xr` is an **agent-based framework for automated testing**. The original usecase of `iv4xr` is to test so-called _Extended Reality_ systems, such as computer games, simulators, and VR or AR based systems. Currently this is still an on-going project, but in any case `iv4xr` is actually generic enough to target other types of software, such as a class or a service.
-
-**What is the difference between iv4xr and aplib?**
-`aplib` is the underlying agent-library underneath `iv4xr`. `aplib` is a general purpose agent-library, whereas `iv4xr` is a framework specifically for testing. E.g. `iv4xr` adds testing-related functionalities to `aplib` agents so that these agents can be used to test other software.
+`iv4xr-core` provides an infrastructure to do **agent-based automated testing**. The original usecase of `iv4xr` is to test so-called _Extended Reality_ systems, such as computer games, simulators, and VR or AR based systems. However, it is actually generic enough to target other types of software, such as a Java class or a service. The agent programming part is provided by a component called aplib. The Core adds testing-related functionalities to aplib agents so that these agents can be used to test other software.
 
 ### What is agent-based testing?
 
@@ -63,7 +58,6 @@ In an agent-based architecture, agents are meant to control the program-under-te
 
 For this example, a [`NullEnvironment`](../../src/main/java/nl/uu/cs/aplib/environments/NullEnvironment.java) that simply holds a reference to a`GCDGame` will do. In this way, when the agent access the environment, it also gets access to the `GCDGame`. Here is the definition of this dummy Environment:
 
-<<**NOTE for IV4XR TEAM**: below is NOT how you should interface your 3D game/simulator to iv4xr. See instead the example [Test_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/Test_GCDGame.java).>>
 
 ```java
 static class GCDEnv extends NullEnvironment {
@@ -72,7 +66,7 @@ static class GCDEnv extends NullEnvironment {
 }
 ```
 
-Above, the only thing we did is to make this custom Environment to wrap over program-under-test. Hence, a test agent can reach it through this environment.
+Above, the only thing we did is to make this custom Environment to wrap over the program-under-test. Hence, a test agent can reach the latter through this environment.
 
 ### Step 2: Defining the State Structure for the Agent
 
@@ -105,7 +99,7 @@ var agent = new TestAgent().attachState(state);
 Imagine a simple testing scenario for `GCDGame` where we drive the game to location (x,y) = (1,1). At this position we expect the valur of gcd to be 1 and the method `win()` to return true. We will later generalize this scenario, but let's for now just focus on this scenario. The scenario has two key parts:
 
 * The agent needs to drive the program-under-test to a specific state, namely (x,y)=(1,1). This is called a **goal**.
-* The correctness property to assert is: **when** (x,y)=(1,1) **then** gcd is expected to be 1 and `win()` is expected to be true. This is called **oracle**.
+* The correctness property to assert is: **when** (x,y)=(1,1) **then** gcd is expected to be 1 and `win()` is expected to be true. This is called **invariant** or **oracle**.
 
 Notice that essentially a test checks if the state predicate _goal ⇒ oracle_ is valid.
 
@@ -122,8 +116,8 @@ var topgoal = testgoal("tg")
 	. toSolve((MyState S) -> S.env().gcdgameUnderTest.x == X && S.env().gcdgameUnderTest.y == Y)
 	// specify the tactic to solve the above goal:
 	. withTactic( ... WE NEED a tactic ...)
-	// assert the oracle :
-	. oracle(agent, (MyState S) ->
+	// assert the invariant/oracle :
+	. invariant(agent, (MyState S) ->
 				      assertTrue_("",info,
                          S.env().gcdgameUnderTest.gcd == expectedGC
                          && S.env().gcdgameUnderTest.win() == expectedWinConclusion))

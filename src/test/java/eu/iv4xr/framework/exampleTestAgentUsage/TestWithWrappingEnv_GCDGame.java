@@ -121,12 +121,14 @@ public class TestWithWrappingEnv_GCDGame {
         var game = new GCDGame();
         Logging.getAPLIBlogger().info("STARTING a new test. Initial state: (" + game.x + ", " + game.y + ")");
 
-        // (2) Create a fresh state + environment for the test agent; attach the game to
-        // the env:
-        var state = (MyState) (new MyState().setEnvironment(new GCDEnv(game)));
+        // (2) Create a fresh state + environment for the test agent:
+        var state = new MyState() ;
+        var env   = new GCDEnv(game) ;
 
-        // (3) Create your test agent; attach the just created state to it:
-        var agent = new TestAgent().attachState(state);
+        // (3) Create your test agent; attach the just created state and env to it:
+        var agent = new TestAgent()
+        		     . attachState(state)
+                     . attachEnvironment(env) ;
 
         var info = "test gcd(" + X + "," + Y + ")";
 
@@ -150,7 +152,8 @@ public class TestWithWrappingEnv_GCDGame {
         // test-agent also need
         // a data-collector:
         var dataCollector = new TestDataCollector();
-        agent.setTestDataCollector(dataCollector).setGoal(topgoal);
+        agent. setTestDataCollector(dataCollector)
+             . setGoal(topgoal);
 
         // (6) Ok, now we can run the agent to do the test:
         while (!topgoal.getStatus().success()) {

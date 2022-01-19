@@ -56,6 +56,17 @@ public class BuchiModelChecker {
 		this.model = model ;
 	}
 	
+	
+	
+	
+	/**
+	 * Check if the target 'program' {@link #model} can produce an infinite
+	 * execution that would satisfy the given LTL formula.
+	 */
+	public SATVerdict sat(LTL<IExplorableState> phi) {
+		return sat(phi, Integer.MAX_VALUE) ; 
+	}
+	
 	/**
 	 * Check if the target 'program' {@link #model} can produce an infinite
 	 * execution that would be accepted by the given Buchi automaton. If so SAT is
@@ -65,6 +76,15 @@ public class BuchiModelChecker {
 	 */
 	public SATVerdict sat(Buchi buchi) {
 		return sat(buchi, Integer.MAX_VALUE) ; 
+	}
+	
+	/**
+	 * Check if the target program has an finite execution of the specified maximum
+	 * length that would witness the given LTL formula.
+	 */
+	public SATVerdict sat(LTL<IExplorableState> phi, int maxDepth) {
+		Buchi B = LTL2Buchi.getBuchi(phi) ;
+		return sat(B,maxDepth) ;
 	}
 	
 	/**
@@ -79,11 +99,20 @@ public class BuchiModelChecker {
 	}
 	
 	/**
+	 * The same as {@link #find(Buchi, int)}, but it takes an LTL formula for specifying
+	 * the pattern of the execution to find. This returns witness for the given LTL property.
+	 */
+	public Path<Pair<IExplorableState,String>> find(LTL<IExplorableState> phi, int maxDepth) {
+		Buchi B = LTL2Buchi.getBuchi(phi) ;
+		return find(B,maxDepth) ;
+	}
+	
+	/**
 	 * Check if the target 'program' {@link #model} can produce an infinite execution that
 	 * would be accepted by the given Buchi automaton. If so a witness is returned, and else
 	 * null.
 	 * 
-	 * <p>A 'witness' is a finite execution, that can be 'extended' to a finite execution
+	 * <p>A 'witness' is a finite execution, that can be 'extended' to a infinite execution
 	 * accepted by the Buchi. Further explanation about this can be found here: {@link Buchi}.
 	 */
 	public Path<Pair<IExplorableState,String>> find(Buchi buchi, int maxDepth) {

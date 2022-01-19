@@ -7,7 +7,9 @@ import eu.iv4xr.framework.spatial.Vec3;
 
 public class WorldEntity implements Serializable {
 
-    /**
+	private static final long serialVersionUID = 1L;
+
+	/**
      * A unique id identifying this entity.
      */
     public final String id;

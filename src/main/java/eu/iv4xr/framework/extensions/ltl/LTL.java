@@ -1,8 +1,12 @@
 package eu.iv4xr.framework.extensions.ltl;
 
+import static eu.iv4xr.framework.extensions.ltl.LTL.ltlNot;
+
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 
 /**
@@ -110,30 +114,40 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     	sat() ;
     	fullyEvaluated = true ;
     }
+    
+    /**
+     * Make a clone of this LTL formula. The structure will be cloned, but the under
+     * lying state predicates are not cloned.
+     */
+    abstract public LTL<State> treeClone() ;
          
 
     /**
      * phi.Until(psi) constructs the LTL formula "phi U psi".
      */
-    public LTL<State> until(LTL<State> psi) {
+    public Until<State> until(LTL<State> psi) {
         var ltl = new Until<State>();
-        ltl.phi1 = this;
-        ltl.phi2 = psi;
+        ltl.phi1 = this.treeClone();
+        ltl.phi2 = psi.treeClone();
         return ltl;
     }
 
     /**
      * phi.weakUntil(psi) constructs the LTL formula "phi W psi".
      */
-    public LTL<State> weakUntil(LTL<State> psi) {
+    public WeakUntil<State> weakUntil(LTL<State> psi) {
         var ltl = new WeakUntil<State>();
-        ltl.phi1 = this ;
-        ltl.phi2 = psi ;
+        ltl.phi1 = this.treeClone() ;
+        ltl.phi2 = psi.treeClone() ;
         return ltl ;
     }
 
     public LTL<State> until(Predicate<State> psi) {
     	return until(now(psi)) ;
+    }
+    
+    public WeakUntil<State> weakUntil(Predicate<State> psi) {
+    	return weakUntil(now(psi)) ;
     }
     
     /**
@@ -147,6 +161,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     public static class Now<State> extends LTL<State> {
     	
         public Predicate<State> p;
+        public String name = null ;
         
         Now() { super() ; }
 
@@ -164,7 +179,18 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
         
         @Override 
-        public String toString() { return "p" ; }
+        public String toString() { 
+        	if (name==null) return "p" ; 
+        	return name ;
+        }
+        
+        @Override
+        public Now<State> treeClone() {
+        	var clone = new Now<State>() ;
+        	clone.p = this.p ;
+        	if(this.name != null) clone.name = "" + this.name ;
+        	return clone ;        	
+        }
     }
 
     public static class Not<State> extends LTL<State> {
@@ -208,6 +234,13 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         void evalAtomSat(State state) {
             evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi.evalAtomSat(state);
+        }
+        
+        @Override
+        public Not<State> treeClone() {
+        	var clone = new Not<State>() ;
+        	clone.phi = this.phi.treeClone() ;
+        	return clone ;        	
         }
         
         @Override 
@@ -266,6 +299,21 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 phi.evalAtomSat(state);
         }
         
+        @Override
+        public And<State> treeClone() {
+        	var clone = new And<State>() ;
+        			
+            LTL<State>[] dummy = (LTL<State>[]) new LTL[0] ;
+			
+            clone.conjuncts = Arrays.asList(this.conjuncts)
+			   .stream()
+			   .map((LTL<State> g) -> g.treeClone())
+			   .collect(Collectors.toList())
+			   .toArray(dummy) 
+			;		
+        	return clone ;        	
+        }
+        
         @Override 
         public String toString() { 
         	String z = "" ;
@@ -275,6 +323,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         			z += " && " ;
         		}
         		z += "(" + f + ")" ;
+        		k++ ;
         	}
         	return z ; 
         }
@@ -340,6 +389,21 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 phi.evalAtomSat(state);
 		}
 		
+        @Override
+        public Or<State> treeClone() {
+        	var clone = new Or<State>() ;
+        			
+            LTL<State>[] dummy = (LTL<State>[]) new LTL[0] ;
+			
+            clone.disjuncts = Arrays.asList(this.disjuncts)
+			   .stream()
+			   .map((LTL<State> g) -> g.treeClone())
+			   .collect(Collectors.toList())
+			   .toArray(dummy) 
+			;		
+        	return clone ;        	
+        }
+		
 		@Override 
         public String toString() { 
         	String z = "" ;
@@ -349,6 +413,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         			z += " || " ;
         		}
         		z += "(" + f + ")" ;
+        		k++ ;
         	}
         	return z ; 
         }
@@ -410,6 +475,15 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             phi2.evalAtomSat(state);
         }
         
+        @Override
+        public Until<State> treeClone() {
+        	var clone = new Until<State>() ;
+        			
+           clone.phi1 = this.phi1.treeClone() ;
+           clone.phi2 = this.phi2.treeClone() ;
+        	return clone ;        	
+        }
+        
         @Override 
         public String toString() { 
         	return "(" + phi1 + ") U (" + phi2 + ")" ; 
@@ -440,6 +514,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         	if(fullyEvaluated) 
         		return evals.getFirst().verdict;
         	
+        	/*
+        	 does not work :|  want to know why...
+        	 
         	LTL<State> encoding = ltlOr(always(phi1), phi1.until(phi2)) ;
       
             encoding.sat();
@@ -451,6 +528,51 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                 var f = iterator.next();
                 f.verdict = iteratorEncoding.next().verdict;
             }
+            */
+        	phi1.sat();
+            phi2.sat();
+        	var iterator = evals.descendingIterator();
+            var iteratorPhi1 = phi1.evals.descendingIterator();
+            var iteratorPhi2 = phi2.evals.descendingIterator();
+
+            // keep track if phi1 until phi2 holds at sigma(k+1)
+            boolean nextSat = false;
+
+            // (1) calculate phi1 until phi2 holds on every sigma(k); we calculate this
+            // backwards for every state in the interval:
+            while (iterator.hasNext()) {
+                var psi = iterator.next();
+                var p = iteratorPhi1.next().verdict;
+                var q = iteratorPhi2.next().verdict;
+                if (q == SATVerdict.SAT) {
+                    psi.verdict = SATVerdict.SAT;
+                    nextSat = true;
+                } else {
+                    if (nextSat && p == SATVerdict.SAT)
+                        psi.verdict = SATVerdict.SAT;
+                    else {
+                        psi.verdict = SATVerdict.UNSAT;
+                        nextSat = false;
+                    }
+                }
+            }
+            
+            // (2) combine with always(phi1):   
+            iterator = evals.descendingIterator();
+            iteratorPhi1 = phi1.evals.descendingIterator();
+            while (iterator.hasNext()) {
+            	var psi = iterator.next();
+            	var p = iteratorPhi1.next().verdict; 
+            	if (p == SATVerdict.SAT) {
+            		psi.verdict = SATVerdict.SAT ;
+            	}
+            	else {
+            		// else this i and its predecesors won't satisfy always(phi1)
+            		// we break:
+            		break ;
+            	}
+            }  
+
             return evals.getFirst().verdict;
         }
 
@@ -459,6 +581,15 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
             phi1.evalAtomSat(state);
             phi2.evalAtomSat(state);
+        }
+        
+        @Override
+        public WeakUntil<State> treeClone() {
+        	var clone = new WeakUntil<State>() ;
+        			
+           clone.phi1 = this.phi1.treeClone() ;
+           clone.phi2 = this.phi2.treeClone() ;
+        	return clone ;        	
         }
         
         @Override 
@@ -515,6 +646,13 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             phi.evalAtomSat(state);
         }
         
+        @Override
+        public Next<State> treeClone() {
+           var clone = new Next<State>() ;       			
+           clone.phi = this.phi.treeClone() ;
+           return clone ;        	
+        }
+        
         @Override 
         public String toString() { 
         	return "X(" + phi + ")" ; 
@@ -525,75 +663,97 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     /**
      * If p is a state-predicate, this construct the LTL formula "now(p)".
      */
-	public static <State>  LTL<State> now(Predicate<State> p) {
+	public static <State>  Now<State> now(Predicate<State> p) {
         var a = new Now<State>();
         a.p = p ;
         return a;
+    }
+	
+	public static <State>  Now<State> now(String name, Predicate<State> p) {
+        var a = now(p) ;
+        a.name = name ;
+        return a ;
     }
 
 	/**
 	 * If p is a state-predicate, next(p) constructs the LTL formula "X now(p)".
 	 */
-    public static <State>  LTL<State> next(LTL<State> phi) {
+    public static <State>  Next<State> next(LTL<State> phi) {
         var ltl = new Next<State>();
-        ltl.phi = phi;
+        ltl.phi = phi.treeClone();
         return ltl;
     }
     
     /**
      * next(phi) constructs the LTL formula "X phi".
      */
-    public static <State>  LTL<State> next(Predicate<State> phi) {
+    public static <State>  Next<State> next(Predicate<State> phi) {
         return next(now(phi)) ;
     }
 
     /**
      * ltlNot(phi) constructs the LTL formula "not phi".
      */
-    public static <State>  LTL<State> ltlNot(LTL<State> phi) {
+    public static <State>  Not<State> ltlNot(LTL<State> phi) {
         var ltl = new Not<State>();
-        ltl.phi = phi;
+        ltl.phi = phi.treeClone();
         return ltl;
     }
 
     /**
      * ltlAnd(phi1, ..., phin ) constructs the LTL formula "phi1 && phi2 ... && phin".
      */
-    public static <State>  LTL<State> ltlAnd(LTL<State>... phis) {
+    public static <State>  And<State> ltlAnd(LTL<State>... phis) {
         if (phis == null)
             throw new IllegalArgumentException();
         if (phis.length < 2)
             throw new IllegalArgumentException();
         var ltl = new And<State>();
-        ltl.conjuncts = phis;
+        
+        LTL<State>[] dummy = (LTL<State>[]) new LTL[0] ;
+		
+		ltl.conjuncts = Arrays.asList(phis)
+		   .stream()
+		   .map((LTL<State> g) -> g.treeClone())
+		   .collect(Collectors.toList())
+		   .toArray(dummy) 
+		;
         return ltl;
     }
     
     /**
      * ltlOr(phi1, ..., phin ) constructs the LTL formula "phi1 || phi2 ... || phin".
      */
-    public static <State>  LTL<State> ltlOr(LTL<State>... phis) {
+    public static <State>  Or<State> ltlOr(LTL<State>... phis) {
     	if (phis == null)
             throw new IllegalArgumentException();
     	if (phis.length < 2)
             throw new IllegalArgumentException();
     	var ltl = new Or<State>();
-        ltl.disjuncts = phis;
+    	
+        LTL<State>[] dummy = (LTL<State>[]) new LTL[0] ;
+		
+		ltl.disjuncts = Arrays.asList(phis)
+		   .stream()
+		   .map((LTL<State> g) -> g.treeClone())
+		   .collect(Collectors.toList())
+		   .toArray(dummy) 
+		;
         return ltl ;   	
     }
 
     /**
      * evenatually(phi) constructs the LTL formula "F phi" (also written "diamond phi").
      */
-    public static <State>  LTL<State> eventually(LTL<State> phi) {
-        return now((State state) -> true).until(phi);
+    public static <State>  Until<State> eventually(LTL<State> phi) {
+        return now("true",(State state) -> true).until(phi.treeClone());
     }
     
     /**
      * if p is a state-predicate, evenatually(p) constructs the LTL formula 
      * "F noq(p)" (also written "diamond now(p)").
      */
-    public static <State>  LTL<State> eventually(Predicate<State> phi) {
+    public static <State>  Until<State> eventually(Predicate<State> phi) {
         return eventually(now(phi)) ;
     }
 

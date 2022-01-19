@@ -88,9 +88,25 @@ public class Buchi {
 	 */
 	public List<Integer> currentExecution = new LinkedList<>() ;
 	
+	/**
+	 * Representing a transition in a Buchi automaton.
+	 */
 	public static class BuchiTransition implements ITransition {
 		
+		/**
+		 * The id of the transition.
+		 */
 		public String id ;
+		
+		/**
+		 * The transition's name. Useful when printing the transition. It does not have to be
+		 * unique.
+		 */
+		public String name ;
+		
+		/**
+		 * The predicate that guard the transition.
+		 */
 		public Predicate<IExplorableState> condition ;
 		
 		@Override
@@ -123,13 +139,19 @@ public class Buchi {
 	 * @param from  The source-state of the transition.
 	 * @param to    The destination-state of the transition.
 	 * @param transitionId  Some id to identify the transition.
+	 * @param transitionName The name of the transition. It does not have to be unique.
 	 * @param condition  The semantic condition specifying when the transition can be taken.
 	 */
-	public Buchi withTransition(String from, String to, String transitionId, Predicate<IExplorableState> condition) {
+	public Buchi withTransition(String from, 
+			String to, 
+			String transitionId, 
+			String transitionName, 
+			Predicate<IExplorableState> condition) {
 		int fromId = states.get(from) ;
 		int toId = states.get(to) ;
 		var transition = new BuchiTransition() ;
 		transition.id = transitionId ;
+		transition.name = transitionName ;
 		transition.condition = condition ;
 		var transitionGroup = transitions.get(fromId) ;
 		if (transitionGroup == null) {
@@ -138,6 +160,14 @@ public class Buchi {
 		}
 		transitionGroup.add(new Pair<BuchiTransition,Integer>(transition,toId)) ;
 		return this ;
+	}
+	
+	/**
+	 * The same as the other withTransition. This one will set the transition name to be the same as
+	 * the given transitionId.
+	 */
+	public Buchi withTransition(String from, String to, String transitionId, Predicate<IExplorableState> condition) {
+		return withTransition(from,to,transitionId,transitionId,condition) ;
 	}
 	
 	/***
@@ -208,7 +238,11 @@ public class Buchi {
 		buf.append("States (" + states.size() + ") :") ;
 		int k = 0 ;
 		for(var st : states.entrySet()) {
-			buf.append("\n   " + st.getValue() + ":" + st.getKey()) ;
+			buf.append("\n   " + st.getValue() + ":") ;
+			if (st.getValue() == this.initialState) {
+				buf.append(">") ;
+			}
+			buf.append(st.getKey().toString()) ;
 			if(this.omegaAcceptingStates.contains(st.getValue())) {
 				buf.append("  (OA)") ;
 			}
@@ -222,11 +256,111 @@ public class Buchi {
 			var from = decoder[trgroup.getKey()] ;
 			for (var tr : trgroup.getValue()) {
 				var to = decoder[tr.snd] ;
-				var tr_ = tr.fst.id ;
-				buf.append("\n   " + from + " ---" + tr_ + "--> " + to)  ;
+				var tr_ = tr.fst.name ;
+				buf.append("\n   " 
+				   + tr.fst.id + ": "
+				   + from + " ---" + tr_ + "--> " + to)  ;
 			}
 		}
 		return buf.toString() ;
+	}
+	
+	/**
+	 * Construct a new Buchi that is a "clone" of this Buchi. he states and transitions
+	 * will be cloned, but the underlying predicates that form the transitions' conditions
+	 * are not cloned.
+	 */
+	public Buchi treeClone() {
+		var B = new Buchi() ;
+		for (var st : this.states.entrySet()) {
+			B.states.put(st.getKey(), st.getValue()) ;
+		}
+		B.decoder = Arrays.copyOf(this.decoder,this.decoder.length) ;
+		for (var st : this.omegaAcceptingStates) {
+			B.omegaAcceptingStates.add(st) ;
+		}
+		for (var st : this.traditionalAcceptingStates) {
+			B.traditionalAcceptingStates.add(st) ;
+		}
+		B.withInitialState(this.decoder[this.initialState]) ;
+		for (var trgroup : this.transitions.entrySet()) {		
+			List<Pair<BuchiTransition,Integer>> outArrows = new LinkedList<>() ;
+			B.transitions.put(trgroup.getKey(), outArrows) ;
+			for(var tr : trgroup.getValue()) {
+				var trClone = new BuchiTransition() ;
+				trClone.id = "" + tr.fst.id ;
+				if (tr.fst.name != null) {
+					trClone.name = "" + tr.fst.name ;
+				}
+				trClone.condition = tr.fst.condition ;
+				outArrows.add(new Pair<BuchiTransition,Integer>(trClone,tr.snd)) ;
+			}
+		}
+		return B;
+	}
+	
+	/**
+	 * Rename the states in this Buchi, by adding the given string as a suffix to
+	 * each state-name. It then returns the resulting Buchi.
+	 */
+	Buchi appendStateNames(String suffix) {
+		var states__ = this.states ;
+		this.states = new HashMap<String,Integer>() ;
+		for(var st : states__.entrySet()) {
+			String newName = st.getKey() + suffix ;
+			this.states.put(newName,st.getValue()) ;
+		}
+		for (int k=0; k<decoder.length; k++) {
+			decoder[k] = decoder[k] + suffix ;
+		}
+		return this ;
+	}
+	
+	/**
+	 * Insert a new state with the given name. The new state will get the index 0.
+	 * The indices of existing states will be shifted by 1, and their arrows will
+	 * be adjusted accordingly.
+	 * The method return the modified Buchi.
+	 */ 
+	Buchi insertNewState(String st) {
+		var oldDecoder = this.decoder ;
+		this.decoder = new String[this.decoder.length+1] ;
+		this.decoder[0] = st ;
+		// shift the old indices:
+		for(int k=0; k<oldDecoder.length; k++) {
+			this.decoder[k+1] = oldDecoder[k] ;
+		}
+		// reflect the adjustment in the state-to-index map:
+		for (var st_ : this.states.entrySet()) {
+			this.states.put(st_.getKey(), st_.getValue() + 1) ;
+		}
+		this.states.put(st,0) ;
+		
+		// adjust initial state:
+		this.initialState++ ;
+		
+		// adjust the accepting states:
+		var oldOmegaAcceptingStates = this.omegaAcceptingStates ;
+		this.omegaAcceptingStates = new HashSet<>() ;
+		for (var s : oldOmegaAcceptingStates) {
+			this.omegaAcceptingStates.add(s+1) ;
+		}
+		var oldTraditionalAcceptingStates = this.traditionalAcceptingStates ;
+		this.traditionalAcceptingStates = new HashSet<>() ;
+		for (var s : oldTraditionalAcceptingStates) {
+			this.traditionalAcceptingStates.add(s+1) ;
+		}
+		// adjust the transitions:
+		var oldTransitions = this.transitions ;
+		this.transitions = new HashMap<>() ;
+		transitions.put(0, new LinkedList<Pair<BuchiTransition,Integer>>()) ;
+		for (var trgroup : oldTransitions.entrySet()) {
+			transitions.put(trgroup.getKey()+1, trgroup.getValue()) ;
+			for (var tr : trgroup.getValue()) {
+				tr.snd = tr.snd + 1 ;
+			}
+		}
+		return this ;
 	}
 	
 	/**

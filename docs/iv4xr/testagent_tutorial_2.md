@@ -1,4 +1,4 @@
-# iv4xr Tutorial 2: Testing an External Program with Test Agent
+# iv4xr-core Tutorial 2: Testing an External Program with Test Agent
 Author: Wishnu Prasetya
 
 **Prerequisite:** you have read at least the following tutorials:
@@ -72,7 +72,7 @@ static class GCDEnv extends Environment {
 
 ### Defining Goal and Oracle
 
-Goals, oracles, and tactics can in principle be defined in the same way as in Tutorial-1. However, the precise code to get to information on the state of the program-under-test, or to tell it to do something is a bit different.
+Goals, invariants/oracles, and tactics can in principle be defined in the same way as in Tutorial-1. However, the precise code to get to information on the state of the program-under-test, or to tell it to do something is a bit different.
 
 ```java
 var topgoal = testgoal("tg")
@@ -81,7 +81,7 @@ var topgoal = testgoal("tg")
     // specify a tactic to solve the goal:
     . withTactic(...........)
     // assert the property to check:
-    . oracle(agent, (MyState S) -> assertTrue_("",info,
+    . invariant(agent, (MyState S) -> assertTrue_("",info,
          S.env().gcd == expectedGCD && S.env().win == expectedWinConclusion))
     // finally we lift the goal to become a GoalStructure, for technical reason.
     . lift() ;
