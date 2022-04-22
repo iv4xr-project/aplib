@@ -3,6 +3,9 @@ package nl.uu.cs.aplib.exampleUsages.fiveGame;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
+
+import javax.swing.JFrame;
 
 /**
  * A simple game as an example for agents to play. The game is played by two
@@ -11,10 +14,12 @@ import java.util.Random;
  * piece is placed on an empty square. Some squares may be blocked; these are
  * randomly determined when the board was created.
  * 
- * A player wins if she can make a horizontal, vertical, or diagonal connected
+ * <p>A player wins if she can make a horizontal, vertical, or diagonal connected
  * segment of length 5, consisting of only her pieces.
  * 
- * The game ends in tie if the board is full, and no player wins.
+ * <p>The game ends in tie if the board is full, and no player wins.
+ * 
+ * <p>The main-method gives a demo using two random-agents as players.
  * 
  * @author wish
  *
@@ -186,9 +191,9 @@ public class FiveGame {
      */
     public String toString() {
         var s = line(boardsize + 2);
-        for (int x = 0; x < boardsize; x++) {
+        for (int y = boardsize-1; 0<=y; y--) {
             s += "\n ";
-            for (int y = 0; y < boardsize; y++)
+            for (int x = 0; x < boardsize; x++)
                 if (board[x][y] == SQUARE.EMPTY)
                     s += " ";
                 else if (board[x][y] == SQUARE.CROSS)
@@ -242,6 +247,8 @@ public class FiveGame {
         FiveGame game;
         SQUARE ty;
         Random rnd = new Random();
+        
+        RandomPlayer() { }
 
         /**
          * Construct an instance of RandomPlayer.
@@ -307,6 +314,32 @@ public class FiveGame {
         }
 
     }
+    
+    static public class ProgrammedAgent extends RandomPlayer {
+    	
+    	List<Square_> programmedMoves = new LinkedList<>() ;
+    	
+    	public ProgrammedAgent(SQUARE ty, FiveGame game) {
+    		super(ty,game) ;
+        }
+    	
+    	public void programMoves(int ... moves) {
+    	   int n = moves.length/2 ;
+    	   for(int k=0; k<n; k++) {
+    		   int x = moves[2*k] ;
+    		   int y = moves[2*k+1] ;
+    		   programmedMoves.add(new Square_(ty,x,y)) ;
+    	   }
+    	}
+    	
+    	@Override
+    	public boolean move() {
+    	    Square_ mv = programmedMoves.remove(0) ;
+    	    game.move(ty, mv.x, mv.y) ;
+    	    return true ;
+    	}
+    	
+    }
 
     static public void main(String[] args) {
 
@@ -317,7 +350,9 @@ public class FiveGame {
         RandomPlayer player2 = new RandomPlayer(SQUARE.CROSS, game);
         game.print();
         game.printStatus();
-
+        
+        GameDisplay niceDisplay =  GameDisplay.makeDisplay(game) ;
+    	Scanner in = new Scanner(System.in);        
         boolean circleTurn = true;
         while (game.getGameStatus() == GAMESTATUS.UNFINISHED) {
             if (circleTurn) {
@@ -327,10 +362,11 @@ public class FiveGame {
                 player2.move();
                 circleTurn = true;
             }
+            niceDisplay.repaint();
+    		System.out.println("(press a ENTER to continue)") ;
+    		in.nextLine();
         }
-
         game.print();
         game.printStatus();
-
     }
 }

@@ -1,11 +1,21 @@
 package nl.uu.cs.aplib.exampleUsages.fiveGame;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import alice.tuprolog.InvalidTheoryException;
 import alice.tuprolog.MalformedGoalException;
 import alice.tuprolog.NoSolutionException;
+import nl.uu.cs.aplib.agents.PrologReasoner;
 //import alice.tuprolog.SolveInfo;
 //import alice.tuprolog.Term;
 //import nl.uu.cs.aplib.agents.PrologReasoner;
@@ -19,24 +29,31 @@ import nl.uu.cs.aplib.mainConcepts.*;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
 
+import static nl.uu.cs.aplib.exampleUsages.fiveGame.Strategies.* ;
+
+/**
+ * In this demo we will show how to create an agent (an aplib-agent) to automatically
+ * play a Fivegame. Its strategies to play the game are coded in Prolog, see {@link Strategies}.
+ * The agent will use a state-structure that includes a Prolog-engine to execute the
+ * strategies.
+ * 
+ * <p>Run the main-method to see how this aplib-agent plays against a random-agent (just
+ * an agent that plays by randomly placing a piece).
+ * 
+ * @author wish
+ *
+ */
 public class FiveGame_withAgent {
 
-    // defining some predicate and atom names for Prolog:
-    static String cross = "cross";
-    static String circle = "circle";
-    static String blocked = "blocked";
-    static PredicateName winningMove = predicate("winningMove");
-    static PredicateName eastNeighbor = predicate("eastNeighbor");
-    static PredicateName northNeighbor = predicate("northNeighbor");
-    static PredicateName occupied = predicate("occupied");
-    static PredicateName blockMove = predicate("blockMove");
-    static PredicateName set4Move = predicate("set4Move");
-
-    static class MyState extends State {
+    /**
+     * Defining the state-structure of our aplib-agent that will later play
+     * FiveGame. This state will have no additional variables/field. However,
+     * it has access to the instance of the played game through its env().
+     * It also extends the class State, hence it can have a Prolog-base (which
+     * we will use).
+     */
+    public static class MyState extends State {
     	
-    	FiveGame.SQUARE[][] board ;
-    	int boardsize ;
-
         /**
          * Constructor. It will also create a prolog-engine and attach it to this state.
          */
@@ -59,120 +76,29 @@ public class FiveGame_withAgent {
         @Override
         public MyState setEnvironment(Environment env) {
             super.setEnvironment(env);
-            board = env().thegame.board ;
-            boardsize = board.length;
-            var prolog = prolog();
-
-            // The strategy to play the next move is controlled by the following set of
-            // rules:
-
-            // be careful when using "not" and "is" because they are sensitive to the order
-            // of evaluation/unification; e.g. don't do them when the binding are not
-            // resolved yet
-            var ruleWinWest = rule(winningMove.on("X", "Y")).impBy(eastNeighbor.on(cross, "A", "B", "Y"))
-                    .and(eastNeighbor.on(cross, "B", "C", "Y")).and(eastNeighbor.on(cross, "C", "D", "Y"))
-                    .and(eastNeighbor.on(cross, "D", "E", "Y")).and(not(occupied.on("O", "A", "Y"))).and("X is A");
-
-            var ruleWinEast = rule(winningMove.on("X", "Y")).impBy(occupied.on(cross, "A", "Y"))
-                    .and(eastNeighbor.on(cross, "A", "B", "Y")).and(eastNeighbor.on(cross, "B", "C", "Y"))
-                    .and(eastNeighbor.on(cross, "C", "D", "Y")).and("E is (D+1)").and("E < " + boardsize)
-                    .and(not(occupied.on("O", "E", "Y"))).and("X is E");
-
-            var ruleWinSouth = rule(winningMove.on("X", "Y")).impBy(northNeighbor.on(cross, "X", "A", "B"))
-                    .and(northNeighbor.on(cross, "X", "B", "C")).and(northNeighbor.on(cross, "X", "C", "D"))
-                    .and(northNeighbor.on(cross, "X", "D", "E")).and(not(occupied.on("O", "X", "A"))).and("Y is A");
-
-            var ruleWinNorth = rule(winningMove.on("X", "Y")).impBy(occupied.on(cross, "X", "A"))
-                    .and(northNeighbor.on(cross, "X", "A", "B")).and(northNeighbor.on(cross, "X", "B", "C"))
-                    .and(northNeighbor.on(cross, "X", "C", "D")).and("E is (D+1)").and("E < " + boardsize)
-                    .and(not(occupied.on(cross, "X", "E"))).and("Y is E");
-
-            var ruleBlock4WestEast = rule(blockMove.on("X", "Y")).impBy(eastNeighbor.on(circle, "A", "B", "Y"))
-                    .and(eastNeighbor.on(circle, "B", "C", "Y")).and(eastNeighbor.on(circle, "C", "D", "Y"))
-                    .and(eastNeighbor.on(circle, "D", "E", "Y")).and(or(and(not(occupied.on("O", "A", "Y")), "X is A"),
-                            and("F is (E+1)", "F < " + boardsize, not(occupied.on("O", "F", "Y")), "X is F")));
-
-            var ruleBlock4SouthNorth = rule(blockMove.on("X", "Y")).impBy(northNeighbor.on(circle, "X", "A", "B"))
-                    .and(northNeighbor.on(circle, "X", "B", "C")).and(northNeighbor.on(circle, "X", "C", "D"))
-                    .and(northNeighbor.on(circle, "X", "D", "E")).and(or(and(not(occupied.on("O", "X", "A")), "Y is A"),
-                            and("F is (E+1)", "F < " + boardsize, not(occupied.on("O", "X", "F")), "Y is F")));
-
-            var rule4WestEast = rule(set4Move.on("X", "Y")).impBy(eastNeighbor.on(cross, "A", "B", "Y"))
-                    .and(eastNeighbor.on(cross, "B", "C", "Y")).and(eastNeighbor.on(cross, "C", "D", "Y"))
-                    .and("E is (D+1)").and("E < " + boardsize).and(not(occupied.on("O", "A", "Y")))
-                    .and(not(occupied.on("P", "E", "Y")))
-                    .and(or(and("0 < A", "X is A"), and("(E+1) < " + boardsize, "X is E")));
-
-            var rule4SouthNorth = rule(set4Move.on("X", "Y")).impBy(northNeighbor.on(cross, "X", "A", "B"))
-                    .and(northNeighbor.on(cross, "X", "B", "C")).and(northNeighbor.on(cross, "X", "C", "D"))
-                    .and("E is (D+1)").and("E < " + boardsize).and(not(occupied.on("O", "X", "A")))
-                    .and(not(occupied.on("P", "X", "E")))
-                    .and(or(and("0 < A", "Y is A"), and("(E+1) < " + boardsize, "Y is E")));
-
+            var prolog = prolog();  
             try {
-                // now add the strategy-rules to the prolog engine:
-                prolog.add(ruleWinWest, ruleWinEast, ruleBlock4WestEast, ruleBlock4SouthNorth, ruleWinSouth,
-                        ruleWinNorth, rule4WestEast, rule4SouthNorth);
-                // and add blocked-squares to prolog:
-                for (int x = 0; x < boardsize; x++) {
-                    for (int y = 0; y < boardsize; y++) {
-                        // System.out.println(">>>") ;
-                        if (board[x][y] == SQUARE.BLOCKED) {
-                            // System.out.println(">>>==") ;
-                            prolog.facts(occupied.on(blocked, x, y));
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new Error("Fail to add clauses to Prolog");
+            	Strategies.initializeProlog(prolog(),env().thegame);
             }
-
+            catch(Exception e) {
+            	throw new Error("Failed to initialize Prolog") ;
+            }
             return this;
         }
 
         @Override
         public void updateState(String agentID) {
-        	var obs = env().observe(agentID) ;
-        	board = obs.snd ;
+        	// put the move of opponent in prolog base:
+        	Strategies.markMove(prolog(), env().thegame, 
+        			env().thegame.lastmove.sq, 
+        			env().thegame.lastmove.x, 
+        			env().thegame.lastmove.y) ;
         }
 
-        void markMove(SQUARE sq, int x, int y) {
-            try {
-                markMove_(sq, x, y);
-            } catch (Exception e) {
-            } // swallow...
-        }
-
-        String sqtype(SQUARE sq) {
-            switch (sq) {
-            case CROSS:
-                return cross;
-            case CIRCLE:
-                return circle;
-            case BLOCKED:
-                return blocked;
-            }
-            return null;
-        }
-
-        void markMove_(SQUARE sq, int x, int y) throws InvalidTheoryException {
-            //env().board[x][y] = sq;
-            prolog().facts(occupied.on(sqtype(sq), x, y));
-            if (x > 0) {
-                prolog().facts(eastNeighbor.on(sqtype(sq), x - 1, x, y));
-            }
-            if (x < boardsize - 1 && board[x + 1][y] != SQUARE.EMPTY) {
-                prolog().facts(eastNeighbor.on(sqtype(board[x + 1][y]), x, x + 1, y));
-            }
-            if (y > 0) {
-                prolog().facts(northNeighbor.on(sqtype(sq), x, y - 1, y));
-            }
-            if (y < boardsize - 1 && board[x][y + 1] != SQUARE.EMPTY) {
-                prolog().facts(northNeighbor.on(sqtype(board[x][y + 1]), x, y, y + 1));
-            }
-        }
-
+  
         List<Square_> getEmptySquares() {
+        	var boardsize = env().thegame.boardsize ;
+        	var board = env().thegame.board ;
             var r = new LinkedList<Square_>();
             for (int x = 0; x < boardsize; x++)
                 for (int y = 0; y < boardsize; y++) {
@@ -184,6 +110,8 @@ public class FiveGame_withAgent {
         }
 
         boolean hasHVCrossNeighbor(int x, int y) {
+        	var boardsize = env().thegame.boardsize ;
+        	var board = env().thegame.board ;
             if (x > 0 && board[x - 1][y] == SQUARE.CROSS)
                 return true;
             if (x + 1 < boardsize && board[x + 1][y] == SQUARE.CROSS)
@@ -200,56 +128,37 @@ public class FiveGame_withAgent {
         }
 
     }
-
-    // just for testing
-    static private void test() throws InvalidTheoryException {
-        int N = 8;
-        var thegame = new FiveGame(N, 0);
-        // create an agent state and an environment, attached to the game:
+    
+        
+    /**
+     * Create and configure an aplib-agent to play a FiveGame.
+     */
+    public static BasicAgent configureAgent(FiveGame thegame) {
+    	
+    	// create an agent state and an environment, attached to the game:
         var state = new MyState().setEnvironment(new FiveGameEnv().attachGame(thegame));
-
-        state.markMove(SQUARE.CROSS, 2, 2);
-        state.markMove(SQUARE.CROSS, 3, 2);
-        state.markMove(SQUARE.CROSS, 4, 2);
-
-        System.out.println(state.prolog().showTheory());
-
-        var solution = state.prolog().query("set4Move(X,Y)");
-
-        if (solution != null) {
-            System.out.println(">> x = " + solution.int_("X"));
-            System.out.println(">> y = " + solution.int_("Y"));
-        } else {
-            System.out.println(">> no solution");
-        }
-
-    }
-
-    static public void main(String[] args) throws InvalidTheoryException, NoSolutionException, MalformedGoalException {
-
-        // test() ;
-
-        // creating an instance of the FiveGame
-        var thegame = new FiveGame(7, 0);
-        // create an agent state and an environment, attached to the game:
-        var state = new MyState().setEnvironment(new FiveGameEnv().attachGame(thegame));
-        // creatint the agent:
+        // creating the agent:
         var agent = new BasicAgent().attachState(state);
 
         var rnd = new Random();
 
-        // defining various actions
+        // Defining various actions that the agent can do:
+        
         // this one will randomly choose an empty square, that has a horizontal or
         // vertical cross-neighbor:
         var besideHV = action("besideHV").do1((MyState st) -> {
+        	System.out.println(">>> doing besideHV") ;
             var empties = st.getEmptySquaresWithHVNeighboringCross();
             if (empties.isEmpty())
                 empties = st.getEmptySquares();
-            if (empties.isEmpty())
-                return null;
+            if (empties.isEmpty()) {
+            	//throw new Error() ;
+            	return null;	
+            }
+                
             Square_ sq = empties.get(rnd.nextInt(empties.size()));
             var status = st.env().move(SQUARE.CROSS, sq.x, sq.y);
-            st.markMove(SQUARE.CROSS, sq.x, sq.y);
+            Strategies.markMove(st.prolog(),thegame,SQUARE.CROSS, sq.x, sq.y);
             return status;
         }).lift();
 
@@ -259,56 +168,80 @@ public class FiveGame_withAgent {
                 return null;
             int x = qsolution.int_("X");
             int y = qsolution.int_("Y");
+            System.out.println(">>> doing winningmove (" + x + "," + y + ")") ;
             var status = st.env().move(SQUARE.CROSS, x, y);
-            st.markMove(SQUARE.CROSS, x, y);
+            Strategies.markMove(st.prolog(),thegame,SQUARE.CROSS, x, y);
             return status;
         }).on((MyState st) -> st.prolog().query(winningMove.on("X", "Y"))).lift();
 
-        // block the opponent if it has a 4 consecutive hor. or vert. row:
+        // block the opponent if it has a 3 or 4 consecutive pieces:
         var block = action("block").do2((MyState st) -> (QueryResult qsolution) -> {
             if (qsolution == null)
                 return null;
             int x = qsolution.int_("X");
             int y = qsolution.int_("Y");
+            System.out.println(">>> doing block (" + x + "," + y + ")") ;
             var status = st.env().move(SQUARE.CROSS, x, y);
-            st.markMove(SQUARE.CROSS, x, y);
+            Strategies.markMove(st.prolog(),thegame,SQUARE.CROSS, x, y);
             return status;
         }).on((MyState st) -> st.prolog().query(blockMove.on("X", "Y"))).lift();
 
+         
         // place a cross next to 3 consecutive hor or vert crosses:
         var smartmove = action("smartmove").do2((MyState st) -> (QueryResult qsolution) -> {
             if (qsolution == null)
                 return null;
             int x = qsolution.int_("X");
             int y = qsolution.int_("Y");
+            System.out.println(">>> doing smartmove (" + x + "," + y + ")") ;
             var status = st.env().move(SQUARE.CROSS, x, y);
-            st.markMove(SQUARE.CROSS, x, y);
+            Strategies.markMove(st.prolog(),thegame,SQUARE.CROSS, x, y);
             return status;
         }).on((MyState st) -> st.prolog().query(set4Move.on("X", "Y"))).lift();
 
-        // define a goal and specify a tactic:
+        // define a goal for the agent (to win) and specify a tactic to achieve that:
         var g = goal("goal").toSolve((GAMESTATUS st) -> st == GAMESTATUS.CROSSWON)
-                .withTactic(FIRSTof(winningmove, block, smartmove, besideHV)).lift();
+                .withTactic(FIRSTof(
+                		winningmove, 
+                		block, 
+                		smartmove, 
+                		besideHV)).lift();
 
         agent.setGoal(g);
-        var opponent = new FiveGame.RandomPlayer(SQUARE.CIRCLE, thegame);
+        
+    	return agent ;
+    }
+    
+    /**
+     * Create an instance of FiveGame. Create two agents: one is aplib-agent and one is
+     * a random-agent. They will play against each other on the game. The aplib-agent
+     * will play cross, the random-agent plays circle.
+     * 
+     * Then, both agents will be run to play the game.
+     */
+    static public void main(String[] args) throws InvalidTheoryException, NoSolutionException, MalformedGoalException {
 
-        Scanner consoleInput = new Scanner(System.in);
-
-        // now we let the agent play against an automated random player:
-        while (thegame.getGameStatus() == GAMESTATUS.UNFINISHED) {
-            opponent.move();
-            if (thegame.getGameStatus() != GAMESTATUS.UNFINISHED) {
-                thegame.print();
-                thegame.printStatus();
-                break;
-            }
-            agent.update();
-            thegame.print();
-            thegame.printStatus();
-            System.out.println("(press a ENTER to continue)");
-            consoleInput.nextLine();
-        }
-        consoleInput.close();
+        // test() ;
+    	var thegame = new FiveGame(8,3);  
+    	var agent = configureAgent(thegame) ;
+    	var opponent = new FiveGame.RandomPlayer(SQUARE.CIRCLE, thegame);
+    	
+    	// run the game:
+    	GameDisplay nicedisplay = GameDisplay.makeDisplay(thegame) ;
+    	nicedisplay.repaint() ;
+    	boolean agentTurn = false ;
+    	Scanner in = new Scanner(System.in);
+    	while(thegame.getGameStatus() == GAMESTATUS.UNFINISHED) {
+    		if(agentTurn)
+    			agent.update();
+    		else {
+    			opponent.move() ;
+    		}
+    		agentTurn = !agentTurn ;
+        	nicedisplay.repaint() ;
+    		System.out.println(thegame.toString() + "\n" + thegame.toStringShort()) ;
+    		System.out.println("x:aplib-agent | o:random-agent (press a ENTER to continue)") ;
+    		in.nextLine();
+    	}
     }
 }
