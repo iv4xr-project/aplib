@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.spatial.IntVec2D;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.*;
 import nl.uu.cs.aplib.utils.Pair;
 
@@ -86,6 +87,7 @@ public class MiniDungeon {
 	
 	public Entity[][] world ;
 	public List<Player> players = new LinkedList<>() ;
+	public List<String> recentlyRemoved = new LinkedList<>() ;
 	Random rnd  ;
 	public int turnNr = 0 ;
 	
@@ -234,29 +236,11 @@ public class MiniDungeon {
 	public enum Command { MOVEUP, MOVEDOWN, MOVELEFT, MOVERIGHT, USEHEAL, USERAGE , DONOTHING } 
 	
 		
-	List<Key> keysInBag(Player player) {
-	   return player.bag.stream()
-		. filter(i -> i instanceof Key)
-		. map(i -> (Key) i)
-		. collect(Collectors.toList()) ;
-	}
 	
-	List<HealingPotion> healpotsInBag(Player player) {
-		   return player.bag.stream()
-			. filter(i -> i instanceof HealingPotion)
-			. map(i -> (HealingPotion) i)
-			. collect(Collectors.toList()) ;
-	}
-	
-	List<RagePotion> ragepotsInBag(Player player) {
-		   return player.bag.stream()
-			. filter(i -> i instanceof RagePotion)
-			. map(i -> (RagePotion) i)
-			. collect(Collectors.toList()) ;
-	}
 	
 	void removeFromWorld(Entity e) {
 		world[e.x][e.y] = null ;
+		recentlyRemoved.add(e.id) ;
 	}
 	
 	void attack(CombativeEntity attacker, CombativeEntity defender) {
@@ -372,9 +356,15 @@ public class MiniDungeon {
 		if (c_ == null) return "" ;
 		
 		Player player = c_.fst ;
-		boolean wasEnraged = player.rageTimer > 0;		
+		boolean wasEnraged = player.rageTimer > 0;	
+		List<String> copyOfRemoved = new LinkedList<>() ;
+		copyOfRemoved.addAll(recentlyRemoved) ;
+		recentlyRemoved.clear();
 		String msg = doCommandWorker(player,c_.snd) ;
-		if (msg == null) return "" ;
+		if (msg == null) {
+			recentlyRemoved.addAll(copyOfRemoved) ;
+			return "" ;
+		}
 		// putting the logic for rage time-out here:
 		if (player.rageTimer > 0)
 			player.rageTimer--;
@@ -427,7 +417,7 @@ public class MiniDungeon {
 			return "> " + player.name + " cowers in fear.";
 
 		case USEHEAL:
-			var hpotions = healpotsInBag(player);
+			var hpotions = player.itemsInBag(HealingPotion.class) ;
 			if (hpotions.size() == 0) {
 				return "> " + player.name + " does not have any heal-potion to use.";
 			} else {
@@ -437,7 +427,7 @@ public class MiniDungeon {
 				return "> That tastes good!";
 			}
 		case USERAGE:
-			var rpotions = ragepotsInBag(player);
+			var rpotions = player.itemsInBag(RagePotion.class) ;
 			if (rpotions.size() == 0) {
 				return "> " + player.name + " does not have any rage-potion to use.";
 			} else {
@@ -489,6 +479,7 @@ public class MiniDungeon {
 			player.y = yy;
 			world[xx][yy] = player;
 			player.bag.add(target);
+			recentlyRemoved.add(target.id) ;
 			if (target instanceof HealingPotion)
 				return "> " + player.name + " found a small vial of greed liquid.";
 			if (target instanceof RagePotion)
@@ -516,11 +507,14 @@ public class MiniDungeon {
 			return msg ;
 		} 
 		if (target instanceof GoalFlag) {
-			var keys = keysInBag(player);
+			var keys = player.itemsInBag(Key.class) ;
 			if (keys.size() == 0) {
 				return "> " + player.name + ", you don't have any key to unlock the goal.";
 			}
-			var goldenKey = keys.stream().filter(k -> k.blessed).collect(Collectors.toList());
+			var goldenKey = keys.stream()
+					. map( k -> (Key) k)
+					. filter(k -> k.blessed)
+					. collect(Collectors.toList());
 			if (goldenKey.size() > 0) {
 				if (player == frodo()) {
 					status = GameStatus.FRODOWIN;
@@ -562,6 +556,7 @@ public class MiniDungeon {
 	}
 	
 	boolean isVisible(Player player, int x, int y) {
+		if (player.dead()) return false ;
 		float viewDistanceSq = config.viewDistance*config.viewDistance ;
 		float dx = (float) (x - player.x) ;
 		float dy = (float) (y - player.y) ;
@@ -573,15 +568,15 @@ public class MiniDungeon {
 	 * Tiles that are visible to the players (so, visible to either Frodo
 	 * or Smeagol).
 	 */
-	public List<Pos2D> visibleTiles() {
-		List<Pos2D> visible = new LinkedList<>() ;
+	public List<IntVec2D> visibleTiles() {
+		List<IntVec2D> visible = new LinkedList<>() ;
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
 				if (isVisible(frodo(),x,row)) {
-					visible.add(new Pos2D(x,row)) ; 
+					visible.add(new IntVec2D(x,row)) ; 
 				}
 				else if (config.enableSmeagol && isVisible(smeagol(),x,row)) {
-					visible.add(new Pos2D(x,row)) ;
+					visible.add(new IntVec2D(x,row)) ;
 				}
 			}
 		}
@@ -609,17 +604,17 @@ public class MiniDungeon {
 		z.append("[" + turnNr + "] Frodo hp: " + frodo().hp + "/" + frodo().hpMax
 				+ ", AR:" + frodo().attackRating 
 				+ (frodo().rageTimer>0 ? " [ENRAGED]" : "")
-				+ "\n#heal-pots:" + healpotsInBag(frodo()).size()
-				+ ", #rage-pots:" + ragepotsInBag(frodo()).size()
-				+ ", #keys:" + keysInBag(frodo()).size()
+				+ "\n#heal-pots:" + frodo().itemsInBag(HealingPotion.class).size()
+				+ ", #rage-pots:" + frodo().itemsInBag(RagePotion.class).size()
+				+ ", #keys:" + frodo().itemsInBag(Key.class).size()
 				) ;
 		if (config.enableSmeagol) {
 			z.append("\nSmeagol hp: " + smeagol().hp + "/" + smeagol().hpMax
 					+ ", AR:" + smeagol().attackRating 
 					+ (smeagol().rageTimer>0 ? " [ENRAGED]" : "")
-					+ "\n#heal-pots:" + healpotsInBag(smeagol()).size()
-					+ ", #rage-pots:" + ragepotsInBag(smeagol()).size()
-					+ ", #keys:" + keysInBag(smeagol()).size()
+					+ "\n#heal-pots:" + smeagol().itemsInBag(HealingPotion.class).size()
+					+ ", #rage-pots:" + smeagol().itemsInBag(RagePotion.class).size()
+					+ ", #keys:" + smeagol().itemsInBag(Key.class).size()
 					) ;
 		}
 		

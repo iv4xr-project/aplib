@@ -2,9 +2,14 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.spatial.IntVec2D;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Key;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.RagePotion;
 
 public class Entity {
 	
@@ -14,8 +19,8 @@ public class Entity {
 	public int x ;
 	public int y ;
 	
-	public Pos2D pos() {
-		return new Pos2D(x,y) ;
+	public IntVec2D pos() {
+		return new IntVec2D(x,y) ;
 	}
 
 	
@@ -61,11 +66,19 @@ public class Entity {
 		public boolean dead() {
 			return hp <= 0 ;
 		}
+		
+		public List<Entity> itemsInBag(Class C) {
+			   return bag.stream()
+				. filter(i -> i.getClass() == C)
+				. collect(Collectors.toList()) ;
+		}
+			
 	}
 	
 	public static class Frodo extends Player {
 		public Frodo(int x, int y) {
 			super(x,y) ;
+			id = name ;
 		}
 	}
 	
@@ -73,6 +86,7 @@ public class Entity {
 		public Smeagol(int x, int y) {
 			super(x,y) ;
 			name = "Smaegol" ;
+			id = name ;
 			hp = (hp * 3)/2 ;
 			hpMax = hp ;
 			attackRating = attackRating*2 ;
