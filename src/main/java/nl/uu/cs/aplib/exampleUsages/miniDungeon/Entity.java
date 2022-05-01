@@ -4,14 +4,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
 
 public class Entity {
 	
-	public enum EntityType { PLAYER, MONSTER, GOALFLAG, HEALPOT, WALL }
+	public enum EntityType { PLAYER, MONSTER, GOALFLAG, HEALPOT, RAGEPOT, WALL }
 	
 	public String id ;
 	public int x ;
 	public int y ;
+	
+	public Pos2D pos() {
+		return new Pos2D(x,y) ;
+	}
 
 	
 	
@@ -41,12 +46,37 @@ public class Entity {
 	
 	public static class  Player extends CombativeEntity{
 		public List<Entity> bag = new LinkedList<>() ;
+		// when 0 the player is not raged; when raged, it AR counts double
+		public String name = "Frodo" ;
+		public int rageTimer = 0 ;
+		public int maxBagSize = 2 ;
 		public Player(int x, int y) {
 			this.x = x ; this.y = y ;
 			hpMax = 20 ;
 			hp = 20 ;
 			attackRating = 1 ;
 			id = "P" ;
+		}
+		
+		public boolean dead() {
+			return hp <= 0 ;
+		}
+	}
+	
+	public static class Frodo extends Player {
+		public Frodo(int x, int y) {
+			super(x,y) ;
+		}
+	}
+	
+	public static class Smeagol extends Player {
+		public Smeagol(int x, int y) {
+			super(x,y) ;
+			name = "Smaegol" ;
+			hp = (hp * 3)/2 ;
+			hpMax = hp ;
+			attackRating = attackRating*2 ;
+			maxBagSize = 1 ;
 		}
 	}
 	
@@ -67,21 +97,23 @@ public class Entity {
 		}
 	}
 	
+	public static class  RagePotion extends Entity{
+		public RagePotion(int x, int y, int id) {
+			this.x = x ; this.y = y ;
+			this.id = "R" + id ;
+		}
+	}
+	
+	/**
+	 * Only a blessed key can open a door.
+	 */
 	public static class  Key extends Entity{
 		
-		boolean goldenKey = false ;
+		boolean blessed = false ;
 		
 		public Key(int x, int y, int id) {
 			this.x = x ; this.y = y ;
 			this.id = "K" + id ;
-		}
-	}
-	
-	public static class  Door extends Entity{
-		public boolean isOpen = false ;
-		public Door(int x, int y, int id) {
-			this.x = x ; this.y = y ;
-			this.id = "B" + id ;
 		}
 	}
 

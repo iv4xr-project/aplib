@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 
 
 public class DungeonApp extends JPanel implements KeyListener {
@@ -27,15 +28,16 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	Font consoleFont = new Font("Courier New", Font.BOLD, txtCharSize);
 	
-	public DungeonApp() {
+
+	public DungeonApp(MiniDungeonConfig config) {
 		super() ;
-		restart() ;
+		restart(config) ;
 		// dungeon.showConsoleIO = false ;
 		addKeyListener(this);
 	}
 	
-	void restart() {
-		dungeon = new MiniDungeon(20,4,5,4,3) ;
+	void restart(MiniDungeonConfig config) {	
+		dungeon = new MiniDungeon(config) ;
 		msgFromTheGame = "" ;
 	}
 	
@@ -52,20 +54,31 @@ public class DungeonApp extends JPanel implements KeyListener {
 	@Override
 	public void keyReleased(KeyEvent e) { }
 	
+	char[] validCharCommand = { 'w', 'a', 's', 'd', 'e', 'r', 
+			'i', 'j', 'k', 'l', 'o', 'p',
+			'q', 'z' } ;
+	
 	boolean validCharCommand(char c) {
-		return c == 'w' || c == 'a' || c == 's' || c == 'd' || c == 'u' || c == 'r' ;
+		for(char d : validCharCommand) {
+			if (c==d) return true ;
+		}
+		return false ;
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
 		char key = e.getKeyChar() ;
 		if(! validCharCommand(key)) return ;
-		if (key == 'r') {
-			restart() ;
+		var config = dungeon.config ;
+		if (key == 'z') {
+			restart(config) ;
+		}
+		if (key == 'q') {
+			System.exit(0);
 		}
 		else {
 			if (dungeon.status == GameStatus.INPROGRESS)
-				this.msgFromTheGame = dungeon.doCommand("" + key) ;
+				this.msgFromTheGame = dungeon.doCommand(key) ;
 		}
 		repaint() ;
 	}
@@ -83,7 +96,10 @@ public class DungeonApp extends JPanel implements KeyListener {
 		gr.setColor(Color.white) ;
 		gr.setFont(consoleFont);
 		var lines = dungeon.toString().lines().collect(Collectors.toList()) ;
-		lines.add("Commands: wasd: to move | u: use potion") ;
+		lines.add("Commands:") ;
+		lines.add("Frodo:   wasd to move | e:use-healpot | e:use-ragepot") ;
+		lines.add("Smaegol: ijkl to move | o:use-healpot | p:use-ragepot") ;
+		lines.add("q:quit | z:restart") ;
 		lines.add("") ;
 		lines.addAll(msgFromTheGame.lines().collect(Collectors.toList())) ;
 		int k = 0 ;
@@ -96,7 +112,9 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	public static void main(String[] args) {
 		
-		DungeonApp sc = new DungeonApp();
+		MiniDungeonConfig config = new MiniDungeonConfig() ;
+		System.out.println(">>> Configuration:\n" + config) ;
+		DungeonApp sc = new DungeonApp(config);
 		
 		JFrame frame = new JFrame("Mini Dungeon");
 		
