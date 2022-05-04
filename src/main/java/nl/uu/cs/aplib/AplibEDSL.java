@@ -104,7 +104,7 @@ public class AplibEDSL {
     /**
      * Repeatedly trying to solve a goal, while the given predicate is true. More
      * precisely, the agent first checks the given guard predicate g. If it does not
-     * hold, the loop ends. Else, it makes the sugoal current and tries to solve it.
+     * hold, the loop ends. Else, it makes the subgoal current and tries to solve it.
      * If this subgoal is solved, the loop ends. Else we repeat the above steps.
      * 
      * If the agent runs out of the budget to do the loop, it also leaves the loop.
@@ -129,6 +129,9 @@ public class AplibEDSL {
      * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal G
      * based on it, and this G is the one that is deployed. Notice that the kind of G produced can thus
      * be made dependent on the current agent state.
+     * 
+     * <p>The new goal is only deployed once; so if this structure is iterated, it will not deploy
+     * another new goal.
      */
     public static <AgentState> GoalStructure  DEPLOYonce(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
         Boolean[] deployed = {false} ;
@@ -147,6 +150,49 @@ public class AplibEDSL {
                         ABORT())
                 ).lift();
         return FIRSTof(G) ;
+    }
+    
+    /**
+     * The combinator will "dynamically" deploy a goal to be executed/adopted after executing this
+     * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal G
+     * based on it, and this G is the one that is deployed. Notice that the kind of G produced can thus
+     * be made dependent on the current agent state.
+     * 
+     * <p>The new goal , it will not deploy
+     * another new goal.
+     */
+    public static <AgentState> GoalStructure  DEPLOY(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
+        GoalStructure[] newGoal = { null } ; 
+        GoalStructure G = goal("deploy a goal")
+                .toSolve((AgentState state) -> true)
+                .withTactic(
+                        action("deploying a goal")
+                            .do1((AgentState state) -> {
+                            	newGoal[0] = dynamicgoal.apply(state) ;
+                                agent.addAfter(newGoal[0]);
+                                return state ;
+                                })
+                            .lift())
+                .lift();
+        
+        Function<Void,GoalStructure> remove = dummy -> 
+        	  goal("removing the new goal after completion")
+        		.toSolve((AgentState state) -> true)
+        		.withTactic(action("removing a goal")
+        				.do1((AgentState state) -> {
+        					if (newGoal[0] != null) 
+        					    agent.remove(newGoal[0]) ;
+        					return state ;
+        				})
+        				.lift()
+        				)
+        		.lift()  ;
+        	  
+        return IFELSE2(SEQ(G),
+        		   remove.apply(null), 
+        		   // always remove the new goal again, but if the new goal failed we will also
+        		   // make the whole construct fail:
+        		   SEQ(remove.apply(null),FAIL())) ;  
     }
 
     /**
@@ -234,7 +280,7 @@ public class AplibEDSL {
      * it will continue with the goal g1 as the goal to solve, and else g2 has to be
      * solved.
      */
-    public static <State> GoalStructure IFELSE2(GoalStructure p, GoalStructure g1, GoalStructure g2) {
+    public static GoalStructure IFELSE2(GoalStructure p, GoalStructure g1, GoalStructure g2) {
        // GoalStructure not_g = lift((State state) -> p.test(state));
         return FIRSTof(SEQ(p, g1), g2);
     }

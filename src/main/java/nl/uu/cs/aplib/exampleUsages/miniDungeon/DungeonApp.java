@@ -113,6 +113,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 	public static void main(String[] args) {
 		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
+		config.viewDistance = 4 ;
 		System.out.println(">>> Configuration:\n" + config) ;
 		DungeonApp sc = new DungeonApp(config);
 		

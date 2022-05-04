@@ -51,7 +51,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * Something else must construct this graph, which you then can attach it to
 	 * this state.
 	 */
-	Navigatable<NavgraphNode> worldNavigation;
+	public Navigatable<NavgraphNode> worldNavigation;
 
 	@Override
 	public Iv4xrEnvironment env() {
