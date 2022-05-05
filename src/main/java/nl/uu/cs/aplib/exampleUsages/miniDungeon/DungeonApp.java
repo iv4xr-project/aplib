@@ -28,6 +28,12 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	Font consoleFont = new Font("Courier New", Font.BOLD, txtCharSize);
 	
+	/**
+	 * If true will disable interaction with physcal keys; useful when we want an
+	 * algorithms instead of humans to play the game.
+	 */
+	public boolean disableKey = false ;
+	
 
 	public DungeonApp(MiniDungeonConfig config) {
 		super() ;
@@ -67,7 +73,12 @@ public class DungeonApp extends JPanel implements KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
+		if (disableKey) return ;
 		char key = e.getKeyChar() ;
+		keyPressedWorker(key) ;
+	}
+	
+	public void keyPressedWorker(char key) {
 		if(! validCharCommand(key)) return ;
 		var config = dungeon.config ;
 		if (key == 'z') {
@@ -110,19 +121,23 @@ public class DungeonApp extends JPanel implements KeyListener {
 		
 	}
 	
-	public static void main(String[] args) {
-		
-		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		config.viewDistance = 4 ;
-		System.out.println(">>> Configuration:\n" + config) ;
-		DungeonApp sc = new DungeonApp(config);
-		
+	/**
+	 * To launch a DungeonApp in a window.
+	 */
+	public static JFrame deploy(DungeonApp app) {
 		JFrame frame = new JFrame("Mini Dungeon");
-		
-		frame.add(sc);
+		frame.add(app);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
 		frame.setVisible(true);
+		return frame ;
+	}
+	
+	public static void main(String[] args) {		
+		MiniDungeonConfig config = new MiniDungeonConfig() ;
+		config.viewDistance = 4 ;
+		System.out.println(">>> Configuration:\n" + config) ;
+		deploy(new DungeonApp(config));
 	}
 
 }

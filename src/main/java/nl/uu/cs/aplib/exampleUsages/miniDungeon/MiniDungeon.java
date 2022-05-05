@@ -12,29 +12,45 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.*;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
- * A mini Dungeon crawl game. The dungeon is a 2D square consisting of NxN tiles. 
- * Outermost tiles are walls. Walls are also placed inside the world to form a simple
- * zig-zag maze. The player starts in the dungeon-center and there is a goal-marker placed
- * at location (N-2,1). The player wins if he/she manages to reach this goal.
+ * A MiniDungeon is a game played by one or two players, played in a (simple) maze
+ * in an NxN world. The world is tiled where a player can only move from one tile
+ * to another. The tiles are arranged to form a square world, from tile (0,0) to
+ * tile (N-1,N-1). The tiles on the border of this world are always walls to prevent
+ * players from going off the world.
+ * 
+ * <p>Planned: a more advanced version where players can adventure through a series
+ * of mazes through shrines.
+ * 
+ * <p>The first player is called Frodo. In a multi-player setup, there is a second player
+ * called Smeagol. They can play cooperatively, or competitively. The game is turn-based,
+ * where at every turn a player moves, then all the monsters move. The other player remains
+ * idle during this turn. The game engine does not in itself limits players to move
+ * in a strict alteration.
+ * 
+ * <p>In the current setup, there is only one maze. The players start somewhere in the
+ * maze. There is also a shrine somewhere in the maze. A player wins if it manages
+ * to bless the shrine.
  * 
  * <ul>
- * <li>Monsters are randomly placed in the dungeon. When a monster is adjacent to the player,
- * it will attack the player. Similarly, a player can attack an adjacent monster. If
- * a monster's hp reaches 0, it will be removed from the dungeon. If the player's hp reaches
- * 0 the player dies and the game is lost.
+ * <li>Monsters are randomly placed in the dungeon. When a monster is adjacent to a player,
+ * it will attack the player. Similarly, a player can attack an adjacent monster (or
+ * another player). If a monster's hp reaches 0, it will be removed from the dungeon. 
+ * If the player's hp reaches 0 the player dies and cannot participate in the game
+ * anymore. If both players die, the game ends; the monsters win.
  * 
- * <li>There are keys and  healing potions randomly dropped in the dungeon. 
+ * <li>There are scrolls and potions randomly dropped in the dungeon. 
  * When the player moves to a tile with an item on it, and provided there is
  * still some space in the player's bag, the item is picked and automatically placed in 
- * the  bag. The default capacity of the bag is 2.
+ * the  bag. Frodo's bag can hold two items. Smeagol has a smaller bag that can only
+ * hold one item.
  * 
- * <li>The goal-marker must be 'unlocked' to actually be reached. This needs a key.
- * Among all keys dropped in the dungeon, there is one that would match the goal.
- * Which key it is, is not known to the player until he tries it on the goal. Trying
- * a key consumes it.
+ * <li>The shrine is tainted, and must be cleansed by using a scroll. However, only
+ * a holy scroll can do this. The player does not know up front which scroll is holy
+ * until it uses it. Using a scroll consumes it.
  * 
- * <li> The player can use a potion, if his/her bag contains one. This heals his hp with
- * some amount. Using a potion consumes it.
+ * <li> The player can use a potion, if his/her bag contains one. Using a heal potion
+ * heals the player for some amount of health point. Using a rage potion double
+ * its attack rating for some turns.
  * </ul>
  * 
  * You can run the main-method below to actually play the game. You can also control
@@ -42,7 +58,6 @@ import nl.uu.cs.aplib.utils.Pair;
  * 
  * 
  * @author iswbprasetya
- *
  */
 
 public class MiniDungeon {
@@ -85,7 +100,7 @@ public class MiniDungeon {
 	public MiniDungeonConfig config ;
 
 	
-	public Entity[][] world ;
+	public Maze maze ;
 	public List<Player> players = new LinkedList<>() ;
 	public List<String> recentlyRemoved = new LinkedList<>() ;
 	Random rnd  ;
@@ -104,34 +119,11 @@ public class MiniDungeon {
 			throw new IllegalArgumentException("too many monsters and items") ;
 		
 		rnd = new Random(config.randomSeed) ;
-		world = new Entity[size][size] ;
 		
-		// walls around the arena:
-		for(int i=0; i<size; i++) {
-			world[0][i] = new Wall(0,i) ;
-			world[size-1][i] = new Wall(size-1,i) ;
-			world[i][0] = new Wall(i,0) ;
-			world[i][size-1] = new Wall(i,size-1) ;
-		}
+		maze = Maze.buildSimpleMaze("maze0", rnd, size, config.numberOfCorridors) ;
+		var world = maze.world ;
 		
-		// walls that build the maze (just a simple maze) :
-		int corridorWidth = size/config.numberOfCorridors ;
-		int coridorX = size ;
-		boolean alt = true ;
-		for(int cr = 1 ; cr < config.numberOfCorridors; cr++) {
-			coridorX = coridorX - corridorWidth ;
-			if(alt) {
-				for(int y=1; y<size-2;y++) {
-					world[coridorX][y] = new Wall(coridorX,y) ;
-				}
-			}
-			else {
-				for(int y=size-2; 1<y ; y--) {
-					world[coridorX][y] = new Wall(coridorX,y) ;
-				}
-			}
-			alt = !alt ;
-		}
+		seedMaze(maze) ;
 		
 		// place players:
 		int center = size/2 ;
@@ -140,6 +132,7 @@ public class MiniDungeon {
 			for (int y=center-1; y<=center+1; y++) {
 				if ((world[x][y] == null)) {
 					var frodo = new Frodo(x,y) ;
+					frodo.mazeId = maze.id ;
 					world[x][y] = frodo ;
 					players.add(frodo) ;
 					placed = true ;
@@ -150,69 +143,83 @@ public class MiniDungeon {
 		}
 		if (config.enableSmeagol) {
 			var smeagol = new Smeagol(1,1) ;
+			smeagol.mazeId = maze.id ;
 			world[1][1] = smeagol ;
 			players.add(smeagol) ;
 		}
-		
-		
-		// place the goal-flag:
-		world[size-2][1] = new GoalFlag(size-2,1) ;
-		
+	}
 	
-		List<Pair<Integer,Integer>> freeSquares = new LinkedList<>() ;
-		for(int x=1; x<size-1;x++) {
-			for (int y=1; y<size-1; y++) {
-				if(world[x][y] == null) {
-					freeSquares.add(new Pair<Integer,Integer>(x,y)) ;
+	/**
+	 * Seed a maze with items, monsters, and shrine.
+	 */
+	void seedMaze(Maze maze) {
+		// place the Shrine:
+		var world = maze.world;
+		int size = world.length;
+
+		Shrine S = new Shrine(size - 2, 1);
+		S.mazeId = maze.id;
+		world[size - 2][1] = S;
+
+		List<Pair<Integer, Integer>> freeSquares = new LinkedList<>();
+		for (int x = 1; x < size - 1; x++) {
+			for (int y = 1; y < size - 1; y++) {
+				if (world[x][y] == null) {
+					freeSquares.add(new Pair<Integer, Integer>(x, y));
 				}
 			}
 		}
-		
+
 		// seed monsters:
-		int m = 0 ;
-		while(m<config.numberOfMonsters && freeSquares.size()>0) {
-			int k = rnd.nextInt(freeSquares.size()) ;
-			var sq = freeSquares.remove(k) ;
-			Monster M = new Monster(sq.fst,sq.snd,m) ;
-			world[sq.fst][sq.snd] = M ;
-			m++ ;
+		int m = 0;
+		while (m < config.numberOfMonsters && freeSquares.size() > 0) {
+			int k = rnd.nextInt(freeSquares.size());
+			var sq = freeSquares.remove(k);
+			Monster M = new Monster(sq.fst, sq.snd, m);
+			M.mazeId = maze.id;
+			world[sq.fst][sq.snd] = M;
+			m++;
 		}
-		
+
 		// seed heal-potions:
-		int h = 0 ;
-		while(h<config.numberOfHealPots && freeSquares.size()>0) {
-			int k = rnd.nextInt(freeSquares.size()) ;
-			var sq = freeSquares.remove(k) ;
-			HealingPotion H = new HealingPotion(sq.fst,sq.snd,h) ;
-			world[sq.fst][sq.snd] = H ;
-			h++ ;
+		int h = 0;
+		while (h < config.numberOfHealPots && freeSquares.size() > 0) {
+			int k = rnd.nextInt(freeSquares.size());
+			var sq = freeSquares.remove(k);
+			HealingPotion H = new HealingPotion(sq.fst, sq.snd, h);
+			H.mazeId = maze.id;
+			world[sq.fst][sq.snd] = H;
+			h++;
 		}
-		
+
 		// seed rage-potions:
-		int r = 0 ;
-		while(r<config.numberOfRagePots && freeSquares.size()>0) {
-			int k = rnd.nextInt(freeSquares.size()) ;
-			var sq = freeSquares.remove(k) ;
-			RagePotion R = new RagePotion(sq.fst,sq.snd,r) ;
-			world[sq.fst][sq.snd] = R ;
-			r++ ;
+		int r = 0;
+		while (r < config.numberOfRagePots && freeSquares.size() > 0) {
+			int k = rnd.nextInt(freeSquares.size());
+			var sq = freeSquares.remove(k);
+			RagePotion R = new RagePotion(sq.fst, sq.snd, r);
+			R.mazeId = maze.id;
+			world[sq.fst][sq.snd] = R;
+			r++;
 		}
-		
-		// seed keys:
-		int ky = 0 ;
-		List<Key> keys = new LinkedList<>() ;
-		while(ky < config.numberOfKeys && freeSquares.size()>0) {
-			int k = rnd.nextInt(freeSquares.size()) ;
-			var sq = freeSquares.remove(k) ;
-			Key K = new Key(sq.fst,sq.snd,ky) ;
-			world[sq.fst][sq.snd] = K ;
-			keys.add(K) ;
-			ky++ ;
+
+		// seed scrolls:
+		int ky = 0;
+		List<Scroll> scrolls = new LinkedList<>();
+		while (ky < config.numberOfKeys && freeSquares.size() > 0) {
+			int k = rnd.nextInt(freeSquares.size());
+			var sq = freeSquares.remove(k);
+			Scroll K = new Scroll(sq.fst, sq.snd, ky);
+			K.mazeId = maze.id;
+			world[sq.fst][sq.snd] = K;
+			scrolls.add(K);
+			ky++;
 		}
-		// choose one blessed key:
-		Key blessedKey = keys.get(rnd.nextInt(keys.size())) ;
-		blessedKey.blessed = true ;
+		// choose one holy scroll:
+		Scroll holyScroll = scrolls.get(rnd.nextInt(scrolls.size()));
+		holyScroll.holy = true;
 	}
+	
 	
 	public boolean showConsoleIO = true ;
 	
@@ -235,11 +242,9 @@ public class MiniDungeon {
 	
 	public enum Command { MOVEUP, MOVEDOWN, MOVELEFT, MOVERIGHT, USEHEAL, USERAGE , DONOTHING } 
 	
-		
-	
 	
 	void removeFromWorld(Entity e) {
-		world[e.x][e.y] = null ;
+		maze.world[e.x][e.y] = null ;
 		recentlyRemoved.add(e.id) ;
 	}
 	
@@ -271,9 +276,14 @@ public class MiniDungeon {
 		return true ;
 	}
 	
-	String monstersMoves() {
+	Maze currentMaze(Player player) {
+		return maze ;
+	}
+	
+	String monstersMoves(Player playerThatJustMoved) {
 		List<Monster> monsters = new LinkedList<>();
 		String msg = "";
+		var world = currentMaze(playerThatJustMoved).world ;
 		for (int x = 1; x < config.worldSize - 1; x++) {
 			for (int y = 1; y < config.worldSize - 1; y++) {
 				var e = world[x][y];
@@ -361,6 +371,7 @@ public class MiniDungeon {
 		copyOfRemoved.addAll(recentlyRemoved) ;
 		recentlyRemoved.clear();
 		String msg = doCommandWorker(player,c_.snd) ;
+		//xSystem.out.println(">>> " + recentlyRemoved) ;
 		if (msg == null) {
 			recentlyRemoved.addAll(copyOfRemoved) ;
 			return "" ;
@@ -371,7 +382,7 @@ public class MiniDungeon {
 		if (player.rageTimer == 0 && wasEnraged) {
 			msg += "\n> " + player.name + " is no longer enraged.";
 		}
-		msg += monstersMoves();
+		msg += monstersMoves(player);
 		turnNr++;
 		return msg ;
 	}
@@ -458,6 +469,7 @@ public class MiniDungeon {
 			break;
 		}
 
+		var world = currentMaze(player).world ;
 		var target = world[xx][yy];
 		if (target == null) {
 			// target is clear, move there
@@ -470,16 +482,16 @@ public class MiniDungeon {
 		if (target instanceof Wall) {
 			return null ;
 		}
-		if (target instanceof HealingPotion || target instanceof RagePotion || target instanceof Key) {
+		if (target instanceof HealingPotion || target instanceof RagePotion || target instanceof Scroll) {
 			if (player.bag.size() == player.maxBagSize) {
 				return "> " + player.name + ", your bag has no space left.";
 			}
+			removeFromWorld(target) ;
 			world[player.x][player.y] = null;
 			player.x = xx;
 			player.y = yy;
 			world[xx][yy] = player;
 			player.bag.add(target);
-			recentlyRemoved.add(target.id) ;
 			if (target instanceof HealingPotion)
 				return "> " + player.name + " found a small vial of greed liquid.";
 			if (target instanceof RagePotion)
@@ -506,29 +518,45 @@ public class MiniDungeon {
 			}
 			return msg ;
 		} 
-		if (target instanceof GoalFlag) {
-			var keys = player.itemsInBag(Key.class) ;
-			if (keys.size() == 0) {
-				return "> " + player.name + ", you don't have any key to unlock the goal.";
+		if (target instanceof Shrine) {
+			var shrine = (Shrine) target ;
+			if (shrine.cleansed) {
+				// TODO jump to the next maze
+				throw new UnsupportedOperationException("Feature unimplemented: jumping to another maze.") ;
 			}
-			var goldenKey = keys.stream()
-					. map( k -> (Key) k)
-					. filter(k -> k.blessed)
+			var scrolls = player.itemsInBag(Scroll.class) ;
+			if (scrolls.size() == 0) {
+				return "> " + player.name + ", you don't have any scroll to cleanse the shrine.";
+			}
+			List<Scroll> holyScroll = scrolls.stream()
+					. map(s -> (Scroll) s)
+					. filter(s -> s.holy)
 					. collect(Collectors.toList());
-			if (goldenKey.size() > 0) {
-				if (player == frodo()) {
-					status = GameStatus.FRODOWIN;
+			
+			if (holyScroll.size() > 0) {
+				player.bag.remove(holyScroll.get(0));
+				shrine.cleansed = true ;
+				if (shrine.immortal) {
+					if (player == frodo()) {
+						status = GameStatus.FRODOWIN;
+					}
+					else {
+						status = GameStatus.SMEAGOLWIN ;
+					}
+					return "> ROAR! " 
+								+ player.name + " blessed an IMORTAL shrine. " 
+								+ player.name + " WINS!" ;
 				}
 				else {
-					status = GameStatus.SMEAGOLWIN ;
+					return "> Alkabra! " + player.name + " blessed a shrine." ;
 				}
-				player.bag.remove(goldenKey.get(0));
-				return "> " + player.name + " unlock the goal. " + player.name + " WIN!";
+
 			} else {
-				player.bag.remove(keys.get(0));
-				return "> " + player.name + " tried a key, but sadly it does not fit the goal.";
+				player.bag.remove(scrolls.get(0));
+				return "> " + player.name + " read a scroll: Mellon! Nothing else happended.";
 
 			}
+			
 		}
 		throw new IllegalArgumentException() ;
 	}
@@ -541,10 +569,10 @@ public class MiniDungeon {
 		if (e instanceof Frodo) return '@' ;
 		if (e instanceof Smeagol) return '&' ;
 		if (e instanceof Monster) return 'm' ;
-		if (e instanceof HealingPotion) return '+' ;
-		if (e instanceof RagePotion) return 'x' ;
-		if (e instanceof Key) return 'k' ;
-		if (e instanceof GoalFlag) return 'G' ;
+		if (e instanceof HealingPotion) return '%' ;
+		if (e instanceof RagePotion) return '!' ;
+		if (e instanceof Scroll) return '?' ;
+		if (e instanceof Shrine) return 'S' ;
 		/*
 		if (e instanceof Door) {
 			Door d = (Door) e ;
@@ -587,6 +615,7 @@ public class MiniDungeon {
 	public String toString() {
 		float viewDistanceSq = config.viewDistance*config.viewDistance ;
 		StringBuffer z = new StringBuffer() ;
+		var world = currentMaze(frodo()).world ;
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
 				boolean isVisible = 
@@ -606,7 +635,7 @@ public class MiniDungeon {
 				+ (frodo().rageTimer>0 ? " [ENRAGED]" : "")
 				+ "\n#heal-pots:" + frodo().itemsInBag(HealingPotion.class).size()
 				+ ", #rage-pots:" + frodo().itemsInBag(RagePotion.class).size()
-				+ ", #keys:" + frodo().itemsInBag(Key.class).size()
+				+ ", #scrolls:" + frodo().itemsInBag(Scroll.class).size()
 				) ;
 		if (config.enableSmeagol) {
 			z.append("\nSmeagol hp: " + smeagol().hp + "/" + smeagol().hpMax
@@ -614,7 +643,7 @@ public class MiniDungeon {
 					+ (smeagol().rageTimer>0 ? " [ENRAGED]" : "")
 					+ "\n#heal-pots:" + smeagol().itemsInBag(HealingPotion.class).size()
 					+ ", #rage-pots:" + smeagol().itemsInBag(RagePotion.class).size()
-					+ ", #keys:" + smeagol().itemsInBag(Key.class).size()
+					+ ", #scrolls:" + smeagol().itemsInBag(Scroll.class).size()
 					) ;
 		}
 		

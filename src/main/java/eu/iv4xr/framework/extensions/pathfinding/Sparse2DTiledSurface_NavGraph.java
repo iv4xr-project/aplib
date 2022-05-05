@@ -84,21 +84,56 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		xMap.put(o.y, o) ;
 	}
 	
+	public void removeNonNavigable(int x, int y) {
+		Map<Integer,NonNavigableTile> xMap = obstacles.get(x) ;
+		if (xMap != null) {
+			xMap.remove(y) ;
+		}
+	}
+	
+	public void markAsSeen(Tile p) {
+		Set<Integer> ys = seen.get(p.x) ;
+		if (ys == null) {
+			ys = new HashSet<>() ;
+			seen.put(p.x, ys) ;
+		}
+		ys.add(p.y) ;
+		frontierCandidates.add(p) ;
+	}
+	
 	public void markAsSeen(List<Tile> newlyseen) {
 		for(Tile p : newlyseen) {
-			Set<Integer> ys = seen.get(p.x) ;
-			if (ys == null) {
-				ys = new HashSet<>() ;
-				seen.put(p.x, ys) ;
-			}
-			ys.add(p.y) ;
-			frontierCandidates.add(p) ;
+			markAsSeen(p) ;
 		}
 	}
 	
 	public boolean hasBeenSeen(int x, int y) {
 		var ys = seen.get(x) ;
 		return ys != null && ys.contains(y) ;
+	}
+	
+	public void openDoor(int x, int y) {
+		if (isDoor(x,y)) {
+			var o = obstacles.get(x).get(y) ;
+			Door door = (Door) o ;
+			door.isOpen = true ;
+		}
+	}
+	
+	public void closeDoor(int x, int y) {
+		if (isDoor(x,y)) {
+			var o = obstacles.get(x).get(y) ;
+			Door door = (Door) o ;
+			door.isOpen = false ;
+		}
+	}
+	
+	public boolean isDoor(int x, int y) {
+		var xmap = obstacles.get(x) ;
+		if (xmap == null) return false ;
+		var o = xmap.get(y) ;
+		if (o == null) return false ;
+		return o instanceof Door ;
 	}
 	
 	public boolean isBlocked(int x, int y) {
@@ -212,19 +247,15 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
      */
 	public List<Tile> getFrontierTiles() {
 		List<Tile> frontiers = new LinkedList<>() ;
-		int maxNumberOfNeighbors = 4 ;
-		if (diagonalMovementPossible) maxNumberOfNeighbors = 8 ;
 		List<Tile> cannotBeFrontier = new LinkedList<>() ;
 		for(var t : frontierCandidates) {
+			int maxNumberOfNeighbors = physicalNeighbours(t.x,t.y).size() ;
 			int N = neighbours_(t.x,t.y).size() ;
 			if (N == maxNumberOfNeighbors) {
 				cannotBeFrontier.add(t) ;
 				continue ;
 			}
-			int pN = physicalNeighbours(t.x,t.y).size() ;
-			if(pN>N) {
-				frontiers.add(t) ;
-			}
+			frontiers.add(t) ;
 		}
 		// remove tiles that are obviously not frontiers:
 		frontierCandidates.removeAll(cannotBeFrontier) ;
@@ -238,7 +269,7 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 	}
 	
 	
-	List<Tile> explore(int x, int y) {
+	public List<Tile> explore(int x, int y) {
 
 		var frontiers = getFrontierTiles();
         
@@ -254,7 +285,6 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
                 return path;
             }
         }
-        //System.out.println("original explore second one");
         return null;
 	}
 	

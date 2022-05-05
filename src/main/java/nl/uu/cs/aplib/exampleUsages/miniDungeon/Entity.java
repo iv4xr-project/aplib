@@ -5,17 +5,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.IntVec2D;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Key;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.RagePotion;
 
 public class Entity {
 	
-	public enum EntityType { PLAYER, MONSTER, GOALFLAG, HEALPOT, RAGEPOT, WALL }
-	
 	public String id ;
+	/**
+	 * Specifying in which maze the entity is located.
+	 */
+	public String mazeId ;
 	public int x ;
 	public int y ;
 	
@@ -34,11 +31,19 @@ public class Entity {
 
 	}
 	
-	public static class GoalFlag extends Entity{
+	public static class Shrine extends Entity{
 		
-		public GoalFlag(int x, int y) {
+		/**
+		 * True if this shrine is an immortal shrine. Cleansing an immortal shrine wins 
+		 * the game.
+		 */
+		public boolean immortal = true ;
+		
+		public boolean cleansed = false ;
+		
+		public Shrine(int x, int y) {
 			this.x = x ; this.y = y ;
-			id = "G" ;
+			id = "Shr" ;
 		}
 
 	}
@@ -119,15 +124,15 @@ public class Entity {
 	}
 	
 	/**
-	 * Only a blessed key can open a door.
+	 * Only a a holy scroll can bless a shrine.
 	 */
-	public static class  Key extends Entity{
+	public static class  Scroll extends Entity{
 		
-		boolean blessed = false ;
+		boolean holy = false ;
 		
-		public Key(int x, int y, int id) {
+		public Scroll(int x, int y, int id) {
 			this.x = x ; this.y = y ;
-			this.id = "K" + id ;
+			this.id = "S" + id ;
 		}
 	}
 
