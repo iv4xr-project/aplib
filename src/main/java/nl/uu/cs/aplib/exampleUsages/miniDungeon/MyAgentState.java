@@ -17,8 +17,6 @@ import nl.uu.cs.aplib.mainConcepts.Environment;
 
 public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.Tile> {
 	
-	public Pathfinder<Sparse2DTiledSurface_NavGraph.Tile> pathfinder = new AStar<>() ;
-	
 	@Override
 	public MyAgentEnv env() {
 		return (MyAgentEnv) super.env() ;
@@ -50,6 +48,7 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 	public void updateState(String agentId) {
 		super.updateState(agentId);
 		// Updating the navigation graph:
+		// System.out.println(">>> updateState") ;
 		WorldEntity aux = auxState() ;
 		Sparse2DTiledSurface_NavGraph nav = worldNavigation()  ;
 		var seenTiles = (Serializable[]) aux.properties.get("visibleTiles") ;
@@ -57,6 +56,7 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 			var entry = (Serializable[]) entry_ ;
 			var tile = (IntVec2D) entry[0] ;
 			var type = (String) entry[1] ;
+			//System.out.println(">>> registering " + tile + ": " + type) ;
 			nav.markAsSeen(new Tile(tile.x,tile.y));
 			switch (type) {
 			   case "Wall" :

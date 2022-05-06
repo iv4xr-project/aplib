@@ -26,6 +26,11 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		}
 		
 		@Override
+	    public int hashCode() {
+	        return Objects.hash(x, y);
+	    }
+		
+		@Override
 		public String toString() {
 			return "(" + x + "," + y + ")" ;
 		}
@@ -186,6 +191,7 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		candidates = candidates.stream()
 			.filter(c -> ! isBlocked(c.x,c.y))
 			.collect(Collectors.toList());
+		//System.out.println("&&&& " + candidates.size()) ;
 		
 		return candidates ;
 	}
@@ -200,10 +206,12 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 	 */
 	public List<Tile> neighbours_(int x, int y) {
 		var candidates = physicalNeighbours(x,y) ;
+		//System.out.println("=== (" + x + "," + y + ") -> " + candidates.size()) ;
 		
 		if (! perfect_memory_pathfinding) {
 			candidates = candidates.stream().filter(c -> hasBeenSeen(c.x,c.y)).collect(Collectors.toList()) ;
 		}
+		//System.out.println("=== " + candidates.size() + ":" + candidates) ;
 		return candidates ;
 	}
 	
@@ -231,8 +239,8 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
      * The distance between two neighboring tiles.
      */ 
 	public float distance(Tile from, Tile to) {
-		 if (from.x == to.x || from.y == to.y) return 1 ;
-		 return 1.4142f ;
+		if (from.x == to.x || from.y == to.y) return 1 ;
+		return 1.4142f ;
 	}
 	
 	
@@ -279,7 +287,9 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
         frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,x,y), distSq(p2.x,p2.y,x,y)));
 
         for (var front : frontiers) {
+        	System.out.println(">>> (" + x + "," + y + ")  --> (" + front.x + "," + front.y + ")" ) ;
             var path = findPath(x,y,front.x, front.y);
+            System.out.println("==== path " + path) ;
             // System.out.println("frontier path " + path +" frontier vertices: "+ front.fst);
             if (path != null) {
                 return path;
@@ -287,7 +297,6 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
         }
         return null;
 	}
-	
-	
+		
 
 }
