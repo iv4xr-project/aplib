@@ -4,26 +4,30 @@ import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.T
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
 import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Monster;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class TacticLib {
 	
-	static Tile toTile(Vec3 p) {
+	public static Tile toTile(Vec3 p) {
 		return new Tile((int)p.x, (int) p.z ) ;
 	}
 	
-	static boolean adjacent(Tile tile1, Tile tile2) {
+	public static boolean adjacent(Tile tile1, Tile tile2) {
 		return (tile1.x == tile2.x && Math.abs(tile1.y - tile2.y) == 1)
 				||
 			   (tile1.y == tile2.y && Math.abs(tile1.x - tile2.x) == 1) ;
 	}
 	
-	static boolean agentIsAlive(MyAgentState state) {
+	public static boolean agentIsAlive(MyAgentState state) {
 		var a = state.worldmodel.elements.get(state.worldmodel().agentId) ;
 		if (a==null) {
 			throw new IllegalArgumentException() ;
@@ -35,7 +39,7 @@ public class TacticLib {
 		return hp>0 ;
 	}
 	
-	static List<Tile> adjustedFindPath(MyAgentState state, int x0, int y0, int x1, int y1) {
+	public static List<Tile> adjustedFindPath(MyAgentState state, int x0, int y0, int x1, int y1) {
 		var nav = state.worldNavigation() ;
 		nav.openDoor(x0,y0) ;
 		nav.openDoor(x1,y1) ;
@@ -45,7 +49,43 @@ public class TacticLib {
 		return path ;
 	}
 	
-	static void printEntities(MyAgentState state) {
+	public static List<WorldEntity> adajcentMonsters(MyAgentState S) {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		Tile p = toTile(player.position) ;
+		List<WorldEntity> ms = S.worldmodel.elements.values().stream()
+				.filter(e -> e.type.equals(Monster.class.getSimpleName())
+						 	 && adjacent(p,toTile(e.position)))
+				.collect(Collectors.toList()) ;
+		return ms ;
+	}
+	
+	public static int manhattanDist(Tile t1, Tile t2) {
+		return Math.abs(t1.x - t2.x) + Math.abs(t1.y - t2.y) ;
+	}
+
+	static int distTo(MyAgentState S, WorldEntity e) {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		Tile p = toTile(player.position) ;
+		Tile target = toTile(e.position) ;
+		var path = adjustedFindPath(S,p.x, p.y, target.x, target.y) ;
+		if(path==null) return Integer.MAX_VALUE ;
+		return path.size() - 1 ;
+	}
+	
+	public static List<WorldEntity> nearItems(MyAgentState S, Class itemType, int withinDistance) {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		Tile p = toTile(player.position) ;
+		List<WorldEntity> ms = S.worldmodel.elements.values().stream()
+				.filter(e -> e.type.equals(itemType.getSimpleName())
+						 	 && distTo(S,e) <= withinDistance
+						 	 )
+				.collect(Collectors.toList()) ;
+		ms.sort((e1, e2) -> Integer.compare(distTo(S,e1),distTo(S,e2)));
+		return ms ;
+	}
+	
+	
+	public static void printEntities(MyAgentState state) {
 		int k = 0 ;
 		for(var e : state.worldmodel.elements.values()) {
 			if (e.type.equals("aux") || e.type.equals("Wall")) continue ;
@@ -123,7 +163,7 @@ public class TacticLib {
 		return alpha.lift() ;
 	}
 	
-	Tactic interact(String targetId) {
+	public Tactic interact(String targetId) {
 		var alpha = action("navigate-to")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
@@ -146,7 +186,65 @@ public class TacticLib {
 		return alpha.lift() ;
 	}
 	
-	Tactic explore() {
+	public Predicate<MyAgentState> whenToUseHealPot = S -> {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		int hp = (int) player.properties.get("hp") ;
+		boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
+		return hp>0 && hp<=10 && hasHealPot ;
+	} ;
+		
+	public Predicate<MyAgentState> whenToUseRagePot = S -> {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		int hp = (int) player.properties.get("hp") ;
+		boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;
+		return hp>0 && hasRagePot && adajcentMonsters(S).size()>1 ;
+	} ;
+	
+	public Predicate<MyAgentState> whenToAttack = S -> {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		int hp = (int) player.properties.get("hp") ;
+		return hp>5 && adajcentMonsters(S).size()>0 ;
+	} ;
+	
+	public Tactic useHealingPot() {
+		var alpha = action("explore")
+				.do1((MyAgentState S) -> {
+					System.out.println(">>>> using HEALPOT") ;
+					WorldModel newwom = S.env().action(S.worldmodel.agentId, Command.USEHEAL) ;
+					return newwom ;
+				})
+				.on_(whenToUseHealPot)
+				;
+		return alpha.lift() ;
+	}
+	
+	public Tactic attackMonster() {
+		var alpha = action("explore")
+				.do1((MyAgentState S) -> {
+					var ms = adajcentMonsters(S) ;
+					// just choose the first one:
+					Tile m = toTile(ms.get(0).position) ;
+					System.out.println(">>> Attack " + m) ;
+					WorldModel newwom = moveTo(S,m) ;
+					return newwom ;
+				})
+				.on_(whenToAttack)
+				;
+		return alpha.lift() ;
+	}
+	
+	public Tactic useRagePot() {
+		var alpha = action("explore")
+				.do1((MyAgentState S) -> {
+					WorldModel newwom = S.env().action(S.worldmodel.agentId, Command.USERAGE) ;
+					return newwom ;
+				})
+				.on_(whenToUseRagePot)
+				;
+		return alpha.lift() ;
+	}
+	
+	public Tactic explore() {
 		var alpha = action("explore")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
@@ -156,11 +254,11 @@ public class TacticLib {
 					if (!agentIsAlive(S)) return null ;
 					Tile agentPos = toTile(S.worldmodel.position) ;
 					S.worldNavigation().openDoor(agentPos.x, agentPos.y) ;
-					System.out.println(">>> explore is invoked") ;
+					//System.out.println(">>> explore is invoked") ;
 					var candidates = S.worldNavigation().explore(agentPos.x, agentPos.y) ;
 					S.worldNavigation().closeDoor(agentPos.x, agentPos.y) ;
-					System.out.println(">>> explore is invoked, candidates: " + candidates) ;
-					if (candidates.size() == 0) {
+					//System.out.println(">>> explore is invoked, candidates: " + candidates) ;
+					if (candidates == null || candidates.size() == 0) {
 						return null ;
 					}
 					for(var t : candidates) {

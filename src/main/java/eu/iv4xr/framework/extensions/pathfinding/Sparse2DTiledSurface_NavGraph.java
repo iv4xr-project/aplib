@@ -163,11 +163,9 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 
     /**
      * Return the neighbors of a tile. A tile u is a neighbor of a tile t if u is
-     * adjacent to t, and moreover u is navigable (e.g. it is not a wall or a
-     * closed door). If the flag diagonalMovementPossible is true, then tiles
-     * that are diagonally touching t are also considered neighbors.
-     * 
-     * This method does not consider whether u has been seen or not.
+     * adjacent to t.
+     * This method does not consider whether u has been seen or not, nor whether
+     * u is navigable.
      */
 	public List<Tile> physicalNeighbours(int x, int y) {
 		
@@ -189,7 +187,7 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		}
 		
 		candidates = candidates.stream()
-			.filter(c -> ! isBlocked(c.x,c.y))
+			//.filter(c -> ! isBlocked(c.x,c.y))
 			.collect(Collectors.toList());
 		//System.out.println("&&&& " + candidates.size()) ;
 		
@@ -207,6 +205,10 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 	public List<Tile> neighbours_(int x, int y) {
 		var candidates = physicalNeighbours(x,y) ;
 		//System.out.println("=== (" + x + "," + y + ") -> " + candidates.size()) ;
+		
+		candidates = candidates.stream()
+				.filter(c -> ! isBlocked(c.x,c.y))
+				.collect(Collectors.toList());
 		
 		if (! perfect_memory_pathfinding) {
 			candidates = candidates.stream().filter(c -> hasBeenSeen(c.x,c.y)).collect(Collectors.toList()) ;
@@ -257,13 +259,18 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		List<Tile> frontiers = new LinkedList<>() ;
 		List<Tile> cannotBeFrontier = new LinkedList<>() ;
 		for(var t : frontierCandidates) {
-			int maxNumberOfNeighbors = physicalNeighbours(t.x,t.y).size() ;
-			int N = neighbours_(t.x,t.y).size() ;
-			if (N == maxNumberOfNeighbors) {
-				cannotBeFrontier.add(t) ;
-				continue ;
+			var pneighbors = physicalNeighbours(t.x,t.y) ;
+			boolean isFrontier = false ;
+			for (var n : pneighbors) {
+				if (! hasBeenSeen(n.x,n.y)) {
+					frontiers.add(t) ;
+					isFrontier = true ;
+					break ;
+				}
 			}
-			frontiers.add(t) ;
+			if (!isFrontier) {
+				cannotBeFrontier.add(t) ;
+			}
 		}
 		// remove tiles that are obviously not frontiers:
 		frontierCandidates.removeAll(cannotBeFrontier) ;
@@ -287,9 +294,9 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
         frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,x,y), distSq(p2.x,p2.y,x,y)));
 
         for (var front : frontiers) {
-        	System.out.println(">>> (" + x + "," + y + ")  --> (" + front.x + "," + front.y + ")" ) ;
+        	//System.out.println(">>> (" + x + "," + y + ")  --> (" + front.x + "," + front.y + ")" ) ;
             var path = findPath(x,y,front.x, front.y);
-            System.out.println("==== path " + path) ;
+            //System.out.println("==== path " + path) ;
             // System.out.println("frontier path " + path +" frontier vertices: "+ front.fst);
             if (path != null) {
                 return path;

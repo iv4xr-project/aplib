@@ -11,6 +11,8 @@ import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.W
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.IntVec2D;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Frodo;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Smeagol;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.Environment;
@@ -65,14 +67,29 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 			   case "" :
 				   nav.removeNonNavigable(tile.x,tile.y);
 				   break ;
+			   case "Monster" : 
+				   // not going to represent monsters as non-navigable
+				   // nav.addNonNavigable(new Door(tile.x,tile.y,true));
+				   break ;
 			   default:
 				   nav.addNonNavigable(new Door(tile.x,tile.y));
 				   break ;			   
 			}	
 		}	
+		// removing entities that are no longer in the game-board, except players:
+		var removedEntities = (Serializable[]) aux.properties.get("recentlyRemoved") ;
+		for (var entry_ : removedEntities) {
+			var id = (String) entry_ ;
+			if (id.equals(Frodo.class.getSimpleName()) || id.equals(Smeagol.class.getSimpleName())) {
+				continue ;
+			}
+			this.worldmodel.elements.remove(id) ;
+		}
+		
 	}
 	
 	
+	// just for testing:
 	public static void main(String[] args) {
 
 		// System.out.println(">>>" + Frodo.class.getSimpleName()) ;

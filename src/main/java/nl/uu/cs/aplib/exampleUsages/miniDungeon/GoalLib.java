@@ -14,7 +14,15 @@ public class GoalLib {
 	
 	TacticLib tacticLib = new TacticLib() ;
 	
-	public GoalStructure EntityTouched(String targetId) {
+	/**
+	 * This will search the maze to guide the agent o a tile next to the 
+	 * specified entity ("touching" the entity). 
+	 * 
+	 * <p>The goal's tactic can also handle some critical situations that may 
+	 * emerge during the search, e.g. if it is attacked by a monster, or
+	 * when it gets low in the health.
+	 */
+	public Goal EntityTouched(String targetId) {
 		
 		var G = goal("Entity " + targetId + " is touched.") 
 				.toSolve((WorldModel wom) -> {
@@ -23,81 +31,34 @@ public class GoalLib {
 					return adjacent(toTile(wom.position),toTile(e.position)) ;
 				})
 				.withTactic(
-				   FIRSTof(
+				   FIRSTof(tacticLib.useHealingPot(),
+						   tacticLib.useRagePot(),
+						   tacticLib.attackMonster(),
 						   tacticLib.navigateTo(targetId),
 						   tacticLib.explore(),
+						   //Abort().on_(S -> { System.out.println("### about to abort") ; return false;}).lift(), 
 				   		   ABORT()) 
 				  )
-				.lift()
 				;
 		
 		return G ;		
 	}
 	
-	public GoalStructure EntityInteracted(String targetId) {
+	/**
+	 * This goal causes the agent to interact with a given entity. It requires the agent
+	 * to be standing next to the entity.
+	 */
+	public Goal EntityInteracted(String targetId) {
 		
 		var G = goal("Entity " + targetId + " is interacted.") 
 				.toSolve((WorldModel wom) -> true)
 				.withTactic(
-				   FIRSTof(
-						   tacticLib.interact(targetId),
+				   FIRSTof(tacticLib.interact(targetId),
 						   ABORT()) 
 				  )
-				.lift()
 				;
 		
 		return G ;
-		
-	}
-	
-	
-	public static void main(String[] args) throws InterruptedException {
-
-		// System.out.println(">>>" + Frodo.class.getSimpleName()) ;
-
-		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.viewDistance = 4 ;
-		System.out.println(">>> Configuration:\n" + config);
-		DungeonApp app = new DungeonApp(config);
-		DungeonApp.deploy(app);
-		MyAgentEnv env = new MyAgentEnv(app);
-		MyAgentState state = new MyAgentState() ;
-		var goalLib = new GoalLib() ;
-		var G = SEQ(
-				goalLib.EntityTouched("S0"),
-				goalLib.EntityInteracted("S0"),
-				goalLib.EntityTouched("Shr"),
-				goalLib.EntityInteracted("Shr")) ;
-
-		var agent = new TestAgent("Frodo","Frodo") 
-				. attachState(state)
-				. attachEnvironment(env)
-				. setGoal(G) ;
-
-		Thread.sleep(2000);
-		
-		state.updateState("Frodo");
-		printEntities(state) ;
-		
-		//System.exit(0);
-		
-		System.out.println(">> Start agent loop...") ;
-		//var scanner = new Scanner(System.in) ;
-		//scanner.nextLine() ;
-
-		int k = 0 ;
-		
-		while(G.getStatus().inProgress()) {
-			System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position)) ;
-			agent.update();
-			Thread.sleep(30); 
-			if (k>=150) break ;
-			k++ ;
-		}
-		
-		G.printGoalStructureStatus();
-		
-		//System.exit(0);
 		
 	}
 

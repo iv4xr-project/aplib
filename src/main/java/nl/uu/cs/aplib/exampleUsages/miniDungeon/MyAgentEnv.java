@@ -132,6 +132,8 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 			we.properties.put("hp",player.hp) ;
 			we.properties.put("hpmax",player.hpMax) ;
 			we.properties.put("ar",player.attackRating) ;
+			we.properties.put("bagUsed",player.bag.size()) ;
+			we.properties.put("maxBagSize",player.maxBagSize) ;
 			we.properties.put("keysInBag",player.itemsInBag(Scroll.class).size()) ;
 			we.properties.put("healpotsInBag",player.itemsInBag(HealingPotion.class).size()) ;
 			we.properties.put("ragepotsInBag",player.itemsInBag(RagePotion.class).size()) ;
@@ -188,6 +190,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		return aux ;
 	}
 	
+	// just for testing:
 	public static void main(String[] args) {
 		
 		//System.out.println(">>>" + Frodo.class.getSimpleName()) ;

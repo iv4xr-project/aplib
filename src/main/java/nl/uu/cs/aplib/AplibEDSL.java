@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.*;
 import nl.uu.cs.aplib.mainConcepts.Tactic.*;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * Provide a set of convenience static methods to be used as
@@ -193,6 +194,50 @@ public class AplibEDSL {
         		   // always remove the new goal again, but if the new goal failed we will also
         		   // make the whole construct fail:
         		   SEQ(remove.apply(null),FAIL())) ;  
+    }
+    
+    /**
+     * Construct a goal that will be interrupted on a certain conditions. The goal is
+     * aborted, and a new goal is launcher. When the new goal is done (success or fail),
+     * the execution continues with the original goal.
+     * 
+     * <p>For example: 
+     * 
+     *      <p>INTERRUPTIBLE(g, HANDLER(c1,H1), HANDLER(c2,H2))
+     *      
+     * <p>Will abort the execution of g when the condition c1 or c2 becomes true. If c1 is true,
+     * we then proceed with the goal H1. When H1 is done, either in success or failure, the
+     * execution of g is resumed.  
+     */
+    public static <State> GoalStructure INTERRUPTIBLE(Goal g, 
+    		Pair<Predicate<State>,GoalStructure>... handlers) {
+    	
+    	Tactic originalTactic = g.getTactic() ;
+    	
+    	Predicate<State> guard = S -> {
+    		for(var h : handlers) {
+    			if (h.fst.test(S)) return true ;
+    		}
+    		return false ;
+    	} ;
+    	
+    	Tactic exceptional = Abort().on_(guard).lift() ;
+    			
+    	Goal g2 = g.withTactic(FIRSTof(exceptional,originalTactic)) ;
+    	
+    	GoalStructure H = FAIL() ;
+    	for(int k = handlers.length-1 ; 0<=k; k--) {
+    		var H_k = SEQ(handlers[k].snd)  ;
+    		var condition = handlers[k].fst ;
+    		H = IFELSE(condition,H_k,H) ;
+    	}
+    	H = SEQ(H,FAIL()) ;
+    	
+    	return REPEAT(FIRSTof(g2.lift(),H)) ;
+    }
+    
+    public static <State> Pair<Predicate<State>,GoalStructure> HANDLE(Predicate<State> p ,GoalStructure handler) {
+    	return new Pair<>(p,handler) ;
     }
 
     /**
