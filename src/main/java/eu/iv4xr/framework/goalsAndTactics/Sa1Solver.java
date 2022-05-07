@@ -18,6 +18,8 @@ public class Sa1Solver {
 	public Function<String,GoalStructure> gTargetIsRefreshed ;
 	public Tactic exploreTactic ;
 	
+	public Sa1Solver() { }
+	
 	public Sa1Solver(Function<Iv4xrAgentState, BiFunction<Vec3, Vec3, Boolean>> reachabilityChecker,
 			Function<String, GoalStructure> gCandidateIsInteracted, 
 			Function<String, GoalStructure> gTargetIsRefreshed,
@@ -89,7 +91,7 @@ public class Sa1Solver {
 	 * it should be a "switch"). This e is interacted
 	 */
 	
-	GoalStructure solver(BasicAgent agent, 
+	public GoalStructure solver(BasicAgent agent, 
 			String tId, 
 			Predicate<WorldEntity> selector,
 			Predicate<Iv4xrAgentState> phi,

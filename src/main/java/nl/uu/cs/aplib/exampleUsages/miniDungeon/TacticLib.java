@@ -7,6 +7,7 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Monster;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
@@ -25,6 +26,12 @@ public class TacticLib {
 		return (tile1.x == tile2.x && Math.abs(tile1.y - tile2.y) == 1)
 				||
 			   (tile1.y == tile2.y && Math.abs(tile1.x - tile2.x) == 1) ;
+	}
+	
+	public static GameStatus gameStatus(MyAgentState state) {
+		var aux = state.worldmodel.elements.get("aux") ;
+		var status = (GameStatus) aux.properties.get("status") ;
+		return status ;
 	}
 	
 	public static boolean agentIsAlive(MyAgentState state) {

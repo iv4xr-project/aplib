@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 public class GoalLib {
 	
-	TacticLib tacticLib = new TacticLib() ;
+	public TacticLib tacticLib = new TacticLib() ;
 	
 	/**
 	 * This will search the maze to guide the agent o a tile next to the 
