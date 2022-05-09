@@ -12,7 +12,8 @@ public class Entity {
 	/**
 	 * Specifying in which maze the entity is located.
 	 */
-	public String mazeId ;
+	public int mazeId ;
+	
 	public int x ;
 	public int y ;
 	
@@ -24,20 +25,21 @@ public class Entity {
 	
 	public static class Wall extends Entity{
 		
-		public Wall(int x, int y) {
+		public Wall(int x, int y, String id) {
 			this.x = x ; this.y = y ;
-			id = "W" + x + "-" + y ;
+			this.id = id ;
 		}
 
 	}
 	
+	public enum ShrineType { SunShrine, MoonShrine, ShrineOfImmortals }
+	
 	public static class Shrine extends Entity{
 		
 		/**
-		 * True if this shrine is an immortal shrine. Cleansing an immortal shrine wins 
-		 * the game.
+		 * Cleansing an immortal shrine wins the game.
 		 */
-		public boolean immortal = true ;
+		public ShrineType shrineType = ShrineType.ShrineOfImmortals ;
 		
 		public boolean cleansed = false ;
 		
@@ -100,26 +102,26 @@ public class Entity {
 	}
 	
 	public static class  Monster extends CombativeEntity{
-		public Monster(int x, int y, int id) {
+		public Monster(int x, int y, String id) {
 			this.x = x ; this.y = y ;
 			hpMax = 20 ;
 			hp = 3 ;
 			attackRating = 1 ;
-			this.id = "M" + id ;
+			this.id = id ;
 		}
 	}
 	
 	public static class  HealingPotion extends Entity{
-		public HealingPotion(int x, int y, int id) {
+		public HealingPotion(int x, int y, String id) {
 			this.x = x ; this.y = y ;
-			this.id = "H" + id ;
+			this.id = id ;
 		}
 	}
 	
 	public static class  RagePotion extends Entity{
-		public RagePotion(int x, int y, int id) {
+		public RagePotion(int x, int y, String id) {
 			this.x = x ; this.y = y ;
-			this.id = "R" + id ;
+			this.id = id ;
 		}
 	}
 	
@@ -130,9 +132,9 @@ public class Entity {
 		
 		boolean holy = false ;
 		
-		public Scroll(int x, int y, int id) {
+		public Scroll(int x, int y, String id) {
 			this.x = x ; this.y = y ;
-			this.id = "S" + id ;
+			this.id = id ;
 		}
 	}
 

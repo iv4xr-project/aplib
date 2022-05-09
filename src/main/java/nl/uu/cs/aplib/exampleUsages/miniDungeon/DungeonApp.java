@@ -20,7 +20,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 	public MiniDungeon dungeon  ;
 	String msgFromTheGame = "" ;
 	
-	int panelWidth = 600 ;
+	int panelWidth = 700 ;
 	int panelHeight = 600 ;
 	int txtCharSize = 16 ;
 	int topMargin = 50 ;
@@ -135,7 +135,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	public static void main(String[] args) {		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		config.viewDistance = 4 ;
+		//config.viewDistance = 4 ;
 		System.out.println(">>> Configuration:\n" + config) ;
 		deploy(new DungeonApp(config));
 	}

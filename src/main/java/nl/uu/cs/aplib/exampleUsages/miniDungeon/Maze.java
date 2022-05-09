@@ -1,36 +1,83 @@
 package nl.uu.cs.aplib.exampleUsages.miniDungeon;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
+import eu.iv4xr.framework.spatial.IntVec2D;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Wall;
+import nl.uu.cs.aplib.utils.Pair;
 
 public class Maze {
 	
 	public enum MazeShape { SIMPLE } 
 	
-	public String id ;
+	public int id ;
 	public Entity[][] world ;
 	
+	static private void assignName(Wall w, int mazeId) {
+		w.mazeId = mazeId ;
+		w.id = "W_" + mazeId + "_" + w.x + "_" + w.y ;
+ 	}
+	
 	/**
-	 * Construct a maze of NxN, sorounded by walls.
+	 * Construct a maze of NxN, surrounded by walls.
 	 */
-	public Maze(String id, int size) {
-		this.id = id;
+	public Maze(int mazeId, int size) {
+		this.id = mazeId;
 		world = new Entity[size][size];
 		// walls around the arena:
 		for (int i = 0; i < size; i++) {
-			world[0][i] = new Wall(0, i);
-			world[size - 1][i] = new Wall(size - 1, i);
-			world[i][0] = new Wall(i, 0);
-			world[i][size - 1] = new Wall(i, size - 1);
+			Wall w = new Wall(0, i,"");
+			assignName(w,mazeId) ;
+			world[0][i] = w ;
+			w = new Wall(size - 1, 0, "");
+			assignName(w,mazeId) ;
+			world[size - 1][i] = w ;
+			w =  new Wall(i, 0, "");
+			assignName(w,mazeId) ;
+			world[i][0] = w ;
+			w = new Wall(i, size - 1, "");
+			assignName(w,mazeId) ;
+			world[i][size - 1] = w ;
 		}
+	}
+	
+	public List<Pair<Integer,Integer>> getFreeTiles() {
+		List<Pair<Integer, Integer>> freeSquares = new LinkedList<>();
+		int size = world.length ;
+		for (int x = 1; x < size - 1; x++) {
+			for (int y = 1; y < size - 1; y++) {
+				if (world[x][y] == null) {
+					freeSquares.add(new Pair<Integer, Integer>(x, y));
+				}
+			}
+		}
+		return freeSquares ;
+	}
+	
+	public Pair<Integer,Integer> getClosestFreeSquare(int x, int y) {
+		var freeTiles = getFreeTiles() ;
+		if (freeTiles.isEmpty()) return null ;
+		Pair<Integer,Integer> minp = null ;
+		float mindistSq = Float.MAX_VALUE ;
+		var p0 = new IntVec2D(x,y) ;
+		for(var q : freeTiles) {
+			var qv = new IntVec2D(q.fst,q.snd) ;
+			var distSq = IntVec2D.distSq(p0,qv) ;
+			if (distSq < mindistSq) {
+				mindistSq = distSq ;
+				minp = q ;
+			}
+		}
+		return minp ;
 	}
 	
 	/**
 	 * Construct an NxN maze with a single zig-zag corridor.
 	 */
-	public static Maze buildSimpleMaze(String id, Random rnd, int size, int numberOfCorridors) {
-		Maze maze = new Maze(id,size) ;
+	public static Maze buildSimpleMaze(int mazeId, Random rnd, int size, int numberOfCorridors) {
+		Maze maze = new Maze(mazeId,size) ;
 		var world = maze.world ;
 		// walls that build the maze (just a simple maze) :
 		int corridorWidth = size / numberOfCorridors;
@@ -40,14 +87,14 @@ public class Maze {
 			coridorX = coridorX - corridorWidth;
 			if (alt) {
 				for (int y = 1; y < size - 2; y++) {
-					Wall w = new Wall(coridorX, y) ;
-					w.mazeId = id ;
+					Wall w = new Wall(coridorX, y,"") ;
+					assignName(w,mazeId) ;
 					world[coridorX][y] = w ;
 				}
 			} else {
 				for (int y = size - 2; 1 < y; y--) {
-					Wall w = new Wall(coridorX, y) ;
-					w.mazeId = id ;
+					Wall w = new Wall(coridorX, y,"") ;
+					assignName(w,mazeId) ;
 					world[coridorX][y] = w ;
 				}
 			}

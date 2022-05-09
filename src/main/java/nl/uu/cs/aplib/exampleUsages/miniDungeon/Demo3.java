@@ -33,6 +33,7 @@ public class Demo3 {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4 ;
 		config.viewDistance = 4 ;
+		config.randomSeed = 79373 ;
 		System.out.println(">>> Configuration:\n" + config);
 		DungeonApp app = new DungeonApp(config);
 		DungeonApp.deploy(app);
@@ -84,10 +85,10 @@ public class Demo3 {
 			System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
 			Thread.sleep(200); 
-			if (k>=300) break ;
+			if (k>=1000) break ;
 			k++ ;
 		}	
-		G.printGoalStructureStatus();	
+		//G.printGoalStructureStatus();	
 		//System.exit(0);	
 	}
 

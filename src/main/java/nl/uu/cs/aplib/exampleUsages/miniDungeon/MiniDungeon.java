@@ -64,6 +64,7 @@ public class MiniDungeon {
 	
 	public static class MiniDungeonConfig {
 		public int worldSize = 20 ;
+		public int nuberOfMaze = 2 ;
 		public int numberOfCorridors = 4 ;
 		public float viewDistance = 100f ;
 		public long randomSeed = 34793 ;
@@ -83,6 +84,7 @@ public class MiniDungeon {
 			String s = "" ;
 			s += "randomseed   : " + randomSeed ;
 			s += "\nWorldsize    : " + worldSize ;
+			s += "\n#mazes       : " + nuberOfMaze ;
 			s += "\n#corridors   : " +  numberOfCorridors ;
 			s += "\nview distance: " +  viewDistance ;
 			s += "\n#monsters    : " +  numberOfMonsters ;
@@ -100,7 +102,7 @@ public class MiniDungeon {
 	public MiniDungeonConfig config ;
 
 	
-	public Maze maze ;
+	public List<Maze> mazes = new LinkedList<>();
 	public List<Player> players = new LinkedList<>() ;
 	public List<String> recentlyRemoved = new LinkedList<>() ;
 	Random rnd  ;
@@ -120,19 +122,21 @@ public class MiniDungeon {
 		
 		rnd = new Random(config.randomSeed) ;
 		
-		maze = Maze.buildSimpleMaze("maze0", rnd, size, config.numberOfCorridors) ;
-		var world = maze.world ;
+		var firstMaze = Maze.buildSimpleMaze(0, rnd, size, config.numberOfCorridors) ;
+		firstMaze.id = 0 ;
+		mazes.add(firstMaze) ;
+		var world = firstMaze.world ;
 		
-		seedMaze(maze) ;
+		seedMaze(firstMaze) ;
 		
-		// place players:
+		// place players (in the first maze):
 		int center = size/2 ;
 		for (int x=center-1 ; x<=center+1; x++) {
 			boolean placed = false ;
 			for (int y=center-1; y<=center+1; y++) {
 				if ((world[x][y] == null)) {
 					var frodo = new Frodo(x,y) ;
-					frodo.mazeId = maze.id ;
+					frodo.mazeId = firstMaze.id ;
 					world[x][y] = frodo ;
 					players.add(frodo) ;
 					placed = true ;
@@ -143,7 +147,7 @@ public class MiniDungeon {
 		}
 		if (config.enableSmeagol) {
 			var smeagol = new Smeagol(1,1) ;
-			smeagol.mazeId = maze.id ;
+			smeagol.mazeId = firstMaze.id ;
 			world[1][1] = smeagol ;
 			players.add(smeagol) ;
 		}
@@ -157,25 +161,38 @@ public class MiniDungeon {
 		var world = maze.world;
 		int size = world.length;
 
+		// place shrine a moon-shrine or immortal-shrine:
 		Shrine S = new Shrine(size - 2, 1);
 		S.mazeId = maze.id;
+		S.shrineType = ShrineType.MoonShrine ;
+		S.id = "SM" + maze.id ;
 		world[size - 2][1] = S;
-
-		List<Pair<Integer, Integer>> freeSquares = new LinkedList<>();
-		for (int x = 1; x < size - 1; x++) {
-			for (int y = 1; y < size - 1; y++) {
-				if (world[x][y] == null) {
-					freeSquares.add(new Pair<Integer, Integer>(x, y));
-				}
-			}
+		if (maze.id == config.nuberOfMaze-1) {
+			// this is the final maze
+			S.shrineType = ShrineType.ShrineOfImmortals ;
+			S.id = "SI" + maze.id ;
 		}
+		
+		// place a sun-shrine:
+		if (maze.id>0) {
+			S = new Shrine(1,1);
+			S.mazeId = maze.id;
+			S.shrineType = ShrineType.SunShrine ;
+			S.id = "SS" + maze.id ;
+			// a sun-shrine is always clean:
+			S.cleansed = true ;
+			world[1][1] = S;
+		}
+
+		List<Pair<Integer, Integer>> freeSquares = maze.getFreeTiles() ;
 
 		// seed monsters:
 		int m = 0;
 		while (m < config.numberOfMonsters && freeSquares.size() > 0) {
 			int k = rnd.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
-			Monster M = new Monster(sq.fst, sq.snd, m);
+			String id = "M" + maze.id + "_" + m ;
+			Monster M = new Monster(sq.fst, sq.snd, id);
 			M.mazeId = maze.id;
 			world[sq.fst][sq.snd] = M;
 			m++;
@@ -186,7 +203,8 @@ public class MiniDungeon {
 		while (h < config.numberOfHealPots && freeSquares.size() > 0) {
 			int k = rnd.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
-			HealingPotion H = new HealingPotion(sq.fst, sq.snd, h);
+			String id = "H" + maze.id + "_" + h ;
+			HealingPotion H = new HealingPotion(sq.fst, sq.snd, id);
 			H.mazeId = maze.id;
 			world[sq.fst][sq.snd] = H;
 			h++;
@@ -197,7 +215,8 @@ public class MiniDungeon {
 		while (r < config.numberOfRagePots && freeSquares.size() > 0) {
 			int k = rnd.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
-			RagePotion R = new RagePotion(sq.fst, sq.snd, r);
+			String id = "R" + maze.id + "_" + r ;
+			RagePotion R = new RagePotion(sq.fst, sq.snd, id);
 			R.mazeId = maze.id;
 			world[sq.fst][sq.snd] = R;
 			r++;
@@ -209,7 +228,8 @@ public class MiniDungeon {
 		while (ky < config.numberOfKeys && freeSquares.size() > 0) {
 			int k = rnd.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
-			Scroll K = new Scroll(sq.fst, sq.snd, ky);
+			String id = "S" + maze.id + "_" + ky ;
+			Scroll K = new Scroll(sq.fst, sq.snd, id);
 			K.mazeId = maze.id;
 			world[sq.fst][sq.snd] = K;
 			scrolls.add(K);
@@ -242,8 +262,11 @@ public class MiniDungeon {
 	
 	public enum Command { MOVEUP, MOVEDOWN, MOVELEFT, MOVERIGHT, USEHEAL, USERAGE , DONOTHING } 
 	
-	
-	void removeFromWorld(Entity e) {
+	/**
+	 * Remove the entity e from the maze where it is is.
+	 */	
+	void removeFromMaze(Entity e) {
+		var maze = mazes.get(e.mazeId) ;
 		maze.world[e.x][e.y] = null ;
 		recentlyRemoved.add(e.id) ;
 	}
@@ -256,7 +279,7 @@ public class MiniDungeon {
 		}
 		defender.hp = defender.hp - ar ;
 		if (defender.hp <=0) {
-			removeFromWorld(defender) ;
+			removeFromMaze(defender) ;
 		}
 	}
 	
@@ -277,7 +300,7 @@ public class MiniDungeon {
 	}
 	
 	Maze currentMaze(Player player) {
-		return maze ;
+		return mazes.get(player.mazeId) ;
 	}
 	
 	String monstersMoves(Player playerThatJustMoved) {
@@ -486,7 +509,7 @@ public class MiniDungeon {
 			if (player.bag.size() == player.maxBagSize) {
 				return "> " + player.name + ", your bag has no space left.";
 			}
-			removeFromWorld(target) ;
+			removeFromMaze(target) ;
 			world[player.x][player.y] = null;
 			player.x = xx;
 			player.y = yy;
@@ -521,8 +544,44 @@ public class MiniDungeon {
 		if (target instanceof Shrine) {
 			var shrine = (Shrine) target ;
 			if (shrine.cleansed) {
-				// TODO jump to the next maze
-				throw new UnsupportedOperationException("Feature unimplemented: jumping to another maze.") ;
+				if (shrine.shrineType == ShrineType.ShrineOfImmortals) {
+					// should not happen, because then the game would have been over
+					throw new IllegalArgumentException() ;
+				}
+				// the shrine is cleansed; this will teleport the player to
+				// the connected shrine 
+				
+				// remove the player from the current maze:
+				removeFromMaze(player) ;
+				
+				// get the next maze; create it if it has not been created:
+				Maze maze = currentMaze(player) ;
+				int nextMazeId = shrine.shrineType == ShrineType.SunShrine ? maze.id-1 : maze.id+1 ;
+				if (mazes.size() == nextMazeId) {
+					// generate the next maze:
+					Maze nextmaze = Maze.buildSimpleMaze(nextMazeId, rnd, config.worldSize, config.numberOfCorridors) ;
+					seedMaze(nextmaze) ;
+					mazes.add(nextmaze) ;
+				}
+				Maze nextmaze = mazes.get(nextMazeId) ;
+				// now teleport the player to some free location near the Sun-shrine
+				Pair<Integer,Integer> targetShrineLocation = new Pair<>(1,1) ;
+				if (shrine.shrineType == ShrineType.SunShrine) {
+					var size = nextmaze.world.length ;
+					targetShrineLocation = new Pair<>(size-2,1) ;
+				}
+				var teleportLocation = nextmaze.getClosestFreeSquare(targetShrineLocation.fst, targetShrineLocation.snd) ;
+				player.mazeId = nextmaze.id ;
+				player.x = teleportLocation.fst ;
+				player.y = teleportLocation.snd ;
+				nextmaze.world[player.x][player.y] = player ;
+				if (shrine.shrineType == ShrineType.MoonShrine) {
+					return "> " + player.name + " touched a shrine and winked out. Is this a new place..?";
+				}
+				else {
+					return "> " + player.name + " touched a shrine and winked out. Fleeing back already?";					
+				}
+
 			}
 			var scrolls = player.itemsInBag(Scroll.class) ;
 			if (scrolls.size() == 0) {
@@ -536,7 +595,7 @@ public class MiniDungeon {
 			if (holyScroll.size() > 0) {
 				player.bag.remove(holyScroll.get(0));
 				shrine.cleansed = true ;
-				if (shrine.immortal) {
+				if (shrine.shrineType == ShrineType.ShrineOfImmortals) {
 					if (player == frodo()) {
 						status = GameStatus.FRODOWIN;
 					}
@@ -560,6 +619,8 @@ public class MiniDungeon {
 		}
 		throw new IllegalArgumentException() ;
 	}
+	
+	
 	
 	
 	
@@ -616,17 +677,31 @@ public class MiniDungeon {
 		float viewDistanceSq = config.viewDistance*config.viewDistance ;
 		StringBuffer z = new StringBuffer() ;
 		var world = currentMaze(frodo()).world ;
+		Entity[][] world2 = null ;
+		if (config.enableSmeagol) {
+			world2 = currentMaze(smeagol()).world ;
+		}
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
 				boolean isVisible = 
 						isVisible(frodo(),x,row) 
-						|| (config.enableSmeagol && isVisible(smeagol(),x,row)) ;
+						|| (config.enableSmeagol && world2==world && isVisible(smeagol(),x,row)) ;
 				
 				if (isVisible) {
 					z.append(toChar(world[x][row])) ;					
 				}
 				else 
 					z.append(" ") ;
+			}
+			if (world2 != null && world2 != world) {
+				z.append("    ") ;
+				for(int x = 0; x<config.worldSize; x++) {
+					if (isVisible(smeagol(),x,row)) {
+						z.append(toChar(world2[x][row])) ;					
+					}
+					else 
+						z.append(" ") ;
+				}
 			}
 			z.append("\n") ;
 		}

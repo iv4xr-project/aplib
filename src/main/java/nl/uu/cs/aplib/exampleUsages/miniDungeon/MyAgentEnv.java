@@ -114,7 +114,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 			var shrine = (Shrine) e ;
 			we.position = new Vec3(e.x,0,e.y) ;
 			we.properties.put("maze",e.mazeId) ;
-			we.properties.put("immortal",shrine.immortal) ;
+			we.properties.put("shrinetype",shrine.shrineType) ;
 			we.properties.put("cleansed",shrine.cleansed) ;
 			return we ;
 		}
