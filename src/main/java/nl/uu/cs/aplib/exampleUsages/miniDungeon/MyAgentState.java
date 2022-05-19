@@ -62,17 +62,17 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 			nav.markAsSeen(new Tile(tile.x,tile.y));
 			switch (type) {
 			   case "Wall" :
-				   nav.addNonNavigable(new Wall(tile.x,tile.y));
+				   nav.addObstacle(new Wall(tile.x,tile.y));
 				   break ;
 			   case "" :
-				   nav.removeNonNavigable(tile.x,tile.y);
+				   nav.removeObstacle(tile.x,tile.y);
 				   break ;
 			   case "Monster" : 
 				   // not going to represent monsters as non-navigable
 				   // nav.addNonNavigable(new Door(tile.x,tile.y,true));
 				   break ;
 			   default:
-				   nav.addNonNavigable(new Door(tile.x,tile.y));
+				   nav.addObstacle(new Door(tile.x,tile.y));
 				   break ;			   
 			}	
 		}	

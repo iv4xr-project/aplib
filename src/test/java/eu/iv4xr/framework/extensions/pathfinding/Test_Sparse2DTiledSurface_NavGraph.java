@@ -21,10 +21,10 @@ public class Test_Sparse2DTiledSurface_NavGraph {
 		}
 		
 		for(int x=0; x<nav.maxX; x++) {
-			nav.addNonNavigable(new Wall(x,0));
-			nav.addNonNavigable(new Wall(x,nav.maxY-1));
-			nav.addNonNavigable(new Wall(0,x));
-			nav.addNonNavigable(new Wall(nav.maxX-1,x));
+			nav.addObstacle(new Wall(x,0));
+			nav.addObstacle(new Wall(x,nav.maxY-1));
+			nav.addObstacle(new Wall(0,x));
+			nav.addObstacle(new Wall(nav.maxX-1,x));
 		}
 		
 		var path = nav.findPath(1, 1, 3, 3) ;

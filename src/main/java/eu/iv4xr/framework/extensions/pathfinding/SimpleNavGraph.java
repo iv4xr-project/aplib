@@ -31,7 +31,7 @@ import eu.iv4xr.framework.spatial.meshes.*;
  * 
  * @author Naraenda
  */
-public class SimpleNavGraph implements Navigatable<Integer> {
+public class SimpleNavGraph implements Navigatable<Integer>, CanDealWithDynamicObstacle<LineIntersectable> {
 
 	/**
 	 * The set of vertices that form the navigation graph. The index of the vertex
@@ -74,6 +74,18 @@ public class SimpleNavGraph implements Navigatable<Integer> {
 		}
 		if (q != null)
 			obstacles.remove(q);
+	}
+	
+	/**
+	 * Return the state of this obstacle. True means that it is in the blocking state.
+	 */
+	public boolean isBlocking(LineIntersectable obstacle) {
+		for (var o : obstacles) {
+			if (o.obstacle == obstacle) {
+				return o.isBlocking ;
+			}
+		}
+		return false ;
 	}
 
 	public void toggleBlockingOn(LineIntersectable obstacle) {

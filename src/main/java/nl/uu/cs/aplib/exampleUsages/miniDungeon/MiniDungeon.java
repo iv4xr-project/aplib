@@ -317,6 +317,7 @@ public class MiniDungeon {
 					boolean thereWasPlayerToAttack = false ;
 					for (Player player : players) {
 						if (player.dead()) continue ;
+						if (player.mazeId != m.mazeId) continue ;
 						// in case there are multiple players around m, m will just pick the first one
 						// in this list:
 						if ((m.x == player.x && Math.abs(m.y - player.y) == 1)
@@ -451,7 +452,7 @@ public class MiniDungeon {
 			return "> " + player.name + " cowers in fear.";
 
 		case USEHEAL:
-			var hpotions = player.itemsInBag(HealingPotion.class) ;
+			var hpotions = player.itemsInBag(EntityType.HEALPOT) ;
 			if (hpotions.size() == 0) {
 				return "> " + player.name + " does not have any heal-potion to use.";
 			} else {
@@ -461,7 +462,7 @@ public class MiniDungeon {
 				return "> That tastes good!";
 			}
 		case USERAGE:
-			var rpotions = player.itemsInBag(RagePotion.class) ;
+			var rpotions = player.itemsInBag(EntityType.RAGEPOT) ;
 			if (rpotions.size() == 0) {
 				return "> " + player.name + " does not have any rage-potion to use.";
 			} else {
@@ -502,10 +503,12 @@ public class MiniDungeon {
 			world[xx][yy] = player;
 			return "" ;
 		} 
-		if (target instanceof Wall) {
+		if (target.type == EntityType.WALL) {
 			return null ;
 		}
-		if (target instanceof HealingPotion || target instanceof RagePotion || target instanceof Scroll) {
+		if (target.type == EntityType.HEALPOT 
+				|| target.type == EntityType.RAGEPOT 
+				|| target.type == EntityType.SCROLL) {
 			if (player.bag.size() == player.maxBagSize) {
 				return "> " + player.name + ", your bag has no space left.";
 			}
@@ -523,7 +526,7 @@ public class MiniDungeon {
 				return "> " + player.name + " found a key.";
 			
 		}
-		if (target instanceof Monster) {
+		if (target.type == EntityType.MONSTER) {
 			var m = (Monster) target;
 			String msg = "> " + player.name + " attacked monster " + m.id;
 			attack(player, m);
@@ -541,7 +544,7 @@ public class MiniDungeon {
 			}
 			return msg ;
 		} 
-		if (target instanceof Shrine) {
+		if (target.type == EntityType.SHRINE) {
 			var shrine = (Shrine) target ;
 			if (shrine.cleansed) {
 				if (shrine.shrineType == ShrineType.ShrineOfImmortals) {
@@ -583,7 +586,7 @@ public class MiniDungeon {
 				}
 
 			}
-			var scrolls = player.itemsInBag(Scroll.class) ;
+			var scrolls = player.itemsInBag(EntityType.SCROLL) ;
 			if (scrolls.size() == 0) {
 				return "> " + player.name + ", you don't have any scroll to cleanse the shrine.";
 			}
@@ -626,14 +629,16 @@ public class MiniDungeon {
 	
 	char toChar(Entity e) {
 		if (e == null) return '.' ; 
-		if (e instanceof Wall) return '#' ;
-		if (e instanceof Frodo) return '@' ;
-		if (e instanceof Smeagol) return '&' ;
-		if (e instanceof Monster) return 'm' ;
-		if (e instanceof HealingPotion) return '%' ;
-		if (e instanceof RagePotion) return '!' ;
-		if (e instanceof Scroll) return '?' ;
-		if (e instanceof Shrine) return 'S' ;
+		switch(e.type) {
+		    case WALL    : return '#' ;
+		    case FRODO   : return '@' ;
+		    case SMEAGOL : return '&' ;
+		    case MONSTER : return 'm' ;
+		    case HEALPOT : return '%' ;
+		    case RAGEPOT : return '!' ;
+		    case SCROLL  : return '?' ;
+		    case SHRINE  : return 'S' ;
+		}
 		/*
 		if (e instanceof Door) {
 			Door d = (Door) e ;
@@ -672,6 +677,27 @@ public class MiniDungeon {
 		return visible ;
 	}
 	
+	public String showGameStatus() {
+		StringBuffer z = new StringBuffer() ;
+		z.append("[" + turnNr + "] Frodo hp: " + frodo().hp + "/" + frodo().hpMax
+				+ ", AR:" + frodo().attackRating 
+				+ (frodo().rageTimer>0 ? " [ENRAGED]" : "")
+				+ "\n#heal-pots:" + frodo().itemsInBag(EntityType.HEALPOT).size()
+				+ ", #rage-pots:" + frodo().itemsInBag(EntityType.RAGEPOT).size()
+				+ ", #scrolls:" + frodo().itemsInBag(EntityType.SCROLL).size()
+				) ;
+		if (config.enableSmeagol) {
+			z.append("\nSmeagol hp: " + smeagol().hp + "/" + smeagol().hpMax
+					+ ", AR:" + smeagol().attackRating 
+					+ (smeagol().rageTimer>0 ? " [ENRAGED]" : "")
+					+ "\n#heal-pots:" + smeagol().itemsInBag(EntityType.HEALPOT).size()
+					+ ", #rage-pots:" + smeagol().itemsInBag(EntityType.RAGEPOT).size()
+					+ ", #scrolls:" + smeagol().itemsInBag(EntityType.SCROLL).size()
+					) ;
+		}
+		return z.toString() ;
+	}
+	
 	@Override
 	public String toString() {
 		float viewDistanceSq = config.viewDistance*config.viewDistance ;
@@ -705,22 +731,7 @@ public class MiniDungeon {
 			}
 			z.append("\n") ;
 		}
-		z.append("[" + turnNr + "] Frodo hp: " + frodo().hp + "/" + frodo().hpMax
-				+ ", AR:" + frodo().attackRating 
-				+ (frodo().rageTimer>0 ? " [ENRAGED]" : "")
-				+ "\n#heal-pots:" + frodo().itemsInBag(HealingPotion.class).size()
-				+ ", #rage-pots:" + frodo().itemsInBag(RagePotion.class).size()
-				+ ", #scrolls:" + frodo().itemsInBag(Scroll.class).size()
-				) ;
-		if (config.enableSmeagol) {
-			z.append("\nSmeagol hp: " + smeagol().hp + "/" + smeagol().hpMax
-					+ ", AR:" + smeagol().attackRating 
-					+ (smeagol().rageTimer>0 ? " [ENRAGED]" : "")
-					+ "\n#heal-pots:" + smeagol().itemsInBag(HealingPotion.class).size()
-					+ ", #rage-pots:" + smeagol().itemsInBag(RagePotion.class).size()
-					+ ", #scrolls:" + smeagol().itemsInBag(Scroll.class).size()
-					) ;
-		}
+		z.append(showGameStatus()) ;
 		
 		return z.toString() ;
 	}
@@ -731,6 +742,7 @@ public class MiniDungeon {
 	 * An instance of the game with just simple console.
 	 */
 	public static void main(String[] args) {
+		
 		MiniDungeon dg = new MiniDungeon(new MiniDungeonConfig()) ;
 		//aaadg.config.viewDistance = 4 ;
 		while(dg.status == GameStatus.INPROGRESS) {

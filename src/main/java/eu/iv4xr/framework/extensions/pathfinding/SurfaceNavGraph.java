@@ -1,6 +1,7 @@
 package eu.iv4xr.framework.extensions.pathfinding;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.Line;
 import eu.iv4xr.framework.spatial.Vec3;
@@ -48,7 +49,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * @author Wish
  *
  */
-public class SurfaceNavGraph extends SimpleNavGraph {
+public class SurfaceNavGraph extends SimpleNavGraph implements Xnavigatable<Integer> {
 
     /**
      * A vertex is a BORDER-vertex if it lies in a border-edge. An edge is a
@@ -209,6 +210,20 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         // setting A* as the default pathfinder:
         pathfinder = new AStar<Integer>();
     }
+    
+    /**
+	 * When true then the pathfinder will consider all nodes in the graph to have been seen.
+	 */
+	public boolean usingPerfectMemoryPathfinding() {
+		return perfect_memory_pathfinding ;
+	}
+	
+	/**
+	 * When true then the pathfinder will consider all nodes in the graph to have been seen.
+	 */
+	public void setPerfectMemoryPathfinding(Boolean flag) {
+		perfect_memory_pathfinding = flag ;
+	}
 
     /**
      * Mark all vertices as "unseen".
@@ -224,46 +239,54 @@ public class SurfaceNavGraph extends SimpleNavGraph {
     public void setPathFinder(Pathfinder<Integer> pf) {
         pathfinder = pf;
     }
-
+    
     /**
-     * Mark the given vertices as "seen" for the purpose of memory-based navigation.
+     * Mark the given vertex as "seen" for the purpose of memory-based navigation.
      * Since Faces' center-points were added artificially (they were not explicitly
      * present in the mesh-data used to build this nav-graph), the agent that calls
      * this method may not check if it also saw center-points. This method will
      * therefore take the heuristic to mark a center-point as seen if one of its
      * non-center neighbor is marked as seen.
      */
+    public void markAsSeen(Integer v) {
+    	seenVertices.set(v, true);
+        // additionally, if v is not a center, then mark the center connected to
+        // it as "seen".
+        if (verticesType.get(v) != VertexType.CENTRE) {
+            var neighbors = edges.neighbours(v);
+            //var vloc = vertices.get(v);
+            for (Integer z : neighbors) {
+                //var zloc = vertices.get(z);
+                // the 2nd cond is a HACK!
+                if (verticesType.get(z) == VertexType.CENTRE
+                // || Vec3.dist(vloc,zloc) <= 0.4
+                )
+                    seenVertices.set(z, true);
+            }
+        }
+    }
+    
+    /**
+     * Mark the given vertices as "seen".
+     */
     public void markAsSeen(List<Integer> seen) {
         for (Integer v : seen) {
-            // mark v as seen:
-            seenVertices.set(v, true);
-            // additionally, if v is not a center, then mark the center connected to
-            // it as "seen".
-            if (verticesType.get(v) != VertexType.CENTRE) {
-                var neighbors = edges.neighbours(v);
-                //var vloc = vertices.get(v);
-                for (Integer z : neighbors) {
-                    //var zloc = vertices.get(z);
-                    // the 2nd cond is a HACK!
-                    if (verticesType.get(z) == VertexType.CENTRE
-                    // || Vec3.dist(vloc,zloc) <= 0.4
-                    )
-                        seenVertices.set(z, true);
-                }
-            }
+        	markAsSeen(v) ;
         }
     }
 
     public void markAsSeen(int... seen) {
-        List<Integer> seen_ = new LinkedList<>();
-        for (int k : seen) {
-            seen_.add(k);
+        for (int v : seen) {
+        	markAsSeen(v) ;
         }
-        markAsSeen(seen_);
     }
 
     public int numberOfSeen() {
         return (int) seenVertices.stream().filter(b -> b == true).count();
+    }
+    
+    public boolean hasbeenSeen(Integer nd) {
+    	return seenVertices.get(nd)  == true ;
     }
 
     /**
@@ -416,7 +439,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * The path-finding will be memory-based. That is, only navigation over vertices
      * marked as seen will be possible.
      */
-    public ArrayList<Integer> findPath(int start, int goal) {
+    public ArrayList<Integer> findPath(Integer start, Integer goal) {
         return pathfinder.findPath(this, start, goal);
     }
 
@@ -476,6 +499,11 @@ public class SurfaceNavGraph extends SimpleNavGraph {
         }
         return frontiers;
     }
+    
+    public List<Integer> getFrontier() {
+    	var F = getFrontierVertices().stream().map(nd -> nd.fst).collect(Collectors.toSet()) ;
+    	return F.stream().collect(Collectors.toList()) ;
+    }
 
     /**
      * Find a path to an unexplored and unblocked vertex w which is the
@@ -505,7 +533,7 @@ public class SurfaceNavGraph extends SimpleNavGraph {
      * 
      * If no no such path can be found, the method returns null.
      */
-    public List<Integer> explore(int startVertex) {
+    public List<Integer> explore(Integer startVertex) {
 
         var frontiers = getFrontierVertices();
         

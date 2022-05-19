@@ -103,51 +103,48 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 	
 
 	WorldEntity toWorldEntity(Entity e) {
-		if (e instanceof Wall) {
-			var we = new WorldEntity(e.id, e.getClass().getSimpleName(),false) ;
-			we.position = new Vec3(e.x,0,e.y) ;
-			we.properties.put("maze",e.mazeId) ;
-			return we ;
-		}
-		if (e instanceof Shrine) {
-			var we = new WorldEntity(e.id,e.getClass().getSimpleName(),false) ;
-			var shrine = (Shrine) e ;
-			we.position = new Vec3(e.x,0,e.y) ;
-			we.properties.put("maze",e.mazeId) ;
-			we.properties.put("shrinetype",shrine.shrineType) ;
-			we.properties.put("cleansed",shrine.cleansed) ;
-			return we ;
-		}
-		if (e instanceof Scroll || e instanceof HealingPotion || e instanceof RagePotion) {
-			var we = new WorldEntity(e.id,e.getClass().getSimpleName(),false) ;
-			we.position = new Vec3(e.x,0,e.y) ;
-			we.properties.put("maze",e.mazeId) ;
-			return we ;
-		}
-		if (e instanceof Player) {
-			var we = new WorldEntity(e.id,e.getClass().getSimpleName(),true) ;
-			we.position = new Vec3(e.x,0,e.y) ;
-			we.properties.put("maze",e.mazeId) ;
-			Player player = (Player) e ;	
-			we.properties.put("hp",player.hp) ;
-			we.properties.put("hpmax",player.hpMax) ;
-			we.properties.put("ar",player.attackRating) ;
-			we.properties.put("bagUsed",player.bag.size()) ;
-			we.properties.put("maxBagSize",player.maxBagSize) ;
-			we.properties.put("keysInBag",player.itemsInBag(Scroll.class).size()) ;
-			we.properties.put("healpotsInBag",player.itemsInBag(HealingPotion.class).size()) ;
-			we.properties.put("ragepotsInBag",player.itemsInBag(RagePotion.class).size()) ;
-			we.properties.put("rageTimer",player.rageTimer) ;
-			return we ;
-		}
-		if (e instanceof Monster) {
-			var we = new WorldEntity(e.id,e.getClass().getSimpleName(),true) ;
-			we.position = new Vec3(e.x,0,e.y) ;
-			we.properties.put("maze",e.mazeId) ;
-			Monster m = (Monster) e ;	
-			we.properties.put("hp",m.hp) ;
-			we.properties.put("ar",m.attackRating) ;
-			return we ;
+		switch(e.type) {
+			case WALL: 
+			case SCROLL:
+			case HEALPOT:
+			case RAGEPOT:
+				WorldEntity we = new WorldEntity(e.id,"" + e.type,false) ;
+				we.position = new Vec3(e.x,0,e.y) ;
+				we.properties.put("maze",e.mazeId) ;
+				return we ;
+			case SHRINE:
+				we = new WorldEntity(e.id,"" + e.type,false) ;
+				var shrine = (Shrine) e ;
+				we.position = new Vec3(e.x,0,e.y) ;
+				we.properties.put("maze",e.mazeId) ;
+				we.properties.put("shrinetype",shrine.shrineType) ;
+				we.properties.put("cleansed",shrine.cleansed) ;
+				return we ;
+			case FRODO:
+			case SMEAGOL:
+				we = new WorldEntity(e.id,"" + e.type,true) ;
+				we.position = new Vec3(e.x,0,e.y) ;
+				we.properties.put("maze",e.mazeId) ;
+				Player player = (Player) e ;	
+				we.properties.put("hp",player.hp) ;
+				we.properties.put("hpmax",player.hpMax) ;
+				we.properties.put("ar",player.attackRating) ;
+				we.properties.put("bagUsed",player.bag.size()) ;
+				we.properties.put("maxBagSize",player.maxBagSize) ;
+				we.properties.put("scrollsInBag",player.itemsInBag(EntityType.SCROLL).size()) ;
+				we.properties.put("healpotsInBag",player.itemsInBag(EntityType.HEALPOT).size()) ;
+				we.properties.put("ragepotsInBag",player.itemsInBag(EntityType.RAGEPOT).size()) ;
+				we.properties.put("rageTimer",player.rageTimer) ;
+				return we ;
+			case MONSTER:
+				we = new WorldEntity(e.id,"" + e.type,true) ;
+				we.position = new Vec3(e.x,0,e.y) ;
+				we.properties.put("maze",e.mazeId) ;
+				Monster m = (Monster) e ;	
+				we.properties.put("hp",m.hp) ;
+				we.properties.put("ar",m.attackRating) ;
+				return we ;
+				
 		}
 		return null ;
 	}

@@ -15,7 +15,7 @@ public class Maze {
 	public int id ;
 	public Entity[][] world ;
 	
-	static private void assignName(Wall w, int mazeId) {
+	static private void assignIdToWall(Wall w, int mazeId) {
 		w.mazeId = mazeId ;
 		w.id = "W_" + mazeId + "_" + w.x + "_" + w.y ;
  	}
@@ -29,16 +29,16 @@ public class Maze {
 		// walls around the arena:
 		for (int i = 0; i < size; i++) {
 			Wall w = new Wall(0, i,"");
-			assignName(w,mazeId) ;
+			assignIdToWall(w,mazeId) ;
 			world[0][i] = w ;
 			w = new Wall(size - 1, 0, "");
-			assignName(w,mazeId) ;
+			assignIdToWall(w,mazeId) ;
 			world[size - 1][i] = w ;
 			w =  new Wall(i, 0, "");
-			assignName(w,mazeId) ;
+			assignIdToWall(w,mazeId) ;
 			world[i][0] = w ;
 			w = new Wall(i, size - 1, "");
-			assignName(w,mazeId) ;
+			assignIdToWall(w,mazeId) ;
 			world[i][size - 1] = w ;
 		}
 	}
@@ -88,13 +88,13 @@ public class Maze {
 			if (alt) {
 				for (int y = 1; y < size - 2; y++) {
 					Wall w = new Wall(coridorX, y,"") ;
-					assignName(w,mazeId) ;
+					assignIdToWall(w,mazeId) ;
 					world[coridorX][y] = w ;
 				}
 			} else {
 				for (int y = size - 2; 1 < y; y--) {
 					Wall w = new Wall(coridorX, y,"") ;
-					assignName(w,mazeId) ;
+					assignIdToWall(w,mazeId) ;
 					world[coridorX][y] = w ;
 				}
 			}

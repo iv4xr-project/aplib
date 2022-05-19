@@ -5,7 +5,26 @@ import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.Vec3;
 
-public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledSurface_NavGraph.Tile> {
+/**
+ * Representing a navigation graph over a 2D tiled-world. The world is assumed to
+ * be made of tiles/squares, arranged from tile (0,0) to tile (maxX-1,maxY-1) to
+ * form a rectangle world.
+ * 
+ * <p>The tiles are not explicitly stored. Rather, we only store non-navigable tiles.
+ * These are tiles that block movement through them. There are two types: Wall and
+ * Door. A wall is always non-navigable. A door can be made blocking/unblocking.
+ * 
+ * <p>The class also implements {@link Xnavigatable}, so it offers methods to do
+ * pathfinding and exploration over the world.
+ * 
+ * @author Wish
+ *
+ */
+public class Sparse2DTiledSurface_NavGraph 
+		implements 
+		Xnavigatable<Sparse2DTiledSurface_NavGraph.Tile> ,
+		CanDealWithDynamicObstacle<Sparse2DTiledSurface_NavGraph.Tile> 
+		{
 	
 	public static class Tile {
 		public int x ;
@@ -70,7 +89,7 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
      * essentially turns off memory-based path finding. The default of this flag is
      * false.
      */
-    public boolean perfect_memory_pathfinding = false;
+    boolean perfect_memory_pathfinding = false;
 	
     public Map<Integer,Map<Integer,NonNavigableTile>> obstacles = new HashMap<>() ;
     public Map<Integer,Set<Integer>> seen = new HashMap<>() ;
@@ -80,19 +99,27 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 	
 	public Pathfinder<Tile> pathfinder = new AStar<>() ;
 	
-	public void addNonNavigable(NonNavigableTile o) {
+	/**
+	 * Add a non-navigable tile (obstacle).
+	 */
+	public void addObstacle(Tile o) {
+		if (!(o instanceof NonNavigableTile)) throw new IllegalArgumentException() ;
+		
 		Map<Integer,NonNavigableTile> xMap = obstacles.get(o.x) ;
 		if (xMap == null) {
 			xMap = new HashMap<>();
 			obstacles.put(o.x,xMap) ;
 		}
-		xMap.put(o.y, o) ;
+		xMap.put(o.y, (NonNavigableTile) o) ;
 	}
 	
-	public void removeNonNavigable(int x, int y) {
-		Map<Integer,NonNavigableTile> xMap = obstacles.get(x) ;
+	/**
+	 * Remove a non-navigable tile (obstacle).
+	 */
+	public void removeObstacle(Tile o) {
+		Map<Integer,NonNavigableTile> xMap = obstacles.get(o.x) ;
 		if (xMap != null) {
-			xMap.remove(y) ;
+			xMap.remove(o.y) ;
 		}
 	}
 	
@@ -112,12 +139,44 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		}
 	}
 	
-	public boolean hasBeenSeen(int x, int y) {
+	public boolean hasbeenSeen(int x, int y) {
 		var ys = seen.get(x) ;
 		return ys != null && ys.contains(y) ;
 	}
 	
-	public void openDoor(int x, int y) {
+	public boolean hasbeenSeen(Tile tile) {
+		return hasbeenSeen(tile.x, tile.y) ;
+	}
+	
+	/**
+	 * Return the state of this obstacle. True means that it is in the blocking state.
+	 */
+	public boolean isBlocking(Tile tile) {
+		if (isDoor(tile.x,tile.y)) {
+			var o = obstacles.get(tile.x).get(tile.y) ;
+			Door door = (Door) o ;
+			return ! door.isOpen  ;
+		}
+		return false ;
+	}
+
+	/**
+	 * Toggle the blocking state of the obstacle in this location to make it non-blocking/open.
+	 * When non-blocking the obstacle will not block navigation.
+	 *  
+	 * Only the state of a Door can be toggled. Walls cannot be toggled.
+	 */
+	public void toggleBlockingOff(Tile tile) {
+		toggleBlockingOff(tile.x, tile.y) ;
+	}
+	
+	/**
+	 * Toggle the blocking state of the obstacle in this location to make it non-blocking/open. 
+	 * When non-blocking the obstacle will not block navigation.
+	 * 
+	 * Only the state of a Door can be toggled. Walls cannot be toggled.
+	 */
+	public void toggleBlockingOff(int x, int y) {
 		if (isDoor(x,y)) {
 			var o = obstacles.get(x).get(y) ;
 			Door door = (Door) o ;
@@ -125,7 +184,21 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		}
 	}
 	
-	public void closeDoor(int x, int y) {
+	/**
+	 * Toggle the blocking state of the obstacle in this location to make it blocking. 
+	 * When in the blocking state, an obstacle would block navigation through it.
+	 * Only the state of a Door can be toggled. Walls will always be blocking.
+	 */
+	public void toggleBlockingOn(Tile tile) {
+		toggleBlockingOn(tile.x, tile.y) ;
+	}
+	
+	/**
+	 * Toggle the blocking state of the obstacle in this location to make it blocking. 
+	 * When in the blocking state, an obstacle would block navigation through it.
+	 * Only the state of a Door can be toggled. Walls will always be blocking.
+	 */
+	public void toggleBlockingOn(int x, int y) {
 		if (isDoor(x,y)) {
 			var o = obstacles.get(x).get(y) ;
 			Door door = (Door) o ;
@@ -150,6 +223,20 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 			return ! ((Door) o).isOpen ;
 		}
 		else return true ;
+	}
+	
+    /**
+	 * When true then the pathfinder will consider all nodes in the graph to have been seen.
+	 */
+	public boolean usingPerfectMemoryPathfinding() {
+		return perfect_memory_pathfinding ;
+	}
+	
+	/**
+	 * When true then the pathfinder will consider all nodes in the graph to have been seen.
+	 */
+	public void setPerfectMemoryPathfinding(Boolean flag) {
+		perfect_memory_pathfinding = flag ;
 	}
 	
 	 /**
@@ -211,7 +298,7 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 				.collect(Collectors.toList());
 		
 		if (! perfect_memory_pathfinding) {
-			candidates = candidates.stream().filter(c -> hasBeenSeen(c.x,c.y)).collect(Collectors.toList()) ;
+			candidates = candidates.stream().filter(c -> hasbeenSeen(c.x,c.y)).collect(Collectors.toList()) ;
 		}
 		//System.out.println("=== " + candidates.size() + ":" + candidates) ;
 		return candidates ;
@@ -234,7 +321,12 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
      * The estimated distance between two arbitrary vertices.
      */ 
 	public float heuristic(Tile from, Tile to) {
-		return (float) Math.sqrt(distSq(from.x,from.y,to.x,to.y)) ;
+		if(diagonalMovementPossible)
+			// straight-line distance:
+			return (float) Math.sqrt(distSq(from.x,from.y,to.x,to.y)) ;
+		else
+			// Manhattan distance:
+			return Math.abs(from.x - to.x) + Math.abs(from.y - to.y) ;
 	}
 
     /**
@@ -245,9 +337,12 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		return 1.4142f ;
 	}
 	
+	public List<Tile> findPath(Tile from, Tile to) {
+		return pathfinder.findPath(this, from, to) ;
+	}
 	
 	public List<Tile> findPath(int fromX, int fromY, int toX, int toY) {
-		return pathfinder.findPath(this, new Tile(fromX,fromY), new Tile(toX,toY)) ;
+		return findPath(new Tile(fromX,fromY), new Tile(toX,toY)) ;
 	}
 	
     /**
@@ -255,14 +350,14 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
      * it is a seen/explored tile and it has at least one unexplored and unblocked
      * neighbor.
      */
-	public List<Tile> getFrontierTiles() {
+	public List<Tile> getFrontier() {
 		List<Tile> frontiers = new LinkedList<>() ;
 		List<Tile> cannotBeFrontier = new LinkedList<>() ;
 		for(var t : frontierCandidates) {
 			var pneighbors = physicalNeighbours(t.x,t.y) ;
 			boolean isFrontier = false ;
 			for (var n : pneighbors) {
-				if (! hasBeenSeen(n.x,n.y)) {
+				if (! hasbeenSeen(n.x,n.y)) {
 					frontiers.add(t) ;
 					isFrontier = true ;
 					break ;
@@ -283,10 +378,12 @@ public class Sparse2DTiledSurface_NavGraph implements Navigatable<Sparse2DTiledS
 		return dx*dx + dy*dy ;
 	}
 	
-	
+	public List<Tile> explore(Tile startingLocation) {
+		return explore(startingLocation.x, startingLocation.y) ;
+	}
 	public List<Tile> explore(int x, int y) {
 
-		var frontiers = getFrontierTiles();
+		var frontiers = getFrontier();
         
         if (frontiers.isEmpty())
             return null;

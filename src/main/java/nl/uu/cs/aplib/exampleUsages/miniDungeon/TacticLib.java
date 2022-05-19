@@ -48,11 +48,11 @@ public class TacticLib {
 	
 	public static List<Tile> adjustedFindPath(MyAgentState state, int x0, int y0, int x1, int y1) {
 		var nav = state.worldNavigation() ;
-		nav.openDoor(x0,y0) ;
-		nav.openDoor(x1,y1) ;
+		nav.toggkeBlockingOff(x0,y0) ;
+		nav.toggkeBlockingOff(x1,y1) ;
 		var path = nav.findPath(x0,y0,x1,y1) ;
-		nav.closeDoor(x0,y0) ;
-		nav.closeDoor(x1,y1) ;
+		nav.toggleBlockingOn(x0,y0) ;
+		nav.toggleBlockingOn(x1,y1) ;
 		return path ;
 	}
 	
@@ -260,10 +260,10 @@ public class TacticLib {
 				.on((MyAgentState S) -> {
 					if (!agentIsAlive(S)) return null ;
 					Tile agentPos = toTile(S.worldmodel.position) ;
-					S.worldNavigation().openDoor(agentPos.x, agentPos.y) ;
+					S.worldNavigation().toggkeBlockingOff(agentPos.x, agentPos.y) ;
 					//System.out.println(">>> explore is invoked") ;
 					var candidates = S.worldNavigation().explore(agentPos.x, agentPos.y) ;
-					S.worldNavigation().closeDoor(agentPos.x, agentPos.y) ;
+					S.worldNavigation().toggleBlockingOn(agentPos.x, agentPos.y) ;
 					//System.out.println(">>> explore is invoked, candidates: " + candidates) ;
 					if (candidates == null || candidates.size() == 0) {
 						return null ;
