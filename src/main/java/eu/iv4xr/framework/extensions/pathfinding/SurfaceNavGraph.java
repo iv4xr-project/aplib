@@ -49,7 +49,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * @author Wish
  *
  */
-public class SurfaceNavGraph extends SimpleNavGraph implements Xnavigatable<Integer> {
+public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integer> {
 
     /**
      * A vertex is a BORDER-vertex if it lies in a border-edge. An edge is a
@@ -500,24 +500,29 @@ public class SurfaceNavGraph extends SimpleNavGraph implements Xnavigatable<Inte
         return frontiers;
     }
     
+    /**
+     * This returns the set of frontier-vertices. A vertex is a frontier vertex if
+     * it is a seen/explored vertex and it has at least one unexplored and unblocked
+     * neighbor
+     */
     public List<Integer> getFrontier() {
     	var F = getFrontierVertices().stream().map(nd -> nd.fst).collect(Collectors.toSet()) ;
     	return F.stream().collect(Collectors.toList()) ;
     }
 
-    /**
-     * Find a path to an unexplored and unblocked vertex w which is the
-     * geometrically 'closest' to the given the given start location. Note that the
-     * path ends in that unexplored vertex.
-     * 
-     * More precisely, we first look an explored vertex v in the vicinity of the
-     * given start-location, that can be reached by a straight line from the start
-     * location, without being blocked. The w meant above is the closest to this
-     * intermediate v. The face F on which this v is located must be of distance at
-     * most faceDistThreshold from the start-location.
-     * 
-     * If no no such path nor intermediate v can be found, the method returns null.
-     */
+	/**
+	 * Find a path to an unexplored and unblocked vertex w which is the
+	 * geometrically 'closest' to the given the given start location. The path starts at
+	 * the given start-location and ends at that unseen vertex.
+	 * 
+	 * <p>More precisely, we first look an explored vertex v in the vicinity of the
+	 * given start-location, that can be reached by a straight line from the start
+	 * location, without being blocked. The w meant above is the closest to this
+	 * intermediate v. The face F on which this v is located must be of distance at
+	 * most faceDistThreshold from the start-location.
+	 * 
+	 * <p>If no no such path nor intermediate v can be found, the method returns null.
+	 */
     public List<Integer> explore(Vec3 startLocation, float faceDistThreshold) {
         var startVertex = getNearestUnblockedVertex(startLocation, faceDistThreshold);
        // System.out.print("original explore " + startVertex);
@@ -526,14 +531,33 @@ public class SurfaceNavGraph extends SimpleNavGraph implements Xnavigatable<Inte
         return explore(startVertex);
     }
 
-    /**
-     * Find a path to an unexplored and unblocked vertex which is the geometrically
-     * closest to the given starting vertex. Note that the path ends in that
-     * unexplored vertex.
-     * 
-     * If no no such path can be found, the method returns null.
-     */
+	/**
+	 * Find a path to an unseen/unexplored vertex which is the geometrically closest
+	 * to the given starting vertex. The path starts at the start-vertex and ends at
+	 * that unseen vertex. If no no such path can be found, the method returns null.
+	 * 
+	 * <p>More precisely, the method looks for a frontier v that is closest to the start
+	 * vertex, and is reachable from this start vertex. It then constructs a path from the 
+	 * starting vertex to v, and adds an unblocked neighbor w of v to the path. This w
+	 * exists, by definition of v being a frontier.
+	 */
     public List<Integer> explore(Integer startVertex) {
+    	return explore(startVertex,startVertex) ;
+    }
+    
+	/**
+	 * Find a path from the start-vertex to an unseen/unexplored vertex which is the
+	 * geometrically closest to the given heuristic-vertex. The path starts at the
+	 * start-vertex and ends at that unseen vertex. If no no such path can be found,
+	 * the method returns null.
+	 * 
+	 * <p>
+	 * More precisely, the method looks for a frontier v that is closest to the
+	 * heuristic vertex, and is reachable from the start-vertex. It then constructs
+	 * a path from the starting vertex to v, and adds an unblocked neighbor w of v to
+	 * the path. This w exists, by definition of v being a frontier.
+	 */
+    public List<Integer> explore(Integer startVertex, Integer heuristicVertex) {
 
         var frontiers = getFrontierVertices();
         
@@ -542,8 +566,9 @@ public class SurfaceNavGraph extends SimpleNavGraph implements Xnavigatable<Inte
         // sort the frontiers ascendingly, by their geometric distance to the
         // start-vertex:
         Vec3 startLocation = vertices.get(startVertex);
+        Vec3 heuristicLocation = vertices.get(heuristicVertex);
         frontiers.sort((p1, p2) -> Float.compare(Vec3.distSq(vertices.get(p1.fst), startLocation),
-                Vec3.distSq(vertices.get(p2.fst), startLocation)));
+                Vec3.distSq(vertices.get(p2.fst), heuristicLocation)));
 
         for (var front : frontiers) {
             var path = findPath(startVertex, front.fst);

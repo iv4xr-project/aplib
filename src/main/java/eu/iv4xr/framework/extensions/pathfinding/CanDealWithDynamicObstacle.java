@@ -5,7 +5,6 @@ package eu.iv4xr.framework.extensions.pathfinding;
  * has a state that can be toggled to set it to the blocking-state and non-blocking
  * state. When non-blocking it will not hamper navigation, otherwise it will.
  */
-
 public interface CanDealWithDynamicObstacle<Obstacle> {
 	
 	public void addObstacle(Obstacle o) ;

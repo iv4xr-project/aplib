@@ -19,38 +19,26 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class LayeredAreasNavigation<
 			NodeId, 
-			Nav extends Xnavigatable<NodeId> & CanDealWithDynamicObstacle<NodeId>> 
+			Nav extends XPathfinder<NodeId> & CanDealWithDynamicObstacle<NodeId>> 
 		implements 
-		Xnavigatable<Pair<Integer,NodeId>>,
+		XPathfinder<Pair<Integer,NodeId>>,
 		CanDealWithDynamicObstacle<Pair<Integer,NodeId>> {
 	
 	public List<Nav> areas = new LinkedList<>() ;
 		
-    boolean perfect_memory_pathfinding = false;
-
-	
-	/**
-	 * Specify the heuristic distance between two adjacent area. For faster
-	 * search, this should be larger than the maximum "diameter" of the areas.
-	 */
-	public float heuristicDistanceBetweenAdjacentAreas = 1000 ;
-	
-	/**
-	 * Specify the cost/distance of going through a portal to go to an
-	 * adjacent area.
-	 */
-	public float distanceBetweenTwoSidesOfPortal = 1f ;
-
 	/**
 	 * Portals between areas. If P is the i-th Portal in the list, this 
-	 * P connects area i to i+1. P.lowPortal is a node in area  i, and
+	 * P connects area i to i+1. P.lowPortal is a node in area i, and
 	 * P.highPortal is a node in area i+1. From P.lowPortal we can travel
 	 * to P.highPortal (which is in area i+1).
 	 * 
 	 * <p>Note that if there are n areas, we will only have n-1 portals, as
 	 * the last area have no next-area to connect to.
 	 */ 
-	public List<Portal<NodeId>> portals ;
+	public List<Portal<NodeId>> portals = new LinkedList<>() ;
+	
+	boolean perfect_memory_pathfinding = false;
+
 	
 	/**
 	 * Representing a bi-directional "portal" between areas.
@@ -78,19 +66,29 @@ public class LayeredAreasNavigation<
 				
 	}
 	
-	public void addArea(Nav area) {
-		areas.add(area) ;
-		area.setPerfectMemoryPathfinding(perfect_memory_pathfinding);
-	}
-	
 	/**
-	 * Add a portal from area a to a+1, where a is the current number
-	 * of portals.
+	 * Add a new area with index a, where a is the current number of areas
+	 * we have. The new area is connected to the area a-1 through the given
+	 * pair of portals, where portalLow is in the area a-1 and portalHigh
+	 * is in the area a. 
+	 * 
+	 * <p>Note that for the first area added, the specified portals are ignored (so they
+	 * can just be null) because we don't have a previous portal yet.
+	 *
+	 *  @param isOpen indicate whether the added portal is set to be open or close.
 	 */
-	public void addPortal(NodeId portalLow, NodeId portalHigh) {
+	public void addNextArea(Nav area, NodeId portalLow, NodeId portalHigh, boolean isOpen) {
+		areas.add(area) ;
+		if (areas.size() == 1) {
+			// this is the first area, so we don't do portals yet:
+			return ;
+		}
+		area.setPerfectMemoryPathfinding(perfect_memory_pathfinding);
 		var portal = new Portal<NodeId>(portalLow,portalHigh) ;
+		portal.isOpen = isOpen ;
 		portals.add(portal) ;
 	}
+	
 	
 	/**
 	 * Return the low-portal of the given area A.
@@ -123,175 +121,123 @@ public class LayeredAreasNavigation<
 	 * to teleport to A.
 	 */
 	public NodeId connectedLowPortal(int A) {
-		if (A == areas.size() - 1) return null ;
-		return portals.get(A).lowPortal ;
-	}
-
-
-
-	@Override
-	public Iterable<Pair<Integer, NodeId>> neighbours(Pair<Integer, NodeId> id) {
-		int areaId = id.fst ;
-		NodeId nodeSrc = id.snd ;
-		var area = areas.get(areaId) ;
-		List<Pair<Integer,NodeId>> NS = new LinkedList<>() ;
-		for(var n : area.neighbours(nodeSrc)) {
-			NS.add(new Pair<>(areaId,n)) ;
-		}
-		// the case when id is a portal, add the opposite portal as neighbor,
-		// if the portals are not blocked:
-		Integer otherArea = null ;
-		NodeId otherPortal = null ;
-		if (nodeSrc.equals(lowPortal(areaId))) {
-			otherArea = areaId+1 ;
-			otherPortal = connectedHighPortal(areaId) ;		
-		}
-		else if (nodeSrc.equals(highPortal(areaId))){
-			otherArea = areaId-1 ;
-			otherPortal = connectedLowPortal(areaId) ;		
-		}
-		if (otherPortal != null) {
-			Nav area2 = areas.get(otherArea) ;
-			if(!area.isBlocking(nodeSrc) && !area2.isBlocking(otherPortal)) {
-				if (perfect_memory_pathfinding 
-					|| area2.hasbeenSeen(otherPortal)
-						) {
-					NS.add(new Pair<>(otherArea,otherPortal)) ;
-				}
-			}
-		}
-		return NS;
+		if (A == 0) return null ;
+		return portals.get(A-1).lowPortal ;
 	}
 	
-
-	@Override
-	public float heuristic(Pair<Integer, NodeId> from, Pair<Integer, NodeId> to) {
-		int area1Id = from.fst ;
-		int area2Id = to.fst ;
-		Nav area1 = areas.get(area1Id) ;
-		NodeId nd1 = from.snd ;
-		NodeId nd2 = to.snd ;
-		
-		if (area1Id == area2Id) {
-			return area1.heuristic(nd1, nd2) ;
+	/**
+	 * Set the portal between area a1 and a2 to open or close.
+	 * 
+	 * @param isOpen If true will open the portal, else close it.
+	 */
+	public void setPortal(int areaFrom, int areaTo, boolean isOpen) {
+		if(areaTo == areaFrom+1) {
+			portals.get(areaFrom).isOpen = isOpen ;
+			return ;
 		}
-		else if (area1Id < area2Id) {
-			NodeId area1Portal = highPortal(area1Id) ;
-			NodeId area2Portal = lowPortal(area2Id) ;
-			Nav area2 = areas.get(area2Id) ;
-			float dist = 0 ;
-			dist += area1.distance(nd1,area1Portal) ;
-			dist += distanceBetweenTwoSidesOfPortal ;
-			dist += heuristicDistanceBetweenAdjacentAreas*(area2Id - area1Id - 1) ;
-			dist += area2.distance(area2Portal, nd2) ;
-			return dist ;	
+		if (areaTo == areaFrom-1) {
+			portals.get(areaTo).isOpen = isOpen ;
+			return ;
 		}
-		else { // area1Id > area2Id 
-			NodeId area1Portal = lowPortal(area1Id) ;
-			NodeId area2Portal = highPortal(area2Id) ;
-			Nav area2 = areas.get(area2Id) ;
-			float dist = 0 ;
-			dist += area1.distance(nd1,area1Portal) ;
-			dist += distanceBetweenTwoSidesOfPortal ;
-			dist += heuristicDistanceBetweenAdjacentAreas*(area1Id - area2Id - 1) ;
-			dist += area2.distance(area2Portal, nd2) ;
-			return dist ;
-		}
+		throw new IllegalArgumentException() ;
 	}
 
-	@Override
-	public float distance(Pair<Integer, NodeId> from, Pair<Integer, NodeId> to) {
-		var area1 = areas.get(from.fst) ;
-		if (from.fst.equals(to.fst)) {
-			return area1.distance(from.snd, to.snd) ;
-		}
-		// else "from" and "to" must be a pair of portals:
-		return distanceBetweenTwoSidesOfPortal ;
-	}
 
 	@Override
 	public List<Pair<Integer, NodeId>> findPath(Pair<Integer, NodeId> from, Pair<Integer, NodeId> to) {
-		int area1_id = from.fst ;
-		int areaN_id = to.fst ;
+		int area1_id = from.fst;
+		int areaN_id = to.fst;
 		if (areaN_id == area1_id) {
-			var path = areas.get(area1_id).findPath(from.snd, to.snd) ;
-			if (path == null) return null ;
-			return path.stream().map(nd -> new Pair<>(area1_id,nd)).collect(Collectors.toList()) ;
+			var path = areas.get(area1_id).findPath(from.snd, to.snd);
+			if (path == null)
+				return null;
+			return path.stream().map(nd -> new Pair<>(area1_id, nd)).collect(Collectors.toList());
 		}
 
-		List<Pair<Integer, NodeId>>  path = new LinkedList<>() ;
-		
-		NodeId nd0 = from.snd ;
-		NodeId ndNext = null ;
+		List<Pair<Integer, NodeId>> path = new LinkedList<>();
 
-		boolean we_go_up = areaN_id > area1_id ;
-		int increment = we_go_up ? 1 : -1 ;
-		
-		if (areaN_id > area1_id) {
-			// going up:
-			for (var L = area1_id; L != areaN_id; L = L+increment) 
-			{
-				ndNext = lowPortal(L) ;
-				var pathNext = areas.get(L).findPath(nd0, ndNext) ;
-				if (pathNext == null) return null ;
-				int areaId = L ;
-				List<Pair<Integer, NodeId>> pathNext_ = pathNext.stream()
-						.map(nd -> new Pair<>(areaId,nd))
-						.collect(Collectors.toList()) ;
-				path.addAll(pathNext_) ;
-				NodeId connectedPortal = connectedHighPortal(L) ;
-				nd0 = connectedPortal ;
+		NodeId nd0 = from.snd;
+		NodeId ndNext = null;
+
+		boolean we_go_up = areaN_id > area1_id;
+		int increment = we_go_up ? 1 : -1;
+
+		for (var L = area1_id; L != areaN_id; L = L + increment) {
+			Portal po = null ;
+			if (we_go_up) {
+				po = portals.get(L) ;
+				ndNext = lowPortal(L);
+
 			}
-			// still have to do the last area:
-			NodeId ndFinal = to.snd ;
-			var pathNext = areas.get(areaN_id).findPath(nd0, ndFinal) ;
-			if (pathNext == null)
+			else {
+				po = portals.get(L-1) ;
+				ndNext = highPortal(L);
+			}
+			if (! po.isOpen) {
+				// the portal is closed!
 				return null ;
+			}
+			var pathNext = areas.get(L).findPath(nd0, ndNext);
+			if (pathNext == null)
+				return null;
+			int areaId = L;
 			List<Pair<Integer, NodeId>> pathNext_ = pathNext.stream()
-					.map(nd -> new Pair<>(areaN_id,nd))
-					.collect(Collectors.toList()) ;
-			path.addAll(pathNext_) ;
-			return path ;
+					. map(nd -> new Pair<>(areaId, nd))
+					. collect(Collectors.toList());
+			path.addAll(pathNext_);
+			if (we_go_up) {
+				NodeId connectedPortal = connectedHighPortal(L);
+				nd0 = connectedPortal;				
+			}
+			else {
+				NodeId connectedPortal = connectedLowPortal(L);
+				nd0 = connectedPortal;	
+			}
 		}
-		// else we go down:
-		
-		// TODO Auto-generated method stub
-		return null;
+		// still have to do the last area:
+		NodeId ndFinal = to.snd;
+		var pathNext = areas.get(areaN_id).findPath(nd0, ndFinal);
+		if (pathNext == null)
+			return null;
+		List<Pair<Integer, NodeId>> pathNext_ = pathNext.stream().map(nd -> new Pair<>(areaN_id, nd))
+				.collect(Collectors.toList());
+		path.addAll(pathNext_);
+		return path;
 	}
 
 
 	@Override
-	public void addObstacle(Pair<AreaId, NodeId> o) {
-		areas.get(o.fst).addObstacle(o.snd);
+	public void addObstacle(Pair<Integer, NodeId> o) {
+		areas.get(o.fst).addObstacle(o.snd);	
 	}
 
 
 	@Override
-	public void removeObstacle(Pair<AreaId, NodeId> o) {
+	public void removeObstacle(Pair<Integer, NodeId> o) {
 		areas.get(o.fst).removeObstacle(o.snd);	
 	}
 
 
 	@Override
-	public void toggleBlockingOn(Pair<AreaId, NodeId> o) {
+	public void toggleBlockingOn(Pair<Integer, NodeId> o) {
 		areas.get(o.fst).toggleBlockingOn(o.snd);		
 	}
 
 
 	@Override
-	public void toggleBlockingOff(Pair<AreaId, NodeId> o) {
+	public void toggleBlockingOff(Pair<Integer, NodeId> o) {
 		areas.get(o.fst).toggleBlockingOff(o.snd);		
 	}
 
 	@Override
-	public boolean hasbeenSeen(Pair<AreaId, NodeId> nd) {
+	public boolean hasbeenSeen(Pair<Integer, NodeId> nd) {
 		return areas.get(nd.fst).hasbeenSeen(nd.snd);		
 	}
 
 
 	@Override
 	public void markAsSeen(Pair<Integer, NodeId> id) {
-		areas.get(id.fst).hasbeenSeen(id.snd);
+		areas.get(id.fst).markAsSeen(id.snd);
 		var areaId = id.fst ;
 		var nd = id.snd ;
 		// if id is a portal, we also mark the otherside as seen:	
@@ -307,27 +253,60 @@ public class LayeredAreasNavigation<
 			NodeId otherPortal = connectedLowPortal(areaId) ;		
 			area2.markAsSeen(otherPortal);
 		}
-		throw new IllegalArgumentException() ;
 	}
 
 
 	@Override
-	public List<Pair<AreaId, NodeId>> getFrontier() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Pair<Integer,NodeId>> getFrontier() {
+		List<Pair<Integer,NodeId>> frontiers = new LinkedList<>() ;
+		for (int a=0; a<areas.size(); a++) {
+			var nav = areas.get(a) ;
+			Integer a_ = a ;
+			var fr = nav.getFrontier().stream().map(nd -> new Pair<>(a_,nd)).collect(Collectors.toList()) ;
+			frontiers.addAll(fr) ;
+		}
+		return frontiers ;
 	}
 
 
 	@Override
-	public List<Pair<AreaId, NodeId>> explore(Pair<AreaId, NodeId> startNode) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Pair<Integer, NodeId>> explore(Pair<Integer, NodeId> startNode, Pair<Integer, NodeId> heuristicNode) {
+		var candidates = getFrontier() ;
+		if (candidates.size() == 0) 
+			return null ;
+		
+		var candidates2 = candidates.stream()
+			.map(c -> new Pair<>(c, findPath(startNode,c)))
+			.filter(d -> d.snd != null)
+			.collect(Collectors.toList()) ;
+		
+		if (candidates2.size() ==0)
+			return null ;
+			
+		candidates2.sort((d1,d2) -> Integer.compare(
+				distanceCandidate(d1,heuristicNode), 
+				distanceCandidate(d2,heuristicNode)))  ;
+		
+		return candidates2.get(0).snd ;
+	}
+	
+	private int distanceCandidate(
+			Pair<Pair<Integer,NodeId>, List<Pair<Integer,NodeId>>> candidate,
+			Pair<Integer,NodeId> heuristicNode) {
+		
+		int c = candidate.fst.fst ;
+		
+		if (c == heuristicNode.fst) {
+			// candidates from the same area;
+			return candidate.snd.size() ;
+		}
+		return Math.abs(c - heuristicNode.fst)*20000 + candidate.snd.size() ;
 	}
 
 
 	@Override
 	public void wipeOutMemory() {
-		for(var nav : areas.values()) {
+		for(var nav : areas) {
 			nav.wipeOutMemory();
 		}
 	}
@@ -342,11 +321,38 @@ public class LayeredAreasNavigation<
 	@Override
 	public void setPerfectMemoryPathfinding(Boolean flag) {
 		perfect_memory_pathfinding = flag ;
-		for(var nav : areas.values()) {
+		for(var nav : areas) {
 			nav.setPerfectMemoryPathfinding(flag);
 		}	
 	}
-	
 
+
+	@Override
+	public boolean isBlocking(Pair<Integer, NodeId> o) {
+		var nav = areas.get(o.fst) ;
+		return nav.isBlocking(o.snd) ;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer z = new StringBuffer() ;
+		for (int a=0; a<areas.size(); a++) {
+			if (a>0) z.append("\n") ;
+			var nav = areas.get(a) ;
+			z.append("=== Area " + a) ;
+			if (a < areas.size() -1) {
+				var po = portals.get(a) ;
+				char open = po.isOpen?'o' : 'x' ;
+				if (nav.hasbeenSeen(po.lowPortal))
+					open = po.isOpen?'O' : 'X' ;
+				
+				z.append(", portal: " + po.lowPortal + " --" +  open + "-> " + po.highPortal) ;				
+			}
+			
+			z.append("\n" + nav) ;	
+		}
+		return z.toString() ;
+	}
+	
 
 }

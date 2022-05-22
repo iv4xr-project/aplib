@@ -22,7 +22,8 @@ import eu.iv4xr.framework.spatial.Vec3;
  */
 public class Sparse2DTiledSurface_NavGraph 
 		implements 
-		Xnavigatable<Sparse2DTiledSurface_NavGraph.Tile> ,
+		Navigatable<Sparse2DTiledSurface_NavGraph.Tile> ,
+		XPathfinder<Sparse2DTiledSurface_NavGraph.Tile> ,
 		CanDealWithDynamicObstacle<Sparse2DTiledSurface_NavGraph.Tile> 
 		{
 	
@@ -348,7 +349,8 @@ public class Sparse2DTiledSurface_NavGraph
     /**
      * This returns the set of frontier-tiles. A tile is a frontier tile if
      * it is a seen/explored tile and it has at least one unexplored and unblocked
-     * neighbor.
+     * neighbor. Note that under this definition a frontier does not have to be
+     * reachable. You can use {@link findPath} to check which frontiers are reachable.
      */
 	public List<Tile> getFrontier() {
 		List<Tile> frontiers = new LinkedList<>() ;
@@ -378,17 +380,18 @@ public class Sparse2DTiledSurface_NavGraph
 		return dx*dx + dy*dy ;
 	}
 	
-	public List<Tile> explore(Tile startingLocation) {
-		return explore(startingLocation.x, startingLocation.y) ;
+	public List<Tile> explore(Tile startingLocation, Tile heuristicLocation) {
+		return explore(startingLocation.x, startingLocation.y, heuristicLocation.x, heuristicLocation.y) ;
 	}
-	public List<Tile> explore(int x, int y) {
+	
+	public List<Tile> explore(int x, int y, int heuristicX, int heuristicY) {
 
 		var frontiers = getFrontier();
         
         if (frontiers.isEmpty())
             return null;
         // sort the frontiers ascendingly, by their geometric distance to (x,y):
-        frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,x,y), distSq(p2.x,p2.y,x,y)));
+        frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,x,y), distSq(p2.x,p2.y,heuristicX,heuristicY)));
 
         for (var front : frontiers) {
         	//System.out.println(">>> (" + x + "," + y + ")  --> (" + front.x + "," + front.y + ")" ) ;
@@ -400,6 +403,40 @@ public class Sparse2DTiledSurface_NavGraph
             }
         }
         return null;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer z = new StringBuffer() ;
+		for (int y = maxY-1 ; 0<=y ; y--) {
+			for (int x=0; x<maxX; x++) {
+				Tile o = null ;
+				var mapx = obstacles.get(x) ;
+				if (mapx != null) o = mapx.get(y) ;
+				boolean wasSeen = hasbeenSeen(x,y) ;
+				char c = ' ' ;
+				if(o == null) {
+					if (wasSeen) c = '.' ;
+ 				}
+				else {
+					if (o instanceof Wall) {
+						c = wasSeen ? 'W' : 'w' ;
+					}
+					if (o instanceof Door) {
+						var d = (Door) o ;
+						if (d.isOpen) {
+							c = wasSeen ? 'O' : 'o' ;
+						}
+						else {
+							c = wasSeen ? 'X' : 'x' ;
+						}
+					}
+				}
+				z.append(c) ;
+			}
+			if (y>0) z.append("\n") ;
+		}
+		return z.toString() ;
 	}
 		
 
