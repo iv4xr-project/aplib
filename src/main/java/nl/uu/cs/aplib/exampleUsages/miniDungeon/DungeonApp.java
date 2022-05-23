@@ -378,8 +378,9 @@ public class DungeonApp extends JPanel implements KeyListener {
 		for(int row = dungeon.config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x < dungeon.config.worldSize; x++) {
 				boolean isVisible = 
-						dungeon.isVisible(dungeon.frodo(),x,row) 
-						|| (dungeon.config.enableSmeagol && world2==world && dungeon.isVisible(dungeon.smeagol(),x,row)) ;
+						dungeon.isVisible(dungeon.frodo(),dungeon.frodo().mazeId,x,row) 
+						|| (dungeon.config.enableSmeagol && world2==world 
+						    && dungeon.isVisible(dungeon.smeagol(),dungeon.smeagol().mazeId,x,row)) ;
 				
 				if (isVisible) {
 					drawTile(gr,world,x,row,false) ;
@@ -387,7 +388,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 			}
 			if (world2 != null && world2 != world) {
 				for(int x = 0; x < dungeon.config.worldSize; x++) {
-					if (dungeon.isVisible(dungeon.smeagol(),x,row)) {
+					if (dungeon.isVisible(dungeon.smeagol(),dungeon.smeagol().mazeId,x,row)) {
 						drawTile(gr,world2,x,row,true) ;
 					}
 				}

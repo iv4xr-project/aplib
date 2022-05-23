@@ -312,6 +312,13 @@ public class MiniDungeon {
 				var e = world[x][y];
 				if (e instanceof Monster) {
 					Monster m = (Monster) e;
+					
+					if (m.aggravateTimer == 0 && m.aggravated) {
+						m.aggravated = false ;
+					}
+					if (m.aggravateTimer > 0) {
+						m.aggravateTimer-- ;
+					}
 
 					// the player is next to m; attack the player:
 					boolean thereWasPlayerToAttack = false ;
@@ -355,12 +362,53 @@ public class MiniDungeon {
 					if (1 < m.x && world[m.x - 1][m.y] == null) {
 						candidates.add(new Pair<>(m.x - 1, m.y));
 					}
-					candidates.add(null);
-					var sq = candidates.get(rnd.nextInt(candidates.size()));
-					if (sq == null)
-						// the monster decides to stay where it is:
-						continue;
-					// move the monster:
+					
+					if (candidates.isEmpty()) continue ;
+					
+					
+					Pair<Integer,Integer> sq ;
+					
+					if(m.aggravated) {
+						// the monster is aggravated
+						Player fr = frodo() ;
+					    Player sm = smeagol() ;
+					    float minSqDist = Float.MAX_VALUE ;
+					    Pair<Integer,Integer> minSq = null ; 
+					    for (var c : candidates) {
+					    	float sqDist = Float.MAX_VALUE ;
+					    	if (sm != null && !sm.dead() && m.mazeId == sm.mazeId) {
+					    		sqDist = IntVec2D.dist(new IntVec2D(c.fst,c.snd), new IntVec2D(sm.x,sm.y)) ;
+					    		if (sqDist < minSqDist) {
+					    			minSq = c ;
+					    			minSqDist = sqDist ;
+					    			continue ;
+					    		}
+					    	}
+					    	if (fr != null && !fr.dead() && m.mazeId == fr.mazeId) {
+					    		sqDist = IntVec2D.dist(new IntVec2D(c.fst,c.snd), new IntVec2D(fr.x,fr.y)) ;
+					    		if (sqDist < minSqDist) {
+					    			minSq = c ;
+					    			minSqDist = sqDist ;
+					    		}
+					    	}
+					    }
+						sq = minSq ;
+					}
+					else {
+						// the monster is not aggravated
+						// logic to make the monster aggravated here (for now none):
+						// ....
+						//  e.g. when there is an enraged player in radius 6
+						//
+						// Then move
+						candidates.add(null);
+						sq = candidates.get(rnd.nextInt(candidates.size()));
+						if (sq == null)
+							// the monster decides to stay where it is:
+							continue;
+					}
+
+					// move the monster to sq:
 					world[m.x][m.y] = null;
 					m.x = sq.fst;
 					m.y = sq.snd;
@@ -586,6 +634,7 @@ public class MiniDungeon {
 				}
 
 			}
+			// the shrine is not cleansed yet:
 			var scrolls = player.itemsInBag(EntityType.SCROLL) ;
 			if (scrolls.size() == 0) {
 				return "> " + player.name + ", you don't have any scroll to cleanse the shrine.";
@@ -649,8 +698,9 @@ public class MiniDungeon {
 		throw new IllegalArgumentException() ;		
 	}
 	
-	boolean isVisible(Player player, int x, int y) {
+	boolean isVisible(Player player, int mazeid, int x, int y) {
 		if (player.dead()) return false ;
+		if (player.mazeId != mazeid) return false ;
 		float viewDistanceSq = config.viewDistance*config.viewDistance ;
 		float dx = (float) (x - player.x) ;
 		float dy = (float) (y - player.y) ;
@@ -662,15 +712,15 @@ public class MiniDungeon {
 	 * Tiles that are visible to the players (so, visible to either Frodo
 	 * or Smeagol).
 	 */
-	public List<IntVec2D> visibleTiles() {
-		List<IntVec2D> visible = new LinkedList<>() ;
+	public List<Pair<Integer,IntVec2D>> visibleTiles() {
+		List<Pair<Integer,IntVec2D>> visible = new LinkedList<>() ;
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
-				if (isVisible(frodo(),x,row)) {
-					visible.add(new IntVec2D(x,row)) ; 
+				if (isVisible(frodo(),frodo().mazeId,x,row)) {
+					visible.add(new Pair<>(frodo().mazeId, new IntVec2D(x,row))) ; 
 				}
-				else if (config.enableSmeagol && isVisible(smeagol(),x,row)) {
-					visible.add(new IntVec2D(x,row)) ;
+				else if (config.enableSmeagol && isVisible(smeagol(),smeagol().mazeId,x,row)) {
+					visible.add(new Pair<>(smeagol().mazeId, new IntVec2D(x,row))) ;
 				}
 			}
 		}
@@ -710,8 +760,8 @@ public class MiniDungeon {
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
 				boolean isVisible = 
-						isVisible(frodo(),x,row) 
-						|| (config.enableSmeagol && world2==world && isVisible(smeagol(),x,row)) ;
+						isVisible(frodo(),frodo().mazeId,x,row) 
+						|| (config.enableSmeagol && world2==world && isVisible(smeagol(),smeagol().mazeId,x,row)) ;
 				
 				if (isVisible) {
 					z.append(toChar(world[x][row])) ;					
@@ -722,7 +772,7 @@ public class MiniDungeon {
 			if (world2 != null && world2 != world) {
 				z.append("    ") ;
 				for(int x = 0; x<config.worldSize; x++) {
-					if (isVisible(smeagol(),x,row)) {
+					if (isVisible(smeagol(),smeagol().mazeId,x,row)) {
 						z.append(toChar(world2[x][row])) ;					
 					}
 					else 

@@ -54,11 +54,12 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 			wom.elements.put(P.id,toWorldEntity(P)) ;
 		}
 		
-		// addint visible objects:
+		// adding visible objects:
 		var visibleTiles = thegame().visibleTiles() ;
-		var world = app.dungeon.currentMaze(app.dungeon.frodo()).world ;
 		for(var sq : visibleTiles) {
-			Entity e = world[sq.x][sq.y] ;
+			int mazeId = sq.fst ;
+			var world = app.dungeon.mazes.get(mazeId).world ;
+ 			Entity e = world[sq.snd.x][sq.snd.y] ;
 			if (e != null) {
 				wom.elements.put(e.id, toWorldEntity(e)) ;
 			}
@@ -143,8 +144,8 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				Monster m = (Monster) e ;	
 				we.properties.put("hp",m.hp) ;
 				we.properties.put("ar",m.attackRating) ;
-				return we ;
-				
+				we.properties.put("aggravated",m.aggravated) ;
+				return we ;	
 		}
 		return null ;
 	}
@@ -155,7 +156,6 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		aux.properties.put("status",thegame().status) ;
 		aux.properties.put("worldSize",thegame().config.worldSize) ;
 		aux.properties.put("viewDist",thegame().config.viewDistance) ;
-		aux.properties.put("smeagolOn",thegame().config.enableSmeagol) ;
 		aux.properties.put("smeagolOn",thegame().config.enableSmeagol) ;
 		
 		// recently removed objects:
@@ -171,14 +171,16 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		var visibleTiles_ = thegame().visibleTiles() ;
 		Serializable[] visibleTiles = new Serializable[visibleTiles_.size()] ;
 		k = 0 ;
-		var world = app.dungeon.currentMaze(app.dungeon.frodo()).world ;
+		//var world = app.dungeon.currentMaze(app.dungeon.frodo()).world ;
 		for(var tile : visibleTiles_) {
 			String etype = "" ;
-			Entity e = world[tile.x][tile.y] ;
+			int mazeId = tile.fst ;
+			var world =  app.dungeon.mazes.get(mazeId).world ;
+			Entity e = world[tile.snd.x][tile.snd.y] ;
 			if (e != null) {
 				etype = e.getClass().getSimpleName() ;
 			}
-			Serializable[] entry = { tile, etype } ;
+			Serializable[] entry = { mazeId, tile.snd , etype } ;
 			visibleTiles[k] = entry ;
 			k++ ;
 		}
@@ -188,7 +190,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 	}
 	
 	// just for testing:
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		
 		//System.out.println(">>>" + Frodo.class.getSimpleName()) ;
 		

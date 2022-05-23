@@ -111,7 +111,8 @@ public class Entity {
 	
 	public static class  Monster extends CombativeEntity{
 		
-		public boolean isUndead = false ; 
+		public boolean aggravated = false ; 
+		int aggravateTimer = 0 ;
 		
 		public Monster(int x, int y, String id) {
 			this.x = x ; this.y = y ;

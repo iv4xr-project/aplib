@@ -3,8 +3,12 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon;
 import java.io.Serializable;
 
 import eu.iv4xr.framework.extensions.pathfinding.AStar;
+import eu.iv4xr.framework.extensions.pathfinding.CanDealWithDynamicObstacle;
+import eu.iv4xr.framework.extensions.pathfinding.LayeredAreasNavigation;
+import eu.iv4xr.framework.extensions.pathfinding.Navigatable;
 import eu.iv4xr.framework.extensions.pathfinding.Pathfinder;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph;
+import eu.iv4xr.framework.extensions.pathfinding.XPathfinder;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Door;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Wall;
@@ -16,12 +20,30 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Smeagol;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.Environment;
+import nl.uu.cs.aplib.utils.Pair;
 
-public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.Tile> {
+public class MyAgentState extends Iv4xrAgentState<Void> {
+	
+	public LayeredAreasNavigation<Tile,Sparse2DTiledSurface_NavGraph>  multiLayerNav ;
 	
 	@Override
 	public MyAgentEnv env() {
 		return (MyAgentEnv) super.env() ;
+	}
+	
+	/**
+	 * We are not going to keep an Nav-graph, but will instead keep a layered-nav-graphs.
+	 */
+	@Override
+	public Navigatable<Void> worldNavigation() {
+		throw new UnsupportedOperationException() ;
+	}
+	/**
+	 * We are not going to keep an Nav-graph, but will instead keep a layered-nav-graphs.
+	 */
+	@Override
+	public MyAgentState setWorldNavigation(Navigatable<Void> nav) {
+		throw new UnsupportedOperationException() ;
 	}
 	
 	@Override
@@ -31,17 +53,13 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 		// configuration etc.
 		// The graph is empty when created.
 		Sparse2DTiledSurface_NavGraph navg = new Sparse2DTiledSurface_NavGraph() ;
+		multiLayerNav = new LayeredAreasNavigation<>() ;
 		navg.maxX = env().app.dungeon.config.worldSize ;
 		navg.maxY = navg.maxX ;
-		this.setWorldNavigation(navg) ;
+		multiLayerNav.addNextArea(navg, null, null, false);
 		return this ;
 	}
-	
-	@Override
-	public Sparse2DTiledSurface_NavGraph worldNavigation() {
-		return (Sparse2DTiledSurface_NavGraph) super.worldNavigation() ;
-	}
-	
+
 	public WorldEntity auxState() {
 		return worldmodel().elements.get("aux") ;
 	}
@@ -52,27 +70,36 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 		// Updating the navigation graph:
 		// System.out.println(">>> updateState") ;
 		WorldEntity aux = auxState() ;
-		Sparse2DTiledSurface_NavGraph nav = worldNavigation()  ;
 		var seenTiles = (Serializable[]) aux.properties.get("visibleTiles") ;
 		for (var entry_ : seenTiles) {
 			var entry = (Serializable[]) entry_ ;
-			var tile = (IntVec2D) entry[0] ;
-			var type = (String) entry[1] ;
+			int mazeId = (int) entry[0] ;
+			var tile = (IntVec2D) entry[1] ;
+			var type = (String) entry[2] ;
 			//System.out.println(">>> registering " + tile + ": " + type) ;
-			nav.markAsSeen(new Tile(tile.x,tile.y));
+			if (mazeId > multiLayerNav.areas.size()) {
+				// detecting a new maze, need to allocate a nav-graph for this maze:
+				Sparse2DTiledSurface_NavGraph newNav = new Sparse2DTiledSurface_NavGraph() ;
+				int N = env().app.dungeon.config.worldSize ;
+				Tile lowPortal  = new Tile(N-1,1);
+				Tile highPortal = new Tile(1,1) ;
+				multiLayerNav.addNextArea(newNav, lowPortal, highPortal, false);
+			}
+				
+			multiLayerNav.markAsSeen(new Pair<>(mazeId,new Tile(tile.x,tile.y)));
 			switch (type) {
 			   case "Wall" :
-				   nav.addObstacle(new Wall(tile.x,tile.y));
+				   multiLayerNav.addObstacle(new Pair<>(mazeId, new Wall(tile.x,tile.y))) ;
 				   break ;
 			   case "" :
-				   nav.removeObstacle(tile.x,tile.y);
+				   multiLayerNav.removeObstacle(new Pair<>(mazeId, new Tile(tile.x,tile.y))) ;
 				   break ;
 			   case "Monster" : 
 				   // not going to represent monsters as non-navigable
 				   // nav.addNonNavigable(new Door(tile.x,tile.y,true));
 				   break ;
 			   default:
-				   nav.addObstacle(new Door(tile.x,tile.y));
+				   multiLayerNav.addObstacle(new Pair<>(mazeId, new Door(tile.x,tile.y))) ;
 				   break ;			   
 			}	
 		}	
@@ -90,7 +117,7 @@ public class MyAgentState extends Iv4xrAgentState<Sparse2DTiledSurface_NavGraph.
 	
 	
 	// just for testing:
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
 		// System.out.println(">>>" + Frodo.class.getSimpleName()) ;
 
