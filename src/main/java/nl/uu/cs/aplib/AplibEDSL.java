@@ -87,6 +87,11 @@ public class AplibEDSL {
 
     }
     
+    public static <State> GoalStructure DEBUG(String debugstring) {
+    	return goal("debug-goal").toSolve((State belief) -> true)
+    			.withTactic(action("").do1((State state) -> { System.out.println(debugstring) ; return state ; } ).lift()).lift();
+    }
+    
     /**
      * This goal will always fail.
      */
@@ -117,8 +122,8 @@ public class AplibEDSL {
 
     /**
      * If this goal becomes current, it will evaluate the current state. If p holds,
-     * it will continue with the goal g1 as the goal to solve, and else g2 has to be
-     * solved.
+     * it will continue with the goal g1 as the goal to solve. if p does not hold,
+     * of SEQ(p,g1) failed, g2 is tried.
      */
     public static <State> GoalStructure IFELSE(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
         GoalStructure not_g = lift((State state) -> p.test(state));
@@ -158,9 +163,6 @@ public class AplibEDSL {
      * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal G
      * based on it, and this G is the one that is deployed. Notice that the kind of G produced can thus
      * be made dependent on the current agent state.
-     * 
-     * <p>The new goal , it will not deploy
-     * another new goal.
      */
     public static <AgentState> GoalStructure  DEPLOY(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
         GoalStructure[] newGoal = { null } ; 
@@ -284,7 +286,7 @@ public class AplibEDSL {
     public static PrimitiveTactic ABORT() {
         return lift(new Action.Abort());
     }
-
+   
     /**
      * To construct a SEQ {@link nl.uu.cs.aplib.mainConcepts.Tactic}.
      */
@@ -321,9 +323,7 @@ public class AplibEDSL {
     
     //----------------------//
     /**
-     * If this goal becomes current, it will evaluate the current state. If p holds,
-     * it will continue with the goal g1 as the goal to solve, and else g2 has to be
-     * solved.
+     * If this goal becomes current, it will try SEQ(p,g1). If this fails it tries g2.
      */
     public static GoalStructure IFELSE2(GoalStructure p, GoalStructure g1, GoalStructure g2) {
        // GoalStructure not_g = lift((State state) -> p.test(state));

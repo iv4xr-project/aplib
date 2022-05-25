@@ -4,11 +4,15 @@ import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.T
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
 import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Monster;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
+import nl.uu.cs.aplib.mainConcepts.Action;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
+import nl.uu.cs.aplib.utils.Pair;
+
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 import java.util.LinkedList;
@@ -46,13 +50,26 @@ public class TacticLib {
 		return hp>0 ;
 	}
 	
-	public static List<Tile> adjustedFindPath(MyAgentState state, int x0, int y0, int x1, int y1) {
-		var nav = state.worldNavigation() ;
-		nav.toggkeBlockingOff(x0,y0) ;
-		nav.toggkeBlockingOff(x1,y1) ;
-		var path = nav.findPath(x0,y0,x1,y1) ;
-		nav.toggleBlockingOn(x0,y0) ;
-		nav.toggleBlockingOn(x1,y1) ;
+	static Pair<Integer,Tile> loc3(int mazeId, int x, int y) {
+		return new Pair<>(mazeId, new Tile(x,y)) ;
+	}
+	
+	public static int mazeId(WorldEntity e) {
+		return (int) e.properties.get("maze") ;
+	}
+	
+	public static List<Pair<Integer,Tile>> adjustedFindPath(MyAgentState state, 
+			int maze0,
+			int x0, int y0, 
+			int maze1, int x1, int y1) {
+		var nav = state.multiLayerNav ;
+		boolean srcOriginalBlockingState  = nav.isBlocking(loc3(maze0,x0,y0)) ;
+		boolean destOriginalBlockingState = nav.isBlocking(loc3(maze1,x1,y1)) ;
+		nav.toggleBlockingOff(loc3(maze0,x0,y0)) ;
+		nav.toggleBlockingOff(loc3(maze1,x1,y1)) ;
+		var path = nav.findPath(loc3(maze0,x0,y0),loc3(maze1,x1,y1)) ;
+		nav.setBlockingState(loc3(maze0,x0,y0),srcOriginalBlockingState) ;
+		nav.setBlockingState(loc3(maze1,x1,y1),destOriginalBlockingState) ;
 		return path ;
 	}
 	
@@ -60,7 +77,8 @@ public class TacticLib {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		Tile p = toTile(player.position) ;
 		List<WorldEntity> ms = S.worldmodel.elements.values().stream()
-				.filter(e -> e.type.equals(Monster.class.getSimpleName())
+				.filter(e -> e.type.equals(EntityType.MONSTER.toString())
+						     && mazeId(player) == mazeId(e)
 						 	 && adjacent(p,toTile(e.position)))
 				.collect(Collectors.toList()) ;
 		return ms ;
@@ -74,16 +92,16 @@ public class TacticLib {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		Tile p = toTile(player.position) ;
 		Tile target = toTile(e.position) ;
-		var path = adjustedFindPath(S,p.x, p.y, target.x, target.y) ;
+		var path = adjustedFindPath(S, mazeId(player), p.x, p.y, mazeId(e), target.x, target.y) ;
 		if(path==null) return Integer.MAX_VALUE ;
 		return path.size() - 1 ;
 	}
 	
-	public static List<WorldEntity> nearItems(MyAgentState S, Class itemType, int withinDistance) {
+	public static List<WorldEntity> nearItems(MyAgentState S, EntityType itemType, int withinDistance) {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		Tile p = toTile(player.position) ;
 		List<WorldEntity> ms = S.worldmodel.elements.values().stream()
-				.filter(e -> e.type.equals(itemType.getSimpleName())
+				.filter(e -> e.type.equals(itemType.toString())
 						 	 && distTo(S,e) <= withinDistance
 						 	 )
 				.collect(Collectors.toList()) ;
@@ -95,8 +113,8 @@ public class TacticLib {
 	public static void printEntities(MyAgentState state) {
 		int k = 0 ;
 		for(var e : state.worldmodel.elements.values()) {
-			if (e.type.equals("aux") || e.type.equals("Wall")) continue ;
-			System.out.println(">>> " + e.id + " @" + e.position) ;
+			if (e.type.equals("aux") || e.type.equals("WALL")) continue ;
+			System.out.println(">>> " + e.id + " @" + mazeId(e) + "|" + e.position) ;
 			k++ ;
 		}
 		System.out.println(">>> #entities=" + k) ;
@@ -121,34 +139,36 @@ public class TacticLib {
 		return wom ;
 	}
 	
-	public Tactic navigateTo(int x, int y) {
-		var alpha = action("navigate-to")
+	public Tactic navigateTo(int mazeId, int x, int y) {
+		var alpha = action("move-to")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
 					return newwom ;
 				})
 				.on((MyAgentState S) -> {
 					if (!agentIsAlive(S)) return null ;
+					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = toTile(S.worldmodel.position) ;
-					var path = adjustedFindPath(S,agentPos.x, agentPos.y, x, y) ;
+					var path = adjustedFindPath(S, mazeId(a), agentPos.x, agentPos.y, mazeId, x, y) ;
 					if (path == null) {
 						return null ;
 					}
 					// the first element is the src itself, so we need to pick the next one:
-					return path.get(1) ;
+					return path.get(1).snd ;
 				}) 
 				;
 		return alpha.lift() ;
 	}
 	
 	public Tactic navigateTo(String targetId) {
-		var alpha = action("navigate-to")
+		var alpha = action("move-to")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
 					return newwom ;
 				})
 				.on((MyAgentState S) -> {
 					if (!agentIsAlive(S)) return null ;
+					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = toTile(S.worldmodel.position) ;
 					WorldEntity e = S.worldmodel.elements.get(targetId) ;
 					if (e == null) {
@@ -158,29 +178,30 @@ public class TacticLib {
 					//System.out.println("src: " + agentPos) ;
 					//System.out.println("dest: " + target) ;
 					// System.out.println(">>> calling pathfinder") ;
-					var path = adjustedFindPath(S,agentPos.x, agentPos.y, target.x, target.y) ;
+					var path = adjustedFindPath(S, mazeId(a), agentPos.x, agentPos.y, mazeId(e),target.x, target.y) ;
 					if (path == null) {
 						return null ;
 					}
 					// System.out.println("path: " + path) ; 
 					// the first element is the src itself, so we need to pick the next one:
-					return path.get(1) ;
+					return path.get(1).snd ;
 				}) 
 				;
 		return alpha.lift() ;
 	}
 	
 	public Tactic interact(String targetId) {
-		var alpha = action("navigate-to")
+		var alpha = action("interact")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
 					return newwom ;
 				})
 				.on((MyAgentState S) -> {
 					if (!agentIsAlive(S)) return null ;
+					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = toTile(S.worldmodel.position) ;
 					WorldEntity e = S.worldmodel.elements.get(targetId) ;
-					if (e == null) {
+					if (e == null || mazeId(a)!=mazeId(e)) {
 						return null ;
 					}
 					Tile target = toTile(e.position) ;
@@ -214,7 +235,7 @@ public class TacticLib {
 	} ;
 	
 	public Tactic useHealingPot() {
-		var alpha = action("explore")
+		var alpha = action("use healpot")
 				.do1((MyAgentState S) -> {
 					System.out.println(">>>> using HEALPOT") ;
 					WorldModel newwom = S.env().action(S.worldmodel.agentId, Command.USEHEAL) ;
@@ -226,7 +247,7 @@ public class TacticLib {
 	}
 	
 	public Tactic attackMonster() {
-		var alpha = action("explore")
+		var alpha = action("attack")
 				.do1((MyAgentState S) -> {
 					var ms = adajcentMonsters(S) ;
 					// just choose the first one:
@@ -241,7 +262,7 @@ public class TacticLib {
 	}
 	
 	public Tactic useRagePot() {
-		var alpha = action("explore")
+		var alpha = action("use ragepot")
 				.do1((MyAgentState S) -> {
 					WorldModel newwom = S.env().action(S.worldmodel.agentId, Command.USERAGE) ;
 					return newwom ;
@@ -251,7 +272,7 @@ public class TacticLib {
 		return alpha.lift() ;
 	}
 	
-	public Tactic explore() {
+	public Action explore() {
 		var alpha = action("explore")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
@@ -259,25 +280,22 @@ public class TacticLib {
 				})
 				.on((MyAgentState S) -> {
 					if (!agentIsAlive(S)) return null ;
+					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = toTile(S.worldmodel.position) ;
-					S.worldNavigation().toggkeBlockingOff(agentPos.x, agentPos.y) ;
 					//System.out.println(">>> explore is invoked") ;
-					var candidates = S.worldNavigation().explore(agentPos.x, agentPos.y) ;
-					S.worldNavigation().toggleBlockingOn(agentPos.x, agentPos.y) ;
-					//System.out.println(">>> explore is invoked, candidates: " + candidates) ;
-					if (candidates == null || candidates.size() == 0) {
+					var path = S.multiLayerNav.explore(loc3(mazeId(a),agentPos.x, agentPos.y)) ;
+					if (path == null) {
+						//System.out.println(">>>> can't find an explore path!") ;
 						return null ;
 					}
-					for(var t : candidates) {
-						var path = adjustedFindPath(S,agentPos.x, agentPos.y, t.x, t.y) ;
-						if (path != null && path.size()>1) {
-							return path.get(1) ;
-						}
-					}
-					return null ;
+					return path.get(1).snd ;
 				}) 
 				;
-		return alpha.lift() ;
+		return alpha ;
+	}
+	
+	public Tactic exploreTactic() {
+		return explore().lift() ;
 	}
 
 }

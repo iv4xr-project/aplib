@@ -87,20 +87,11 @@ public class SimpleNavGraph implements Navigatable<Integer>, CanDealWithDynamicO
 		}
 		return false ;
 	}
-
-	public void toggleBlockingOn(LineIntersectable obstacle) {
+	
+	public void setBlockingState(LineIntersectable obstacle, boolean isBlocking) {
 		for (var o : obstacles) {
 			if (o.obstacle == obstacle) {
-				o.isBlocking = true;
-				break;
-			}
-		}
-	}
-
-	public void toggleBlockingOff(LineIntersectable obstacle) {
-		for (var o : obstacles) {
-			if (o.obstacle == obstacle) {
-				o.isBlocking = false;
+				o.isBlocking = isBlocking;
 				break;
 			}
 		}

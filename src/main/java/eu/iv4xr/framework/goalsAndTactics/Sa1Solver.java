@@ -11,64 +11,103 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.mainConcepts.*;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
-public class Sa1Solver {
+public class Sa1Solver<NavgraphNode>  {
 	
-	public Function<Iv4xrAgentState,BiFunction<Vec3,Vec3,Boolean>> reachabilityChecker ;
+	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Boolean> reachabilityChecker ;
+	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent ;
+	public Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceBetweenEntities ;
 	public Function<String,GoalStructure> gCandidateIsInteracted ;
 	public Function<String,GoalStructure> gTargetIsRefreshed ;
-	public Tactic exploreTactic ;
+	public Action explore ;
 	
 	public Sa1Solver() { }
 	
-	public Sa1Solver(Function<Iv4xrAgentState, BiFunction<Vec3, Vec3, Boolean>> reachabilityChecker,
+	public Sa1Solver(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
+			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
+			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
 			Function<String, GoalStructure> gCandidateIsInteracted, 
 			Function<String, GoalStructure> gTargetIsRefreshed,
-			Tactic exploreTactic) {
+			Action explore) {
 		this.reachabilityChecker = reachabilityChecker;
+		this.distanceBetweenEntities = distanceFunction ;
+		this.distanceToAgent = distanceToAgent ;
 		this.gCandidateIsInteracted = gCandidateIsInteracted;
 		this.gTargetIsRefreshed = gTargetIsRefreshed;
-		this.exploreTactic = exploreTactic;
+		this.explore = explore;
 	}
 	
-	public Sa1Solver(IInteractiveWorldGoalLib goalLib,
-			IInteractiveWorldTacticLib tacticLib,
-			Function<Iv4xrAgentState, BiFunction<Vec3, Vec3, Boolean>> reachabilityChecker) {
-		this.reachabilityChecker = reachabilityChecker;
-		this.gCandidateIsInteracted = id -> goalLib.entityInteracted(id) ;
-		this.gTargetIsRefreshed = id -> goalLib.entityStateRefreshed(id);
-		this.exploreTactic = tacticLib.explore() ;
+	boolean exploreIsExhausted(Iv4xrAgentState<NavgraphNode> belief) {
+		return ! explore.isEnabled(belief) ;
 	}
 	
+	Random rnd = new Random() ;
 	
-	
+	WorldEntity nextCandidate(
+			Iv4xrAgentState<NavgraphNode> belief, 
+			List<String> visited,
+			Predicate<WorldEntity> selector,
+			String tId,
+			Policy policy) {
+		
+		List<WorldEntity> candidates = belief.worldmodel.elements.values()
+				.stream()
+				.filter(e -> selector.test(e) 
+						&& ! visited.contains(e.id)
+						&& reachabilityChecker.apply(belief,e)
+						) 
+				.collect(Collectors.toList());
+		if (candidates.isEmpty()) {
+			return null ;
+		}
+		
+		WorldEntity chosen = null ;
+				
+		if (policy == Policy.RANDOM) {
+			chosen = candidates.get(rnd.nextInt(candidates.size())) ;
+			return chosen ;
+		}
+		
+		switch(policy) {
+			case NEAREST_TO_AGENT: 
+				candidates.sort((e1,e2) -> Float.compare(
+						distanceToAgent.apply(belief,e1), 
+						distanceToAgent.apply(belief,e2))) ;
+				break ;
+			case  NEAREST_TO_TARGET:
+				var target = belief.worldmodel.elements.get(tId) ;
+				// should not be null!
+				if(target == null) throw new IllegalArgumentException() ;
+				candidates.sort((e1,e2) -> Float.compare(
+						(float) distanceBetweenEntities.apply(belief).apply(e1,target),
+						(float) distanceBetweenEntities.apply(belief).apply(e2,target)
+				   )) ;
+				break ;
+			case RANDOM:
+				break ;
+		}
+		
+		chosen = candidates.get(0) ;	
+		return chosen ;
+	}
+
+		
 	
 	/**
-	 * Perform exploration for the given budget. It will explore until there is nothing left to
-	 * explore, or until the budget runs out. The goal never fails.
+	 * Perform exploration for the given budget. It will explore until there is 
+	 * nothing left to explore, or until the budget runs out. 
+	 * The goal is intentionally made to always fail.
 	 */	
 	GoalStructure pgExplore(int budget) {
 		
 		GoalStructure explr = goal("exploring (persistent-goal: aborted when it is terminated)").toSolve(belief -> false)
-				.withTactic(FIRSTof(exploreTactic,
+				.withTactic(FIRSTof(explore.lift(),
 						    ABORT()))
 				.lift()
 				.maxbudget(budget)
 				;
 		
-		return FIRSTof(explr, SUCCESS()) ;
+		return explr ;
 		
-	}
-	
-	/**
-	 * Perform a single cycle explore; will abort the goal if there is no space to explore.
-	 * This is essentially used to check whether exploration is exhausted.
-	 */
-	GoalStructure gExplore1() {
-		return goal("can explore").toSolve(belief -> true)
-				.withTactic(
-					FIRSTof(exploreTactic, 
-							ABORT()))
-				.lift() ;
 	}
 	
 	
@@ -109,67 +148,39 @@ public class Sa1Solver {
 		  if there is no such interactable.
 		  "Nearest" is determined by the used policy.
 		 */
-		GoalStructure NearestInteracted = DEPLOY(agent,
+		GoalStructure search = DEPLOY(agent,
 				
 				(Iv4xrAgentState belief) -> {
 					
+					WorldEntity chosen = nextCandidate(belief,visited,selector,tId,policy) ;
 					
-					List<WorldEntity> candidates = belief.worldmodel.elements.values()
-							.stream()
-							.filter(e -> selector.test(e) 
-									&& ! visited.contains(e.id)
-									&& reachabilityChecker.apply(belief).apply(belief.worldmodel.position, e.position)
-									) 
-							.collect(Collectors.toList());
-					if (candidates.isEmpty()) {
-						return FAIL() ;
-					}
-					
-					switch(policy) {
-						case NEAREST_TO_AGENT: 
-							candidates.sort((e1,e2) -> Float.compare(Vec3.distSq(e1.position, belief.worldmodel.position),
-							         Vec3.distSq(e2.position, belief.worldmodel.position)  
-							   )) ;
-							break ;
-						case  NEAREST_TO_TARGET:
-							var target = belief.worldmodel.elements.get(tId) ;
-							// should not be null!
-							if(target == null) throw new IllegalArgumentException() ;
-							candidates.sort((e1,e2) -> Float.compare(Vec3.distSq(e1.position, target.position),
-							         Vec3.distSq(e2.position, target.position)  
-							   )) ;
-							break ;
-						case RANDOM:
-							break ;
-					}
-					
-					WorldEntity chosen = candidates.get(0) ;	
-					if (policy == Policy.RANDOM) {
-						chosen = candidates.get(rnd.nextInt(candidates.size())) ;
+					if (chosen == null) {
+						if (exploreIsExhausted(belief)) {
+							// to terminate the repeat:
+							return SUCCESS() ;
+						}
+						else {
+							return pgExplore(incrementalExplorationBudget) ;
+						}
+						
 					}
 					visited.add(chosen.id) ;
-					return gCandidateIsInteracted.apply(chosen.id) ;
+					return SEQ(
+							gCandidateIsInteracted.apply(chosen.id),
+							gTargetIsRefreshed.apply(tId), 
+							/* check phi: */ 
+							lift(phi)) ;
 				}
+				
+				
 		) ;
 				
-					
-		var G = REPEAT(
-				   IFELSE2(NearestInteracted, // deploy a dynamic goal
-				           // if that worked then:
-				           SEQ(gTargetIsRefreshed.apply(tId), /* check phi: */ lift(phi)),
-				           // else:
-				           IFELSE2(gExplore1(),
-				        	  // then:
-				        	  SEQ(pgExplore(incrementalExplorationBudget), FAIL()),
-				        	  // else, there is nothing left to explore, we end the repeat-loop:
-				        	  SUCCESS())
-				 )) ;
-		
+			
 		return SEQ(gTargetIsRefreshed.apply(tId), 
 				   IFELSE(phi,
 						  /* then: */ SUCCESS(),
 						  // else:
-						  SEQ(G,
+						  SEQ(REPEAT(search),
 							  // G might terminate without succesfully establishing phi, so we check it again:
 							  lift(phi))
 					)) ;

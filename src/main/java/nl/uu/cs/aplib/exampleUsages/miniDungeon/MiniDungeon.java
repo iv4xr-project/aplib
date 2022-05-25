@@ -107,7 +107,6 @@ public class MiniDungeon {
 	public List<String> recentlyRemoved = new LinkedList<>() ;
 	Random rnd  ;
 	public int turnNr = 0 ;
-	
 	public GameStatus status = GameStatus.INPROGRESS ;
 	
 	public MiniDungeon(MiniDungeonConfig config) {

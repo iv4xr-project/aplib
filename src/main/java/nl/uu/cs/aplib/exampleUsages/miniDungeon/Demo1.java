@@ -14,10 +14,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
  */
 public class Demo1 {
 	
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws Exception {
 		// Create an instance of the game:
 		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.viewDistance = 4 ;
+		config.viewDistance = 6 ;
 		System.out.println(">>> Configuration:\n" + config);
 		DungeonApp app = new DungeonApp(config);
 		DungeonApp.deploy(app);
@@ -28,10 +28,10 @@ public class Demo1 {
 		// Specify a goal for the agent: search and grab scroll S0 then use it on the Shrine.
 		//
 		var G = SEQ(
-				goalLib.EntityTouched("S0").lift(),
-				goalLib.EntityInteracted("S0").lift(),
-				goalLib.EntityTouched("Shr").lift(),
-				goalLib.EntityInteracted("Shr").lift()) ;
+				goalLib.EntityTouched("S0_0").lift(),
+				goalLib.EntityInteracted("S0_0").lift(),
+				goalLib.EntityTouched("SM0").lift(),
+				goalLib.EntityInteracted("SM0").lift()) ;
 
 		// Now, create an agent, attach the game to it, and give it the above goal:
 		var agent = new TestAgent("Frodo","Frodo") 
@@ -41,8 +41,8 @@ public class Demo1 {
 
 		Thread.sleep(1000);
 		
-		//state.updateState("Frodo");
-		//printEntities(state) ;
+		state.updateState("Frodo");
+		TacticLib.printEntities(state) ;
 		
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;

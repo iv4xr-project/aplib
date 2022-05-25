@@ -150,9 +150,10 @@ public class Sparse2DTiledSurface_NavGraph
 	}
 	
 	/**
-	 * Return the state of this obstacle. True means that it is in the blocking state.
+	 * The tile is blocking (true) if it is a wall or a closed door. Else it is non-blocking (false).
 	 */
 	public boolean isBlocking(Tile tile) {
+		if (isWall(tile.x,tile.y)) return true ;
 		if (isDoor(tile.x,tile.y)) {
 			var o = obstacles.get(tile.x).get(tile.y) ;
 			Door door = (Door) o ;
@@ -160,50 +161,16 @@ public class Sparse2DTiledSurface_NavGraph
 		}
 		return false ;
 	}
-
-	/**
-	 * Toggle the blocking state of the obstacle in this location to make it non-blocking/open.
-	 * When non-blocking the obstacle will not block navigation.
-	 *  
-	 * Only the state of a Door can be toggled. Walls cannot be toggled.
-	 */
-	public void toggleBlockingOff(Tile tile) {
-		toggleBlockingOff(tile.x, tile.y) ;
-	}
 	
-	/**
-	 * Toggle the blocking state of the obstacle in this location to make it non-blocking/open. 
-	 * When non-blocking the obstacle will not block navigation.
-	 * 
-	 * Only the state of a Door can be toggled. Walls cannot be toggled.
-	 */
-	public void toggleBlockingOff(int x, int y) {
+	
+	@Override
+	public void setBlockingState(Tile tile, boolean isBlocking) {
+		int x = tile.x ;
+		int y = tile.y ;
 		if (isDoor(x,y)) {
 			var o = obstacles.get(x).get(y) ;
 			Door door = (Door) o ;
-			door.isOpen = true ;
-		}
-	}
-	
-	/**
-	 * Toggle the blocking state of the obstacle in this location to make it blocking. 
-	 * When in the blocking state, an obstacle would block navigation through it.
-	 * Only the state of a Door can be toggled. Walls will always be blocking.
-	 */
-	public void toggleBlockingOn(Tile tile) {
-		toggleBlockingOn(tile.x, tile.y) ;
-	}
-	
-	/**
-	 * Toggle the blocking state of the obstacle in this location to make it blocking. 
-	 * When in the blocking state, an obstacle would block navigation through it.
-	 * Only the state of a Door can be toggled. Walls will always be blocking.
-	 */
-	public void toggleBlockingOn(int x, int y) {
-		if (isDoor(x,y)) {
-			var o = obstacles.get(x).get(y) ;
-			Door door = (Door) o ;
-			door.isOpen = false ;
+			door.isOpen = ! isBlocking ;
 		}
 	}
 	
@@ -215,16 +182,15 @@ public class Sparse2DTiledSurface_NavGraph
 		return o instanceof Door ;
 	}
 	
-	public boolean isBlocked(int x, int y) {
+	public boolean isWall(int x, int y) {
 		var xmap = obstacles.get(x) ;
 		if (xmap == null) return false ;
 		var o = xmap.get(y) ;
 		if (o == null) return false ;
-		if (o instanceof Door) {
-			return ! ((Door) o).isOpen ;
-		}
-		else return true ;
+		return o instanceof Wall ;
 	}
+	
+
 	
     /**
 	 * When true then the pathfinder will consider all nodes in the graph to have been seen.
@@ -295,7 +261,7 @@ public class Sparse2DTiledSurface_NavGraph
 		//System.out.println("=== (" + x + "," + y + ") -> " + candidates.size()) ;
 		
 		candidates = candidates.stream()
-				.filter(c -> ! isBlocked(c.x,c.y))
+				.filter(c -> ! isBlocking(c))
 				.collect(Collectors.toList());
 		
 		if (! perfect_memory_pathfinding) {

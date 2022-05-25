@@ -88,17 +88,19 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 				
 			multiLayerNav.markAsSeen(new Pair<>(mazeId,new Tile(tile.x,tile.y)));
 			switch (type) {
-			   case "Wall" :
+			   case "WALL" :
 				   multiLayerNav.addObstacle(new Pair<>(mazeId, new Wall(tile.x,tile.y))) ;
 				   break ;
 			   case "" :
 				   multiLayerNav.removeObstacle(new Pair<>(mazeId, new Tile(tile.x,tile.y))) ;
 				   break ;
-			   case "Monster" : 
+			   case "MONSTER" : 
 				   // not going to represent monsters as non-navigable
 				   // nav.addNonNavigable(new Door(tile.x,tile.y,true));
 				   break ;
 			   default:
+				   // representing potions, scrolls and shrines as doors that we can
+				   // open or close to enable navigation onto them or not:
 				   multiLayerNav.addObstacle(new Pair<>(mazeId, new Door(tile.x,tile.y))) ;
 				   break ;			   
 			}	

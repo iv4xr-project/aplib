@@ -178,7 +178,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 			var world =  app.dungeon.mazes.get(mazeId).world ;
 			Entity e = world[tile.snd.x][tile.snd.y] ;
 			if (e != null) {
-				etype = e.getClass().getSimpleName() ;
+				etype = e.type.toString() ;
 			}
 			Serializable[] entry = { mazeId, tile.snd , etype } ;
 			visibleTiles[k] = entry ;

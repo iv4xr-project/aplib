@@ -68,6 +68,8 @@ public class DungeonApp extends JPanel implements KeyListener {
 	 */
 	public boolean disableKey = false ;
 	
+	public boolean soundOn = true ;
+	
 	// sounds:
 	Clip soundWelcome ;
 	Clip soundExit ;
@@ -122,6 +124,14 @@ public class DungeonApp extends JPanel implements KeyListener {
 		msgFromTheGame = "" ;
 	}
 	
+	void playSound(Clip sound) {
+		if (soundOn) {
+			sound.stop();
+			sound.setMicrosecondPosition(0);
+			sound.start();
+		}
+	}
+	
 	@Override
 	public void addNotify(){
 		super.addNotify();
@@ -158,8 +168,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 		var config = dungeon.config ;
 		if (key == 'z') {
 			restart(config) ;
-			soundWelcome.setMicrosecondPosition(0);
-			soundWelcome.start();
+			playSound(soundWelcome);
 		}
 		if (key == 'q') {
 			closeAllSounds() ;
@@ -187,8 +196,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 					smeagolAreaNow = dungeon.smeagol().mazeId ;
 				}
 				if ((frodoAreaWas != frodoAreaNow) || (smeagolAreaWas != smeagolAreaNow)) {
-					soundExit.setMicrosecondPosition(0);
-					soundExit.start();
+					playSound(soundExit);
 				}
 				else if (turnNrWas != dungeon.turnNr) {
 					Player frodo = dungeon.frodo() ;
@@ -196,18 +204,13 @@ public class DungeonApp extends JPanel implements KeyListener {
 					if((frodoHPWas > 0 && frodo.hp <= 0)
 							|| (smeagol != null && smeagolHPWas>0 && smeagol.hp<=0)
 							) {
-						soundDie.stop();
-						soundDie.setMicrosecondPosition(0);
-						soundDie.start();
+						playSound(soundDie);
 						
 					}
 					if ((frodo.hp>0 && frodo.hp<5) ||
 							(smeagol != null && smeagol.hp>0 && smeagol.hp<5)) {
 						// almost dead:
-						soundAlmostDie.stop();
-						soundAlmostDie.setMicrosecondPosition(0);
-						soundAlmostDie.start();
-						
+						playSound(soundAlmostDie);			
 					}
 				}
 				
@@ -414,7 +417,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 		}
 		
 		if(!loaded) {
-			soundWelcome.start();
+			playSound(soundWelcome) ;
 			loaded = true ;
 		}
 	}
@@ -433,12 +436,16 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	public static void main(String[] args) throws Exception {		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		config.numberOfMonsters = 30 ;
+		config.numberOfMonsters = 50 ;
 		config.numberOfHealPots = 10 ;
 		config.numberOfRagePots = 10 ;
-		config.viewDistance = 6 ;
+		config.numberOfCorridors = 1 ;
+		
+		config.viewDistance = 3 ;
 		System.out.println(">>> Configuration:\n" + config) ;
-		deploy(new DungeonApp(config));
+		var app = new DungeonApp(config) ;
+		//app.dungeon.showConsoleIO = false ;
+		deploy(app);
 	}
 
 }

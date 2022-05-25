@@ -17,14 +17,26 @@ public interface CanDealWithDynamicObstacle<Obstacle> {
 	public boolean isBlocking(Obstacle o) ;
 	
 	/**
+	 * Set the the state of this obstacle to blocking or unblocking.
+	 * 
+	 * @param isBlocking If true then the obstacle will be set to its blocking state, 
+	 * 			and else non-blocking.
+	 */
+	public void setBlockingState(Obstacle o, boolean isBlocking) ;
+	
+	/**
 	 * Change the state of this obstacle to blocking.
 	 */
-	public void toggleBlockingOn(Obstacle o) ;
+	default public void toggleBlockingOn(Obstacle o) {
+		setBlockingState(o,true) ;
+	}
 
 	/**
 	 * Change the state of this obstacle to non-blocking.
 	 */
-	public void toggleBlockingOff(Obstacle o) ;
+	default public void toggleBlockingOff(Obstacle o) {
+		setBlockingState(o,false) ;
+	}
 	
 
 }

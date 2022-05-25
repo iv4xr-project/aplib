@@ -12,13 +12,16 @@ import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Scroll;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
+import nl.uu.cs.aplib.utils.Pair;
 
 import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
 
@@ -28,68 +31,111 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
  */
 public class Demo3 {
 	
-		public static void main(String[] args) throws InterruptedException {
-		// Create an instance of the game, attach an environment to it:
-		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 4 ;
-		config.viewDistance = 4 ;
-		config.randomSeed = 79373 ;
-		System.out.println(">>> Configuration:\n" + config);
-		DungeonApp app = new DungeonApp(config);
-		DungeonApp.deploy(app);
-		MyAgentEnv env = new MyAgentEnv(app);
-		MyAgentState state = new MyAgentState() ;
-		var goalLib = new GoalLib() ;
-		
-		// create an agent:
-		var agent = new TestAgent("Frodo","Frodo")  ;
-		
-		// create and configure the SA1 algorithm:
-		Function<Iv4xrAgentState, BiFunction<Vec3, Vec3, Boolean>> isReachable = S
-				-> (p1,p2) -> {
-					var t1 = toTile(p1) ;
-					var t2 = toTile(p2) ;
-					var path = adjustedFindPath((MyAgentState) S, t1.x,t1.y,t2.x,t2.y) ;
-					return path!=null && path.size()>0 ;
-				} ;
-				
-		var sa1Solver = new Sa1Solver(
-				isReachable,
-				eId -> SEQ(Demo2.SmartEntityTouched(agent, goalLib, eId), goalLib.EntityInteracted(eId).lift()), 
-				eId -> SEQ(Demo2.SmartEntityTouched(agent, goalLib, eId), goalLib.EntityInteracted(eId).lift()),
-				goalLib.tacticLib.explore()	
-				) ;
-		
-		var G = sa1Solver.solver(agent, 
-				"Shr", 
-				e -> e.type.equals(Scroll.class.getSimpleName()), 
-				S -> gameStatus((MyAgentState) S) == GameStatus.FRODOWIN , 
-				Policy.NEAREST_TO_AGENT, 
-				20) ;
+	    static boolean isReachable(MyAgentState S, WorldEntity e) {
+	    	var aname = S.worldmodel.agentId ;
+	        var player = S.worldmodel.elements.get(aname) ;
+	        int player_maze = (int) player.properties.get("maze") ;
+	        int e_maze = (int) e.properties.get("maze") ;
+	        
+			var t1 = toTile(player.position) ;
+			var t2 = toTile(e.position) ;
+			var path = adjustedFindPath(S, player_maze,t1.x,t1.y,e_maze,t2.x,t2.y) ;
+			return path!=null && path.size()>0 ;
+	    }
+	    
+	    static float distanceToAgent(MyAgentState S, WorldEntity e) {
+	    	var aname = S.worldmodel.agentId ;
+	        var player = S.worldmodel.elements.get(aname) ;
+	        int player_maze = (int) player.properties.get("maze") ;
+	        int e_maze = (int) e.properties.get("maze") ;
+	        
+	        if (e_maze == player_maze) {
+	        	var p1 = player.position.copy() ;
+		        var p2 = e.position.copy() ;
+		        p1.y = 0 ;
+		        p2.y = 0 ;
+		        return  Vec3.distSq(p1, p2) ;
+	        }
+	        return Math.abs(e_maze - player_maze)*1000000 ;
+	    }
+	    	    
+	    static float distanceBetweenEntities(MyAgentState S, WorldEntity e1, WorldEntity e2) {
+	    	int e1_maze = (int) e1.properties.get("maze") ;
+	        int e2_maze = (int) e2.properties.get("maze") ;
+	        
+	        if (e1_maze == e2_maze) {
+	        	var p1 = e1.position.copy() ;
+		        var p2 = e2.position.copy() ;
+		        p1.y = 0 ;
+		        p2.y = 0 ;
+		        return  Vec3.distSq(p1, p2) ;
+	        }
+	        return Math.abs(e1_maze - e2_maze)*1000000 ;
+	    }
+	
+	    
+		public static void main(String[] args) throws Exception {
+			// Create an instance of the game, attach an environment to it:
+			MiniDungeonConfig config = new MiniDungeonConfig();
+			config.numberOfHealPots = 4;
+			config.viewDistance = 4 ;
+			config.randomSeed = 79373;
+			System.out.println(">>> Configuration:\n" + config);
+			DungeonApp app = new DungeonApp(config);
+			app.soundOn = false ;
+			DungeonApp.deploy(app);
+			MyAgentEnv env = new MyAgentEnv(app);
+			MyAgentState state = new MyAgentState();
+			var goalLib = new GoalLib();
 
-		// Now, attach the game to the agent, and give it the above goal:
-		agent. attachState(state)
-			 . attachEnvironment(env)
-			 . setGoal(G) ;
+			// create an agent:
+			var agent = new TestAgent("Frodo", "player-frodo");	
+			
+			var sa1Solver = new Sa1Solver<Void>(
+					(S, e) -> isReachable((MyAgentState) S, e), 
+					(S, e) -> distanceToAgent((MyAgentState) S, e), 
+					S -> (e1, e2) -> distanceBetweenEntities((MyAgentState) S, e1, e2),
+					eId -> SEQ(
+							Demo2.SmartEntityTouched(agent, goalLib, eId), 
+							goalLib.EntityInteracted(eId).lift()), 
+					eId -> SEQ(
+							Demo2.SmartEntityTouched(agent, goalLib, eId), 
+							goalLib.EntityInteracted(eId).lift()), 
+					goalLib.tacticLib.explore());
 
-		Thread.sleep(1000);
-		
-		//state.updateState("Frodo");
-		//printEntities(state) ;
-		
-		// Now we run the agent:
-		System.out.println(">> Start agent loop...") ;
-		int k = 0 ;
-		while(G.getStatus().inProgress()) {
-			agent.update();
-			System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position)) ;
-			// delay to slow it a bit for displaying:
-			Thread.sleep(200); 
-			if (k>=1000) break ;
-			k++ ;
-		}	
-		//G.printGoalStructureStatus();	
-		//System.exit(0);	
-	}
+			var G = sa1Solver.solver(agent, 
+					"SM0", e -> e.type.equals("" + EntityType.SCROLL),
+					S -> gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
+					Policy.NEAREST_TO_AGENT, 
+					20);
+
+			// Now, attach the game to the agent, and give it the above goal:
+			agent.attachState(state).attachEnvironment(env).setGoal(G);
+
+			Thread.sleep(1000);
+
+			state.updateState("Frodo");
+			printEntities(state);
+
+			// Now we run the agent:
+			System.out.println(">> Start agent loop...");
+			int k = 0;
+			while (G.getStatus().inProgress()) {
+				agent.update();
+				System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position));
+				// delay to slow it a bit for displaying:
+				Thread.sleep(200);
+				if (k >= 1000)
+					break;
+				k++;
+			}
+			//System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
+			//int maze = 0 ;
+			//Tile frodoLoc = toTile(state.worldmodel.position) ;
+			//System.out.println("Explor path: " + state.multiLayerNav.explore(new Pair<>(maze,frodoLoc))) ; ;
+			
+			//G.printGoalStructureStatus();
+			System.exit(0);
+		}
 
 }

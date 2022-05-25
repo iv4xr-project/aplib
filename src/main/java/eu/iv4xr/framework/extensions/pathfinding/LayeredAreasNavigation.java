@@ -217,29 +217,16 @@ public class LayeredAreasNavigation<
 		areas.get(o.fst).removeObstacle(o.snd);	
 	}
 
-
 	@Override
-	public void toggleBlockingOn(Pair<Integer, NodeId> o) {
-		areas.get(o.fst).toggleBlockingOn(o.snd);		
+	public void setBlockingState(Pair<Integer, NodeId> o, boolean isBlocking) {
+		areas.get(o.fst).setBlockingState(o.snd,isBlocking);	
 	}
-
-
+	
 	@Override
-	public void toggleBlockingOff(Pair<Integer, NodeId> o) {
-		areas.get(o.fst).toggleBlockingOff(o.snd);		
-	}
-
-	@Override
-	public boolean hasbeenSeen(Pair<Integer, NodeId> nd) {
-		return areas.get(nd.fst).hasbeenSeen(nd.snd);		
-	}
-
-
-	@Override
-	public void markAsSeen(Pair<Integer, NodeId> id) {
-		areas.get(id.fst).markAsSeen(id.snd);
-		var areaId = id.fst ;
-		var nd = id.snd ;
+	public void markAsSeen(Pair<Integer, NodeId> ndx) {
+		areas.get(ndx.fst).markAsSeen(ndx.snd);
+		var areaId = ndx.fst ;
+		var nd = ndx.snd ;
 		// if id is a portal, we also mark the otherside as seen:	
 		if (nd.equals(lowPortal(areaId))) {
 			int otherArea = areaId+1 ;
@@ -253,6 +240,11 @@ public class LayeredAreasNavigation<
 			NodeId otherPortal = connectedLowPortal(areaId) ;		
 			area2.markAsSeen(otherPortal);
 		}
+	}
+	
+	@Override
+	public boolean hasbeenSeen(Pair<Integer, NodeId> ndx) {
+		return areas.get(ndx.fst).hasbeenSeen(ndx.snd) ;
 	}
 
 
@@ -353,6 +345,6 @@ public class LayeredAreasNavigation<
 		}
 		return z.toString() ;
 	}
-	
+
 
 }

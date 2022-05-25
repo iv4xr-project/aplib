@@ -28,14 +28,16 @@ public class GoalLib {
 				.toSolve((WorldModel wom) -> {
 					WorldEntity e = wom.elements.get(targetId) ;
 					if (e==null) return false ;
-					return adjacent(toTile(wom.position),toTile(e.position)) ;
+					var solved =  adjacent(toTile(wom.position),toTile(e.position)) ;
+					//System.out.println(">>> checking goal") ;
+					return solved; 
 				})
 				.withTactic(
 				   FIRSTof(tacticLib.useHealingPot(),
 						   tacticLib.useRagePot(),
 						   tacticLib.attackMonster(),
 						   tacticLib.navigateTo(targetId),
-						   tacticLib.explore(),
+						   tacticLib.exploreTactic(),
 						   //Abort().on_(S -> { System.out.println("### about to abort") ; return false;}).lift(), 
 				   		   ABORT()) 
 				  )

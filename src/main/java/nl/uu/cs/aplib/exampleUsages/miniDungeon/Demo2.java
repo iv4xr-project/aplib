@@ -6,6 +6,7 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.*;
 import java.util.function.Predicate;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
@@ -32,7 +33,7 @@ public class Demo2 {
 		  (MyAgentState S) -> {
 			  var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 			  int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
-			  var healPotsInVicinity = TacticLib.nearItems(S,HealingPotion.class,5) ;
+			  var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,5) ;
 			  //System.out.println("===== checking deploy grab ") ;
 			  if (bagSpaceUsed>0 || healPotsInVicinity.size() == 0) {
 			      return FAIL() ;
@@ -49,7 +50,7 @@ public class Demo2 {
 	static Predicate<MyAgentState> whenToGoAfterHealPot = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
-		var healPotsInVicinity = TacticLib.nearItems(S,HealingPotion.class,4) ;
+		var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,4) ;
 		return agentIsAlive(S) && bagSpaceUsed==0 && healPotsInVicinity.size() > 0 ;
 	} ;
 	
@@ -69,13 +70,14 @@ public class Demo2 {
 	   return G ;
 	}
 	
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws Exception {
 		// Create an instance of the game:
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4 ;
 		config.viewDistance = 4 ;
 		System.out.println(">>> Configuration:\n" + config);
 		DungeonApp app = new DungeonApp(config);
+		app.soundOn = false ;
 		DungeonApp.deploy(app);
 		MyAgentEnv env = new MyAgentEnv(app);
 		MyAgentState state = new MyAgentState() ;
@@ -89,13 +91,13 @@ public class Demo2 {
 		var G = SEQ(
 				//goalLib.EntityTouched("S0").lift(),
 				//goalLib.EntityTouched("S1").lift(),
-				SmartEntityTouched(agent,goalLib,"S0"),
-				goalLib.EntityInteracted("S0").lift(),
+				SmartEntityTouched(agent,goalLib,"S0_0"),
+				goalLib.EntityInteracted("S0_0").lift(),
 				//goalLib.EntityInteracted("S1").lift(),
-				SmartEntityTouched(agent,goalLib,"Shr"),
+				SmartEntityTouched(agent,goalLib,"SM0"),
 				//goalLib.EntityTouched("Shr").lift(),
 				//SmartEntityTouched(agent,goalLib,"Shr"),
-				goalLib.EntityInteracted("Shr").lift()) ;
+				goalLib.EntityInteracted("SM0").lift()) ;
 
 		// Now, create an agent, attach the game to it, and give it the above goal:
 		agent. attachState(state)
