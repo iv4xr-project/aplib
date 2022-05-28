@@ -30,7 +30,7 @@ public class Demo2b {
 		// Create an instance of the game:
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4 ;
-		//config.viewDistance = 4 ;
+		config.viewDistance = 4 ;
 		config.nuberOfMaze = 2 ;
 		System.out.println(">>> Configuration:\n" + config);
 		DungeonApp app = new DungeonApp(config);
@@ -50,7 +50,7 @@ public class Demo2b {
 				  goalLib.entityInteracted("SM0"),
 				  goalLib.smartFrodoEntityInCloseRange(agent,"SS1"),
 				  goalLib.entityInteracted("SS1"),
-				  //goalLib.smartFrodoEntityInCloseRange(agent,"S0_0")
+				  goalLib.smartFrodoEntityInCloseRange(agent,"S0_0"),
 				  //goalLib.entityInteracted("S0_0")
 				  goalLib.smartFrodoEntityInCloseRange(agent,"SI1"),
 				  goalLib.entityInteracted("SI1")

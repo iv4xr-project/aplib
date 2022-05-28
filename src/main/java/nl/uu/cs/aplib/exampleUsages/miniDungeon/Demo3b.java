@@ -125,7 +125,11 @@ public class Demo3b {
 					explorationBudget);
 
 			// Now, attach the game to the agent, and give it the above goal:
-			var G = SEQ(G1, goalLib.entityInteracted("SM0"), G2) ;
+			var G = SEQ(G1, 
+					    goalLib.entityInteracted("SM0"), 
+					    //goalLib.smartFrodoEntityInCloseRange(agent,"SS1"),
+						//goalLib.entityInteracted("SS1"),
+					    G2) ;
 			agent.attachState(state).attachEnvironment(env).setGoal(G);
 
 			Thread.sleep(1000);
