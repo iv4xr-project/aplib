@@ -64,6 +64,10 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				wom.elements.put(e.id, toWorldEntity(e)) ;
 			}
 		}
+		// time-stamp the elements:
+		for(var e : wom.elements.values()) {
+			e.timestamp = wom.timestamp ;
+		}
 		return wom ;
 	}
 	
@@ -114,7 +118,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				we.properties.put("maze",e.mazeId) ;
 				return we ;
 			case SHRINE:
-				we = new WorldEntity(e.id,"" + e.type,false) ;
+				we = new WorldEntity(e.id,"" + e.type,true) ;
 				var shrine = (Shrine) e ;
 				we.position = new Vec3(e.x,0,e.y) ;
 				we.properties.put("maze",e.mazeId) ;

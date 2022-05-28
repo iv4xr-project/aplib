@@ -620,6 +620,7 @@ public class MiniDungeon {
 					var size = nextmaze.world.length ;
 					targetShrineLocation = new Pair<>(size-2,1) ;
 				}
+				// bug here, if there is no free location:
 				var teleportLocation = nextmaze.getClosestFreeSquare(targetShrineLocation.fst, targetShrineLocation.snd) ;
 				player.mazeId = nextmaze.id ;
 				player.x = teleportLocation.fst ;
@@ -715,11 +716,12 @@ public class MiniDungeon {
 		List<Pair<Integer,IntVec2D>> visible = new LinkedList<>() ;
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
+				var location = new IntVec2D(x,row) ;
 				if (isVisible(frodo(),frodo().mazeId,x,row)) {
-					visible.add(new Pair<>(frodo().mazeId, new IntVec2D(x,row))) ; 
+					visible.add(new Pair<>(frodo().mazeId, location)) ; 
 				}
 				else if (config.enableSmeagol && isVisible(smeagol(),smeagol().mazeId,x,row)) {
-					visible.add(new Pair<>(smeagol().mazeId, new IntVec2D(x,row))) ;
+					visible.add(new Pair<>(smeagol().mazeId, location)) ;
 				}
 			}
 		}

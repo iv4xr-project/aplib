@@ -219,7 +219,26 @@ public class LayeredAreasNavigation<
 
 	@Override
 	public void setBlockingState(Pair<Integer, NodeId> o, boolean isBlocking) {
-		areas.get(o.fst).setBlockingState(o.snd,isBlocking);	
+		//System.out.println(">>>> trying to switch blocking state of: " + o) ;
+		int area = o.fst ;
+		//System.out.println(">>>> low portal of: " + area + ": " + lowPortal(area)) ;
+		//System.out.println(">>>> high portal of: " + area + ": " + highPortal(area)) ;
+		var nd = o.snd ;
+		areas.get(area).setBlockingState(nd,isBlocking);	
+		/*
+		 should not do this here --> responsibility of the user class.
+		 
+		if (nd.equals(lowPortal(area))) {
+			//System.out.println(">>>> swicthing low-portal " + area + " to " + !isBlocking) ;
+			setPortal(area,area+1, ! isBlocking) ;
+			return ;
+		}
+		if (nd.equals(highPortal(area))) {
+			//System.out.println(">>>> swicthing high-portal " + area + " to " + !isBlocking) ;
+			setPortal(area,area-1, ! isBlocking) ;
+			return ;
+		}
+		*/
 	}
 	
 	@Override

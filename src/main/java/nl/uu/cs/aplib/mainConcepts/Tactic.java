@@ -67,7 +67,7 @@ public class Tactic {
      * Given a state, this method returns the set of actions in this tactic which
      * are both eligible for executions and whose guard are true on the state.
      */
-    List<PrimitiveTactic> getFirstEnabledActions(SimpleState agentstate) {
+    public List<PrimitiveTactic> getFirstEnabledActions(SimpleState agentstate) {
 
         List<PrimitiveTactic> actions = new LinkedList<PrimitiveTactic>();
         switch (strTy) {

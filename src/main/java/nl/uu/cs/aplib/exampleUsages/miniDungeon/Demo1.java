@@ -28,10 +28,10 @@ public class Demo1 {
 		// Specify a goal for the agent: search and grab scroll S0 then use it on the Shrine.
 		//
 		var G = SEQ(
-				goalLib.EntityTouched("S0_0").lift(),
-				goalLib.EntityInteracted("S0_0").lift(),
-				goalLib.EntityTouched("SM0").lift(),
-				goalLib.EntityInteracted("SM0").lift()) ;
+				goalLib.entityInCloseRange("S0_0"),
+				goalLib.entityInteracted("S0_0"),
+				goalLib.entityInCloseRange("SM0"),
+				goalLib.entityInteracted("SM0")) ;
 
 		// Now, create an agent, attach the game to it, and give it the above goal:
 		var agent = new TestAgent("Frodo","Frodo") 
@@ -42,7 +42,7 @@ public class Demo1 {
 		Thread.sleep(1000);
 		
 		state.updateState("Frodo");
-		TacticLib.printEntities(state) ;
+		Utils.printEntities(state) ;
 		
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;
@@ -51,7 +51,7 @@ public class Demo1 {
 			agent.update();
 			System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(200); 
+			Thread.sleep(100); 
 			if (k>=150) break ;
 			k++ ;
 		}	

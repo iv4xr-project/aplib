@@ -200,7 +200,7 @@ public class AplibEDSL {
     
     /**
      * Construct a goal that will be interrupted on a certain conditions. The goal is
-     * aborted, and a new goal is launcher. When the new goal is done (success or fail),
+     * aborted, and a new goal is launched. When the new goal is done (success or fail),
      * the execution continues with the original goal.
      * 
      * <p>For example: 
@@ -235,7 +235,11 @@ public class AplibEDSL {
     	}
     	H = SEQ(H,FAIL()) ;
     	
-    	return REPEAT(FIRSTof(g2.lift(),H)) ;
+    	return REPEAT(
+    			   FIRSTof(
+    			      g2.lift(),
+    			      SEQ(lift((State S) -> ! guard.test(S)), SUCCESS()),
+    			      H)) ;
     }
     
     public static <State> Pair<Predicate<State>,GoalStructure> HANDLE(Predicate<State> p ,GoalStructure handler) {

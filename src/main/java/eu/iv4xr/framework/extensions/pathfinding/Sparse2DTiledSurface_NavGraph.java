@@ -36,6 +36,11 @@ public class Sparse2DTiledSurface_NavGraph
 			this.y = y ;
 		}
 		
+		public Tile(float x, float y) {
+			this.x = Math.round(x) ;
+			this.y = Math.round(y) ;
+		}
+		
 		@Override
 		public boolean equals(Object o) {
 			if (o instanceof Tile) {

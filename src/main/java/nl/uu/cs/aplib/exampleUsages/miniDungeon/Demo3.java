@@ -87,27 +87,30 @@ public class Demo3 {
 			MyAgentEnv env = new MyAgentEnv(app);
 			MyAgentState state = new MyAgentState();
 			var goalLib = new GoalLib();
+			var tacticLib = new TacticLib() ;
 
 			// create an agent:
 			var agent = new TestAgent("Frodo", "player-frodo");	
+			int explorationBudget = 20 ;
 			
 			var sa1Solver = new Sa1Solver<Void>(
 					(S, e) -> isReachable((MyAgentState) S, e), 
 					(S, e) -> distanceToAgent((MyAgentState) S, e), 
 					S -> (e1, e2) -> distanceBetweenEntities((MyAgentState) S, e1, e2),
 					eId -> SEQ(
-							Demo2.SmartEntityTouched(agent, goalLib, eId), 
-							goalLib.EntityInteracted(eId).lift()), 
+							goalLib.smartFrodoEntityInCloseRange(agent,eId), 
+							goalLib.entityInteracted(eId)), 
 					eId -> SEQ(
-							Demo2.SmartEntityTouched(agent, goalLib, eId), 
-							goalLib.EntityInteracted(eId).lift()), 
-					goalLib.tacticLib.explore());
+							goalLib.smartFrodoEntityInCloseRange(agent,eId), 
+							goalLib.entityInteracted(eId)), 
+					S -> tacticLib.explorationExhausted(S),
+					budget -> goalLib.smartFrodoExploring(agent,null,budget)) ;
 
 			var G = sa1Solver.solver(agent, 
 					"SM0", e -> e.type.equals("" + EntityType.SCROLL),
 					S -> gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
 					Policy.NEAREST_TO_AGENT, 
-					20);
+					explorationBudget);
 
 			// Now, attach the game to the agent, and give it the above goal:
 			agent.attachState(state).attachEnvironment(env).setGoal(G);
@@ -115,7 +118,7 @@ public class Demo3 {
 			Thread.sleep(1000);
 
 			state.updateState("Frodo");
-			printEntities(state);
+			Utils.printEntities(state);
 
 			// Now we run the agent:
 			System.out.println(">> Start agent loop...");

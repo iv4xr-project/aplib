@@ -440,7 +440,8 @@ public class GoalStructure {
      * around an instance of {@link Goal}.
      */
     static public class PrimitiveGoal extends GoalStructure {
-        Goal goal;
+        
+    	Goal goal;
 
         /**
          * Create an instance of PrimitiveGoal, wrapping around the given {@link Goal}.
@@ -471,6 +472,10 @@ public class GoalStructure {
         void makeInProgressAgain() {
             goal.status.resetToInProgress();
             super.makeInProgressAgain();
+        }
+        
+        public Goal getGoal() {
+        	return goal ;
         }
 
     }

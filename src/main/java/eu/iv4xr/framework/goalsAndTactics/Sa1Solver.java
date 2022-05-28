@@ -18,7 +18,8 @@ public class Sa1Solver<NavgraphNode>  {
 	public Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceBetweenEntities ;
 	public Function<String,GoalStructure> gCandidateIsInteracted ;
 	public Function<String,GoalStructure> gTargetIsRefreshed ;
-	public Action explore ;
+	public Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted ;
+	public Function<Integer,GoalStructure> exploring ;
 	
 	public Sa1Solver() { }
 	
@@ -27,18 +28,17 @@ public class Sa1Solver<NavgraphNode>  {
 			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
 			Function<String, GoalStructure> gCandidateIsInteracted, 
 			Function<String, GoalStructure> gTargetIsRefreshed,
-			Action explore) {
+			Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted,
+			Function<Integer,GoalStructure> exploring) {
 		this.reachabilityChecker = reachabilityChecker;
 		this.distanceBetweenEntities = distanceFunction ;
 		this.distanceToAgent = distanceToAgent ;
 		this.gCandidateIsInteracted = gCandidateIsInteracted;
 		this.gTargetIsRefreshed = gTargetIsRefreshed;
-		this.explore = explore;
+		this.explorationExhausted = explorationExhausted ;
+		this.exploring = exploring;
 	}
 	
-	boolean exploreIsExhausted(Iv4xrAgentState<NavgraphNode> belief) {
-		return ! explore.isEnabled(belief) ;
-	}
 	
 	Random rnd = new Random() ;
 	
@@ -97,6 +97,7 @@ public class Sa1Solver<NavgraphNode>  {
 	 * nothing left to explore, or until the budget runs out. 
 	 * The goal is intentionally made to always fail.
 	 */	
+	/*
 	GoalStructure pgExplore(int budget) {
 		
 		GoalStructure explr = goal("exploring (persistent-goal: aborted when it is terminated)").toSolve(belief -> false)
@@ -109,7 +110,7 @@ public class Sa1Solver<NavgraphNode>  {
 		return explr ;
 		
 	}
-	
+	*/
 	
 	public enum Policy { NEAREST_TO_AGENT, NEAREST_TO_TARGET, RANDOM } 
 	
@@ -155,12 +156,12 @@ public class Sa1Solver<NavgraphNode>  {
 					WorldEntity chosen = nextCandidate(belief,visited,selector,tId,policy) ;
 					
 					if (chosen == null) {
-						if (exploreIsExhausted(belief)) {
+						if (explorationExhausted.test(belief)) {
 							// to terminate the repeat:
 							return SUCCESS() ;
 						}
 						else {
-							return pgExplore(incrementalExplorationBudget) ;
+							return exploring.apply(incrementalExplorationBudget) ;
 						}
 						
 					}
