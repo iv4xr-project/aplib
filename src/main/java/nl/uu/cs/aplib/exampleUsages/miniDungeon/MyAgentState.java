@@ -126,7 +126,7 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 				Tile et = new Tile(e.position.x, e.position.z);
 				var blocker = new Pair<>(e_i, et) ;
 				// just unblock it again :)
-				System.out.println("=== unblocking " + e.id + " in maze " + e_i);
+				//System.out.println("=== unblocking " + e.id + " in maze " + e_i);
 				multiLayerNav.toggleBlockingOff(blocker);
 				var shrineType = (ShrineType) e.properties.get("shrinetype") ;
 				if (shrineType == ShrineType.MoonShrine && multiLayerNav.areas.size() > e_i+1) {

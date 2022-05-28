@@ -29,7 +29,7 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
  * In this Demo we use a generic algorithm, SA1, to let the agent search
  * for the right scroll to cleanse the shrine.
  */
-public class Demo3 {
+public class Demo3b {
 	
 	    static boolean isReachable(MyAgentState S, WorldEntity e) {
 	    	var aname = S.worldmodel.agentId ;
@@ -106,13 +106,26 @@ public class Demo3 {
 					S -> tacticLib.explorationExhausted(S),
 					budget -> goalLib.smartFrodoExploring(agent,null,budget)) ;
 
-			var G = sa1Solver.solver(agent, 
+			var G1 = sa1Solver.solver(agent, 
 					"SM0", e -> e.type.equals("" + EntityType.SCROLL),
+					S -> {
+						var S_ = (MyAgentState) S ;
+						var e = S.worldmodel.elements.get("SM0") ;
+						if (e==null) return false ;
+						var clean = (boolean) e.properties.get("cleansed") ;
+						return clean ;
+					}, 
+					Policy.NEAREST_TO_AGENT, 
+					explorationBudget);
+			
+			var G2 = sa1Solver.solver(agent, 
+					"SI1", e -> e.type.equals("" + EntityType.SCROLL),
 					S -> gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
 					Policy.NEAREST_TO_AGENT, 
 					explorationBudget);
 
 			// Now, attach the game to the agent, and give it the above goal:
+			var G = SEQ(G1, goalLib.entityInteracted("SM0"), G2) ;
 			agent.attachState(state).attachEnvironment(env).setGoal(G);
 
 			Thread.sleep(1000);
@@ -128,7 +141,7 @@ public class Demo3 {
 				System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position));
 				// delay to slow it a bit for displaying:
 				Thread.sleep(20);
-				if (k >= 1000)
+				if (k >= 2000)
 					break;
 				k++;
 			}
