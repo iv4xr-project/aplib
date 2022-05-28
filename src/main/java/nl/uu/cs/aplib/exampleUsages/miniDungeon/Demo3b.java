@@ -31,50 +31,7 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
  */
 public class Demo3b {
 	
-	    static boolean isReachable(MyAgentState S, WorldEntity e) {
-	    	var aname = S.worldmodel.agentId ;
-	        var player = S.worldmodel.elements.get(aname) ;
-	        int player_maze = (int) player.properties.get("maze") ;
-	        int e_maze = (int) e.properties.get("maze") ;
-	        
-			var t1 = toTile(player.position) ;
-			var t2 = toTile(e.position) ;
-			var path = adjustedFindPath(S, player_maze,t1.x,t1.y,e_maze,t2.x,t2.y) ;
-			return path!=null && path.size()>0 ;
-	    }
-	    
-	    static float distanceToAgent(MyAgentState S, WorldEntity e) {
-	    	var aname = S.worldmodel.agentId ;
-	        var player = S.worldmodel.elements.get(aname) ;
-	        int player_maze = (int) player.properties.get("maze") ;
-	        int e_maze = (int) e.properties.get("maze") ;
-	        
-	        if (e_maze == player_maze) {
-	        	var p1 = player.position.copy() ;
-		        var p2 = e.position.copy() ;
-		        p1.y = 0 ;
-		        p2.y = 0 ;
-		        return  Vec3.distSq(p1, p2) ;
-	        }
-	        return Math.abs(e_maze - player_maze)*1000000 ;
-	    }
-	    	    
-	    static float distanceBetweenEntities(MyAgentState S, WorldEntity e1, WorldEntity e2) {
-	    	int e1_maze = (int) e1.properties.get("maze") ;
-	        int e2_maze = (int) e2.properties.get("maze") ;
-	        
-	        if (e1_maze == e2_maze) {
-	        	var p1 = e1.position.copy() ;
-		        var p2 = e2.position.copy() ;
-		        p1.y = 0 ;
-		        p2.y = 0 ;
-		        return  Vec3.distSq(p1, p2) ;
-	        }
-	        return Math.abs(e1_maze - e2_maze)*1000000 ;
-	    }
-	
-	    
-		public static void main(String[] args) throws Exception {
+	    	public static void main(String[] args) throws Exception {
 			// Create an instance of the game, attach an environment to it:
 			MiniDungeonConfig config = new MiniDungeonConfig();
 			config.numberOfHealPots = 4;
@@ -94,9 +51,9 @@ public class Demo3b {
 			int explorationBudget = 20 ;
 			
 			var sa1Solver = new Sa1Solver<Void>(
-					(S, e) -> isReachable((MyAgentState) S, e), 
-					(S, e) -> distanceToAgent((MyAgentState) S, e), 
-					S -> (e1, e2) -> distanceBetweenEntities((MyAgentState) S, e1, e2),
+					(S, e) -> Demo3.isReachable((MyAgentState) S, e), 
+					(S, e) -> Demo3.distanceToAgent((MyAgentState) S, e), 
+					S -> (e1, e2) -> Demo3.distanceBetweenEntities((MyAgentState) S, e1, e2),
 					eId -> SEQ(
 							goalLib.smartFrodoEntityInCloseRange(agent,eId), 
 							goalLib.entityInteracted(eId)), 
@@ -144,7 +101,7 @@ public class Demo3b {
 				agent.update();
 				System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position));
 				// delay to slow it a bit for displaying:
-				Thread.sleep(20);
+				Thread.sleep(50);
 				if (k >= 2000)
 					break;
 				k++;

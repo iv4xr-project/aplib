@@ -31,7 +31,7 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
  */
 public class Demo3 {
 	
-	    static boolean isReachable(MyAgentState S, WorldEntity e) {
+	    public static boolean isReachable(MyAgentState S, WorldEntity e) {
 	    	var aname = S.worldmodel.agentId ;
 	        var player = S.worldmodel.elements.get(aname) ;
 	        int player_maze = (int) player.properties.get("maze") ;
@@ -43,7 +43,7 @@ public class Demo3 {
 			return path!=null && path.size()>0 ;
 	    }
 	    
-	    static float distanceToAgent(MyAgentState S, WorldEntity e) {
+	    public static float distanceToAgent(MyAgentState S, WorldEntity e) {
 	    	var aname = S.worldmodel.agentId ;
 	        var player = S.worldmodel.elements.get(aname) ;
 	        int player_maze = (int) player.properties.get("maze") ;
@@ -59,7 +59,7 @@ public class Demo3 {
 	        return Math.abs(e_maze - player_maze)*1000000 ;
 	    }
 	    	    
-	    static float distanceBetweenEntities(MyAgentState S, WorldEntity e1, WorldEntity e2) {
+	    public static float distanceBetweenEntities(MyAgentState S, WorldEntity e1, WorldEntity e2) {
 	    	int e1_maze = (int) e1.properties.get("maze") ;
 	        int e2_maze = (int) e2.properties.get("maze") ;
 	        
