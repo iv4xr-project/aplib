@@ -479,6 +479,8 @@ public class MiniDungeon {
 		return null ;
 	}
 	
+	public boolean aPlayerHasAttacked = false ;
+	
 	/**
 	 * Execute a command for the given player. The method returns null if the command
 	 * cannot be executed (e.g. the player try to move off the board); the game state
@@ -486,6 +488,8 @@ public class MiniDungeon {
 	 * changed accordingly, and a msg to print is returned.
 	 */
 	String doCommandWorker(Player player, Command command) {
+		
+		aPlayerHasAttacked = false ;
 		
 		if (player.dead())
 			return null ;
@@ -577,6 +581,7 @@ public class MiniDungeon {
 			var m = (Monster) target;
 			String msg = "> " + player.name + " attacked monster " + m.id;
 			attack(player, m);
+			aPlayerHasAttacked = true ;
 			if (m.hp <= 0) {
 				msg += ". The monster is killed!";
 			}

@@ -13,8 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.sound.sampled.AudioInputStream;
@@ -71,10 +70,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 	public boolean soundOn = true ;
 	
 	// sounds:
-	Clip soundWelcome ;
-	Clip soundExit ;
-	Clip soundAlmostDie ;
-	Clip soundDie ;
+	Map<String,Clip> sounds = new HashMap<>() ;
 
 	public DungeonApp(MiniDungeonConfig config) throws Exception {
 		super() ;
@@ -91,29 +87,17 @@ public class DungeonApp extends JPanel implements KeyListener {
         panelHeight = scaledSpriteWidtgh*config.worldSize + 3*yMargin + txtCharSize*14 ; // 14 lines text...
 		
         // loading sounds:
-        p = Path.of("assets","welcome.wav") ;  
-        File f = new File(p.toString()) ;
-        AudioInputStream ais = AudioSystem.getAudioInputStream(f);
-        soundWelcome = AudioSystem.getClip() ;
-        soundWelcome.open(ais);
-        
-        p = Path.of("assets","exit.wav") ;  
-        f = new File(p.toString()) ;
-        ais = AudioSystem.getAudioInputStream(f);
-        soundExit = AudioSystem.getClip() ;
-        soundExit.open(ais);
-        
-        p = Path.of("assets","death.wav") ;  
-        f = new File(p.toString()) ;
-        ais = AudioSystem.getAudioInputStream(f);
-        soundAlmostDie = AudioSystem.getClip() ;
-        soundAlmostDie.open(ais);
-        
-        p = Path.of("assets","die.wav") ;  
-        f = new File(p.toString()) ;
-        ais = AudioSystem.getAudioInputStream(f);
-        soundDie = AudioSystem.getClip() ;
-        soundDie.open(ais);
+        String[] soundNames = {
+        	"welcome", "exit", "death", "die", "punch"
+        } ;
+        for(var soundName: soundNames) {
+        	p = Path.of("assets", soundName + ".wav") ;  
+            File f = new File(p.toString()) ;
+            AudioInputStream ais = AudioSystem.getAudioInputStream(f);
+            Clip sound = AudioSystem.getClip() ;
+            sound.open(ais);
+            sounds.put(soundName, sound) ;
+        }
         
 		// dungeon.showConsoleIO = false ;
 		addKeyListener(this);
@@ -168,7 +152,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 		var config = dungeon.config ;
 		if (key == 'z') {
 			restart(config) ;
-			playSound(soundWelcome);
+			playSound(sounds.get("welcome"));
 		}
 		if (key == 'q') {
 			closeAllSounds() ;
@@ -192,37 +176,41 @@ public class DungeonApp extends JPanel implements KeyListener {
 				// logic for playing sound:
 				int frodoAreaNow = dungeon.frodo().mazeId ;
 				int smeagolAreaNow = -1 ;
+				Player frodo = dungeon.frodo() ;
+				Player smeagol = dungeon.smeagol() ;
+				
 				if (dungeon.config.enableSmeagol) {
 					smeagolAreaNow = dungeon.smeagol().mazeId ;
 				}
 				if ((frodoAreaWas != frodoAreaNow) || (smeagolAreaWas != smeagolAreaNow)) {
-					playSound(soundExit);
+					playSound(sounds.get("exit"));
 				}
-				else if (turnNrWas != dungeon.turnNr) {
-					Player frodo = dungeon.frodo() ;
-					Player smeagol = dungeon.smeagol() ;
+				else if (turnNrWas != dungeon.turnNr) {		
 					if((frodoHPWas > 0 && frodo.hp <= 0)
 							|| (smeagol != null && smeagolHPWas>0 && smeagol.hp<=0)
 							) {
-						playSound(soundDie);
+						playSound(sounds.get("die"));
 						
 					}
-					if ((frodo.hp>0 && frodo.hp<5) ||
+					else if ((frodo.hp>0 && frodo.hp<5) ||
 							(smeagol != null && smeagol.hp>0 && smeagol.hp<5)) {
 						// almost dead:
-						playSound(soundAlmostDie);			
+						playSound(sounds.get("death"));			
 					}
-				}
-				
+					else if(dungeon.aPlayerHasAttacked) {
+						// a player got hit:
+						playSound(sounds.get("punch")) ;
+					}
+				}	
 			}
 		}
 		repaint() ;
 	}
 	
 	void closeAllSounds() {
-		soundWelcome.close();
-		soundExit.close(); 
-		soundAlmostDie.close();
+		for(var sound : sounds.values()) {
+			sound.close(); 
+		}
 	}
 	
 	@Override
@@ -417,7 +405,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 		}
 		
 		if(!loaded) {
-			playSound(soundWelcome) ;
+			playSound(sounds.get("welcome")) ;
 			loaded = true ;
 		}
 	}
@@ -436,10 +424,10 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	public static void main(String[] args) throws Exception {		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		config.numberOfMonsters = 50 ;
-		config.numberOfHealPots = 10 ;
-		config.numberOfRagePots = 10 ;
-		config.numberOfCorridors = 1 ;
+		//config.numberOfMonsters = 50 ;
+		config.numberOfHealPots = 3 ;
+		config.numberOfRagePots = 3 ;
+		//config.numberOfCorridors = 1 ;
 		
 		config.viewDistance = 3 ;
 		System.out.println(">>> Configuration:\n" + config) ;
