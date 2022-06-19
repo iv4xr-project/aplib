@@ -1,11 +1,13 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.*;
+import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.*;
 
 import java.util.function.Predicate;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
@@ -65,7 +67,7 @@ public class Demo2 {
 		int k = 0 ;
 		while(G.getStatus().inProgress()) {
 			agent.update();
-			System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position)) ;
+			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
 			Thread.sleep(100); 
 			if (k>=300) break ;

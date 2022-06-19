@@ -31,7 +31,9 @@ public class Maze {
 			Wall w = new Wall(0, i,"");
 			assignIdToWall(w,mazeId) ;
 			world[0][i] = w ;
-			w = new Wall(size - 1, 0, "");
+			// BUG found by unit test
+			//w = new Wall(size - 1, 0, "");
+			w = new Wall(size - 1, i, "");
 			assignIdToWall(w,mazeId) ;
 			world[size - 1][i] = w ;
 			w =  new Wall(i, 0, "");

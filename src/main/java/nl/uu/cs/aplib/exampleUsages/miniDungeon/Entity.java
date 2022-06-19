@@ -98,7 +98,9 @@ public class Entity {
 	
 	public static class Smeagol extends Player {
 		public Smeagol(int x, int y) {
-			name = "Smaegol" ;
+			// BUG found by unit-test
+			// name = "Smaegol" ; 
+			name = "Smeagol" ;
 			id = name ;
 			this.type = EntityType.SMEAGOL ;
 			this.x = x ; this.y = y ;
@@ -116,8 +118,11 @@ public class Entity {
 		
 		public Monster(int x, int y, String id) {
 			this.x = x ; this.y = y ;
-			hpMax = 20 ;
+			// BUG found by unit testing
+			//hpMax = 20 ;
+			//hp = 3 ;
 			hp = 3 ;
+			hpMax = hp ;
 			attackRating = 1 ;
 			this.id = id ;
 			this.type = EntityType.MONSTER ;

@@ -1,12 +1,15 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Maze;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Shrine;
 
-public class Utils {
+public class PrintUtils {
 	
 	
 	public static void printEntities(MyAgentState state) {
@@ -18,8 +21,8 @@ public class Utils {
 		int k = 0 ;
 		for(var e : wom.elements.values()) {
 			if (e.type.equals("aux") || e.type.equals("WALL")) continue ;
-			System.out.print(">>> " + e.id + ", maze: " + TacticLib.mazeId(e) 
-				+ ", @" + TacticLib.toTile(e.position)
+			System.out.print(">>> " + e.id + ", maze: " + Utils.mazeId(e) 
+				+ ", @" + Utils.toTile(e.position)
 				+ ", timestamp: " + e.timestamp) ;
 			if (e.type.equals(EntityType.SHRINE.toString())) {
 				System.out.print(", cleansed: " + e.properties.get("cleansed"));

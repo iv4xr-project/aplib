@@ -38,6 +38,9 @@ public class AplibEDSL {
 
     /**
      * Create a REPEAT type {@link nl.uu.cs.aplib.mainConcepts.GoalStructure}.
+     * Let H be the goal structure created by REPEAT(G). Executing H will 
+     * repeatedly try G until it succeeds. Then H succeeds. H fails if it
+     * runs out of budget.
      */
     public static GoalStructure REPEAT(GoalStructure subgoal) {
         return new GoalStructure(GoalsCombinator.REPEAT, subgoal);
@@ -87,6 +90,9 @@ public class AplibEDSL {
 
     }
     
+    /**
+     * A goal structure that does nothing but printing a message for debugging purpose.
+     */
     public static <State> GoalStructure DEBUG(String debugstring) {
     	return goal("debug-goal").toSolve((State belief) -> true)
     			.withTactic(action("").do1((State state) -> { System.out.println(debugstring) ; return state ; } ).lift()).lift();
@@ -108,12 +114,15 @@ public class AplibEDSL {
     
     
     /**
-     * Repeatedly trying to solve a goal, while the given predicate is true. More
-     * precisely, the agent first checks the given guard predicate g. If it does not
+     * Repeatedly trying to solve a goal g, while the given predicate p is true. More
+     * precisely, the agent first checks the given guard predicate p. If it does not
      * hold, the loop ends. Else, it makes the subgoal current and tries to solve it.
      * If this subgoal is solved, the loop ends. Else we repeat the above steps.
      * 
-     * If the agent runs out of the budget to do the loop, it also leaves the loop.
+     * <p>If the agent runs out of the budget to do the loop, it also leaves the loop.
+     * 
+     * <p> Note that WHILEDO(p,g) does not behave as the usual while-loop, as WHILEDO
+     * also breaks the loop when the body g succeeds.
      */
     public static <State> GoalStructure WHILEDO(Predicate<State> p, GoalStructure subgoal) {
         GoalStructure not_g = lift((State state) -> !p.test(state));
@@ -124,6 +133,10 @@ public class AplibEDSL {
      * If this goal becomes current, it will evaluate the current state. If p holds,
      * it will continue with the goal g1 as the goal to solve. if p does not hold,
      * of SEQ(p,g1) failed, g2 is tried.
+     * 
+     * <p>Note that IFELSE does not behave as the usual if-then-else as IFELSE can
+     * still do the else-part g2 even if p is true, namely if the then-branch g1
+     * subsequently fails.
      */
     public static <State> GoalStructure IFELSE(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
         GoalStructure not_g = lift((State state) -> p.test(state));
@@ -132,11 +145,11 @@ public class AplibEDSL {
     
     /**
      * The combinator will "dynamically" deploy a goal to be executed/adopted after executing this
-     * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal G
-     * based on it, and this G is the one that is deployed. Notice that the kind of G produced can thus
+     * combinator. The parameter dynamic goal takes the agent current state and constructs a goal H
+     * based on it, and this H is the one that is deployed. Notice that the kind of H produced can thus
      * be made dependent on the current agent state.
      * 
-     * <p>The new goal is only deployed once; so if this structure is iterated, it will not deploy
+     * <p>The new goal H is only deployed once; so if this structure is iterated, it will not deploy
      * another new goal.
      */
     public static <AgentState> GoalStructure  DEPLOYonce(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
@@ -160,9 +173,11 @@ public class AplibEDSL {
     
     /**
      * The combinator will "dynamically" deploy a goal to be executed/adopted after executing this
-     * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal G
-     * based on it, and this G is the one that is deployed. Notice that the kind of G produced can thus
+     * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal H
+     * based on it, and this H is the one that is deployed. Notice that the kind of H produced can thus
      * be made dependent on the current agent state.
+     * 
+     * After H is executed, it is removed from the goal-tree.
      */
     public static <AgentState> GoalStructure  DEPLOY(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
         GoalStructure[] newGoal = { null } ; 
@@ -210,6 +225,10 @@ public class AplibEDSL {
      * <p>Will abort the execution of g when the condition c1 or c2 becomes true. If c1 is true,
      * we then proceed with the goal H1. When H1 is done, either in success or failure, the
      * execution of g is resumed.  
+     * 
+     * <p>The goal structure constructed with INTERRUPTIBLE, if it terminates within budget,
+     * always terminate successfully, even if g itself fails. To check if g was actually
+     * successful, you can check its predicate again after the INTERRUPTIBLE. 
      */
     public static <State> GoalStructure INTERRUPTIBLE(Goal g, 
     		Pair<Predicate<State>,GoalStructure>... handlers) {
@@ -242,6 +261,9 @@ public class AplibEDSL {
     			      H)) ;
     }
     
+    /**
+     * Just for representing a pair (p,G) of state-predicate and a goal structure.
+     */
     public static <State> Pair<Predicate<State>,GoalStructure> HANDLE(Predicate<State> p ,GoalStructure handler) {
     	return new Pair<>(p,handler) ;
     }
@@ -328,6 +350,10 @@ public class AplibEDSL {
     //----------------------//
     /**
      * If this goal becomes current, it will try SEQ(p,g1). If this fails it tries g2.
+     * 
+     * <p>Note that IFELSE2 does not behave as the usual if-then-else as IFELSE2 can
+     * still do the else-part g2 even if the guard p succeeds, namely if the then-branch g1
+     * subsequently fails.
      */
     public static GoalStructure IFELSE2(GoalStructure p, GoalStructure g1, GoalStructure g2) {
        // GoalStructure not_g = lift((State state) -> p.test(state));

@@ -1,7 +1,7 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.*;
+import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.*;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -14,6 +14,8 @@ import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Scroll;
@@ -22,8 +24,6 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
 import nl.uu.cs.aplib.utils.Pair;
-
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
 
 /**
  * In this Demo we use a generic algorithm, SA1, to let the agent search
@@ -37,8 +37,8 @@ public class Demo3 {
 	        int player_maze = (int) player.properties.get("maze") ;
 	        int e_maze = (int) e.properties.get("maze") ;
 	        
-			var t1 = toTile(player.position) ;
-			var t2 = toTile(e.position) ;
+			var t1 = Utils.toTile(player.position) ;
+			var t2 = Utils.toTile(e.position) ;
 			var path = adjustedFindPath(S, player_maze,t1.x,t1.y,e_maze,t2.x,t2.y) ;
 			return path!=null && path.size()>0 ;
 	    }
@@ -108,7 +108,7 @@ public class Demo3 {
 
 			var G = sa1Solver.solver(agent, 
 					"SM0", e -> e.type.equals("" + EntityType.SCROLL),
-					S -> gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
+					S -> MyAgentState.gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
 					Policy.NEAREST_TO_AGENT, 
 					explorationBudget);
 
@@ -118,14 +118,14 @@ public class Demo3 {
 			Thread.sleep(1000);
 
 			state.updateState("Frodo");
-			Utils.printEntities(state);
+			PrintUtils.printEntities(state);
 
 			// Now we run the agent:
 			System.out.println(">> Start agent loop...");
 			int k = 0;
 			while (G.getStatus().inProgress()) {
 				agent.update();
-				System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position));
+				System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position));
 				// delay to slow it a bit for displaying:
 				Thread.sleep(20);
 				if (k >= 1000)

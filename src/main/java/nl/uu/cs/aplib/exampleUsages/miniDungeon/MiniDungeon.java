@@ -282,12 +282,6 @@ public class MiniDungeon {
 		}
 	}
 	
-	public Player getPlayer(String name) {
-		for(var p : players) {
-			if (p.equals(name)) return p ;
-		}
-		return null ;
-	}
 	
 	boolean allPlayersDead() {
 		for(var pq : players) {
@@ -817,6 +811,5 @@ public class MiniDungeon {
 			}
 		}
 	}
-	
 
 }

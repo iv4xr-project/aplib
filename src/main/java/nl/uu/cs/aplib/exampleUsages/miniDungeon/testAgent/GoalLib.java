@@ -1,18 +1,17 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
+import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
+import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.*;
 
 import eu.iv4xr.framework.goalsAndTactics.IInteractiveWorldGoalLib;
 import eu.iv4xr.framework.mainConcepts.*;
 import nl.uu.cs.aplib.utils.Pair;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-
-
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.* ;
 
 import java.util.function.Predicate;
 
@@ -60,11 +59,20 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 		return G.lift() ;		
 	}
 	
-	Predicate<MyAgentState> whenFrodoToGoAfterHealPot = S -> {
+	Predicate<MyAgentState> whenToGoAfterHealPot = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+		int maxBagSize = (int) player.properties.get("maxBagSize") ;
 		var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,4) ;
-		return agentIsAlive(S) && bagSpaceUsed==0 && healPotsInVicinity.size() > 0 ;
+		return agentIsAlive(S) && maxBagSize-bagSpaceUsed >= 1 && healPotsInVicinity.size() > 0 ;
+	} ;
+	
+	Predicate<MyAgentState> whenToGoAfteRagePot = S -> {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+		int maxBagSize = (int) player.properties.get("maxBagSize") ;
+		var ragePotsInVicinity = TacticLib.nearItems(S,EntityType.RAGEPOT,4) ;
+		return agentIsAlive(S) && maxBagSize-bagSpaceUsed >= 1 && ragePotsInVicinity.size() > 0 ;
 	} ;
 	
 	/**
@@ -115,7 +123,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	
 	   var G = INTERRUPTIBLE(
 			       ((PrimitiveGoal) entityInCloseRange(targetId)).getGoal(),
-			       HANDLE(whenFrodoToGoAfterHealPot, grabHealPot(agent))
+			       HANDLE(whenToGoAfterHealPot, grabHealPot(agent))
 			    ) ;
 	   // Add an extra checing because an interuptible goal-struct always succeeds:
 	   return SEQ(G, checkIfentityIsInCloseRange(targetId)) ;
@@ -127,6 +135,14 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	 */
 	@Override
 	public GoalStructure entityInteracted(String targetId) {
+		
+		var useHealPotTac = (PrimitiveTactic) tacticLib.useHealingPot ;
+		useHealPotTac.on_((MyAgentState S) -> { 
+			return false ;
+		}) ;
+		
+		var bla = goal("xxx") ;
+		
 		
 		var G = goal("Entity " + targetId + " is interacted.") 
 				.toSolve(proposal -> true)
@@ -173,7 +189,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 		Goal explore = ((PrimitiveGoal) exploring(heuristicLocation,budget)).getGoal();
 		Tactic originalExploreTac = explore.getTactic() ;
 		
-		Tactic abortToGetAHealPot = Abort().on_(whenFrodoToGoAfterHealPot).lift() ;
+		Tactic abortToGetAHealPot = Abort().on_(whenToGoAfterHealPot).lift() ;
 		
 		Tactic newExploreTac = FIRSTof(
 				  abortToGetAHealPot, 

@@ -1,9 +1,18 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import eu.iv4xr.framework.mainConcepts.Iv4xrEnvironment;
 import eu.iv4xr.framework.mainConcepts.*;
 import eu.iv4xr.framework.spatial.IntVec2D;
 import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Frodo;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Monster;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Player;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Shrine;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Smeagol;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.utils.Pair;

@@ -38,6 +38,8 @@ public class DungeonApp extends JPanel implements KeyListener {
 	int yMargin = 20 ;
 	int xMargin = 20 ;
 	
+	public boolean headless = false ;
+	
 	/**
 	 * Image containing the sprites for drawing the game (pic of monsters, walls etc). Each
 	 * sprite is a picture of some size NxN pixels, and arranged as tiles in the Image.
@@ -418,13 +420,13 @@ public class DungeonApp extends JPanel implements KeyListener {
 		frame.add(app);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
-		frame.setVisible(true);
+		if (!app.headless) frame.setVisible(true);
 		return frame ;
 	}
 	
 	public static void main(String[] args) throws Exception {		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		//config.numberOfMonsters = 50 ;
+		config.numberOfMonsters = 50 ;
 		config.numberOfHealPots = 3 ;
 		config.numberOfRagePots = 3 ;
 		//config.numberOfCorridors = 1 ;

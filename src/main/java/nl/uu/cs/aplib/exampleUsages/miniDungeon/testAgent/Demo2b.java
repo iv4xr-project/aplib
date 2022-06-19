@@ -1,12 +1,14 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.*;
+import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.*;
 
 import java.util.function.Predicate;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.HealingPotion;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
@@ -75,7 +77,7 @@ public class Demo2b {
 			var frodo = state.worldmodel.elements.get("Frodo") ;
 			int mapId = (int) frodo.properties.get("maze") ;
 			System.out.println("** [" + k + "/" + app.dungeon.turnNr + "] agent in maze:" 
-					+ mapId + ", @" + toTile(state.worldmodel.position)
+					+ mapId + ", @" + Utils.toTile(state.worldmodel.position)
 					+ ", actual pos @@(" + app.dungeon.frodo().x + "," + app.dungeon.frodo().y + ")"
 					) ;
 			//System.out.println("   #entities SS1 in wom:" + SS1.count()) ;
@@ -91,8 +93,8 @@ public class Demo2b {
 		
 		WorldModel wom ;
 		
-		Utils.printEntities(state) ;
-		var path = state.multiLayerNav.findPath(loc3(1,1,2), loc3(1,18,1)) ;
+		PrintUtils.printEntities(state) ;
+		var path = state.multiLayerNav.findPath(Utils.loc3(1,1,2), Utils.loc3(1,18,1)) ;
 		System.out.println("\n== path: " + path) ;
 		path = adjustedFindPath(state, 0,17,2, 1,18,1) ;
 		System.out.println("\n== path: " + path) ;

@@ -1,9 +1,10 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.TacticLib.toTile;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 
 /**
@@ -42,14 +43,14 @@ public class Demo1 {
 		Thread.sleep(1000);
 		
 		state.updateState("Frodo");
-		Utils.printEntities(state) ;
+		PrintUtils.printEntities(state) ;
 		
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;
 		int k = 0 ;
 		while(G.getStatus().inProgress()) {
 			agent.update();
-			System.out.println("** [" + k + "] agent @" + toTile(state.worldmodel.position)) ;
+			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
 			Thread.sleep(100); 
 			if (k>=150) break ;

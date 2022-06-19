@@ -1,6 +1,8 @@
-package nl.uu.cs.aplib.exampleUsages.miniDungeon;
+package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.extensions.pathfinding.AStar;
 import eu.iv4xr.framework.extensions.pathfinding.CanDealWithDynamicObstacle;
@@ -15,11 +17,15 @@ import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.W
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.IntVec2D;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Frodo;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.ShrineType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Smeagol;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.utils.Pair;
@@ -142,7 +148,47 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 
 	}
 	
+	/**
+	 * Return the game status (as registered in this state).
+	 */
+	public GameStatus gameStatus() {
+		var aux = worldmodel.elements.get("aux") ;
+		var status = (GameStatus) aux.properties.get("status") ;
+		return status ;
+	}
 	
+	/**
+	 * Check if the agent that owns this state is alive in the game
+	 * (its hp>0).
+	 */
+	public boolean agentIsAlive() {
+		var a = worldmodel.elements.get(worldmodel.agentId) ;
+		if (a==null) {
+			throw new IllegalArgumentException() ;
+		}
+		var hp = (Integer) a.properties.get("hp") ;
+		if (hp==null) {
+			throw new IllegalArgumentException() ;
+		}
+		return hp>0 ;
+	}
+	
+	/**
+	 * Return a list of monsters which are currently adjacent to the agent that
+	 * owns this state.
+=	 */
+	public List<WorldEntity> adajcentMonsters() {
+		var player = worldmodel.elements.get(worldmodel.agentId) ;
+		Tile p = Utils.toTile(player.position) ;
+		List<WorldEntity> ms = worldmodel.elements.values().stream()
+				.filter(e -> e.type.equals(EntityType.MONSTER.toString())
+						     && Utils.mazeId(player) == Utils.mazeId(e)
+						 	 && Utils.adjacent(p,Utils.toTile(e.position)))
+				.collect(Collectors.toList()) ;
+		return ms ;
+	}
+
+
 	// just for testing:
 	public static void main(String[] args) throws Exception {
 

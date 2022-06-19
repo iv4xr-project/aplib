@@ -24,7 +24,7 @@ public class Iv4xrEnvironment extends Environment  {
 	
 	
 	/**
-     * You should implement this method.
+     * You can implement this method.
      * 
      * <p>Return a polygon-mesh describing the navigable surface of the 3D-world of the
      * real environment/system that is represented/controlled

@@ -49,6 +49,11 @@
        <artifactId>junit-jupiter-engine</artifactId>
        <version>5.6.0</version>
     </dependency>
+    <dependency>
+    				<groupId>org.pitest</groupId>
+    				<artifactId>pitest-junit5-plugin</artifactId>
+    				<version>0.15</version>
+    </dependency>
 
   </dependencies>
 
@@ -72,6 +77,12 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.22.1</version>
+          <configuration>
+            <!--
+              <forkCount>1</forkCount>
+              <reuseForks> false </reuseForks>
+            -->
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
@@ -125,6 +136,34 @@
                 </execution>
             </executions>
         </plugin>
+        <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.8.0</version>
+            <configuration>
+                <targetClasses>
+                    <param>nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon</param>
+                    <param>nl.uu.cs.aplib.exampleUsages.miniDungeon.Maze</param>
+                    <param>nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity*</param>
+                </targetClasses>
+                <targetTests>
+                  <!--
+                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TestMiniDungeon</param>
+                -->
+                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.UnitTest*</param>
+                </targetTests>
+                <reportsDirectory>
+                    ./pitresults
+                </reportsDirectory>
+                <excludedMethods>
+                    <param>main</param>
+                    <param>deploy</param>
+                </excludedMethods>
+                <excludedClasses>
+                    <param>nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp</param>
+                </excludedClasses>
+            </configuration>
+      </plugin>
       </plugins>
     </pluginManagement>
   </build>
