@@ -342,6 +342,7 @@ public class Sparse2DTiledSurface_NavGraph
 		}
 		// remove tiles that are obviously not frontiers:
 		frontierCandidates.removeAll(cannotBeFrontier) ;
+		System.out.println(">>> Sparse2D.getFrontier() is called") ;
 		return frontiers ;
 	}
 	
@@ -364,6 +365,8 @@ public class Sparse2DTiledSurface_NavGraph
         // sort the frontiers ascendingly, by their geometric distance to (x,y):
         frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,x,y), distSq(p2.x,p2.y,heuristicX,heuristicY)));
 
+        //System.out.println(">>> #frontiers:" + frontiers.size()) ;
+        
         for (var front : frontiers) {
         	//System.out.println(">>> (" + x + "," + y + ")  --> (" + front.x + "," + front.y + ")" ) ;
             var path = findPath(x,y,front.x, front.y);

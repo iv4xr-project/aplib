@@ -128,6 +128,22 @@ public class AplibEDSL {
         GoalStructure not_g = lift((State state) -> !p.test(state));
         return REPEAT(FIRSTof(not_g, subgoal));
     }
+    
+    /**
+     * If p holds in the current state, g1() will be deployed as the
+     * next goal, and else g2() is deployed. The goal thus deployed will
+     * be removed again after executed.
+     */
+    public static <State> GoalStructure IFTHENELSE(
+    		BasicAgent agent,
+    		Predicate<State> p, 
+    		Function<Void,GoalStructure> g1, 
+    		Function<Void,GoalStructure> g2) {
+    	
+    	return DEPLOY(agent, (State S) ->  {
+    		if (p.test(S)) return g1.apply(null) ; else return g2.apply(null) ;
+    		}) ;    	
+    }
 
     /**
      * If this goal becomes current, it will evaluate the current state. If p holds,
@@ -347,7 +363,6 @@ public class AplibEDSL {
 //    }
     
     
-    //----------------------//
     /**
      * If this goal becomes current, it will try SEQ(p,g1). If this fails it tries g2.
      * 

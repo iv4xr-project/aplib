@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>> {
 	
 	/**
-	 * Distance in terms of path-length from the agent that owns S to the entity e.
+	 * Distance in terms of path-length from the agent that owns S to the entity e. It uses
+	 * adjustedFindPath to calculate the path.
 	 */
 	static int distTo(MyAgentState S, WorldEntity e) {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
@@ -74,7 +75,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	Logger logger = Logging.getAPLIBlogger() ;
 	
 
-	public WorldModel moveTo(MyAgentState state, Tile targetTile) {
+	WorldModel moveTo(MyAgentState state, Tile targetTile) {
 		Tile t0 = Utils.toTile(state.worldmodel.position) ;
 		if(!Utils.adjacent(t0,targetTile))
 				throw new IllegalArgumentException() ;
@@ -93,71 +94,34 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 		return wom ;
 	}
 	
-	@Override
-	public Tactic navigateTo(Pair<Integer,Tile> location) {
-		return navigateTo(location.fst, location.snd.x, location.snd.y) ;
-	}
-	
-	public Tactic navigateTo(int mazeId, int x, int y) {
-		var alpha = action("move-to")
-				.do2((MyAgentState S) ->  (Tile nextTile) -> {
-					WorldModel newwom = moveTo(S,nextTile) ;
-					return new Pair<>(S,newwom) ;
-				})
-				.on((MyAgentState S) -> {
-					if (!S.agentIsAlive()) return null ;
-					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
-					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
-					var path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, mazeId, x, y) ;
-					if (path == null) {
-						return null ;
-					}
-					// the first element is the src itself, so we need to pick the next one:
-					return path.get(1).snd ;
-				}) 
-				;
-		return alpha.lift() ;
-	}
-	
-	@Override
-	public Tactic navigateTo(String targetId) {
-		var alpha = action("move-to")
-				.do2((MyAgentState S) ->  (Tile nextTile) -> {
-					WorldModel newwom = moveTo(S,nextTile) ;
-					return new Pair<>(S,newwom) ;
-				})
-				.on((MyAgentState S) -> {
-					if (!S.agentIsAlive()) return null ;
-					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
-					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
-					WorldEntity e = S.worldmodel.elements.get(targetId) ;
-					if (e == null) {
-						//System.out.println("%%%% uknown: " + targetId) ;
-						return null ;
-					}
-					Tile target = Utils.toTile(e.position) ;
-					//System.out.println("src: " + agentPos) ;
-					//System.out.println("dest: " + target) ;
-					// System.out.println(">>> calling pathfinder") ;
-					var path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;
-					if (path == null) {
-						//System.out.println(">>>> can't find path to: " + targetId) ;
-						return null ;
-					}
-					// System.out.println("path: " + path) ; 
-					// the first element is the src itself, so we need to pick the next one:
-					return path.get(1).snd ;
-				}) 
-				;
-		return alpha.lift() ;
+	/**
+	 * Construct an action that would guide the agent to the given location.
+	 */
+	Action navigateToAction(int mazeId, int x, int y) {
+		return action("move-to")
+		.do2((MyAgentState S) ->  (Tile nextTile) -> {
+			WorldModel newwom = moveTo(S,nextTile) ;
+			return new Pair<>(S,newwom) ;
+		})
+		.on((MyAgentState S) -> {
+			if (!S.agentIsAlive()) return null ;
+			var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
+			Tile agentPos = Utils.toTile(S.worldmodel.position) ;
+			var path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, mazeId, x, y) ;
+			if (path == null) {
+				return null ;
+			}
+			// the first element is the src itself, so we need to pick the next one:
+			return path.get(1).snd ;
+		}) 
+		;
 	}
 	
 	/**
-	 * A variation of {@link navigateTo} that guides the agent up to a tile adjacent to
-	 * the target.
+	 * Construct an action that would guide the agent to a tile adjacent to the target entity.
 	 */
-	public Tactic navigateNextTo(String targetId) {
-		var alpha = action("move-to")
+	Action navigateToAction(String targetId) {
+		return action("move-to")
 				.do2((MyAgentState S) ->  (Tile[] nextTile) -> {
 					if (nextTile.length == 0) {
 						return new Pair<>(S,S.env().observe(S.worldmodel().agentId)) ;
@@ -191,16 +155,44 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					return nextTile ;
 				}) 
 				;
-		return alpha.lift() ;
 	}
 	
+
 	@Override
-	public Tactic interact(String targetId) {
-		var alpha = action("interact")
+	public Tactic navigateToTac(Pair<Integer,Tile> location) {
+		return navigateToAction(location.fst, location.snd.x, location.snd.y).lift() ;
+	}
+	
+	/**
+	 * Construct a tactic that would guide the agent to a tile adjacent to the target entity.
+	 */
+	@Override
+	public Tactic navigateToTac(String targetId) {
+		return navigateToAction(targetId).lift() ;	
+	}
+	
+	
+	/**
+	 * Construct an action that would interact with an entity of the given
+	 * id. The action's guard is left unconstrained (so the action would
+	 * always be enabled). You can use the "on" method to add a guard.
+	 */
+	Action interactAction(String targetId) {
+		return action("interact")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
 					return new Pair<>(S,newwom) ;
-				})
+				}) ;
+	}
+	
+	/**
+	 * This constructs a "default" tactic to interact with an entity. The tactic is
+	 * enabled if the entity is known in the agent's state/wom, and if it is 
+	 * adjacent to the agent.
+	 */
+	@Override
+	public Tactic interactTac(String targetId) {
+		var alpha = interactAction(targetId)
 				.on((MyAgentState S) -> {
 					if (!S.agentIsAlive()) return null ;
 					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
@@ -219,38 +211,45 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 		return alpha.lift() ;
 	}
 	
-	public Predicate<MyAgentState> whenToUseHealPot = S -> {
+	public Predicate<MyAgentState> hasHealPot_and_HpLow = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int hp = (int) player.properties.get("hp") ;
 		boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
 		return hp>0 && hp<=10 && hasHealPot ;
 	} ;
 		
-	public Predicate<MyAgentState> whenToUseRagePot = S -> {
+	public Predicate<MyAgentState> hasRagePot_and_inCombat = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int hp = (int) player.properties.get("hp") ;
 		boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;
 		return hp>0 && hasRagePot && S.adajcentMonsters().size()>1 ;
 	} ;
 	
-	public Predicate<MyAgentState> whenToAttack = S -> {
+	public Predicate<MyAgentState> inCombat_and_hpNotCritical = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int hp = (int) player.properties.get("hp") ;
 		return hp>5 && S.adajcentMonsters().size()>0 ;
 	} ;
 	
-	Action actionUseHealingPot = action("use healpot")
+	/**
+	 * Construct an action that would use a healing pot. The action is left unguarded.
+	 */
+	Action useHealingPotAction() {
+		return action("use healpot")
 			.do1((MyAgentState S) -> {
 				logger.info(">>> " + S.worldmodel.agentId + " drinks HEALPOT ") ;
 				WorldModel newwom = S.env().action(S.worldmodel.agentId, Command.USEHEAL) ;
 				return new Pair<>(S,newwom) ;
 			}) ;
+	}
 	
-	Tactic useHealingPotWhenHpLow = actionUseHealingPot
-			.on_(whenToUseHealPot)
-			.lift() ;
 	
-	Tactic attackMonster = action("attack")
+	/**
+	 * Construct an action that would attack an adjacent monster. The action is
+	 * unguarded.
+	 */
+	Action attackMonsterAction() { 
+		return action("attack")
 			.do1((MyAgentState S) -> {
 					var ms = S.adajcentMonsters() ;
 					// just choose the first one:
@@ -258,25 +257,30 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					logger.info(">>> " + S.worldmodel.agentId + " attacks " + m) ;
 					WorldModel newwom = moveTo(S,m) ;
 					return new Pair<>(S,newwom) ;
-				})
-			.on_(whenToAttack)
-			.lift() ;
+				}) ;
+	}
 	
-	
-	Tactic useRagePot = action("use ragepot")
+	/**
+	 * Construct an action that would use a rage pot. The action is left unguarded.
+	 */
+	Action useRagePotAction() {
+		return action("use ragepot")
 			.do1((MyAgentState S) -> {
 					logger.info(">>> " + S.worldmodel.agentId + " drinks RAGEPOT ") ;
 				    WorldModel newwom = S.env().action(S.worldmodel.agentId, Command.USERAGE) ;
 					return new Pair<>(S,newwom) ;
-				})
-			.on_(whenToUseRagePot)
-			.lift() ;
+				}) ;
+	}
 
 	@Override
 	public boolean explorationExhausted(SimpleState S) {
 		return ! exploreAction(null).isEnabled(S) ;
 	}
 	
+	/**
+	 * Construct an action that would explore the world, in the direction of the given
+	 * location.
+	 */
 	Action exploreAction(Pair<Integer,Tile> heuristicLocation) {
 		Action alpha = action("explore")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
@@ -297,7 +301,14 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 						//System.out.println(">>>> can't find an explore path!") ;
 						return null ;
 					}
-					return path.get(1).snd ;
+					try {
+						return path.get(1).snd ;
+					}
+					catch(Exception e) {
+						System.out.println(">>> agent @" + agentPos + ", path: " + path) ;
+						throw e ;
+					}
+					//return path.get(1).snd ;
 				}) 
 				;
 		return alpha ;

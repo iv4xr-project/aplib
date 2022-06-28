@@ -40,15 +40,16 @@ public class Demo2 {
 		MyAgentState state = new MyAgentState() ;
 		var goalLib = new GoalLib() ;
 		
-		var agent = new TestAgent("Frodo","Frodo")  ;
+		//var agent = new TestAgent("Frodo","Frodo")  ;
+		var agent = new TestAgent("Smeagol","Smeagol")  ;
 		
 		//
 		// Specify a goal for the agent: search and grab scroll S0 then use it on the Shrine.
 		//
 		var G = SEQ(
-				  goalLib.smartFrodoEntityInCloseRange(agent,"S0_0"),
+				  goalLib.smartEntityInCloseRange(agent,"S0_0"),
 				  goalLib.entityInteracted("S0_0"),
-				  goalLib.smartFrodoEntityInCloseRange(agent,"SM0"),
+				  goalLib.smartEntityInCloseRange(agent,"SM0"),
 				  goalLib.entityInteracted("SM0")
 				) ;
 

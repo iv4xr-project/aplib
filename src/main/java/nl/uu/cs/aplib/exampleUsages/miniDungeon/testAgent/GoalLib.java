@@ -3,15 +3,13 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.mainConcepts.*;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
-import nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic;
-
 import static nl.uu.cs.aplib.AplibEDSL.* ;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.*;
-
 import eu.iv4xr.framework.goalsAndTactics.IInteractiveWorldGoalLib;
 import eu.iv4xr.framework.mainConcepts.*;
 import nl.uu.cs.aplib.utils.Pair;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
+
+import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils.* ;
 
 import java.util.function.Predicate;
 
@@ -45,11 +43,18 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 					return solved; 
 				})
 				.withTactic(
-				   FIRSTof(tacticLib.useHealingPot,
-						   tacticLib.useRagePot,
-						   tacticLib.attackMonster,
-						   //tacticLib.navigateTo(targetId),
-						   tacticLib.navigateNextTo(targetId),
+				   FIRSTof(tacticLib.useHealingPotAction()
+						   	  .on_(tacticLib.hasHealPot_and_HpLow)
+						   	  .lift()
+						   ,
+						   tacticLib.useRagePotAction()
+						   	  .on_(tacticLib.hasRagePot_and_inCombat)
+						   	  .lift()
+						   ,
+						   tacticLib.attackMonsterAction()
+						      .on_(tacticLib.inCombat_and_hpNotCritical)
+						      .lift(),
+						   tacticLib.navigateToTac(targetId),
 						   tacticLib.explore(null),
 						   //Abort().on_(S -> { System.out.println("### about to abort") ; return false;}).lift(), 
 				   		   ABORT()) 
@@ -64,32 +69,29 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 		int maxBagSize = (int) player.properties.get("maxBagSize") ;
 		var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,4) ;
-		return agentIsAlive(S) && maxBagSize-bagSpaceUsed >= 1 && healPotsInVicinity.size() > 0 ;
+		return S.agentIsAlive() && maxBagSize-bagSpaceUsed >= 1 && healPotsInVicinity.size() > 0 ;
 	} ;
 	
-	Predicate<MyAgentState> whenToGoAfteRagePot = S -> {
+	Predicate<MyAgentState> whenToGoAfterRagePot = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 		int maxBagSize = (int) player.properties.get("maxBagSize") ;
 		var ragePotsInVicinity = TacticLib.nearItems(S,EntityType.RAGEPOT,4) ;
-		return agentIsAlive(S) && maxBagSize-bagSpaceUsed >= 1 && ragePotsInVicinity.size() > 0 ;
+		return S.agentIsAlive() && maxBagSize-bagSpaceUsed >= 1 && ragePotsInVicinity.size() > 0 ;
 	} ;
 	
 	/**
-	 * A goal to send the agent to pick up a healing pot nearby. It is a dynamic goal,
+	 * A goal to send the agent to pick up a heal or rage pot nearby. It is a dynamic goal,
 	 * as it will pick any such pot (rather than a specific one decided upfront).
 	 */
-	GoalStructure grabHealPot(TestAgent agent) { 
+	GoalStructure grabPot(TestAgent agent, EntityType potionType) { 
 		return DEPLOY(agent,
 		  (MyAgentState S) -> {
-			  var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
-			  int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
-			  var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,5) ;
-			  //System.out.println("===== checking deploy grab ") ;
-			  if (bagSpaceUsed>0 || healPotsInVicinity.size() == 0) {
+			  var potsInVicinity = TacticLib.nearItems(S,potionType,5) ;
+			  if (potsInVicinity.size() == 0) {
 			      return FAIL() ;
 			  }
-			  var pot = healPotsInVicinity.get(0) ;
+			  var pot = potsInVicinity.get(0) ;
 			  //System.out.println("===== deploy grab " + pot.id) ;
 			  return SEQ(entityInCloseRange(pot.id),
 					     entityInteracted(pot.id)) ;
@@ -97,7 +99,8 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	    ) ;
 	}
 	
-	GoalStructure checkIfentityIsInCloseRange(String targetId) {
+	
+	GoalStructure checkIfEntityIsInCloseRange(String targetId) {
 		
 		return lift("Check if entity " + targetId + " is touched",(MyAgentState S) -> {
 					WorldEntity e = S.worldmodel.getElement(targetId) ;
@@ -111,22 +114,20 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	
 	/**
 	 * A smarter version of entityInCloseRange(e) goal, that will also pick up a nearby
-	 * healing potion along the way, if the bag is empty. 
-	 * This is intended for Frodo. 
-	 * 
-	 * <p>TODO: Smeagol variant; it should immediately drink
+	 * potion along the way, if the bag is empty. 
 	 */
-	public GoalStructure smartFrodoEntityInCloseRange(
+	public GoalStructure smartEntityInCloseRange(
 				TestAgent agent, 
 			 	String targetId) { 
 		
 	
 	   var G = INTERRUPTIBLE(
 			       ((PrimitiveGoal) entityInCloseRange(targetId)).getGoal(),
-			       HANDLE(whenToGoAfterHealPot, grabHealPot(agent))
+			       HANDLE(whenToGoAfterHealPot, grabPot(agent, EntityType.HEALPOT)),
+			       HANDLE(whenToGoAfterRagePot, grabPot(agent, EntityType.RAGEPOT))
 			    ) ;
-	   // Add an extra checing because an interuptible goal-struct always succeeds:
-	   return SEQ(G, checkIfentityIsInCloseRange(targetId)) ;
+	   // Add an extra checking because an interruptible goal-struct always succeeds:
+	   return SEQ(G, checkIfEntityIsInCloseRange(targetId)) ;
 	}
 	
 	/**
@@ -136,19 +137,41 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	@Override
 	public GoalStructure entityInteracted(String targetId) {
 		
-		var useHealPotTac = (PrimitiveTactic) tacticLib.useHealingPot ;
-		useHealPotTac.on_((MyAgentState S) -> { 
-			return false ;
-		}) ;
-		
-		var bla = goal("xxx") ;
-		
-		
+		// when the target is a scroll, and when the bag is full, this action
+		// will a heal or rage pot to create space. This action
+		// always return a null proposal, as it is not meant to solve
+		// the main-goal:
+		Action useHealOrRagePot = action("use heal- or ragepot").do1(
+				  (MyAgentState S) -> {
+					  var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+					  boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
+					  boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;
+					  if(hasRagePot)	
+						   tacticLib.useRagePotAction().exec1(S) ;
+					  else tacticLib.useHealingPotAction().exec1(S) ;
+					  return null ; 
+				  })
+				.on_((MyAgentState S) -> { 
+					WorldEntity e = S.worldmodel.getElement(targetId) ;
+					if (e==null || ! e.type.equals(EntityType.SCROLL.toString())) {
+						return false ;
+					}
+					var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+					boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
+					boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;
+					int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+					int maxBagSize = (int) player.properties.get("maxBagSize") ;
+					int freeSpace = maxBagSize - bagSpaceUsed ;
+					return (hasHealPot || hasRagePot) && freeSpace==0  ;	
+				}) ;
+
 		var G = goal("Entity " + targetId + " is interacted.") 
 				.toSolve(proposal -> true)
 				.withTactic(
-				   FIRSTof(tacticLib.interact(targetId),
-						   ABORT()) 
+				   FIRSTof(
+					  useHealOrRagePot.lift(),
+					  tacticLib.interactTac(targetId),
+					  ABORT()) 
 				  )
 				;
 		
@@ -170,9 +193,18 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	public GoalStructure exploring(Pair<Integer, Tile> heuristicLocation, int budget) {
 		GoalStructure explr = goal("exploring (persistent-goal: aborted when it is terminated)").toSolve(belief -> false)
 				.withTactic(FIRSTof(
-						tacticLib.useHealingPot,
-						tacticLib.useRagePot,
-						tacticLib.attackMonster,
+						tacticLib.useHealingPotAction()
+						   .on_(tacticLib.hasHealPot_and_HpLow)
+						   .lift()
+						,
+						tacticLib.useRagePotAction()
+						   .on_(tacticLib.hasRagePot_and_inCombat)
+						   .lift()
+						,
+						tacticLib.attackMonsterAction()
+						   .on_(tacticLib.inCombat_and_hpNotCritical)
+						   .lift()
+						,
 						tacticLib.explore(heuristicLocation),
 						ABORT()))
 				.lift()
@@ -182,23 +214,27 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 		return explr ;
 	}
 	
-	public GoalStructure smartFrodoExploring(TestAgent agent, 
+	public GoalStructure smartExploring(TestAgent agent, 
 			Pair<Integer, Tile> heuristicLocation, 
 			int budget) {
 		
-		Goal explore = ((PrimitiveGoal) exploring(heuristicLocation,budget)).getGoal();
-		Tactic originalExploreTac = explore.getTactic() ;
+		Goal exploreG = ((PrimitiveGoal) exploring(heuristicLocation,budget)).getGoal();
+		
+		Tactic originalExploreTac = exploreG.getTactic() ;
 		
 		Tactic abortToGetAHealPot = Abort().on_(whenToGoAfterHealPot).lift() ;
+		Tactic abortToGetARagePot = Abort().on_(whenToGoAfterRagePot).lift() ;
 		
 		Tactic newExploreTac = FIRSTof(
 				  abortToGetAHealPot, 
+				  abortToGetARagePot,
 				  originalExploreTac
 				) ;
 
 		return FIRSTof(
-				  explore.withTactic(newExploreTac).lift(),
-				  SEQ(grabHealPot(agent),FAIL())	
+				  exploreG.withTactic(newExploreTac).lift(),
+				  SEQ(grabPot(agent,EntityType.HEALPOT),FAIL()),
+				  SEQ(grabPot(agent,EntityType.RAGEPOT),FAIL())	
 				) ;
 	}
 

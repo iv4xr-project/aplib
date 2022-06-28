@@ -274,6 +274,7 @@ public class LayeredAreasNavigation<
 			var nav = areas.get(a) ;
 			Integer a_ = a ;
 			var fr = nav.getFrontier().stream().map(nd -> new Pair<>(a_,nd)).collect(Collectors.toList()) ;
+			System.out.println("xxxx calling getFrontier of map " + a_) ;
 			frontiers.addAll(fr) ;
 		}
 		return frontiers ;

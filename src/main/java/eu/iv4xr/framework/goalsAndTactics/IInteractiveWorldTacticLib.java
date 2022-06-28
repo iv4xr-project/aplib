@@ -19,21 +19,21 @@ public interface IInteractiveWorldTacticLib<Location> {
 	 * when this navigation is possible, and else the tactic is not
 	 * enabled.
 	 */
-	public Tactic navigateTo(Location heuristicLocation) ;
+	public Tactic navigateToTac(Location heuristicLocation) ;
 	
 	/**
 	 * Construct a tactic to auto-navigate to a world-entity with the given id.
 	 * It is enabled when the entity exists in the current state, and
 	 * if navigation to it is possible. Else the tactic is not enabled.
 	 */
-	public Tactic navigateTo(String entityId) ;
+	public Tactic navigateToTac(String entityId) ;
 	
 	/**
 	 * Construct a tactic to interact with a world-entity with the given id. It is
 	 * enabled when the exists in the current state, and
 	 * if interacting with it is possible. Else the tactic is not enabled.
 	 */
-	public Tactic interact(String entityId) ;
+	public Tactic interactTac(String entityId) ;
 	
 	/**
 	 * Construct a tactic to auto-explore the world. It is enabled when there is a

@@ -42,20 +42,21 @@ public class Demo2b {
 		MyAgentState state = new MyAgentState() ;
 		var goalLib = new GoalLib() ;
 		
-		var agent = new TestAgent("Frodo","Frodo")  ;
+		String player = "Smeagol" ;
+		//String player = "Frodo" ;
+		var agent = new TestAgent(player,player)  ;
 		
 		var G = SEQ(
-				  goalLib.smartFrodoEntityInCloseRange(agent,"S0_1"),
+				  goalLib.smartEntityInCloseRange(agent,"S0_1"),
 				  goalLib.entityInteracted("S0_1"),
-				  goalLib.smartFrodoEntityInCloseRange(agent,"SM0"),
+				  goalLib.smartEntityInCloseRange(agent,"SM0"),
 				  goalLib.entityInteracted("SM0"),
 				  goalLib.entityInteracted("SM0"),
-				  goalLib.smartFrodoEntityInCloseRange(agent,"SS1"),
+				  goalLib.smartEntityInCloseRange(agent,"SS1"),
 				  goalLib.entityInteracted("SS1"),
-				  goalLib.smartFrodoEntityInCloseRange(agent,"S0_0"),
-				  //goalLib.entityInteracted("S0_0")
-				  goalLib.smartFrodoEntityInCloseRange(agent,"SI1"),
-				  goalLib.entityInteracted("SI1")
+				  goalLib.smartEntityInCloseRange(agent,"S0_0"),
+				  goalLib.smartEntityInCloseRange(agent,"SI1")
+				  //goalLib.entityInteracted("SI1")
 				  
 				) ;
 
@@ -74,11 +75,21 @@ public class Demo2b {
 		int k = 0 ;
 		while(G.getStatus().inProgress()) {
 			agent.update();
-			var frodo = state.worldmodel.elements.get("Frodo") ;
-			int mapId = (int) frodo.properties.get("maze") ;
+			var player_ = state.worldmodel.elements.get(player) ;
+			int mapId = (int) player_.properties.get("maze") ;
+			int x ;
+			int y ;
+			if (player.equals("Frodo")) {
+				x = app.dungeon.frodo().x ;
+				y = app.dungeon.frodo().y ;
+			}
+			else {
+				x = app.dungeon.smeagol().x ;
+				y = app.dungeon.smeagol().y ;
+			}
 			System.out.println("** [" + k + "/" + app.dungeon.turnNr + "] agent in maze:" 
 					+ mapId + ", @" + Utils.toTile(state.worldmodel.position)
-					+ ", actual pos @@(" + app.dungeon.frodo().x + "," + app.dungeon.frodo().y + ")"
+					+ ", actual pos @(" + x + "," + y + ")"
 					) ;
 			//System.out.println("   #entities SS1 in wom:" + SS1.count()) ;
 			// delay to slow it a bit for displaying:
@@ -88,7 +99,7 @@ public class Demo2b {
 		}	
 		//G.printGoalStructureStatus();	
 		
-		state.updateState("Frodo");
+		state.updateState(player);
 		
 		
 		WorldModel wom ;
@@ -100,7 +111,7 @@ public class Demo2b {
 		System.out.println("\n== path: " + path) ;
 		
 		
-		wom = state.env().observe("Frodo") ;
+		wom = state.env().observe(player) ;
 		//System.out.println("==============") ;
 		//Utils.printEntities(wom);
 		
