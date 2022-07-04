@@ -14,20 +14,20 @@ public class Test_Sparse2DTiledSurface_NavGraph {
 	public void test_pathfinding() {
 		
 		var nav = new Sparse2DTiledSurface_NavGraph() ;
-		nav.maxX = 5 ;
-		nav.maxY = 5 ;
+		nav.sizeX = 5 ;
+		nav.sizeY = 5 ;
 		
-		for(int x=0; x<nav.maxX; x++) {
-			for (int y=0; y<nav.maxY; y++) {
+		for(int x=0; x<nav.sizeX; x++) {
+			for (int y=0; y<nav.sizeY; y++) {
 				nav.markAsSeen(new Tile(x,y));
 			}
 		}
 		
-		for(int x=0; x<nav.maxX; x++) {
+		for(int x=0; x<nav.sizeX; x++) {
 			nav.addObstacle(new Wall(x,0));
-			nav.addObstacle(new Wall(x,nav.maxY-1));
+			nav.addObstacle(new Wall(x,nav.sizeY-1));
 			nav.addObstacle(new Wall(0,x));
-			nav.addObstacle(new Wall(nav.maxX-1,x));
+			nav.addObstacle(new Wall(nav.sizeX-1,x));
 		}
 		
 		System.out.println(nav) ;
@@ -68,14 +68,14 @@ public class Test_Sparse2DTiledSurface_NavGraph {
 	@Test
 	public void test_visibility() {
 		var nav = new Sparse2DTiledSurface_NavGraph() ;
-		nav.maxX = 12 ;
-		nav.maxY = 12 ;
+		nav.sizeX = 12 ;
+		nav.sizeY = 12 ;
 		
-		for(int x=0; x<nav.maxX; x++) {
+		for(int x=0; x<nav.sizeX; x++) {
 			nav.addObstacle(new Wall(x,0));
-			nav.addObstacle(new Wall(x,nav.maxY-1));
+			nav.addObstacle(new Wall(x,nav.sizeY-1));
 			nav.addObstacle(new Wall(0,x));
-			nav.addObstacle(new Wall(nav.maxX-1,x));
+			nav.addObstacle(new Wall(nav.sizeX-1,x));
 		}
 		
 		assertTrue(!nav.hasbeenSeen(0,0)) ;
@@ -119,14 +119,14 @@ public class Test_Sparse2DTiledSurface_NavGraph {
 	@Test
 	public void test_explore() {
 		var nav = new Sparse2DTiledSurface_NavGraph() ;
-		nav.maxX = 12 ;
-		nav.maxY = 12 ;
+		nav.sizeX = 12 ;
+		nav.sizeY = 12 ;
 		
-		for(int x=0; x<nav.maxX; x++) {
+		for(int x=0; x<nav.sizeX; x++) {
 			nav.addObstacle(new Wall(x,0));
-			nav.addObstacle(new Wall(x,nav.maxY-1));
+			nav.addObstacle(new Wall(x,nav.sizeY-1));
 			nav.addObstacle(new Wall(0,x));
-			nav.addObstacle(new Wall(nav.maxX-1,x));
+			nav.addObstacle(new Wall(nav.sizeX-1,x));
 		}
 		
 		for(int x=0; x<5; x++) {

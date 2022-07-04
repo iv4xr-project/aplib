@@ -71,7 +71,7 @@ public class MiniDungeon {
 		public int numberOfMonsters = 6 ;
 		public int numberOfHealPots = 2 ;
 		public int numberOfRagePots = 2 ;
-		public int numberOfKeys = 3 ;
+		public int numberOfScrolls = 3 ;
 		public boolean enableSmeagol = true ;
 		
 		/**
@@ -90,7 +90,7 @@ public class MiniDungeon {
 			s += "\n#monsters    : " +  numberOfMonsters ;
 			s += "\n#heal-pots   : " +  numberOfHealPots ;
 			s += "\n#rage-potss  : " +  numberOfRagePots ;
-			s += "\n#keys        : " +  numberOfKeys ;
+			s += "\n#scrolls     : " +  numberOfScrolls ;
 			s += "\nSmeagol      : " +  enableSmeagol ;
 			
 			return s ;
@@ -115,7 +115,7 @@ public class MiniDungeon {
 		if (size < 8) throw new IllegalArgumentException("size too small") ;
 		if (config.numberOfCorridors > size/3) 
 			throw new IllegalArgumentException("too many corridors") ;
-		int numberOfItems = config.numberOfHealPots + config.numberOfRagePots + config.numberOfKeys ;
+		int numberOfItems = config.numberOfHealPots + config.numberOfRagePots + config.numberOfScrolls ;
 		if (config.numberOfMonsters + numberOfItems > (size-2)*(size-2)/3) 
 			throw new IllegalArgumentException("too many monsters and items") ;
 		
@@ -184,7 +184,22 @@ public class MiniDungeon {
 		}
 
 		List<Pair<Integer, Integer>> freeSquares = maze.getFreeTiles() ;
-
+		
+		// BUG found during system-testing: 
+		// reserve squares in area of the bottom low corner, either to place
+		// Smaegol, or to teleport
+		freeSquares = freeSquares.stream()
+		   .filter(sq -> !(sq.fst <= 3 && sq.snd <= 3))
+		   .collect(Collectors.toList());
+		
+		// reserve squares for Frodo:
+		int mid = config.worldSize / 2 ;
+		if (maze.id == 0 && config.enableSmeagol) {
+			freeSquares = freeSquares.stream()
+			   .filter(sq -> !(sq.fst >= mid-1 && sq.fst <= mid+1 
+			   				   && sq.snd >= mid-1 && sq.snd <= mid+1))
+			   .collect(Collectors.toList());
+		}
 		// seed monsters:
 		int m = 0;
 		while (m < config.numberOfMonsters && freeSquares.size() > 0) {
@@ -224,7 +239,7 @@ public class MiniDungeon {
 		// seed scrolls:
 		int ky = 0;
 		List<Scroll> scrolls = new LinkedList<>();
-		while (ky < config.numberOfKeys && freeSquares.size() > 0) {
+		while (ky < config.numberOfScrolls && freeSquares.size() > 0) {
 			int k = rnd.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
 			String id = "S" + maze.id + "_" + ky ;
@@ -719,7 +734,9 @@ public class MiniDungeon {
 				if (isVisible(frodo(),frodo().mazeId,x,row)) {
 					visible.add(new Pair<>(frodo().mazeId, location)) ; 
 				}
-				else if (config.enableSmeagol && isVisible(smeagol(),smeagol().mazeId,x,row)) {
+				// BUG found by system test.
+				// else if (config.enableSmeagol && isVisible(smeagol(),smeagol().mazeId,x,row)) {
+				if (config.enableSmeagol && isVisible(smeagol(),smeagol().mazeId,x,row)) {
 					visible.add(new Pair<>(smeagol().mazeId, location)) ;
 				}
 			}

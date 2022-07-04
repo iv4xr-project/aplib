@@ -62,8 +62,8 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 		// The graph is empty when created.
 		Sparse2DTiledSurface_NavGraph navg = new Sparse2DTiledSurface_NavGraph() ;
 		multiLayerNav = new LayeredAreasNavigation<>() ;
-		navg.maxX = env().app.dungeon.config.worldSize ;
-		navg.maxY = navg.maxX ;
+		navg.sizeX = env().app.dungeon.config.worldSize ;
+		navg.sizeY = navg.sizeX ;
 		multiLayerNav.addNextArea(navg, null, null, false);
 		return this ;
 	}
@@ -84,12 +84,12 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 			int mazeId = (int) entry[0];
 			var tile = (IntVec2D) entry[1];
 			var type = (String) entry[2];
-			// System.out.println(">>> registering " + tile + ": " + type) ;
+			//System.out.println(">>> registering maze " + mazeId + ", tile " + tile + ": " + type) ;
 			if (mazeId >= multiLayerNav.areas.size()) {
 				// detecting a new maze, need to allocate a nav-graph for this maze:
 				Sparse2DTiledSurface_NavGraph newNav = new Sparse2DTiledSurface_NavGraph();
-				newNav.maxX = env().app.dungeon.config.worldSize ;
-				newNav.maxY = newNav.maxX ;
+				newNav.sizeX = env().app.dungeon.config.worldSize ;
+				newNav.sizeY = newNav.sizeX ;
 				int N = env().app.dungeon.config.worldSize;
 				Tile lowPortal = new Tile(N - 2, 1);
 				Tile highPortal = new Tile(1, 1);

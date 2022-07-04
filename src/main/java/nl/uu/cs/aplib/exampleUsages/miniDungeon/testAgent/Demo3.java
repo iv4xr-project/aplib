@@ -90,7 +90,9 @@ public class Demo3 {
 			var tacticLib = new TacticLib() ;
 
 			// create an agent:
-			var agent = new TestAgent("Frodo", "player-frodo");	
+			//String agentId = "Frodo" ;
+			String agentId = "Smeagol" ;
+			var agent = new TestAgent(agentId, "player-frodo");	
 			int explorationBudget = 20 ;
 			
 			var sa1Solver = new Sa1Solver<Void>(
@@ -98,17 +100,23 @@ public class Demo3 {
 					(S, e) -> distanceToAgent((MyAgentState) S, e), 
 					S -> (e1, e2) -> distanceBetweenEntities((MyAgentState) S, e1, e2),
 					eId -> SEQ(
-							goalLib.smartFrodoEntityInCloseRange(agent,eId), 
+							goalLib.smartEntityInCloseRange(agent,eId), 
 							goalLib.entityInteracted(eId)), 
 					eId -> SEQ(
-							goalLib.smartFrodoEntityInCloseRange(agent,eId), 
+							goalLib.smartEntityInCloseRange(agent,eId), 
 							goalLib.entityInteracted(eId)), 
 					S -> tacticLib.explorationExhausted(S),
-					budget -> goalLib.smartFrodoExploring(agent,null,budget)) ;
+					budget -> goalLib.smartExploring(agent,null,budget)) ;
 
 			var G = sa1Solver.solver(agent, 
-					"SM0", e -> e.type.equals("" + EntityType.SCROLL),
-					S -> MyAgentState.gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
+					"SM0", 
+					e -> e.type.equals("" + EntityType.SCROLL),
+					S -> { var S_ = (MyAgentState) S;
+					   var e = S.worldmodel.elements.get("SM0");
+					   if (e == null)
+						   return false;
+					   var clean = (boolean) e.properties.get("cleansed");
+					   return clean; }, 
 					Policy.NEAREST_TO_AGENT, 
 					explorationBudget);
 
@@ -117,7 +125,7 @@ public class Demo3 {
 
 			Thread.sleep(1000);
 
-			state.updateState("Frodo");
+			state.updateState(agentId);
 			PrintUtils.printEntities(state);
 
 			// Now we run the agent:

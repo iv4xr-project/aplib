@@ -32,6 +32,7 @@ public class Demo2b {
 		// Create an instance of the game:
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4 ;
+		config.numberOfRagePots = 6 ;
 		config.viewDistance = 4 ;
 		config.nuberOfMaze = 2 ;
 		System.out.println(">>> Configuration:\n" + config);
@@ -47,17 +48,16 @@ public class Demo2b {
 		var agent = new TestAgent(player,player)  ;
 		
 		var G = SEQ(
-				  goalLib.smartEntityInCloseRange(agent,"S0_1"),
-				  goalLib.entityInteracted("S0_1"),
+				  goalLib.smartEntityInCloseRange(agent,"S0_2"),
+				  goalLib.entityInteracted("S0_2"),
 				  goalLib.smartEntityInCloseRange(agent,"SM0"),
 				  goalLib.entityInteracted("SM0"),
 				  goalLib.entityInteracted("SM0"),
 				  goalLib.smartEntityInCloseRange(agent,"SS1"),
 				  goalLib.entityInteracted("SS1"),
 				  goalLib.smartEntityInCloseRange(agent,"S0_0"),
-				  goalLib.smartEntityInCloseRange(agent,"SI1")
-				  //goalLib.entityInteracted("SI1")
-				  
+				  goalLib.smartEntityInCloseRange(agent,"SI1"),
+				  goalLib.entityInteracted("SI1")
 				) ;
 
 		// Now, create an agent, attach the game to it, and give it the above goal:
@@ -69,7 +69,8 @@ public class Demo2b {
 		
 		//state.updateState("Frodo");
 		//printEntities(state) ;
-		
+		//PrintUtils.printInternalEntitiesLocs(app.dungeon) ;
+
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;
 		int k = 0 ;
@@ -105,6 +106,7 @@ public class Demo2b {
 		WorldModel wom ;
 		
 		PrintUtils.printEntities(state) ;
+		//PrintUtils.printInternalEntitiesLocs(app.dungeon) ;
 		var path = state.multiLayerNav.findPath(Utils.loc3(1,1,2), Utils.loc3(1,18,1)) ;
 		System.out.println("\n== path: " + path) ;
 		path = adjustedFindPath(state, 0,17,2, 1,18,1) ;

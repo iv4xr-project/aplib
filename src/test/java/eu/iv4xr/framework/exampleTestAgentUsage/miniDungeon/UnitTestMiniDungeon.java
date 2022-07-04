@@ -94,7 +94,7 @@ public class UnitTestMiniDungeon {
 				}
 			}
 		}
-		assertTrue(scrollCount == config.numberOfKeys
+		assertTrue(scrollCount == config.numberOfScrolls
 				&& healPotCount == config.numberOfHealPots
 				&& ragePotCount == config.numberOfRagePots
 				&& monsterCount == config.numberOfMonsters

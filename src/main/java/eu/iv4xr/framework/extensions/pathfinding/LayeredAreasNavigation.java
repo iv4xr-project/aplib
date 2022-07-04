@@ -244,6 +244,8 @@ public class LayeredAreasNavigation<
 	@Override
 	public void markAsSeen(Pair<Integer, NodeId> ndx) {
 		areas.get(ndx.fst).markAsSeen(ndx.snd);
+		//System.out.println(">>> registering maze " + ndx.fst + ", tile " + ndx.snd) ;
+		
 		var areaId = ndx.fst ;
 		var nd = ndx.snd ;
 		// if id is a portal, we also mark the otherside as seen:	
@@ -274,7 +276,7 @@ public class LayeredAreasNavigation<
 			var nav = areas.get(a) ;
 			Integer a_ = a ;
 			var fr = nav.getFrontier().stream().map(nd -> new Pair<>(a_,nd)).collect(Collectors.toList()) ;
-			System.out.println("xxxx calling getFrontier of map " + a_) ;
+			//System.out.println("xxxx calling getFrontier of map " + a_) ;
 			frontiers.addAll(fr) ;
 		}
 		return frontiers ;
@@ -298,6 +300,8 @@ public class LayeredAreasNavigation<
 		candidates2.sort((d1,d2) -> Integer.compare(
 				distanceCandidate(d1,heuristicNode), 
 				distanceCandidate(d2,heuristicNode)))  ;
+		
+		//System.out.println(">>> LayeredAread.exaplore(), candidates: " + candidates2) ;
 		
 		return candidates2.get(0).snd ;
 	}

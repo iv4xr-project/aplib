@@ -12,20 +12,20 @@ public class Test_LayeredAreasNavigation {
 	public Sparse2DTiledSurface_NavGraph mkArea() {
 		
 		var nav = new Sparse2DTiledSurface_NavGraph() ;
-		nav.maxX = 5 ;
-		nav.maxY = 5 ;
+		nav.sizeX = 5 ;
+		nav.sizeY = 5 ;
 		
-		for(int x=0; x<nav.maxX; x++) {
-			for (int y=0; y<nav.maxY; y++) {
+		for(int x=0; x<nav.sizeX; x++) {
+			for (int y=0; y<nav.sizeY; y++) {
 				nav.markAsSeen(new Tile(x,y));
 			}
 		}
 		
-		for(int x=0; x<nav.maxX; x++) {
+		for(int x=0; x<nav.sizeX; x++) {
 			nav.addObstacle(new Wall(x,0));
-			nav.addObstacle(new Wall(x,nav.maxY-1));
+			nav.addObstacle(new Wall(x,nav.sizeY-1));
 			nav.addObstacle(new Wall(0,x));
-			nav.addObstacle(new Wall(nav.maxX-1,x));
+			nav.addObstacle(new Wall(nav.sizeX-1,x));
 		}
 		
 		return nav ;

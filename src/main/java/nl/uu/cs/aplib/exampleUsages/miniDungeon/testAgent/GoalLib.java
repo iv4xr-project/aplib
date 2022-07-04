@@ -69,15 +69,21 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 		int maxBagSize = (int) player.properties.get("maxBagSize") ;
 		var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,4) ;
-		return S.agentIsAlive() && maxBagSize-bagSpaceUsed >= 1 && healPotsInVicinity.size() > 0 ;
+		return S.agentIsAlive() 
+				&& maxBagSize-bagSpaceUsed >= 1 
+				&& healPotsInVicinity.size() > 0 ;
 	} ;
 	
 	Predicate<MyAgentState> whenToGoAfterRagePot = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 		int maxBagSize = (int) player.properties.get("maxBagSize") ;
+		int numRagePotsInBag = (int) player.properties.get("ragepotsInBag") ;
 		var ragePotsInVicinity = TacticLib.nearItems(S,EntityType.RAGEPOT,4) ;
-		return S.agentIsAlive() && maxBagSize-bagSpaceUsed >= 1 && ragePotsInVicinity.size() > 0 ;
+		return S.agentIsAlive() 
+				&& numRagePotsInBag == 0
+				&& maxBagSize-bagSpaceUsed >= 1 
+				&& ragePotsInVicinity.size() > 0 ;
 	} ;
 	
 	/**
@@ -138,7 +144,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	public GoalStructure entityInteracted(String targetId) {
 		
 		// when the target is a scroll, and when the bag is full, this action
-		// will a heal or rage pot to create space. This action
+		// will use a heal or rage pot to create space. This action
 		// always return a null proposal, as it is not meant to solve
 		// the main-goal:
 		Action useHealOrRagePot = action("use heal- or ragepot").do1(

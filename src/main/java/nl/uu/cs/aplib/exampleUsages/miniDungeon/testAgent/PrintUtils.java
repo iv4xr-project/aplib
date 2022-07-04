@@ -44,8 +44,23 @@ public class PrintUtils {
 						var ss = (Shrine) e ;
 						System.out.println("  " + e.id 
 								+ ", shrine, cleansed: " + ss.cleansed) ;
+						
 					}
-					
+				}
+			}
+		}	
+	}
+	
+	public static void printInternalEntitiesLocs(MiniDungeon game) {
+		for(int mazeId=0; mazeId<game.mazes.size(); mazeId++) {
+			Maze m = game.mazes.get(mazeId) ;
+			for(int x=1; x<game.config.worldSize-1; x++) {
+				for(int y=1; y<game.config.worldSize-1; y++) {
+					var e = m.world[x][y] ;
+					if (e == null || e.type == EntityType.WALL) continue ;
+					System.out.println("  " + e.id 
+							+ ", maze:" + e.mazeId
+							+ ", @(" + e.x + "," + e.y + ")") ;
 				}
 			}
 		}

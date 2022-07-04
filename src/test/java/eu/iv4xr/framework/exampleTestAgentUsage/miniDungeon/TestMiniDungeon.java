@@ -81,14 +81,16 @@ public class TestMiniDungeon {
 				S -> tacticLib.explorationExhausted(S), budget -> goalLib.smartFrodoExploring(agent, null, budget));
 
 		// Goal-1: find the first shrine and cleanse it:
-		var G1 = sa1Solver.solver(agent, "SM0", e -> e.type.equals("" + EntityType.SCROLL), S -> {
-			var S_ = (MyAgentState) S;
-			var e = S.worldmodel.elements.get("SM0");
-			if (e == null)
-				return false;
-			var clean = (boolean) e.properties.get("cleansed");
-			return clean;
-		}, Policy.NEAREST_TO_AGENT, explorationBudget);
+		var G1 = sa1Solver.solver(agent, 
+				"SM0", 
+				e -> e.type.equals("" + EntityType.SCROLL), 
+				S -> { var S_ = (MyAgentState) S;
+					   var e = S.worldmodel.elements.get("SM0");
+					   if (e == null)
+						   return false;
+					   var clean = (boolean) e.properties.get("cleansed");
+					   return clean; }, 
+				Policy.NEAREST_TO_AGENT, explorationBudget);
 
 		// Goal-2: find the final shrine and clease it; check if then Frodo wins:
 		var G2 = sa1Solver.solver(agent, 

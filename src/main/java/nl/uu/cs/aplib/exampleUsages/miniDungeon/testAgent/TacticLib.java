@@ -222,7 +222,13 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int hp = (int) player.properties.get("hp") ;
 		boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;
-		return hp>0 && hasRagePot && S.adajcentMonsters().size()>1 ;
+		/*
+		System.out.println("#### player: " + player.id
+				+ " , hp:" + hp
+				+ " , has rage pot " + hasRagePot
+				+ " , #adjacent-mosnters:" + S.adajcentMonsters().size()
+				) ; */
+		return hp>0 && hasRagePot && S.adajcentMonsters().size()>0 ;
 	} ;
 	
 	public Predicate<MyAgentState> inCombat_and_hpNotCritical = S -> {
@@ -291,10 +297,13 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					if (!S.agentIsAlive()) return null ;
 					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
+					//System.out.println(">>> agent is " + S.worldmodel().agentId) ;
 					//System.out.println(">>> explore is invoked") ;
 					List<Pair<Integer,Tile>> path ;
-					if (heuristicLocation == null)
+					if (heuristicLocation == null) {
+						//System.out.println(">>> @maze " + Utils.mazeId(a) + ", tile: " + agentPos) ;
 					    path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y)) ;
+					}
 					else
 						path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y), heuristicLocation) ;
 					if (path == null) {

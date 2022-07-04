@@ -84,8 +84,15 @@ public class Sparse2DTiledSurface_NavGraph
 		}
 	}
 	
-	public int maxX ;
-	public int maxY ;
+	/**
+	 * The x coordinates of the this tiled-surface starts from 0 until sizeX-1
+	 */
+	public int sizeX ;
+	
+	/**
+	 * The y coordinates of the this tiled-surface starts from 0 until sizeY-1
+	 */
+	public int sizeY ;
 	
 	public boolean diagonalMovementPossible = false ;
 	
@@ -235,14 +242,14 @@ public class Sparse2DTiledSurface_NavGraph
 		
 		List<Tile> candidates = new LinkedList<>() ;
 		if(left >= 0)    candidates.add(new Tile(left, y)) ;
-		if(right < maxX) candidates.add(new Tile(right, y)) ;
+		if(right < sizeX) candidates.add(new Tile(right, y)) ;
 		if(below >= 0)   candidates.add(new Tile(x,below)) ;
-		if(above < maxY) candidates.add(new Tile(x,above)) ;
+		if(above < sizeY) candidates.add(new Tile(x,above)) ;
 		if(diagonalMovementPossible) {
 			if(left >= 0 && below >= 0)      candidates.add(new Tile(left,below)) ;
-			if(left >= 0 && above < maxY)    candidates.add(new Tile(left,above)) ;
-			if(right < maxX && above < maxY) candidates.add(new Tile(right,above)) ;
-			if(right < maxX && below >= 0)   candidates.add(new Tile(right,below)) ;		
+			if(left >= 0 && above < sizeY)    candidates.add(new Tile(left,above)) ;
+			if(right < sizeX && above < sizeY) candidates.add(new Tile(right,above)) ;
+			if(right < sizeX && below >= 0)   candidates.add(new Tile(right,below)) ;		
 		}
 		
 		candidates = candidates.stream()
@@ -342,7 +349,7 @@ public class Sparse2DTiledSurface_NavGraph
 		}
 		// remove tiles that are obviously not frontiers:
 		frontierCandidates.removeAll(cannotBeFrontier) ;
-		System.out.println(">>> Sparse2D.getFrontier() is called") ;
+		//System.out.println(">>> Sparse2D.getFrontier() is called") ;
 		return frontiers ;
 	}
 	
@@ -382,8 +389,8 @@ public class Sparse2DTiledSurface_NavGraph
 	@Override
 	public String toString() {
 		StringBuffer z = new StringBuffer() ;
-		for (int y = maxY-1 ; 0<=y ; y--) {
-			for (int x=0; x<maxX; x++) {
+		for (int y = sizeY-1 ; 0<=y ; y--) {
+			for (int x=0; x<sizeX; x++) {
 				Tile o = null ;
 				var mapx = obstacles.get(x) ;
 				if (mapx != null) o = mapx.get(y) ;

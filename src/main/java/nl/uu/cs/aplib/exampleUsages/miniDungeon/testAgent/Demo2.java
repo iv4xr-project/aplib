@@ -74,7 +74,7 @@ public class Demo2 {
 			if (k>=300) break ;
 			k++ ;
 		}	
-		G.printGoalStructureStatus();	
+		//G.printGoalStructureStatus();	
 		//System.exit(0);	
 	}
 
