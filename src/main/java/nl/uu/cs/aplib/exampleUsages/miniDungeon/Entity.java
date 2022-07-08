@@ -127,6 +127,16 @@ public class Entity {
 			this.id = id ;
 			this.type = EntityType.MONSTER ;
 		}
+		
+		public void aggrevate() {
+			aggravated = true ;
+			aggravateTimer = 5 ;
+		}
+		
+		public void disAggrevate() {
+			aggravated = false ;
+			aggravateTimer = 0 ;
+		}
 	}
 	
 	public static class  HealingPotion extends Entity{

@@ -12,7 +12,6 @@ import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
-import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
@@ -31,122 +30,84 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class Demo3 {
 	
-	    public static boolean isReachable(MyAgentState S, WorldEntity e) {
-	    	var aname = S.worldmodel.agentId ;
-	        var player = S.worldmodel.elements.get(aname) ;
-	        int player_maze = (int) player.properties.get("maze") ;
-	        int e_maze = (int) e.properties.get("maze") ;
-	        
-			var t1 = Utils.toTile(player.position) ;
-			var t2 = Utils.toTile(e.position) ;
-			var path = adjustedFindPath(S, player_maze,t1.x,t1.y,e_maze,t2.x,t2.y) ;
-			return path!=null && path.size()>0 ;
-	    }
-	    
-	    public static float distanceToAgent(MyAgentState S, WorldEntity e) {
-	    	var aname = S.worldmodel.agentId ;
-	        var player = S.worldmodel.elements.get(aname) ;
-	        int player_maze = (int) player.properties.get("maze") ;
-	        int e_maze = (int) e.properties.get("maze") ;
-	        
-	        if (e_maze == player_maze) {
-	        	var p1 = player.position.copy() ;
-		        var p2 = e.position.copy() ;
-		        p1.y = 0 ;
-		        p2.y = 0 ;
-		        return  Vec3.distSq(p1, p2) ;
-	        }
-	        return Math.abs(e_maze - player_maze)*1000000 ;
-	    }
-	    	    
-	    public static float distanceBetweenEntities(MyAgentState S, WorldEntity e1, WorldEntity e2) {
-	    	int e1_maze = (int) e1.properties.get("maze") ;
-	        int e2_maze = (int) e2.properties.get("maze") ;
-	        
-	        if (e1_maze == e2_maze) {
-	        	var p1 = e1.position.copy() ;
-		        var p2 = e2.position.copy() ;
-		        p1.y = 0 ;
-		        p2.y = 0 ;
-		        return  Vec3.distSq(p1, p2) ;
-	        }
-	        return Math.abs(e1_maze - e2_maze)*1000000 ;
-	    }
-	
-	    
-		public static void main(String[] args) throws Exception {
-			// Create an instance of the game, attach an environment to it:
-			MiniDungeonConfig config = new MiniDungeonConfig();
-			config.numberOfHealPots = 4;
-			config.viewDistance = 4 ;
-			config.randomSeed = 79373;
-			System.out.println(">>> Configuration:\n" + config);
-			DungeonApp app = new DungeonApp(config);
-			app.soundOn = false ;
-			DungeonApp.deploy(app);
-			MyAgentEnv env = new MyAgentEnv(app);
-			MyAgentState state = new MyAgentState();
-			var goalLib = new GoalLib();
-			var tacticLib = new TacticLib() ;
+	public static void main(String[] args) throws Exception {
+		// Create an instance of the game, attach an environment to it:
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 4;
+		config.viewDistance = 4 ;
+		config.randomSeed = 79373;
+		System.out.println(">>> Configuration:\n" + config);
+		DungeonApp app = new DungeonApp(config);
+		app.soundOn = false ;
+		DungeonApp.deploy(app);
+		MyAgentEnv env = new MyAgentEnv(app);
+		MyAgentState state = new MyAgentState();
+		var goalLib = new GoalLib();
+		var tacticLib = new TacticLib() ;
 
-			// create an agent:
-			//String agentId = "Frodo" ;
-			String agentId = "Smeagol" ;
-			var agent = new TestAgent(agentId, "player-frodo");	
-			int explorationBudget = 20 ;
-			
-			var sa1Solver = new Sa1Solver<Void>(
-					(S, e) -> isReachable((MyAgentState) S, e), 
-					(S, e) -> distanceToAgent((MyAgentState) S, e), 
-					S -> (e1, e2) -> distanceBetweenEntities((MyAgentState) S, e1, e2),
-					eId -> SEQ(
-							goalLib.smartEntityInCloseRange(agent,eId), 
-							goalLib.entityInteracted(eId)), 
-					eId -> SEQ(
-							goalLib.smartEntityInCloseRange(agent,eId), 
-							goalLib.entityInteracted(eId)), 
-					S -> tacticLib.explorationExhausted(S),
-					budget -> goalLib.smartExploring(agent,null,budget)) ;
+		// create an agent:
+		String agentId = "Frodo" ;
+		//String agentId = "Smeagol" ;
+		var agent = new TestAgent(agentId, "tester");	
+		int explorationBudget = 20 ;
 
-			var G = sa1Solver.solver(agent, 
-					"SM0", 
-					e -> e.type.equals("" + EntityType.SCROLL),
-					S -> { var S_ = (MyAgentState) S;
-					   var e = S.worldmodel.elements.get("SM0");
-					   if (e == null)
-						   return false;
-					   var clean = (boolean) e.properties.get("cleansed");
-					   return clean; }, 
-					Policy.NEAREST_TO_AGENT, 
-					explorationBudget);
+		// Instantiating the SA1-solver; you need to pass a bunch of
+		// things :) 
+		var sa1Solver = new Sa1Solver<Void>(
+				(S, e) -> Utils.isReachable((MyAgentState) S, e), 
+				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e), 
+				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
+				eId -> SEQ(
+						goalLib.smartEntityInCloseRange(agent,eId), 
+						goalLib.entityInteracted(eId)), 
+				eId -> SEQ(
+						goalLib.smartEntityInCloseRange(agent,eId), 
+						goalLib.entityInteracted(eId)), 
+				S -> tacticLib.explorationExhausted(S),
+				budget -> goalLib.smartExploring(agent,null,budget)) ;
 
-			// Now, attach the game to the agent, and give it the above goal:
-			agent.attachState(state).attachEnvironment(env).setGoal(G);
+		// Now, use the "solver" to construct a goal structure G. Again,
+		// there are few things to pass :)
+		// The actual solver is "embedded" into this G.
+		var G = sa1Solver.solver(agent, 
+				"SM0", 
+				e -> e.type.equals("" + EntityType.SCROLL),
+				S -> { var S_ = (MyAgentState) S;
+				var e = S.worldmodel.elements.get("SM0");
+				if (e == null)
+					return false;
+				var clean = (boolean) e.properties.get("cleansed");
+				return clean; }, 
+				Policy.NEAREST_TO_AGENT, 
+				explorationBudget);
 
-			Thread.sleep(1000);
+		// Now, attach the game to the agent, and give it the above goal:
+		agent.attachState(state).attachEnvironment(env).setGoal(G);
 
-			state.updateState(agentId);
-			PrintUtils.printEntities(state);
+		Thread.sleep(1000);
 
-			// Now we run the agent:
-			System.out.println(">> Start agent loop...");
-			int k = 0;
-			while (G.getStatus().inProgress()) {
-				agent.update();
-				System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position));
-				// delay to slow it a bit for displaying:
-				Thread.sleep(20);
-				if (k >= 1000)
-					break;
-				k++;
-			}
-			//System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
-			//int maze = 0 ;
-			//Tile frodoLoc = toTile(state.worldmodel.position) ;
-			//System.out.println("Explor path: " + state.multiLayerNav.explore(new Pair<>(maze,frodoLoc))) ; ;
-			
-			//G.printGoalStructureStatus();
-			System.exit(0);
+		state.updateState(agentId);
+		PrintUtils.printEntities(state);
+
+		// Now we run the agent:
+		System.out.println(">> Start agent loop...");
+		int k = 0;
+		while (G.getStatus().inProgress()) {
+			agent.update();
+			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position));
+			// delay to slow it a bit for displaying:
+			Thread.sleep(20);
+			if (k >= 1000)
+				break;
+			k++;
 		}
+		//System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
+		//int maze = 0 ;
+		//Tile frodoLoc = toTile(state.worldmodel.position) ;
+		//System.out.println("Explor path: " + state.multiLayerNav.explore(new Pair<>(maze,frodoLoc))) ; ;
+
+		//G.printGoalStructureStatus();
+		System.exit(0);
+	}
 
 }

@@ -1,5 +1,9 @@
 package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
+import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.adjustedFindPath;
+
+import java.util.List;
+
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
@@ -30,6 +34,53 @@ public class Utils {
 
 	public static int mazeId(WorldEntity e) {
 		return (int) e.properties.get("maze") ;
+	}
+
+	/**
+	 * Give the straight-line distance-square between two entities, if they
+	 * are in the same maze; else the distance is the difference between
+	 * mazeIds times some large multiplier (1000000).
+	 */
+	public static float distanceBetweenEntities(MyAgentState S, WorldEntity e1, WorldEntity e2) {
+		int e1_maze = (int) e1.properties.get("maze") ;
+	    int e2_maze = (int) e2.properties.get("maze") ;
+	    
+	    if (e1_maze == e2_maze) {
+	    	var p1 = e1.position.copy() ;
+	        var p2 = e2.position.copy() ;
+	        p1.y = 0 ;
+	        p2.y = 0 ;
+	        return  Vec3.distSq(p1, p2) ;
+	    }
+	    return Math.abs(e1_maze - e2_maze)*1000000 ;
+	}
+
+	/**
+	 * Give the straight-line distance-square between the agent that owns
+	 * the given state and the given entity e, if they
+	 * are in the same maze; else the distance is the difference between
+	 * their mazeIds times some large multiplier (1000000).
+	 */
+	public static float distanceToAgent(MyAgentState S, WorldEntity e) {
+		var aname = S.worldmodel.agentId ;
+	    var player = S.worldmodel.elements.get(aname) ;
+	    return distanceBetweenEntities(S, player, e) ;
+	}
+
+	/**
+	 * check if the location of the entity e is reachable from the 
+	 * agent current position.
+	 */
+	public static boolean isReachable(MyAgentState S, WorldEntity e) {
+		var aname = S.worldmodel.agentId ;
+	    var player = S.worldmodel.elements.get(aname) ;
+	    int player_maze = (int) player.properties.get("maze") ;
+	    int e_maze = (int) e.properties.get("maze") ;
+	    
+		var t1 = toTile(player.position) ;
+		var t2 = toTile(e.position) ;
+		var path = adjustedFindPath(S, player_maze,t1.x,t1.y,e_maze,t2.x,t2.y) ;
+		return path!=null && path.size()>0 ;
 	}
 
 }

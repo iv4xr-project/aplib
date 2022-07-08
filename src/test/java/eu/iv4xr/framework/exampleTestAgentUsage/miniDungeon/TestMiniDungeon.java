@@ -3,6 +3,7 @@ package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon;
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Scanner;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
@@ -18,7 +19,6 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Demo3;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
@@ -37,12 +37,23 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
  */
 public class TestMiniDungeon {
 	
-	boolean withGraphics = false ;
-	boolean supressLogging = true ;
+	//boolean withGraphics = false ;
+	//boolean supressLogging = true ;
+	boolean withGraphics = true ;
+	boolean supressLogging = false ;
 
 	
 	@Test
-	public void test3b() throws Exception {
+	public void testFullPlayFrodo() throws Exception {
+		testFullPlay("Frodo") ;
+	}
+	
+	@Test
+	public void testFullPlaySmeagol() throws Exception {
+		testFullPlay("Smeagol") ;
+	}
+	
+	public void testFullPlay(String agentId) throws Exception {
 		// Create an instance of the game, attach an environment to it:
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
@@ -63,7 +74,7 @@ public class TestMiniDungeon {
 		var tacticLib = new TacticLib();
 
 		// create an agent:
-		var agent = new TestAgent("Frodo", "player-frodo");
+		var agent = new TestAgent(agentId, "tester");
 		
 		// should be after create the agent, else the constructor sets the visibility again
 		if (supressLogging) {
@@ -73,12 +84,12 @@ public class TestMiniDungeon {
 		int explorationBudget = 20;
 		
 
-		var sa1Solver = new Sa1Solver<Void>((S, e) -> Demo3.isReachable((MyAgentState) S, e),
-				(S, e) -> Demo3.distanceToAgent((MyAgentState) S, e),
-				S -> (e1, e2) -> Demo3.distanceBetweenEntities((MyAgentState) S, e1, e2),
-				eId -> SEQ(goalLib.smartFrodoEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
-				eId -> SEQ(goalLib.smartFrodoEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
-				S -> tacticLib.explorationExhausted(S), budget -> goalLib.smartFrodoExploring(agent, null, budget));
+		var sa1Solver = new Sa1Solver<Void>((S, e) -> Utils.isReachable((MyAgentState) S, e),
+				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
+				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
+				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
+				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
+				S -> tacticLib.explorationExhausted(S), budget -> goalLib.smartExploring(agent, null, budget));
 
 		// Goal-1: find the first shrine and cleanse it:
 		var G1 = sa1Solver.solver(agent, 
@@ -99,7 +110,9 @@ public class TestMiniDungeon {
 				
 				e -> e.type.equals("" + EntityType.SCROLL),
 				
-				S -> MyAgentState.gameStatus((MyAgentState) S) == GameStatus.FRODOWIN, 
+				S -> ((MyAgentState) S).gameStatus() 
+				     == 
+				     (agentId.equals("Frodo") ? GameStatus.FRODOWIN : GameStatus.SMEAGOLWIN), 
 				
 				Policy.NEAREST_TO_AGENT, explorationBudget);
 
@@ -115,46 +128,48 @@ public class TestMiniDungeon {
 
 		try {
 
-			state.updateState("Frodo");
+			// why do we need this starting update?
+			state.updateState(agentId);
 			//Utils.printEntities(state);
 			
 			// Now we run the agent:
-			//runAndCheck(agent,G,false,20,2000) ;
-			runAndCheck(agent,G,false,0,2000,
-					always(S -> intProp(S,"Frodo","hp") <= intProp(S,"Frodo","hpmax")),
-					always(S -> intProp(S,"Frodo","hp") > 0 ),
-					always(S -> intProp(S,"Frodo","maze") <= 1 ),
-					always(S -> intProp(S,"Smeagol","hp") > 0 ),
+			int delay = 20 ;
+			String theOtherAgent = agentId.equals("Frodo") ? "Smeagol" : "Frodo" ;
+			runAndCheck(agent,G,false,delay,2000,
+					always(S -> intProp(S,agentId,"hp") <= intProp(S,agentId,"hpmax")),
+					always(S -> intProp(S,agentId,"hp") > 0 ),
+					always(S -> intProp(S,agentId,"maze") <= 1 ),
+					always(S -> intProp(S,theOtherAgent,"hp") >= 0 ),
 					always(S -> IMP(intProp(S,"Frodo","hp") <= 0 
 							        && intProp(S,"Smeagol","hp") <= 0,
 							        S.auxState().properties.get("status").equals(GameStatus.MONSTERSWIN))),
-					always(S -> intProp(S,"Frodo","scrollsInBag")
-							+ intProp(S,"Frodo","healpotsInBag")
-							+ intProp(S,"Frodo","ragepotsInBag")
-							<= intProp(S,"Frodo","maxBagSize")
+					always(S -> intProp(S,agentId,"scrollsInBag")
+							+ intProp(S,agentId,"healpotsInBag")
+							+ intProp(S,agentId,"ragepotsInBag")
+							<= intProp(S,agentId,"maxBagSize")
 							),
 					// should not walk through wall:
 					always(S -> {
-						Tile p = getPos(S,"Frodo") ;
+						Tile p = getPos(S,agentId) ;
 						int N = config.worldSize ;
 						return p.x > 0 && p.x < N-1 && p.y > 0 && p.y < N-1 ; 
 					}),
-					eventually(S -> intProp(S,"Frodo","scrollsInBag") > 0),
-					eventually(S -> intProp(S,"Frodo","healpotsInBag") > 0),
-					eventually(S -> intProp(S,"Frodo","hp") < intProp(S,"Frodo","hpmax")),
-					eventually(S -> intProp(S,"Frodo","maze") == 1 )
-					
-					) ;
+					eventually(S -> intProp(S,agentId,"scrollsInBag") > 0),
+					eventually(S -> intProp(S,agentId,"healpotsInBag") > 0),
+					eventually(S -> intProp(S,agentId,"hp") < intProp(S,"Frodo","hpmax")),
+					eventually(S -> intProp(S,agentId,"maze") == 1 )		) ;
 			
 			// System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
 			// int maze = 0 ;
 			// Tile frodoLoc = toTile(state.worldmodel.position) ;
-			// System.out.println("Explor path: " + state.multiLayerNav.explore(new
+			// System.out.println("Explore path: " + state.multiLayerNav.explore(new
 			// Pair<>(maze,frodoLoc))) ; ;
 
 			// G.printGoalStructureStatus();
 			// System.exit(0);
 			
+			Scanner scanner = new Scanner(System.in);
+			//scanner.nextLine() ;
 			assertTrue(G.getStatus().success()) ;
 			
 		} catch (Exception e) {
@@ -229,8 +244,12 @@ public class TestMiniDungeon {
 				for (int s=0; s<phis.length; s++) {
 					Specification spec = phis[s] ;
 					if (spec instanceof Always) {
-						//System.out.println("checking") ;
-						assertTrue(spec.p.test(state)) ;
+						boolean ok = spec.p.test(state) ;
+						if (!ok) {
+							System.out.println("## VIOLATION: " + s + "-th spec (always)") ;
+							//PrintUtils.printEntity(state,"Frodo") ;
+						}
+						assertTrue(ok) ;
 					}
 					else {
 						eventuallySpecResults[s] = eventuallySpecResults[s] || spec.p.test(state) ;
@@ -253,7 +272,11 @@ public class TestMiniDungeon {
 		for (int s=0; s < phis.length; s++) {
 			
 			if (phis[s] instanceof Eventually) {
-				assertTrue(eventuallySpecResults[s]) ;
+				boolean ok = eventuallySpecResults[s] ;
+				if (!ok) {
+					System.out.println("## VIOLATION: " + s + "-th spec (always)") ;
+				}
+				assertTrue(ok) ;
 			}
 			
 		}

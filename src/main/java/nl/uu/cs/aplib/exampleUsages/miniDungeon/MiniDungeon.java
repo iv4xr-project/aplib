@@ -321,12 +321,33 @@ public class MiniDungeon {
 				if (e instanceof Monster) {
 					Monster m = (Monster) e;
 					
-					if (m.aggravateTimer == 0 && m.aggravated) {
-						m.aggravated = false ;
+					if (!m.aggravated) {
+						// the logic for triggering aggravated-state. The monster
+						// becomes aggravated if there is an enraged player within
+						// 8 radius:
+						for (Player player : players) {
+							if (player.dead()) continue ;
+							if (player.mazeId != m.mazeId) continue ;
+							if (player.rageTimer>0) {
+								// the player is enraged:
+					    		var sqDist = IntVec2D.dist(new IntVec2D(player.x,player.y), new IntVec2D(m.x,m.y)) ;
+					    		if (sqDist <= 64f) {
+					    			m.aggrevate();
+					    			break ;
+					    		}
+							}
+						}
 					}
-					if (m.aggravateTimer > 0) {
-						m.aggravateTimer-- ;
+					else {
+						// handlin the aggravation timer:
+						if (m.aggravateTimer <= 0) {
+							m.disAggrevate();
+						}
+						else  {
+							m.aggravateTimer-- ;
+						}
 					}
+					
 
 					// the player is next to m; attack the player:
 					boolean thereWasPlayerToAttack = false ;

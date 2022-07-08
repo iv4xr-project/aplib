@@ -43,8 +43,8 @@ public class Demo2b {
 		MyAgentState state = new MyAgentState() ;
 		var goalLib = new GoalLib() ;
 		
-		String player = "Smeagol" ;
-		//String player = "Frodo" ;
+		//String player = "Smeagol" ;
+		String player = "Frodo" ;
 		var agent = new TestAgent(player,player)  ;
 		
 		var G = SEQ(

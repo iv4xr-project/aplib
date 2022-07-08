@@ -426,12 +426,13 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	public static void main(String[] args) throws Exception {		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		config.numberOfMonsters = 50 ;
-		config.numberOfHealPots = 3 ;
-		config.numberOfRagePots = 3 ;
-		//config.numberOfCorridors = 1 ;
+		config.numberOfMonsters = 20 ;
+		config.numberOfHealPots = 8 ;
+		config.numberOfRagePots = 8 ;
+		config.numberOfScrolls = 6 ;
+		config.numberOfCorridors = 5 ;		
+		config.viewDistance = 20 ;
 		
-		config.viewDistance = 3 ;
 		System.out.println(">>> Configuration:\n" + config) ;
 		var app = new DungeonApp(config) ;
 		//app.dungeon.showConsoleIO = false ;

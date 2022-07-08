@@ -13,7 +13,17 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 public class Sa1Solver<NavgraphNode>  {
 	
+	/**
+	 * A function to check if an entity is reachable from the agent's position. The
+	 * agent is not specified explicitly, but instead the function takes an agent-state
+	 * as input. "The agent" is the agent that "owns" this state, and its id is
+	 * embedded in that state.
+	 */
 	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Boolean> reachabilityChecker ;
+	
+	/**
+	 * A function that returns the "distance" between an entity and the agent. 
+	 */
 	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent ;
 	public Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceBetweenEntities ;
 	public Function<String,GoalStructure> gCandidateIsInteracted ;

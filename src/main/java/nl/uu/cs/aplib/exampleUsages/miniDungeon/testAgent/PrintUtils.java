@@ -12,6 +12,17 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Shrine;
 public class PrintUtils {
 	
 	
+	public static void printEntity(MyAgentState state, String id) {
+		var e = state.worldmodel.elements.get(id) ;
+		if (e == null) {
+			System.out.printf(">>> Entity %s does not exists%n",id) ;
+		}
+		System.out.printf(">>> Entity %s:%s%n",id, e.type) ;
+		for (var p : e.properties.entrySet()) {
+			System.out.printf("     %s:%s%n", p.getKey(), p.getValue()) ;
+		}
+	}
+	
 	public static void printEntities(MyAgentState state) {
 		printEntities(state.worldmodel) ;
 	}
