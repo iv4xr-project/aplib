@@ -190,6 +190,7 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 
 
 	// just for testing:
+	/*
 	public static void main(String[] args) throws Exception {
 
 		// System.out.println(">>>" + Frodo.class.getSimpleName()) ;
@@ -209,5 +210,6 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 		env.action("Frodo", Command.MOVEUP);
 		env.action("Frodo", Command.MOVEUP);
 	}
+	*/
 	
 }

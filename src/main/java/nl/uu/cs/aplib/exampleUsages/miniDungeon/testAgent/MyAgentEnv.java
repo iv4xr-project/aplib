@@ -203,6 +203,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 	}
 	
 	// just for testing:
+	/*
 	public static void main(String[] args) throws Exception {
 		
 		//System.out.println(">>>" + Frodo.class.getSimpleName()) ;
@@ -218,5 +219,6 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		env.action("Frodo", Command.MOVEUP) ;
 		env.action("Frodo", Command.MOVEUP) ;
 	}
+	*/
 
 }

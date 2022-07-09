@@ -35,7 +35,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
  * The test sets up an instance of MiniDungeon with two mazes, then runs the
  * agent. It tests whether cleansing the final shrine indeed wins the game.
  */
-public class TestMiniDungeon {
+public class TestMiniDungeonWithAgent {
 	
 	//boolean withGraphics = false ;
 	//boolean supressLogging = true ;
@@ -58,7 +58,7 @@ public class TestMiniDungeon {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
-		config.randomSeed = 79373;
+		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		// setting sound on/off, graphics on/off etc:
@@ -117,10 +117,10 @@ public class TestMiniDungeon {
 				Policy.NEAREST_TO_AGENT, explorationBudget);
 
 		// Now, attach the game to the agent, and give it the above goal:
-		var G = SEQ(G1, goalLib.entityInteracted("SM0"),
-				// goalLib.smartFrodoEntityInCloseRange(agent,"SS1"),
-				// goalLib.entityInteracted("SS1"),
-				G2);
+		var G = SEQ(G1, 
+				goalLib.entityInteracted("SM0"),
+				G2
+				);
 		agent.attachState(state).attachEnvironment(env).setGoal(G);
 
 		Thread.sleep(1000);
@@ -156,7 +156,7 @@ public class TestMiniDungeon {
 					}),
 					eventually(S -> intProp(S,agentId,"scrollsInBag") > 0),
 					eventually(S -> intProp(S,agentId,"healpotsInBag") > 0),
-					eventually(S -> intProp(S,agentId,"hp") < intProp(S,"Frodo","hpmax")),
+					eventually(S -> intProp(S,agentId,"hp") < intProp(S,agentId,"hpmax")),
 					eventually(S -> intProp(S,agentId,"maze") == 1 )		) ;
 			
 			// System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
@@ -274,7 +274,7 @@ public class TestMiniDungeon {
 			if (phis[s] instanceof Eventually) {
 				boolean ok = eventuallySpecResults[s] ;
 				if (!ok) {
-					System.out.println("## VIOLATION: " + s + "-th spec (always)") ;
+					System.out.println("## VIOLATION: " + s + "-th spec (eventually)") ;
 				}
 				assertTrue(ok) ;
 			}
