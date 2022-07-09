@@ -113,8 +113,7 @@ public class Demo3b {
 			if (k >= 2000)
 				break;
 			k++;
-		}
-		
+		}		
 		//System.exit(0);
 	}
 

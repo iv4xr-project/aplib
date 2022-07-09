@@ -37,10 +37,10 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
  */
 public class TestMiniDungeonWithAgent {
 	
-	//boolean withGraphics = false ;
-	//boolean supressLogging = true ;
-	boolean withGraphics = true ;
-	boolean supressLogging = false ;
+	boolean withGraphics = false ;
+	boolean supressLogging = true ;
+	//boolean withGraphics = true ;
+	//boolean supressLogging = false ;
 
 	
 	@Test
