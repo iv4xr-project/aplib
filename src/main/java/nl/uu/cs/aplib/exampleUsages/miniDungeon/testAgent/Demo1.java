@@ -12,6 +12,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
  * for the agent to find and pick a specific scroll, and then to find the shrine
  * to use the scroll on it. The used goals includes a tactic when the agent is
  * attacked by monsters while it is on its way.
+ * 
+ * @author wish
  */
 public class Demo1 {
 	
@@ -52,11 +54,10 @@ public class Demo1 {
 			agent.update();
 			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(100); 
+			Thread.sleep(50); 
 			if (k>=150) break ;
 			k++ ;
 		}	
-		G.printGoalStructureStatus();	
 		//System.exit(0);	
 	}
 

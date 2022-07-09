@@ -57,7 +57,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * the game from another class. You can do this 
  * 
  * 
- * @author iswbprasetya
+ * @author wish
  */
 
 public class MiniDungeon {

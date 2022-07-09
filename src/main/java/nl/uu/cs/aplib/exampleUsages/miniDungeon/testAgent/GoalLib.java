@@ -13,6 +13,19 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils.* ;
 
 import java.util.function.Predicate;
 
+/**
+ * Provide several basic goal-structures.
+ * 
+ * <p>Keep in mind that the provided navigation and exploration
+ * tactics/goals currently has no ability to deal with items that
+ * block a corridor. The solution is for now to just generate
+ * another dungeon where we have no corridors are not blocked by
+ * items (use another random seed, for example). A better fix
+ * would be to have a smarter navigation and exploration. TO DO.
+ * 
+ * @author wish
+ *
+ */
 public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	
 	public TacticLib tacticLib = new TacticLib() ;

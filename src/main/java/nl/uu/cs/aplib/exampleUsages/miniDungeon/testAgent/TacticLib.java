@@ -22,6 +22,19 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * Provide several basic actions and tactics.
+ * 
+ * <p>Keep in mind that the provided navigation and exploration
+ * tactics/goals currently has no ability to deal with items that
+ * block a corridor. The solution is for now to just generate
+ * another dungeon where we have no corridors are not blocked by
+ * items (use another random seed, for example). A better fix
+ * would be to have a smarter navigation and exploration. TO DO.
+ * 
+ * @author wish
+ *
+ */
 public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>> {
 	
 	/**

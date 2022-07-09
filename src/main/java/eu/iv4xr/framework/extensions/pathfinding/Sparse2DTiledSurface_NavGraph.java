@@ -176,6 +176,12 @@ public class Sparse2DTiledSurface_NavGraph
 	
 	
 	@Override
+	/**
+	 * Set the blocking state of this tile, if it is a Door, to the given
+	 * blocking-state (true means blocking, false non-blocking).
+	 * 
+	 * If the tile is not a Door, this method has no effect.
+	 */
 	public void setBlockingState(Tile tile, boolean isBlocking) {
 		int x = tile.x ;
 		int y = tile.y ;

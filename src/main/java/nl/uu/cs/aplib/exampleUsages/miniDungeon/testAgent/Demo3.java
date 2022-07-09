@@ -27,6 +27,8 @@ import nl.uu.cs.aplib.utils.Pair;
 /**
  * In this Demo we use a generic algorithm, SA1, to let the agent search
  * for the right scroll to cleanse the shrine.
+ * 
+ * @author wish
  */
 public class Demo3 {
 	
@@ -101,13 +103,7 @@ public class Demo3 {
 				break;
 			k++;
 		}
-		//System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
-		//int maze = 0 ;
-		//Tile frodoLoc = toTile(state.worldmodel.position) ;
-		//System.out.println("Explor path: " + state.multiLayerNav.explore(new Pair<>(maze,frodoLoc))) ; ;
-
-		//G.printGoalStructureStatus();
-		System.exit(0);
+		//System.exit(0);
 	}
 
 }

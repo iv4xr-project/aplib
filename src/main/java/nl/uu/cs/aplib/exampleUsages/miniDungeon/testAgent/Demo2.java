@@ -20,9 +20,11 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
  * tactic when the agent is attacked by monsters while it is on its way.
  * 
  * <p> The goal to search for scroll/shrine is enhanced to make the agent
- * to also pick up a healing potion if it happens to be close to the agent's
+ * to also pick up a potion if it happens to be close to the agent's
  * path, and the agent has a space in its bag. We use a mechanism to
  * dynamically deploy a goal to do this. 
+ * 
+ * @author wish
  */
 public class Demo2 {
 	
@@ -60,9 +62,6 @@ public class Demo2 {
 
 		Thread.sleep(1000);
 		
-		//state.updateState("Frodo");
-		//printEntities(state) ;
-		
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;
 		int k = 0 ;
@@ -70,11 +69,10 @@ public class Demo2 {
 			agent.update();
 			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(100); 
+			Thread.sleep(50); 
 			if (k>=300) break ;
 			k++ ;
 		}	
-		//G.printGoalStructureStatus();	
 		//System.exit(0);	
 	}
 

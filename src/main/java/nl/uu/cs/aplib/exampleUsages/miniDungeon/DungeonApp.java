@@ -29,7 +29,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.*;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 
-
+/**
+ * A GUI for MiniDungeon.
+ * 
+ * @author Wish
+ *
+ */
 public class DungeonApp extends JPanel implements KeyListener {
 	
 	public MiniDungeon dungeon  ;

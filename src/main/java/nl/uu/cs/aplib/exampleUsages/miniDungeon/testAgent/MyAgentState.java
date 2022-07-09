@@ -30,6 +30,14 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.utils.Pair;
 
+/**
+ * Provides an implementation of agent state {@link nl.uu.cs.aplib.mainConcepts.SimpleState}.
+ * The state defined here inherits from {@link Iv4xrAgentState}, so it also keeps a
+ * historical WorldModel.
+ * 
+ * @author wish
+ *
+ */
 public class MyAgentState extends Iv4xrAgentState<Void> {
 	
 	public LayeredAreasNavigation<Tile,Sparse2DTiledSurface_NavGraph>  multiLayerNav ;
@@ -190,6 +198,7 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 
 
 	// just for testing:
+	/*
 	public static void main(String[] args) throws Exception {
 
 		// System.out.println(">>>" + Frodo.class.getSimpleName()) ;
@@ -209,5 +218,6 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 		env.action("Frodo", Command.MOVEUP);
 		env.action("Frodo", Command.MOVEUP);
 	}
+	*/
 	
 }

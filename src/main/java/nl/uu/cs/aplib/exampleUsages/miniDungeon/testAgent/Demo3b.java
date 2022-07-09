@@ -28,6 +28,8 @@ import nl.uu.cs.aplib.utils.Pair;
 /**
  * In this Demo we use a generic algorithm, SA1, to let the agent search
  * for the right scroll to cleanse the shrine.
+ * 
+ * @author wish
  */
 public class Demo3b {
 	
@@ -36,7 +38,7 @@ public class Demo3b {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4 ;
-		config.randomSeed = 79373;
+		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		DungeonApp app = new DungeonApp(config);
 		app.soundOn = false ;
@@ -80,16 +82,19 @@ public class Demo3b {
 
 		var G2 = sa1Solver.solver(agent, 
 				"SI1", e -> e.type.equals("" + EntityType.SCROLL),
-				S -> ((MyAgentState) S).gameStatus() == GameStatus.FRODOWIN, 
+				S -> ((MyAgentState) S).gameStatus() 
+						== 
+						(agentId.equals("Frodo") ? GameStatus.FRODOWIN : GameStatus.SMEAGOLWIN), 
 				Policy.NEAREST_TO_AGENT, 
 				explorationBudget);
 
 		// Now, attach the game to the agent, and give it the above goal:
 		var G = SEQ(G1, 
 				goalLib.entityInteracted("SM0"), 
-				//goalLib.smartFrodoEntityInCloseRange(agent,"SS1"),
+				//goalLib.smartEntityInCloseRange(agent,"SI1")
 				//goalLib.entityInteracted("SS1"),
-				G2) ;
+				G2
+				) ;
 		agent.attachState(state).attachEnvironment(env).setGoal(G);
 
 		Thread.sleep(1000);
@@ -109,13 +114,8 @@ public class Demo3b {
 				break;
 			k++;
 		}
-		//System.out.println("Frontiers: " + state.multiLayerNav.getFrontier()) ;
-		//int maze = 0 ;
-		//Tile frodoLoc = toTile(state.worldmodel.position) ;
-		//System.out.println("Explor path: " + state.multiLayerNav.explore(new Pair<>(maze,frodoLoc))) ; ;
-
-		//G.printGoalStructureStatus();
-		System.exit(0);
+		
+		//System.exit(0);
 	}
 
 }

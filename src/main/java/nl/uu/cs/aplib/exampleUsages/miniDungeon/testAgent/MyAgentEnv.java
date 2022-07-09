@@ -23,6 +23,12 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Provides an implementation of {@link nl.uu.cs.aplib.mainConcepts.Environment}
+ * to connect iv4xr/aplib agents to the game MiniDungeon.
+ * 
+ * @author wish
+ */
 public class MyAgentEnv extends Iv4xrEnvironment{
 	
 	public DungeonApp app ;
@@ -203,6 +209,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 	}
 	
 	// just for testing:
+	/*
 	public static void main(String[] args) throws Exception {
 		
 		//System.out.println(">>>" + Frodo.class.getSimpleName()) ;
@@ -218,5 +225,6 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		env.action("Frodo", Command.MOVEUP) ;
 		env.action("Frodo", Command.MOVEUP) ;
 	}
+	*/
 
 }

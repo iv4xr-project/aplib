@@ -24,6 +24,8 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
  * to also pick up a healing potion if it happens to be close to the agent's
  * path, and the agent has a space in its bag. We use a mechanism to
  * dynamically deploy a goal to do this. 
+ * 
+ * @author wish
  */
 public class Demo2b {
 	
@@ -67,10 +69,6 @@ public class Demo2b {
 
 		Thread.sleep(1000);
 		
-		//state.updateState("Frodo");
-		//printEntities(state) ;
-		//PrintUtils.printInternalEntitiesLocs(app.dungeon) ;
-
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;
 		int k = 0 ;
@@ -98,29 +96,6 @@ public class Demo2b {
 			if (k>=1000) break ;
 			k++ ;
 		}	
-		//G.printGoalStructureStatus();	
-		
-		state.updateState(player);
-		
-		
-		WorldModel wom ;
-		
-		PrintUtils.printEntities(state) ;
-		//PrintUtils.printInternalEntitiesLocs(app.dungeon) ;
-		var path = state.multiLayerNav.findPath(Utils.loc3(1,1,2), Utils.loc3(1,18,1)) ;
-		System.out.println("\n== path: " + path) ;
-		path = adjustedFindPath(state, 0,17,2, 1,18,1) ;
-		System.out.println("\n== path: " + path) ;
-		
-		
-		wom = state.env().observe(player) ;
-		//System.out.println("==============") ;
-		//Utils.printEntities(wom);
-		
-		
-		//Utils.printInternalEntityState(app.dungeon) ;
-		//Utils.printNonWalls(state) ;
-		
 		//System.exit(0);	
 	}
 

@@ -8,6 +8,11 @@ import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
 import java.util.function.Predicate;
 
+/**
+ * Provide a set of convenience static methods.
+ * 
+ * @author wish
+ */
 public class Iv4xrEDSL {
 
     /**

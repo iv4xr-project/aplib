@@ -39,8 +39,6 @@ import java.util.logging.Logger;
  * commands to it.
  * </ol>
  * 
- * 
- *
  * @author wish
  *
  */
