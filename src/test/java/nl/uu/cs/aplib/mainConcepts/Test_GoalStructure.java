@@ -26,12 +26,12 @@ public class Test_GoalStructure {
     GoalStructure d;
 
     void setup() {
-        g1 = lift(goal("g1"));
-        g2 = lift(goal("g2"));
-        g3 = lift(goal("g3"));
-        g4 = lift(goal("g4"));
-        g5 = lift(goal("g5"));
-        g6 = lift(goal("g6"));
+        g1 = goal("g1").lift() ;
+        g2 = goal("g2").lift() ;
+        g3 = goal("g3").lift() ;
+        g4 = goal("g4").lift() ;
+        g5 = goal("g5").lift() ;
+        g6 = goal("g6").lift() ;
         a = FIRSTof(g1, g2);
         b = FIRSTof(g3, g4);
         c = SEQ(a, b, g5);
@@ -55,33 +55,33 @@ public class Test_GoalStructure {
     @Test
     public void test_status_propagation_over_FIRSTof() {
 
-        var h1 = lift(goal(""));
-        var h2 = FIRSTof(h1, lift(goal("")));
-        var h3 = FIRSTof(h2, lift(goal("")));
+        var h1 = goal("").lift() ;
+        var h2 = FIRSTof(h1, goal("").lift()) ;
+        var h3 = FIRSTof(h2, goal("").lift());
         assertTrue(h2.getStatus().inProgress());
         h1.setStatusToSuccess("");
         assertTrue(h2.getStatus().success());
         assertTrue(h3.getStatus().success());
 
-        h1 = lift(goal(""));
-        h2 = FIRSTof(h1, lift(goal("")));
-        h3 = FIRSTof(h2, lift(goal("")));
+        h1 = goal("").lift() ;
+        h2 = FIRSTof(h1, goal("").lift());
+        h3 = FIRSTof(h2, goal("").lift());
         h1.setStatusToFail("");
         assertTrue(h2.getStatus().inProgress());
         assertTrue(h3.getStatus().inProgress());
 
-        h1 = lift(goal(""));
-        h2 = FIRSTof(h1, lift(goal("")));
-        h3 = FIRSTof(h2, lift(goal("")));
+        h1 = goal("").lift() ;
+        h2 = FIRSTof(h1, goal("").lift());
+        h3 = FIRSTof(h2, goal("").lift());
         h1.budget = 0;
         h1.setStatusToFailBecauseBudgetExhausted();
         assertTrue(h1.getStatus().failed());
         assertTrue(h2.getStatus().inProgress());
         assertTrue(h3.getStatus().inProgress());
 
-        h1 = lift(goal(""));
-        h2 = FIRSTof(h1, lift(goal("")));
-        h3 = FIRSTof(h2, lift(goal("")));
+        h1 = goal("").lift() ;
+        h2 = FIRSTof(h1, goal("").lift());
+        h3 = FIRSTof(h2, goal("").lift());
         h1.budget = 0;
         h2.budget = 0;
         h1.setStatusToFailBecauseBudgetExhausted();
@@ -89,19 +89,19 @@ public class Test_GoalStructure {
         assertTrue(h2.getStatus().failed());
         assertTrue(h3.getStatus().inProgress());
 
-        h1 = lift(goal(""));
-        h2 = lift(goal(""));
+        h1 = goal("").lift() ;
+        h2 = goal("").lift() ;
         h3 = FIRSTof(h1, h2);
-        var h4 = FIRSTof(h3, lift(goal("")));
+        var h4 = FIRSTof(h3, goal("").lift());
         h1.setStatusToFail("");
         h2.setStatusToSuccess("");
         assertTrue(h3.getStatus().success());
         assertTrue(h4.getStatus().success());
 
-        h1 = lift(goal(""));
-        h2 = lift(goal(""));
+        h1 = goal("").lift() ;
+        h2 = goal("").lift() ;
         h3 = FIRSTof(h1, h2);
-        h4 = FIRSTof(h3, lift(goal("")));
+        h4 = FIRSTof(h3, goal("").lift());
         h1.setStatusToFail("");
         h2.setStatusToFail("");
         assertTrue(h3.getStatus().failed());
@@ -111,34 +111,34 @@ public class Test_GoalStructure {
     @Test
     public void test_status_propagation_over_SEQ() {
 
-        var h1 = lift(goal(""));
-        var h2 = SEQ(h1, lift(goal("")));
-        var h3 = SEQ(h2, lift(goal("")));
+        var h1 = goal("").lift() ;
+        var h2 = SEQ(h1, goal("").lift());
+        var h3 = SEQ(h2, goal("").lift());
         assertTrue(h2.getStatus().inProgress());
         h1.setStatusToFail("");
         assertTrue(h2.getStatus().failed());
         assertTrue(h3.getStatus().failed());
 
-        h1 = lift(goal(""));
-        h2 = SEQ(h1, lift(goal("")));
-        h3 = SEQ(h2, lift(goal("")));
+        h1 = goal("").lift() ;
+        h2 = SEQ(h1, goal("").lift());
+        h3 = SEQ(h2, goal("").lift());
         h1.setStatusToSuccess("");
         assertTrue(h2.getStatus().inProgress());
         assertTrue(h3.getStatus().inProgress());
 
-        h1 = lift(goal(""));
-        h2 = lift(goal(""));
+        h1 = goal("").lift();
+        h2 = goal("").lift();
         h3 = SEQ(h1, h2);
-        var h4 = SEQ(h3, lift(goal("")));
+        var h4 = SEQ(h3, goal("").lift());
         h1.setStatusToSuccess("");
         h2.setStatusToFail("");
         assertTrue(h3.getStatus().failed());
         assertTrue(h4.getStatus().failed());
 
-        h1 = lift(goal(""));
-        h2 = lift(goal(""));
+        h1 = goal("").lift();
+        h2 = goal("").lift();
         h3 = SEQ(h1, h2);
-        h4 = SEQ(h3, lift(goal("")));
+        h4 = SEQ(h3, goal("").lift());
         h1.setStatusToSuccess("");
         h2.setStatusToSuccess("");
         assertTrue(h3.getStatus().success());
@@ -148,8 +148,8 @@ public class Test_GoalStructure {
 
     @Test
     public void test_status_propagation_over_REPEAT() {
-        var h1 = lift(goal(""));
-        var h2 = lift(goal(""));
+        var h1 = goal("").lift();
+        var h2 = goal("").lift();
         var h3 = REPEAT(h1);
         var h4 = SEQ(h3, h2);
         h1.setStatusToSuccess("");
@@ -158,10 +158,10 @@ public class Test_GoalStructure {
         assertTrue(h2.getStatus().inProgress());
         assertTrue(h4.getStatus().inProgress());
 
-        var h1a = lift(goal(""));
-        var h1b = lift(goal(""));
+        var h1a = goal("").lift() ;
+        var h1b = goal("").lift() ;
         var h1c = SEQ(h1a, h1b);
-        h2 = lift(goal(""));
+        h2 = goal("").lift() ;
         h3 = REPEAT(h1c);
         // h4 = SEQ(REPEAT(SEQ(h1a,h1b)),h2) :
         h4 = SEQ(h3, h2);
@@ -173,10 +173,10 @@ public class Test_GoalStructure {
         assertTrue(h3.getStatus().inProgress());
         assertTrue(h4.getStatus().inProgress());
 
-        h1a = lift(goal(""));
-        h1b = lift(goal(""));
+        h1a = goal("").lift() ;
+        h1b = goal("").lift() ;
         h1c = SEQ(h1a, h1b);
-        h2 = lift(goal(""));
+        h2 = goal("").lift() ;
         h3 = REPEAT(h1c);
         h4 = FIRSTof(h3, h2);
         h1a.setStatusToSuccess("");
@@ -272,15 +272,15 @@ public class Test_GoalStructure {
 
     @Test
     public void test_1_getDeepestFirstPrimGoal_andAllocateBudget() {
-        g1 = lift(goal("g1"));
+        g1 = goal("g1").lift() ;
         g1.maxbudget(10);
         PrimitiveGoal y = g1.getDeepestFirstPrimGoal_andAllocateBudget();
         assertTrue(y == g1);
         assertTrue(g1.bmax == 10);
         assertTrue(g1.budget == 10);
 
-        g1 = lift(goal("g1"));
-        g2 = lift(goal("g2"));
+        g1 = goal("g1").lift() ;
+        g2 = goal("g2").lift() ;
         var g = SEQ(g2, g1);
         g.maxbudget(10);
         g.budget = (5);
@@ -290,8 +290,8 @@ public class Test_GoalStructure {
         assertTrue(g1.budget == Double.POSITIVE_INFINITY);
         assertTrue(g2.budget == 5);
 
-        g1 = lift(goal("g1"));
-        g2 = lift(goal("g2"));
+        g1 = goal("g1").lift() ;
+        g2 = goal("g2").lift() ;
         g = FIRSTof(g2, g1);
         g.maxbudget(10);
         g.budget = (15);

@@ -1,8 +1,12 @@
 package eu.iv4xr.framework.mainConcepts;
 
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
+
+import java.util.*;
 import java.util.function.Function;
 
+import eu.iv4xr.framework.extensions.ltl.LTL;
+import eu.iv4xr.framework.extensions.ltl.SATVerdict;
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.CostFunction;
@@ -50,6 +54,7 @@ public class TestAgent extends AutonomousBasicAgent {
     protected String testDesc;
     protected TestDataCollector testDataCollector;
     protected SyntheticEventsProducer syntheticEventsProducer ;
+    public List<LTL<SimpleState>> ltls = new LinkedList<>() ;
     
     //protected GoalStructure goal;  <-- agent already has this field!
     
@@ -167,6 +172,43 @@ public class TestAgent extends AutonomousBasicAgent {
         super.attachEnvironment(env);
         return this;
     }
+    
+    /**
+     * Add one or more LTL-properties that would be checked as the agent runs.
+     */
+    public TestAgent addLTL(@SuppressWarnings("unchecked") LTL<SimpleState> ... ltlsToAdd) {
+    	for (var phi : ltlsToAdd) {
+    		ltls.add(phi) ;
+    		phi.startChecking();
+    	}
+    	return this ;
+    }
+    
+    /**
+     * Reset the state of the LTL-formulas attached/registered to this agent.
+     */
+    public TestAgent resetLTLs() {
+    	for (var phi : ltls) phi.startChecking();
+    	return this ;
+    }
+    
+    /**
+     * Call this at the end of agent's run to evaluate all LTL properties
+     * registered to it. If one gives UNSAT, this method returns false (
+     * one of the LTL is violated), else it returns true (no LTL is violated).
+     */
+    public boolean evaluateLTLs() {
+    	boolean hasUnSat = false ;
+    	// evaluate all ltls, if they were not evaluated yet:
+    	for (var phi : ltls)  {
+    		if (!phi.fullyEvaluated) phi.endChecking();
+    		if (!hasUnSat  &&  phi.sat() == SATVerdict.UNSAT) 
+    			hasUnSat = true ;
+    	}
+    	return !hasUnSat ;
+    }
+    
+    
 
     /**
      * Set initial computation budget for this agent. The agent must have a goal
@@ -253,6 +295,9 @@ public class TestAgent extends AutonomousBasicAgent {
         }
         if(this.syntheticEventsProducer != null) {
         	syntheticEventsProducer.generateCurrentEvents();
+        }
+        for (var phi : ltls) {
+        	phi.checkNext(state) ;
         }
     }
 

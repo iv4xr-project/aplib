@@ -56,7 +56,7 @@ public class Test_DynamicGoalStructure {
     }
 
     @Test
-    public void test_IFELSE_goalstructure() {
+    public void test_TRYIF_goalstructure() {
 
         // attach a state and environment; the environment is here just a dummy that
         // does not do anything
@@ -68,7 +68,7 @@ public class Test_DynamicGoalStructure {
         Goal g2 = mk_goal2();
 
         // testing when we branch to the then-part:
-        GoalStructure mygoal = IFELSE((MyState st) -> st.x == 0, g1.lift(), g2.lift());
+        GoalStructure mygoal = TRYIF((MyState st) -> st.x == 0, g1.lift(), g2.lift());
 
         agent.setGoal(mygoal);
         executeAgent(agent,4) ;
@@ -84,7 +84,7 @@ public class Test_DynamicGoalStructure {
         state.reset();
         g1 = mk_goal1();
         g2 = mk_goal2();
-        mygoal = IFELSE((MyState st) -> st.x != 0, g1.lift(), g2.lift());
+        mygoal = TRYIF((MyState st) -> st.x != 0, g1.lift(), g2.lift());
 
         agent.setGoal(mygoal);
         executeAgent(agent,4) ;

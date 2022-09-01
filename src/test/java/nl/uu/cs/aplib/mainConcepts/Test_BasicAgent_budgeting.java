@@ -45,7 +45,9 @@ public class Test_BasicAgent_budgeting {
             return S.counter;
         });
 
-        var topgoal = lift(goal("g").toSolve((Integer k) -> k == 3).withTactic(lift(a0))).maxbudget(2);
+        var topgoal = goal("g").toSolve((Integer k) -> k == 3).withTactic(a0.lift())
+        				.lift()
+        				.maxbudget(2);
 
         agent.setGoal(topgoal);
         // System.out.println(">>> alocated topgoal " + topgoal.allocatedBudget) ;
@@ -66,7 +68,9 @@ public class Test_BasicAgent_budgeting {
             return S.counter;
         });
 
-        topgoal = lift(goal("g").toSolve((Integer k) -> k == 3).withTactic(lift(a0))).maxbudget(3);
+        topgoal = goal("g").toSolve((Integer k) -> k == 3).withTactic(a0.lift())
+        			.lift()
+        			.maxbudget(3);
 
         agent.setGoal(topgoal);
         agent.update();
@@ -98,8 +102,10 @@ public class Test_BasicAgent_budgeting {
             return S.counter;
         });
 
-        var g1 = lift(goal("g1").toSolve((Integer k) -> k == 6).withTactic(lift(a0))).maxbudget(2);
-        var g2 = lift(goal("g2").toSolve((Integer k) -> k == 7).withTactic(lift(a1)));
+        var g1 = goal("g1").toSolve((Integer k) -> k == 6).withTactic(a0.lift())
+        		.lift()
+        		.maxbudget(2);
+        var g2 = goal("g2").toSolve((Integer k) -> k == 7).withTactic(a1.lift()).lift();
         var topgoal = FIRSTof(g1, g2).maxbudget(10);
 
         agent.setGoal(topgoal);

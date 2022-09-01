@@ -19,9 +19,6 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class AplibEDSL {
 
-    AplibEDSL() {
-    }
-
     /**
      * Create a SEQ type {@link nl.uu.cs.aplib.mainConcepts.GoalStructure}.
      */
@@ -45,6 +42,23 @@ public class AplibEDSL {
     public static GoalStructure REPEAT(GoalStructure subgoal) {
         return new GoalStructure(GoalsCombinator.REPEAT, subgoal);
     }
+    
+    /**
+     * REPEAT(a,G,p) will repeatedly try G, until p is true. The guard
+     * p is checked "after" G: this means after G is concluded with either
+     * success of failed.
+     * Unlike the standard REPEAT, we do not stops when G succeeds. The iteration
+     * steps when at the end of G, g holds on the resulting state.
+     */
+    public static <State> GoalStructure REPEAT(
+    		BasicAgent agent,
+    		GoalStructure subgoal, 
+    		Predicate<State> g) {
+        return REPEAT(
+        		  SEQ(FIRSTof(subgoal,SUCCESS()),
+        		      IF(agent,g,SUCCESS(),FAIL()))        		  
+        	   ) ;
+    }
 
     /**
      * Turn a predicate over state to become a goal. When this goal becomes current,
@@ -62,8 +76,10 @@ public class AplibEDSL {
     }
     
     /**
-     * Turn an action into a goal. The goal itself wil always succeeds. The action will be
-     * executed (once), that would then automatically solves this goal.
+     * Turn an action into a goal. The goal itself will always succeeds. If the action
+     * is enabled, the action will be  executed (once), that would then automatically 
+     * solves this goal. If the action is not enabled, then nothing happens (the goal
+     * is kept, and it is not solved).
      */
     public static <AgentState,Proposal> GoalStructure lift(String goalname, Action a) {
         return goal(goalname)
@@ -113,8 +129,12 @@ public class AplibEDSL {
     }
     
     
+    @Deprecated
     /**
-     * Repeatedly trying to solve a goal g, while the given predicate p is true. More
+     * Deprecated. Use {@link AplibEDSL#WHILE(BasicAgent, Predicate, GoalStructure)}
+     * instead.
+     * 
+     * <p> Repeatedly trying to solve a goal g, while the given predicate p is true. More
      * precisely, the agent first checks the given guard predicate p. If it does not
      * hold, the loop ends. Else, it makes the subgoal current and tries to solve it.
      * If this subgoal is solved, the loop ends. Else we repeat the above steps.
@@ -130,23 +150,64 @@ public class AplibEDSL {
     }
     
     /**
-     * If p holds in the current state, g1() will be deployed as the
-     * next goal, and else g2() is deployed. The goal thus deployed will
-     * be removed again after executed.
+     * WHILE(a,p,G) will repeatedly try G, while p is true. The guard
+     * p is checked at the start of every iteration, and "after" G: 
+     * this means after G is concluded with either success of failed.
+     * Unlike the standard REPEAT, we do not stops when G succeeds. The iteration
+     * steps when at the end of G, g holds on the resulting state.
      */
-    public static <State> GoalStructure IFTHENELSE(
+    public static <State> GoalStructure WHILE(
+    						BasicAgent agent,
+    						Predicate<State> g, 
+    						GoalStructure subgoal) {
+        return IF(agent,
+        		  g,
+        		  REPEAT(agent,subgoal,g), 
+        		  SUCCESS()) ;
+    }
+    
+    /**
+     * When this goal structure is executed, it first apply the query function q
+     * on the current agent state S to obtain a value a. This value can be
+     * null to indicate that the query is not successful.
+     * 
+     * <p> If a is not null, g1(a) will be deployed as the next goal to solve.
+     * Else g2 is deployed.
+     */
+    public static <State,QueryResult> GoalStructure IF(
     		BasicAgent agent,
-    		Predicate<State> p, 
-    		Function<Void,GoalStructure> g1, 
-    		Function<Void,GoalStructure> g2) {
+    		Function<State,QueryResult> q, 
+    		Function<QueryResult,GoalStructure> g1, 
+    		GoalStructure g2) {
     	
     	return DEPLOY(agent, (State S) ->  {
-    		if (p.test(S)) return g1.apply(null) ; else return g2.apply(null) ;
+    		QueryResult a = q.apply(S) ;
+    		if (a!=null) 
+    			 return g1.apply(a) ; 
+    		else return g2 ;
     		}) ;    	
     }
-
+    
     /**
-     * If this goal becomes current, it will evaluate the current state. If p holds,
+     * When this goal structure is executed, it evaluates p on the current state.
+     * If it is true, g1 will be deployed as the next goal. Else g2 is deployed
+     * as the next goal.
+     */
+    public static <State> GoalStructure IF(
+    		BasicAgent agent,
+    		Predicate<State> p, 
+    		GoalStructure g1, 
+    		GoalStructure g2) {
+    	return DEPLOY(agent, (State S) ->  p.test(S) ? g1 : g2) ;    	
+    }
+    
+
+    @Deprecated
+    /**
+     * Deprecated. Use {@link AplibEDSL#TRYIF(Predicate, GoalStructure, GoalStructure)}
+     * instead.
+     * 
+     * <p>If this goal becomes current, it will evaluate the current state. If p holds,
      * it will continue with the goal g1 as the goal to solve. if p does not hold,
      * of SEQ(p,g1) failed, g2 is tried.
      * 
@@ -155,6 +216,22 @@ public class AplibEDSL {
      * subsequently fails.
      */
     public static <State> GoalStructure IFELSE(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
+        GoalStructure not_g = lift((State state) -> p.test(state));
+        return FIRSTof(SEQ(lift(p), g1), g2);
+    }
+    
+    
+    /**
+     * If this goal becomes current, it will evaluate the current state. 
+     * 
+     * <ol>
+     * <li> If p holds on the current state, the agent will then try the goal g1. 
+     * If g1 is solved we are done. If g1 fails, g2 is tried.
+     * 
+     * <li> If p does not hold, we do g2.
+     * </ol>
+     */
+    public static <State> GoalStructure TRYIF(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
         GoalStructure not_g = lift((State state) -> p.test(state));
         return FIRSTof(SEQ(lift(p), g1), g2);
     }
@@ -222,8 +299,8 @@ public class AplibEDSL {
         				)
         		.lift()  ;
         	  
-        return IFELSE2(SEQ(G),
-        		   remove.apply(null), 
+        return FIRSTof(
+        		   SEQ(G,remove.apply(null)), 
         		   // always remove the new goal again, but if the new goal failed we will also
         		   // make the whole construct fail:
         		   SEQ(remove.apply(null),FAIL())) ;  
@@ -266,7 +343,7 @@ public class AplibEDSL {
     	for(int k = handlers.length-1 ; 0<=k; k--) {
     		var H_k = SEQ(handlers[k].snd)  ;
     		var condition = handlers[k].fst ;
-    		H = IFELSE(condition,H_k,H) ;
+    		H = TRYIF(condition,H_k,H) ;
     	}
     	H = SEQ(H,FAIL()) ;
     	
@@ -293,18 +370,18 @@ public class AplibEDSL {
     }
 
     /**
-     * Lift a Goal to become a {@link nl.uu.cs.aplib.mainConcepts.GoalStructure}.
-     */
-    public static PrimitiveGoal lift(Goal g) {
-        return g.lift();
-    }
-
-    /**
      * Create a blank {@link nl.uu.cs.aplib.mainConcepts.Action} with the given
      * name.
      */
     public static Action action(String name) {
         return new Action(name);
+    }
+    
+    /**
+     * Create a blank {@link nl.uu.cs.aplib.mainConcepts.Action}.
+     */
+    public static Action action() {
+        return new Action("");
     }
 
     /**
@@ -326,7 +403,7 @@ public class AplibEDSL {
      * over an Abort action.
      */
     public static PrimitiveTactic ABORT() {
-        return lift(new Action.Abort());
+        return Abort().lift() ; 
     }
    
     /**
@@ -343,13 +420,6 @@ public class AplibEDSL {
         return new Tactic(TacticType.ANYOF, strategies);
     }
 
-    /**
-     * Lift an {@link nl.uu.cs.aplib.mainConcepts.Action} to become a
-     * {@link nl.uu.cs.aplib.mainConcepts.Tactic.PrimitiveTactic}.
-     */
-    public static PrimitiveTactic lift(Action a) {
-        return new PrimitiveTactic(a);
-    }
     
 //    /**
 //     * If this goal becomes current, it will evaluate the current state. If p holds,
@@ -362,16 +432,5 @@ public class AplibEDSL {
 //        return FIRSTof(SEQ(lift(p), g1), g2);
 //    }
     
-    
-    /**
-     * If this goal becomes current, it will try SEQ(p,g1). If this fails it tries g2.
-     * 
-     * <p>Note that IFELSE2 does not behave as the usual if-then-else as IFELSE2 can
-     * still do the else-part g2 even if the guard p succeeds, namely if the then-branch g1
-     * subsequently fails.
-     */
-    public static GoalStructure IFELSE2(GoalStructure p, GoalStructure g1, GoalStructure g2) {
-       // GoalStructure not_g = lift((State state) -> p.test(state));
-        return FIRSTof(SEQ(p, g1), g2);
-    }
+
 }

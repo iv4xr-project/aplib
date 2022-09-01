@@ -188,7 +188,7 @@ public class Sa1Solver<NavgraphNode>  {
 				
 			
 		return SEQ(gTargetIsRefreshed.apply(tId), 
-				   IFELSE(phi,
+				   TRYIF(phi,
 						  /* then: */ SUCCESS(),
 						  // else:
 						  SEQ(REPEAT(search),

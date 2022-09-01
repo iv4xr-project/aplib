@@ -24,11 +24,11 @@ public class Test_Tactic {
 
     @Test
     public void test_getFirstEnabledActions() {
-        var a0 = lift(action("a0").on_(s -> ((IntState) s).i == 0));
-        var a1 = lift(action("a1").on_(s -> ((IntState) s).i == 1));
-        var a2 = lift(action("a2").on_(s -> ((IntState) s).i == 1));
-        var a3 = lift(action("a3").on_(s -> ((IntState) s).i == 3));
-        var a4 = lift(action("a4").on_(s -> ((IntState) s).i == 4));
+        var a0 = action("a0").on_(s -> ((IntState) s).i == 0).lift() ;
+        var a1 = action("a1").on_(s -> ((IntState) s).i == 1).lift() ;
+        var a2 = action("a2").on_(s -> ((IntState) s).i == 1).lift() ;
+        var a3 = action("a3").on_(s -> ((IntState) s).i == 3).lift() ;
+        var a4 = action("a4").on_(s -> ((IntState) s).i == 4).lift() ;
 
         assertFalse(FIRSTof(a0, a1, a2).getFirstEnabledActions(Int(1)).contains(a0));
         assertTrue(FIRSTof(a0, a1, a2).getFirstEnabledActions(Int(1)).contains(a1));
@@ -49,12 +49,12 @@ public class Test_Tactic {
 
     @Test
     public void test_calcNextTactic() {
-        var a0 = lift(action("a0"));
-        var a1 = lift(action("a1"));
-        var a2 = lift(action("a2"));
-        var a3 = lift(action("a3"));
-        var a4 = lift(action("a4"));
-        var a5 = lift(action("a5"));
+        var a0 = action("a0").lift();
+        var a1 = action("a1").lift();
+        var a2 = action("a2").lift();
+        var a3 = action("a3").lift();
+        var a4 = action("a4").lift();
+        var a5 = action("a5").lift();
 
         var s1 = FIRSTof(a0, a1);
         var s2 = ANYof(s1, a2);
