@@ -96,12 +96,49 @@ public class Test_DynamicGoalStructure {
         mygoal.printGoalStructureStatus();
 
     }
+    
+    @Test
+    public void test_IF_goalstructure() {
+
+        // attach a state and environment; the environment is here just a dummy that
+        // does not do anything
+        // relevant for the test:
+        MyState state = new MyState();
+        BasicAgent agent = new BasicAgent().attachState(state).attachEnvironment(new Environment());
+
+        Goal g1 = mk_goal1();
+        Goal g2 = mk_goal2();
+
+        // testing when we branch to the then-part:
+        GoalStructure mygoal = IF(agent,(MyState st) -> st.x == 0, g1.lift(), g2.lift());
+
+        agent.setGoal(mygoal);
+        executeAgent(agent,6) ;
+
+        assertTrue(mygoal.status.success());
+        assertTrue(g1.status.success());
+        assertFalse(g2.status.success());
+
+        // testing when we branch to the else-part:
+
+        state.reset();
+        g1 = mk_goal1();
+        g2 = mk_goal2();
+        mygoal = IF(agent,(MyState st) -> st.x != 0, g1.lift(), g2.lift());
+
+        agent.setGoal(mygoal);
+        executeAgent(agent,6) ;
+
+        assertTrue(mygoal.status.success());
+        assertFalse(g1.status.success());
+        assertTrue(g2.status.success());
+    }
 
     /**
-     * Test WHILE(p,g)for the scenario where the loop terminates because g succeeds.
+     * Test WHILEDO(p,g)for the scenario where the loop terminates because g succeeds.
      */
     @Test
-    public void test_WHILE_goalstructure_exit_by_bodysuccess() {
+    public void test_WHILEDO_goalstructure_exit_by_bodysuccess() {
         MyState state = new MyState();
         BasicAgent agent = new BasicAgent().attachState(state).attachEnvironment(new Environment());
 
@@ -126,11 +163,11 @@ public class Test_DynamicGoalStructure {
     }
 
     /**
-     * Test WHILE(p,g) for the scenario where the loop terminates because the guard p
+     * Test WHILEDO(p,g) for the scenario where the loop terminates because the guard p
      * becomes false.
      */
     @Test
-    public void test_WHILE_goalstructure_exit_by_guard_false() {
+    public void test_WHILEDO_goalstructure_exit_by_guard_false() {
         MyState state = new MyState();
         BasicAgent agent = new BasicAgent().attachState(state).attachEnvironment(new Environment());
 
@@ -152,6 +189,63 @@ public class Test_DynamicGoalStructure {
 
         mygoal.printGoalStructureStatus();
 
+    }
+    
+    /**
+     * Test REPEAT(g,p). It should terminate because the guard p becomes true. 
+     * Furthermore, note that the goal in the body will fail before
+     * the loop breaks, this shows that the failing body does not break the loop.
+     */
+    
+    @Test
+    public void test_CONDITIONED_REPEAT() {
+        MyState state = new MyState();
+        BasicAgent agent = new BasicAgent().attachState(state).attachEnvironment(new Environment());
+
+        Tactic increase = action("incr").do1((MyState st) -> {
+            st.x++;
+            return st;
+        }).lift();
+        Goal g0 = goal("multiple3").toSolve((MyState st) -> st.x % 3 == 0).withTactic(increase);
+
+        GoalStructure mygoal = REPEAT(agent, SEQ(g0.lift(), FAIL()), (MyState st) -> st.x >= 9);
+
+        agent.setGoal(mygoal);
+
+        state.x = 1;
+        executeAgent(agent,30) ;
+
+        assertTrue(state.x == 9);
+        assertTrue(mygoal.status.success());
+        //mygoal.printGoalStructureStatus();
+    }
+    
+    /**
+     * Test WHILE(p,g). It should terminate because the guard p becomes false. 
+     * Furthermore, note that the goal in the body will fail before
+     * the loop breaks, this shows that the failing body does not break the loop.
+     */
+    @Test
+    public void test_WHILE() {
+        MyState state = new MyState();
+        BasicAgent agent = new BasicAgent().attachState(state).attachEnvironment(new Environment());
+
+        Tactic increase = action("incr").do1((MyState st) -> {
+            st.x++;
+            return st;
+        }).lift();
+        Goal g0 = goal("multiple3").toSolve((MyState st) -> st.x % 3 == 0).withTactic(increase);
+
+        GoalStructure mygoal = WHILE(agent,(MyState st) -> st.x < 9, SEQ(g0.lift(), FAIL()));
+
+        agent.setGoal(mygoal);
+
+        state.x = 1;
+        executeAgent(agent,30) ;
+
+        assertTrue(state.x == 9);
+        assertTrue(mygoal.status.success());
+        //mygoal.printGoalStructureStatus();
     }
     
     List<Goal> getPrimgoals(GoalStructure G) {

@@ -44,11 +44,9 @@ public class AplibEDSL {
     }
     
     /**
-     * REPEAT(a,G,p) will repeatedly try G, until p is true. The guard
-     * p is checked "after" G: this means after G is concluded with either
-     * success of failed.
+     * REPEAT(a,G,p) implements repeat-until. It will repeatedly try G, while p is true. 
      * Unlike the standard REPEAT, we do not stops when G succeeds. The iteration
-     * steps when at the end of G, g holds on the resulting state.
+     * stops when at the end of G, g is false on the resulting state.
      */
     public static <State> GoalStructure REPEAT(
     		BasicAgent agent,
@@ -151,10 +149,9 @@ public class AplibEDSL {
     
     /**
      * WHILE(a,p,G) will repeatedly try G, while p is true. The guard
-     * p is checked at the start of every iteration, and "after" G: 
-     * this means after G is concluded with either success of failed.
+     * p is checked at the start of every iteration.
      * Unlike the standard REPEAT, we do not stops when G succeeds. The iteration
-     * steps when at the end of G, g holds on the resulting state.
+     * stops when at the end of G, g holds on the resulting state.
      */
     public static <State> GoalStructure WHILE(
     						BasicAgent agent,
@@ -162,7 +159,7 @@ public class AplibEDSL {
     						GoalStructure subgoal) {
         return IF(agent,
         		  g,
-        		  REPEAT(agent,subgoal,g), 
+        		  REPEAT(agent,subgoal, (State S) -> ! g.test(S)), 
         		  SUCCESS()) ;
     }
     
@@ -216,8 +213,7 @@ public class AplibEDSL {
      * subsequently fails.
      */
     public static <State> GoalStructure IFELSE(Predicate<State> p, GoalStructure g1, GoalStructure g2) {
-        GoalStructure not_g = lift((State state) -> p.test(state));
-        return FIRSTof(SEQ(lift(p), g1), g2);
+        return TRYIF(p,g1,g2) ;
     }
     
     
