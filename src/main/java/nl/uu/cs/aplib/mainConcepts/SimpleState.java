@@ -49,6 +49,11 @@ public class SimpleState {
      * state.
      */
     Environment env;
+    
+    /**
+     * A pointer to the agent that owns this state.
+     */
+    BasicAgent owner ;
 
     /**
      * A logger. Don't set this logger yourself. When you attach this state to an
@@ -95,6 +100,8 @@ public class SimpleState {
     public Environment env() {
         return env;
     }
+    
+    public BasicAgent owner() { return owner ; }
 
     /**
      * Write the string to the logger attached to this state, with the specified

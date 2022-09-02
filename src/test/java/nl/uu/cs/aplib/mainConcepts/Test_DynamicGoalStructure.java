@@ -45,7 +45,7 @@ public class Test_DynamicGoalStructure {
         return goal("g2").toSolve((MyState st) -> st.x < -2).withTactic(decrease);
     }
     
-    void executeAgent(BasicAgent agent, int numSteps) {
+    static void executeAgent(BasicAgent agent, int numSteps) {
     	MyState state = (MyState) agent.state() ;
     	int k = 0;
         while (k < numSteps) {

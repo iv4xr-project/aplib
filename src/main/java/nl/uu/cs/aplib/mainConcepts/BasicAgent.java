@@ -370,6 +370,17 @@ public class BasicAgent {
         }
         logger.info("Agent " + id + " inserts a new goal structure after goal " + currentGoal.goal.name + ".");
     }
+    
+    /** 
+     * As {@link #addAfter(GoalStructure)}, but the inserted goal is set with 
+     * the auto-remove flag turned on. This means that after G is achieved or
+     * failed, it will also be removed from the goal-structure that it is
+     * part of.
+     */
+    public void addAfterWithAutoRemove(GoalStructure G) {
+    	G.autoRemove = true ;
+    	addAfter(G) ;
+    }
 
     /**
      * Insert the goal-structure G as the <b>before</b> direct sibling of the
@@ -422,6 +433,17 @@ public class BasicAgent {
         repeatNode.parent = parent;
         logger.info("Agent " + id + " inserts a new goal structure before goal " + currentGoal.goal.name + ".");
         // case-2 done
+    }
+    
+    /** 
+     * As {@link #addBefore(GoalStructure)}, but the inserted goal is set with 
+     * the auto-remove flag turned on. This means that after G is achieved or
+     * failed, it will also be removed from the goal-structure that it is
+     * part of.
+     */
+    public void addBeforeWithAutoRemove(GoalStructure G) {
+    	G.autoRemove = true ;
+    	addBefore(G) ;
     }
 
     /**
@@ -561,6 +583,8 @@ public class BasicAgent {
         // check the status of top-level goal; if it is resolved, the agent is done:
         if (goal.getStatus().success() || goal.getStatus().failed()) {
             detachgoal();
+            // we don't bother to clean up auto-remove goals since the top-goal
+            // in concluded anyway:
             return;
         }
         // otherwise the top goal is still in-progress...
@@ -576,6 +600,19 @@ public class BasicAgent {
                 if (currentTactic == null)
                     // should not happen...
                     throw new AplibError("Goal " + currentGoal.goal.name + " has no tactic.");
+              
+                // Apply removal of auto-remove subgoals that become achieved or failed.
+                // Actually, we will only remove at most one such subgoal G because there 
+                // can only be at most one such G that is closest to the root. There may
+                // be other concluded auto-remove subgoals, but these should all be subgoals
+                // of G.
+                // 
+                // Note that the new currentGoal g cannot be part of the removed G. This would
+                // otherwise imply that both the previous goal g0 and g are
+                // decendants of G. But since G is concluded, g cannot possibly be a new 
+                // current goal.
+                goal.removeClosest_Concluded_AutoRemove_Subgoal();
+                
             } else {
                 // there is no more goal left!
                 detachgoal();

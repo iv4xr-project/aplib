@@ -2,6 +2,7 @@ package nl.uu.cs.aplib.mainConcepts;
 
 import java.util.*;
 import nl.uu.cs.aplib.Logging;
+import nl.uu.cs.aplib.exception.AplibError;
 
 /**
  * A GoalStructure is a generalization of a {@link Goal}. It is a tree-shaped
@@ -45,6 +46,16 @@ public class GoalStructure {
     List<GoalStructure> subgoals = new LinkedList<GoalStructure>();
     GoalsCombinator combinator;
     ProgressStatus status = new ProgressStatus();
+    
+    /**
+     * A sub-goal-structure that is flagged as auto-remove will be automatically
+     * removed when it is achieved or failed. This flag is by default set to
+     * false (so, NO auto-removal). If set to true, then auto-remove applies.
+     * 
+     * <p>In principle, only goals dynamically added through agent.addBefore or
+     * agent.addAfter could be auto-remove.
+     */
+    boolean autoRemove = false ;
 
     /**
      * Maximum limit on the budget that can be allocated to this goal structure.
@@ -326,6 +337,43 @@ public class GoalStructure {
         } else {
             return subgoals.get(0).getDeepestFirstPrimGoal_andAllocateBudget();
         }
+    }
+    
+    /**
+     * Apply a depth-first=-search, to find the first descedant subgoal G
+     * that is concluded and has its auto-remove flag turned on. There
+     * should be at most just one such G.
+     * Note that this method cannot of course remove "this" goal itself.
+     * 
+     * <p>It is an error if auto-removal causes a goal to have an empty
+     * list of subgoals.
+     */
+    boolean removeClosest_Concluded_AutoRemove_Subgoal() {
+    	GoalStructure toBeRemoved = null ;
+    	for(var G : subgoals) {
+    		if(!G.status.inProgress() && G.autoRemove) {
+    			// find a subgoal that should be removed
+    			toBeRemoved = G ;
+    			break ;
+    		}
+    	}
+    	if (toBeRemoved != null) {
+    		subgoals.remove(toBeRemoved) ;
+    		toBeRemoved.parent = null ;
+    		if(subgoals.size() == 0) {
+    			throw new AplibError("A goal is removed, which cause its parent to have an empty set of subgoals") ;
+    		}
+    		return true ;
+    	}
+    	// else none of the subgoals are themselves removable;
+    	// we search deeper:
+    	for(var G : subgoals) {
+    		var hasRemovedOne = G.removeClosest_Concluded_AutoRemove_Subgoal() ;
+    		if (hasRemovedOne) {
+    			return true ;
+    		}
+    	}
+    	return false ;
     }
 
     void makeInProgressAgain() {
