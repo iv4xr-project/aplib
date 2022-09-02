@@ -57,6 +57,15 @@ public class AplibEDSL {
         		      IF(agent,g,SUCCESS(),FAIL()))        		  
         	   ) ;
     }
+    
+    public static <AgentState extends SimpleState> GoalStructure REPEAT(
+    		GoalStructure subgoal, 
+    		Predicate<AgentState> g) {
+        return REPEAT(
+        		  SEQ(FIRSTof(subgoal,SUCCESS()),
+        		      IF(g,SUCCESS(),FAIL()))        		  
+        	   ) ;
+    }
 
     /**
      * Turn a predicate over state to become a goal. When this goal becomes current,
@@ -163,6 +172,14 @@ public class AplibEDSL {
         		  SUCCESS()) ;
     }
     
+    public static <AgentState extends SimpleState> GoalStructure WHILE(
+			Predicate<AgentState> g, 
+			GoalStructure subgoal) {
+    	return IF(g,
+    			REPEAT(subgoal, (AgentState S) -> ! g.test(S)), 
+    			SUCCESS()) ;
+    }
+    
     /**
      * When this goal structure is executed, it first apply the query function q
      * on the current agent state S to obtain a value a. This value can be
@@ -185,6 +202,21 @@ public class AplibEDSL {
     		}) ;    	
     }
     
+    public static <AgentState extends SimpleState, QueryResult> GoalStructure IF(
+    		Function<AgentState,QueryResult> q, 
+    		Function<QueryResult,GoalStructure> g1, 
+    		GoalStructure g2) {
+    	
+    	Action a = addAfter((AgentState S) -> {
+    		QueryResult result = q.apply(S) ;
+    		if (result !=null) 
+   			 	return g1.apply(result) ; 
+    			else return g2 ;
+    		}) ;
+    	
+    	return SEQ(lift("IF",a)) ; 	
+    }
+    
     /**
      * When this goal structure is executed, it evaluates p on the current state.
      * If it is true, g1 will be deployed as the next goal. Else g2 is deployed
@@ -198,6 +230,14 @@ public class AplibEDSL {
     	return DEPLOY(agent, (State S) ->  p.test(S) ? g1 : g2) ;    	
     }
     
+    public static <AgentState extends SimpleState> GoalStructure IF(
+    		Predicate<AgentState> p, 
+    		GoalStructure g1, 
+    		GoalStructure g2) {
+    	return IF((AgentState S) -> p.test(S) ? true : null,
+    			  (Boolean b) -> g1,
+    			  g2) ;
+    }
 
     @Deprecated
     /**
@@ -371,6 +411,26 @@ public class AplibEDSL {
      */
     public static Action action(String name) {
         return new Action(name);
+    }
+    
+    public static <AgentState extends SimpleState> Action addBefore(Function<AgentState,GoalStructure> fgoal) {
+    	Action a = action("addBefore")
+    			.do1((AgentState S) -> {
+    				var G = fgoal.apply(S) ;
+    				S.owner().addBeforeWithAutoRemove(G) ;
+    				return null  ;
+    			}) ;
+    	return a ;
+    }
+    
+    public static <AgentState extends SimpleState> Action addAfter(Function<AgentState,GoalStructure> fgoal) {
+    	Action a = action("addAfter")
+    			.do1((AgentState S) -> {
+    				var G = fgoal.apply(S) ;
+    				S.owner().addAfterWithAutoRemove(G) ;
+    				return null  ;
+    			}) ;
+    	return a ;
     }
     
     /**
