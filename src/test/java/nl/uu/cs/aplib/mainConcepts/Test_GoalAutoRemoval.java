@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 public class Test_GoalAutoRemoval {
 	
-	// NOTE: if the top-goal is concluded the agent won't bother
-	// cleaning autoremove subgoals. This is expected behavior.
+	// NOTE: the moment the top-goal is concluded the agent won't bother
+	// cleaning residual autoremove subgoals. This is expected behavior.
 	
 	@Test
 	// simple cases where goals are auto-removed

@@ -234,6 +234,17 @@ public class GoalStructure {
     public ProgressStatus getStatus() {
         return status;
     }
+    
+    /**
+     * If this is a primitive-goal, returns its name. Else return the name of
+     * the combinator of this goal structure.
+     */
+    public String getName() {
+    	if (this instanceof PrimitiveGoal) {
+    		return ((PrimitiveGoal) this).goal.name ;
+    	}
+    	return "" + combinator ;
+    }
 
     /**
      * Assuming this goal is closed (that is, it has been solved or failed), this
@@ -340,40 +351,31 @@ public class GoalStructure {
     }
     
     /**
-     * Apply a depth-first=-search, to find the first descedant subgoal G
-     * that is concluded and has its auto-remove flag turned on. There
+     * Apply a depth-first=-search, to find the first descedant (child or lower)
+     * subgoal G that is concluded and has its auto-remove flag turned on. There
      * should be at most just one such G.
-     * Note that this method cannot of course remove "this" goal itself.
+     * Note that this method won't mark  "this" goal itself as G (G has to be a
+     * child or lower).
      * 
-     * <p>It is an error if auto-removal causes a goal to have an empty
+     * <p>It is an error if auto-removal would cause a goal to have an empty
      * list of subgoals.
      */
-    boolean removeClosest_Concluded_AutoRemove_Subgoal() {
-    	GoalStructure toBeRemoved = null ;
+    GoalStructure get_Concluded_AutoRemove_Subgoal() {
     	for(var G : subgoals) {
     		if(!G.status.inProgress() && G.autoRemove) {
     			// find a subgoal that should be removed
-    			toBeRemoved = G ;
-    			break ;
+    			return G ;
     		}
-    	}
-    	if (toBeRemoved != null) {
-    		subgoals.remove(toBeRemoved) ;
-    		toBeRemoved.parent = null ;
-    		if(subgoals.size() == 0) {
-    			throw new AplibError("A goal is removed, which cause its parent to have an empty set of subgoals") ;
-    		}
-    		return true ;
     	}
     	// else none of the subgoals are themselves removable;
     	// we search deeper:
     	for(var G : subgoals) {
-    		var hasRemovedOne = G.removeClosest_Concluded_AutoRemove_Subgoal() ;
-    		if (hasRemovedOne) {
-    			return true ;
+    		GoalStructure GoalStructure = G.get_Concluded_AutoRemove_Subgoal() ;
+    		if (GoalStructure != null) {
+    			return GoalStructure ;
     		}
     	}
-    	return false ;
+    	return null ;
     }
 
     void makeInProgressAgain() {

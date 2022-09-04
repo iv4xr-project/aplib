@@ -243,6 +243,7 @@ public class BasicAgent {
      */
     public BasicAgent attachState(SimpleState state) {
         this.state = state;
+        state.owner = this ;
         state.logger = this.logger;
         return this;
     }
@@ -292,7 +293,7 @@ public class BasicAgent {
         goal = null;
         currentGoal = null;
         String status = "" ;
-        if (lastHandledGoal.getStatus().success()) status = "(sucess)" ;
+        if (lastHandledGoal.getStatus().success()) status = "(success)" ;
         else if(lastHandledGoal.getStatus().failed()) status = "(fail)" ;
         logger.info("Agent " + id + " detaches its goal structure " + status + ".") ;
     }
@@ -354,7 +355,7 @@ public class BasicAgent {
             // if the parent is a REPEAT-node, it can only have one child. So, we insert
             // an additional SEQ node.
             var H = SEQ(currentGoal, G);
-            H.budget = parent.budget;
+            H.budget = parent.budget ;
             parent.subgoals.clear();
             parent.subgoals.add(H);
             H.parent = parent;
@@ -368,7 +369,11 @@ public class BasicAgent {
             }
             G.parent = currentGoal.parent;
         }
-        logger.info("Agent " + id + " inserts a new goal structure after goal " + currentGoal.goal.name + ".");
+        G.budget = Math.min(G.bmax, G.parent.budget) ;
+        String Gname = "(" + G.getName() + ")" ;
+        logger.info("Agent " + id + " inserts a new goal "
+        		             + Gname + " after goal " + currentGoal.goal.name 
+        		             + "; autoremove=" + G.autoRemove);
     }
     
     /** 
@@ -382,8 +387,13 @@ public class BasicAgent {
     	addAfter(G) ;
     }
 
+    
+    @Deprecated
     /**
-     * Insert the goal-structure G as the <b>before</b> direct sibling of the
+     * Deprecated. Use the non-repeating {@link #simpleAddBefore(GoalStructure)} 
+     * instead. 
+     * 
+     * <p>Insert the goal-structure G as the <b>before</b> direct sibling of the
      * current goal. More precisely, the current goal will be replaced by
      * REPEAT(SEQ(G,current-goal)). This is only carried out if G does not already
      * appear as a previous sibling of the current goal under a SEQ node.
@@ -428,6 +438,8 @@ public class BasicAgent {
         repeatNode.budget = parent.budget;
         if (Double.isFinite(parent.budget))
             repeatNode.maxbudget(parent.budget);
+        g1.budget = parent.budget;
+        G.budget = Math.min(G.parent.budget, G.bmax) ;
         parent.subgoals.remove(k);
         parent.subgoals.add(k, repeatNode);
         repeatNode.parent = parent;
@@ -435,15 +447,46 @@ public class BasicAgent {
         // case-2 done
     }
     
+    /**
+     * Insert the goal-structure G as a sibling <b>before</b> the current
+     * goal. However, if the parent of this goal-structure is REPEAT (which can only
+     * have one child), a SEQ node will first be inserted in-between, and the G is
+     * added as the pre-sibling of this goal-structure.
+     * 
+     * <p>
+     * Fail if the current goal is null or if it is the top-goal.
+     */
+    public void simpleAddBefore(GoalStructure G) {
+        if (currentGoal == null || currentGoal.isTopGoal())
+            throw new IllegalArgumentException();
+
+        var parent = currentGoal.parent;
+        if (parent.combinator == GoalsCombinator.REPEAT) {
+            // if the parent is a REPEAT-node, it can only have one child. So, we insert
+            // an additional SEQ node.
+            var H = SEQ(G, currentGoal);
+            H.budget = parent.budget;
+            parent.subgoals.clear();
+            parent.subgoals.add(H);
+            H.parent = parent;
+        } else {
+            int k = currentGoal.parent.subgoals.indexOf(currentGoal);
+            currentGoal.parent.subgoals.add(k, G);
+            G.parent = currentGoal.parent;
+        }
+        G.budget = Math.min(G.parent.budget, G.bmax) ;
+        logger.info("Agent " + id + " inserts a new goal structure after goal " + currentGoal.goal.name + ".");
+    }
+    
     /** 
-     * As {@link #addBefore(GoalStructure)}, but the inserted goal is set with 
+     * As {@link #simpleAddBefore(GoalStructure)}, but the inserted goal is set with 
      * the auto-remove flag turned on. This means that after G is achieved or
      * failed, it will also be removed from the goal-structure that it is
      * part of.
      */
     public void addBeforeWithAutoRemove(GoalStructure G) {
     	G.autoRemove = true ;
-    	addBefore(G) ;
+    	simpleAddBefore(G) ;
     }
 
     /**
@@ -590,9 +633,11 @@ public class BasicAgent {
         // otherwise the top goal is still in-progress...
 
         if (currentGoal.getStatus().success() || currentGoal.getStatus().failed()) {
-            // so... if the current goal is closed (but the topgoal is not closed yet), we
-            // need
-            // to find another goal to solve:
+            // so... if the current goal is closed (but the topgoal is not closed yet),
+        	// check first if we have an auto-remove goal that needs to be removed:
+        	GoalStructure autoRemovedGoal_tobeRemoved = goal.get_Concluded_AutoRemove_Subgoal() ;
+        	
+        	// Next, we need to find another goal to solve:
             currentGoal = currentGoal.getNextPrimitiveGoal_andAllocateBudget();
             if (currentGoal != null) {
                 logger.info("Agent " + id + " switches to goal " + currentGoal.goal.name + ".");
@@ -611,7 +656,17 @@ public class BasicAgent {
                 // otherwise imply that both the previous goal g0 and g are
                 // decendants of G. But since G is concluded, g cannot possibly be a new 
                 // current goal.
-                goal.removeClosest_Concluded_AutoRemove_Subgoal();
+                if (autoRemovedGoal_tobeRemoved != null) {
+                	if (autoRemovedGoal_tobeRemoved == currentGoal) {
+                		throw new AplibError("Something is wrong: agent " 
+                				+ this.id
+                				+ " tries to auto-remove the current goal: " + currentGoal.getName()) ;
+                	}
+                	this.remove(autoRemovedGoal_tobeRemoved);
+                	logger.info("Agent " + id + " AUTO-remove a goal ("
+       		             + autoRemovedGoal_tobeRemoved.getName() + ")") ;
+                }
+                
                 
             } else {
                 // there is no more goal left!

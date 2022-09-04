@@ -48,16 +48,6 @@ public class AplibEDSL {
      * Unlike the standard REPEAT, we do not stops when G succeeds. The iteration
      * stops when at the end of G, g is false on the resulting state.
      */
-    public static <State> GoalStructure REPEAT(
-    		BasicAgent agent,
-    		GoalStructure subgoal, 
-    		Predicate<State> g) {
-        return REPEAT(
-        		  SEQ(FIRSTof(subgoal,SUCCESS()),
-        		      IF(agent,g,SUCCESS(),FAIL()))        		  
-        	   ) ;
-    }
-    
     public static <AgentState extends SimpleState> GoalStructure REPEAT(
     		GoalStructure subgoal, 
     		Predicate<AgentState> g) {
@@ -138,7 +128,7 @@ public class AplibEDSL {
     
     @Deprecated
     /**
-     * Deprecated. Use {@link AplibEDSL#WHILE(BasicAgent, Predicate, GoalStructure)}
+     * Deprecated. Use {@link AplibEDSL#WHILE(Predicate, GoalStructure)}
      * instead.
      * 
      * <p> Repeatedly trying to solve a goal g, while the given predicate p is true. More
@@ -162,22 +152,12 @@ public class AplibEDSL {
      * Unlike the standard REPEAT, we do not stops when G succeeds. The iteration
      * stops when at the end of G, g holds on the resulting state.
      */
-    public static <State> GoalStructure WHILE(
-    						BasicAgent agent,
-    						Predicate<State> g, 
-    						GoalStructure subgoal) {
-        return IF(agent,
-        		  g,
-        		  REPEAT(agent,subgoal, (State S) -> ! g.test(S)), 
-        		  SUCCESS()) ;
-    }
-    
     public static <AgentState extends SimpleState> GoalStructure WHILE(
-			Predicate<AgentState> g, 
-			GoalStructure subgoal) {
-    	return IF(g,
-    			REPEAT(subgoal, (AgentState S) -> ! g.test(S)), 
-    			SUCCESS()) ;
+    						Predicate<AgentState> g, 
+    						GoalStructure subgoal) {
+        return IF(g,
+        		  REPEAT(subgoal, (AgentState S) -> ! g.test(S)), 
+        		  SUCCESS()) ;
     }
     
     /**
@@ -188,20 +168,6 @@ public class AplibEDSL {
      * <p> If a is not null, g1(a) will be deployed as the next goal to solve.
      * Else g2 is deployed.
      */
-    public static <State,QueryResult> GoalStructure IF(
-    		BasicAgent agent,
-    		Function<State,QueryResult> q, 
-    		Function<QueryResult,GoalStructure> g1, 
-    		GoalStructure g2) {
-    	
-    	return DEPLOY(agent, (State S) ->  {
-    		QueryResult a = q.apply(S) ;
-    		if (a!=null) 
-    			 return g1.apply(a) ; 
-    		else return g2 ;
-    		}) ;    	
-    }
-    
     public static <AgentState extends SimpleState, QueryResult> GoalStructure IF(
     		Function<AgentState,QueryResult> q, 
     		Function<QueryResult,GoalStructure> g1, 
@@ -209,27 +175,27 @@ public class AplibEDSL {
     	
     	Action a = addAfter((AgentState S) -> {
     		QueryResult result = q.apply(S) ;
-    		if (result !=null) 
-   			 	return g1.apply(result) ; 
-    			else return g2 ;
-    		}) ;
+    		if (result !=null) {
+    			//System.out.println(">>>> addafter goes to THEN") ;
+    			return g1.apply(result) ; 
+    			}
+    		else {
+    			//System.out.println(">>>> addafter goes to ELSE") ;
+    			return g2 ;
+    		}
+    		}, 
+    		(Boolean) true) ;
     	
     	return SEQ(lift("IF",a)) ; 	
     }
+    
+    
     
     /**
      * When this goal structure is executed, it evaluates p on the current state.
      * If it is true, g1 will be deployed as the next goal. Else g2 is deployed
      * as the next goal.
      */
-    public static <State> GoalStructure IF(
-    		BasicAgent agent,
-    		Predicate<State> p, 
-    		GoalStructure g1, 
-    		GoalStructure g2) {
-    	return DEPLOY(agent, (State S) ->  p.test(S) ? g1 : g2) ;    	
-    }
-    
     public static <AgentState extends SimpleState> GoalStructure IF(
     		Predicate<AgentState> p, 
     		GoalStructure g1, 
@@ -413,6 +379,20 @@ public class AplibEDSL {
         return new Action(name);
     }
     
+    /**
+     * Construct an action that inserts the goal-structure G as a sibling 
+     * <b>before</b> the current
+     * goal. However, if the parent of this goal-structure is REPEAT (which can only
+     * have one child), a SEQ node will first be inserted in-between, and the G is
+     * added as the pre-sibling of this goal-structure.
+     * 
+     * <p>G will be marked as auto-remove (it will be automatically removed after
+     * it is achieved or failed).
+     * 
+     * <p>Note that this action returns a null proposal, so it won't solve a goal on its own.
+     *
+     * <p>Fail if the current goal is null or if it is the top-goal.
+     */
     public static <AgentState extends SimpleState> Action addBefore(Function<AgentState,GoalStructure> fgoal) {
     	Action a = action("addBefore")
     			.do1((AgentState S) -> {
@@ -423,12 +403,54 @@ public class AplibEDSL {
     	return a ;
     }
     
+    /**
+     * Like {@link #addBefore(Function)}, but allows the returned proposal to be specifiedf, rather
+     * than just null.
+     */
+    public static <AgentState extends SimpleState, Proposal> Action addBefore(Function<AgentState,GoalStructure> fgoal, Proposal v) {
+    	Action a = action("addBefore")
+    			.do1((AgentState S) -> {
+    				var G = fgoal.apply(S) ;
+    				S.owner().addBeforeWithAutoRemove(G) ;
+    				return v  ;
+    			}) ;
+    	return a ;
+    }
+    
+    /**
+     * Construct an action that inserts the goal-structure G as the 
+     * <b>next</b> direct sibling of the current
+     * goal. However, if the parent of this goal-structure is REPEAT (which can only
+     * have one child), a SEQ node will first be inserted in-between, and the G is
+     * added as the next sibling of this goal-structure.
+     * 
+     * <p>G will be marked as auto-remove (it will be automatically removed after
+     * it is achieved or failed).
+     * 
+     * <p>Note that this action returns a null proposal, so it won't solve a goal on its own.
+     * 
+     * <p>Fail if the current goal is null or if it is the top-goal.
+     */
     public static <AgentState extends SimpleState> Action addAfter(Function<AgentState,GoalStructure> fgoal) {
     	Action a = action("addAfter")
     			.do1((AgentState S) -> {
     				var G = fgoal.apply(S) ;
     				S.owner().addAfterWithAutoRemove(G) ;
     				return null  ;
+    			}) ;
+    	return a ;
+    }
+    
+    /**
+     * Like {@link #addBefore(Function)}, but allows the returned proposal to be specifiedf, rather
+     * than just null.
+     */
+    public static <AgentState extends SimpleState, Proposal> Action addAfter(Function<AgentState,GoalStructure> fgoal, Proposal v) {
+    	Action a = action("addAfter")
+    			.do1((AgentState S) -> {
+    				var G = fgoal.apply(S) ;
+    				S.owner().addAfterWithAutoRemove(G) ;
+    				return v  ;
     			}) ;
     	return a ;
     }

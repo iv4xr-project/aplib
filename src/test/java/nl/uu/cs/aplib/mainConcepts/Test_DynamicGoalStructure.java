@@ -110,10 +110,10 @@ public class Test_DynamicGoalStructure {
         Goal g2 = mk_goal2();
 
         // testing when we branch to the then-part:
-        GoalStructure mygoal = IF(agent,(MyState st) -> st.x == 0, g1.lift(), g2.lift());
+        GoalStructure mygoal = IF((MyState st) -> st.x == 0, g1.lift(), g2.lift());
 
         agent.setGoal(mygoal);
-        executeAgent(agent,6) ;
+        executeAgent(agent,10) ;
 
         assertTrue(mygoal.status.success());
         assertTrue(g1.status.success());
@@ -124,7 +124,7 @@ public class Test_DynamicGoalStructure {
         state.reset();
         g1 = mk_goal1();
         g2 = mk_goal2();
-        mygoal = IF(agent,(MyState st) -> st.x != 0, g1.lift(), g2.lift());
+        mygoal = IF((MyState st) -> st.x != 0, g1.lift(), g2.lift());
 
         agent.setGoal(mygoal);
         executeAgent(agent,6) ;
@@ -208,7 +208,7 @@ public class Test_DynamicGoalStructure {
         }).lift();
         Goal g0 = goal("multiple3").toSolve((MyState st) -> st.x % 3 == 0).withTactic(increase);
 
-        GoalStructure mygoal = REPEAT(agent, SEQ(g0.lift(), FAIL()), (MyState st) -> st.x >= 9);
+        GoalStructure mygoal = REPEAT(SEQ(g0.lift(), FAIL()), (MyState st) -> st.x >= 9);
 
         agent.setGoal(mygoal);
 
@@ -236,7 +236,7 @@ public class Test_DynamicGoalStructure {
         }).lift();
         Goal g0 = goal("multiple3").toSolve((MyState st) -> st.x % 3 == 0).withTactic(increase);
 
-        GoalStructure mygoal = WHILE(agent,(MyState st) -> st.x < 9, SEQ(g0.lift(), FAIL()));
+        GoalStructure mygoal = WHILE((MyState st) -> st.x < 9, SEQ(g0.lift(), FAIL()));
 
         agent.setGoal(mygoal);
 
