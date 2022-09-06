@@ -42,8 +42,10 @@ public class MinimalDemo {
 
         // creating an agent; attaching a fresh state to it, and attaching the above
         // goal to it:
-        var agent = new BasicAgent().attachState(new SimpleState().setEnvironment(new ConsoleEnvironment()))
-                .setGoal(topgoal);
+        var agent = new BasicAgent()
+        		.attachState(new SimpleState<ConsoleEnvironment>())
+                .attachEnvironment(new ConsoleEnvironment())
+        		.setGoal(topgoal);
 
         // run the agent until it solves its goal:
         while (topgoal.getStatus().inProgress()) {

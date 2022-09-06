@@ -55,7 +55,7 @@ public class Demo3 {
 
 		// Instantiating the SA1-solver; you need to pass a bunch of
 		// things :) 
-		var sa1Solver = new Sa1Solver<Void>(
+		var sa1Solver = new Sa1Solver(
 				(S, e) -> Utils.isReachable((MyAgentState) S, e), 
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e), 
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),

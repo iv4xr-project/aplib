@@ -26,7 +26,7 @@ import nl.uu.cs.aplib.mainConcepts.Environment;
  */
 // NOTE: we can't embed emotion here because emotion needs reference to the agent itself
 // to update; and an instance of State does not have that reference.
-public class Iv4xrAgentState<NavgraphNode> extends State {
+public class Iv4xrAgentState<NavgraphNode,Env extends Iv4xrEnvironment> extends State<Env> {
 
 	/**
 	 * Representing the current state of the target world.
@@ -54,10 +54,6 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 */
 	public Navigatable<NavgraphNode> worldNavigation;
 
-	@Override
-	public Iv4xrEnvironment env() {
-		return (Iv4xrEnvironment) super.env();
-	}
 
 	/**
 	 * Return the value in {@link #worldmodel}.
@@ -75,7 +71,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 		return worldNavigation;
 	}
 	
-	public Iv4xrAgentState<NavgraphNode> setWorldNavigation(Navigatable<NavgraphNode> navgraph) {
+	public Iv4xrAgentState<NavgraphNode,Env> setWorldNavigation(Navigatable<NavgraphNode> navgraph) {
 		this.worldNavigation = navgraph ;
 		return this ;
 	}
@@ -85,13 +81,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * {@link Iv4xrEnvironment} is needed as the environment. 
 	 */
 	@Override
-	public Iv4xrAgentState<NavgraphNode> setEnvironment(Environment env) {
-		if(env == null) {
-			throw new IllegalArgumentException("Cannot attach a null environment to a state.") ;
-		}
-		if (!(env instanceof Iv4xrEnvironment)) {
-			throw new IllegalArgumentException("This class requires an Iv4xrEnvironment as its environment.");
-		}
+	public Iv4xrAgentState<NavgraphNode,Env> setEnvironment(Env env) {
 		super.setEnvironment(env);
 		return this;
 	}
@@ -119,7 +109,8 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph}.
 	 * Then the method attaches this navigation graph into the given agent-state.
 	 */
-	public static void loadSimpleNavGraph(Iv4xrAgentState<Integer> state, Mesh mesh) {
+	public static <Env extends Iv4xrEnvironment>
+		   void loadSimpleNavGraph(Iv4xrAgentState<Integer,Env> state, Mesh mesh) {
 		state.worldNavigation = SimpleNavGraph.fromMeshFaceAverage(mesh);
 	}
 
@@ -129,7 +120,8 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph}.
 	 * Then the method attaches this navigation graph into the given agent-state.
 	 */
-	public static void loadSimpleNavGraph(Iv4xrAgentState<Integer> state) {
+	public static <Env extends Iv4xrEnvironment>
+	    void loadSimpleNavGraph(Iv4xrAgentState<Integer,Env> state) {
 		var env = state.env();
 		if (env == null) {
 			throw new IllegalArgumentException("The state has no environment.");
@@ -146,10 +138,10 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph}.
 	 * Then the method attaches this navigation graph into the given agent-state.
 	 */
-	public static void loadSurfaceNavGraph(
-			Iv4xrAgentState<Integer> state, 
-			Mesh mesh,
-			float faceAreaThresholdToAddCenterNode) {	
+	public static <Env extends Iv4xrEnvironment>
+	       void loadSurfaceNavGraph(Iv4xrAgentState<Integer,Env> state, 
+			                        Mesh mesh,
+			                        float faceAreaThresholdToAddCenterNode) {	
 		var navgraph = new SurfaceNavGraph(mesh,faceAreaThresholdToAddCenterNode) ;	
 		state.worldNavigation = navgraph ;
 	}
@@ -160,9 +152,9 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph}.
 	 * Then the method attaches this navigation graph into the given agent-state.
 	 */
-	public static void loadSurfaceNavGraph(
-			Iv4xrAgentState<Integer> state, 
-			float faceAreaThresholdToAddCenterNode) {	
+	public static <Env extends Iv4xrEnvironment>
+	        void loadSurfaceNavGraph(Iv4xrAgentState<Integer,Env> state, 
+			                         float faceAreaThresholdToAddCenterNode) {	
 		var env = state.env();
 		if (env == null) {
 			throw new IllegalArgumentException("The state has no environment.");

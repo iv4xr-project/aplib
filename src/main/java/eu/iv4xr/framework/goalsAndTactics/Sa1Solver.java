@@ -11,7 +11,7 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.mainConcepts.*;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
-public class Sa1Solver<NavgraphNode>  {
+public class Sa1Solver {
 	
 	/**
 	 * A function to check if an entity is reachable from the agent's position. The
@@ -19,26 +19,26 @@ public class Sa1Solver<NavgraphNode>  {
 	 * as input. "The agent" is the agent that "owns" this state, and its id is
 	 * embedded in that state.
 	 */
-	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Boolean> reachabilityChecker ;
+	public BiFunction<Iv4xrAgentState,WorldEntity,Boolean> reachabilityChecker ;
 	
 	/**
 	 * A function that returns the "distance" between an entity and the agent. 
 	 */
-	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent ;
-	public Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceBetweenEntities ;
+	public BiFunction<Iv4xrAgentState,WorldEntity,Float> distanceToAgent ;
+	public Function<Iv4xrAgentState,BiFunction<WorldEntity,WorldEntity,Float>> distanceBetweenEntities ;
 	public Function<String,GoalStructure> gCandidateIsInteracted ;
 	public Function<String,GoalStructure> gTargetIsRefreshed ;
-	public Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted ;
+	public Predicate<Iv4xrAgentState> explorationExhausted ;
 	public Function<Integer,GoalStructure> exploring ;
 	
 	public Sa1Solver() { }
 	
-	public Sa1Solver(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
-			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
-			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
+	public Sa1Solver(BiFunction<Iv4xrAgentState, WorldEntity, Boolean> reachabilityChecker,
+			BiFunction<Iv4xrAgentState ,WorldEntity,Float> distanceToAgent,
+			Function<Iv4xrAgentState ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
 			Function<String, GoalStructure> gCandidateIsInteracted, 
 			Function<String, GoalStructure> gTargetIsRefreshed,
-			Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted,
+			Predicate<Iv4xrAgentState> explorationExhausted,
 			Function<Integer,GoalStructure> exploring) {
 		this.reachabilityChecker = reachabilityChecker;
 		this.distanceBetweenEntities = distanceFunction ;
@@ -53,7 +53,7 @@ public class Sa1Solver<NavgraphNode>  {
 	Random rnd = new Random() ;
 	
 	WorldEntity nextCandidate(
-			Iv4xrAgentState<NavgraphNode> belief, 
+			Iv4xrAgentState belief, 
 			List<String> visited,
 			Predicate<WorldEntity> selector,
 			String tId,

@@ -21,7 +21,7 @@ import nl.uu.cs.aplib.mainConcepts.Environment;
  * @author Wish
  *
  */
-public class W3DAgentState extends Iv4xrAgentState<Integer> {
+public class W3DAgentState extends Iv4xrAgentState<Integer,W3DEnvironment> {
 
 	// public WorldModel wom;
 
@@ -69,13 +69,15 @@ public class W3DAgentState extends Iv4xrAgentState<Integer> {
 	 * faceAreaThresholdToAddCenterNode set to 1.0.
 	 */
 	@Override
-	public W3DAgentState setEnvironment(Environment env) {	
+	public W3DAgentState setEnvironment(W3DEnvironment env) {	
 		return setEnvironment((W3DEnvironment) env, 1.0f);
 	}
 
+	/*
 	@Override
 	public W3DEnvironment env() {
 		return (W3DEnvironment) super.env();
 	}
+	*/
 
 }

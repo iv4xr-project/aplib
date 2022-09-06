@@ -42,13 +42,13 @@ import java.util.logging.Logger;
  * @author wish
  *
  */
-public class SimpleState {
+public class SimpleState<Env extends Environment> {
 
     /**
      * A pointer to the {@link Environment} associated to the agent that owns this
      * state.
      */
-    Environment env;
+    Env env;
     
     /**
      * A pointer to the agent that owns this state.
@@ -74,7 +74,10 @@ public class SimpleState {
      * @return The method simply returns this state to allow it to be used in the
      *         Fluent Interface style.
      */
-    public SimpleState setEnvironment(Environment env) {
+    public SimpleState<Env> setEnvironment(Env env) {
+    	if(env == null) {
+			throw new IllegalArgumentException("Cannot attach a null environment to a state.") ;
+		}
         this.env = env;
         return this;
     }
@@ -97,7 +100,7 @@ public class SimpleState {
     /**
      * Return the {@link Environment} associated with the state.
      */
-    public Environment env() {
+    public Env env() {
         return env;
     }
     

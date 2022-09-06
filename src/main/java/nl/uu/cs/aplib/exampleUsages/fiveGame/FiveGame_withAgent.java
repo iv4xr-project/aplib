@@ -52,7 +52,7 @@ public class FiveGame_withAgent {
      * It also extends the class State, hence it can have a Prolog-base (which
      * we will use).
      */
-    public static class MyState extends State {
+    public static class MyState extends State<FiveGameEnv> {
     	
         /**
          * Constructor. It will also create a prolog-engine and attach it to this state.
@@ -74,7 +74,7 @@ public class FiveGame_withAgent {
          * @throws InvalidTheoryException
          */
         @Override
-        public MyState setEnvironment(Environment env) {
+        public MyState setEnvironment(FiveGameEnv env) {
             super.setEnvironment(env);
             var prolog = prolog();  
             try {
@@ -135,10 +135,10 @@ public class FiveGame_withAgent {
      */
     public static BasicAgent configureAgent(FiveGame thegame) {
     	
-    	// create an agent state and an environment, attached to the game:
-        var state = new MyState().setEnvironment(new FiveGameEnv().attachGame(thegame));
-        // creating the agent:
-        var agent = new BasicAgent().attachState(state);
+    	// creating the agent:
+        var agent = new BasicAgent()
+        				.attachState(new MyState())
+        				.attachEnvironment(new FiveGameEnv().attachGame(thegame));
 
         var rnd = new Random();
 

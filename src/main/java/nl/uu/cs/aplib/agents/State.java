@@ -1,5 +1,6 @@
 package nl.uu.cs.aplib.agents;
 
+import nl.uu.cs.aplib.mainConcepts.Environment;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.multiAgentSupport.Messenger;
 
@@ -13,7 +14,7 @@ import nl.uu.cs.aplib.multiAgentSupport.Messenger;
  * @author Wish
  *
  */
-public class State extends SimpleState {
+public class State<Env extends Environment> extends SimpleState<Env> {
 
     /**
      * A {@link nl.uu.cs.aplib.multiAgentSupport.Messenger} buffers incoming
@@ -45,7 +46,7 @@ public class State extends SimpleState {
      * Create a Prolog engine and attach it to this state. An agent can add facts
      * and rules to this engine, and then use it to do inference.
      */
-    public State attachProlog() {
+    public State<Env> attachProlog() {
         prolog = new PrologReasoner();
         return this;
     }

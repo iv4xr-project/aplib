@@ -38,7 +38,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * @author wish
  *
  */
-public class MyAgentState extends Iv4xrAgentState<Void> {
+public class MyAgentState extends Iv4xrAgentState<Void,MyAgentEnv> {
 	
 	public LayeredAreasNavigation<Tile,Sparse2DTiledSurface_NavGraph>  multiLayerNav ;
 	
@@ -63,7 +63,7 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 	}
 	
 	@Override
-	public MyAgentState setEnvironment(Environment env) {
+	public MyAgentState setEnvironment(MyAgentEnv env) {
 		super.setEnvironment(env) ;
 		// creating an instance of navigation graph; setting its
 		// configuration etc.

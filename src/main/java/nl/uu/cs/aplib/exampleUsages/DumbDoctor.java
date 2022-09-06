@@ -7,13 +7,8 @@ import nl.uu.cs.aplib.mainConcepts.*;
 
 public class DumbDoctor {
 
-    static public class DoctorBelief extends SimpleState {
+    static public class DoctorBelief extends SimpleState<ConsoleEnvironment> {
         Integer patientHappiness = 0;
-
-        @Override
-        public ConsoleEnvironment env() {
-            return (ConsoleEnvironment) super.env();
-        }
     }
 
     static public void main(String[] args) {

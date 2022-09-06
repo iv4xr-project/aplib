@@ -55,7 +55,7 @@ public class Demo3b {
 
 		int explorationBudget = 20 ;
 
-		var sa1Solver = new Sa1Solver<Void>(
+		var sa1Solver = new Sa1Solver(
 				(S, e) -> Utils.isReachable((MyAgentState) S, e), 
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e), 
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),

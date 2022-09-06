@@ -18,14 +18,14 @@ public class MinimalAutonomousAgent {
     static public void main(String[] args) {
 
         // specifying the goal to solve:
-        Goal g = goal("Guess a the magic number (10)").toSolve((Integer x) -> x == 4);
+        Goal g = goal("Guess a the magic number (4)").toSolve((Integer x) -> x == 4);
 
         Random rnd = new Random();
 
         // defining a single action as the goal solver:
-        var guessing = action("guessing").do1((SimpleState belief) -> {
+        var guessing = action("guessing").do1((SimpleState<ConsoleEnvironment> belief) -> {
             int x = rnd.nextInt(5);
-            ((ConsoleEnvironment) belief.env()).println("Proposing " + x + " ...");
+            belief.env().println("Proposing " + x + " ...");
             return x;
         }).lift();
 
@@ -39,8 +39,12 @@ public class MinimalAutonomousAgent {
 
         // creating an agent; attaching a fresh state to it, and attaching the above
         // goal to it:
-        var agent = new AutonomousBasicAgent().attachState(new State().setEnvironment(new ConsoleEnvironment()))
-                .setGoal(topgoal).setSamplingInterval(1000);
+        var agent = new AutonomousBasicAgent() ;
+        
+        agent.attachState(new State<ConsoleEnvironment>())
+             .attachEnvironment(new ConsoleEnvironment())
+        	 .setGoal(topgoal) ;
+        agent.setSamplingInterval(1000);
 
         // run the agent, autonomously on its own thread:
         new Thread(() -> agent.loop()).start();
@@ -49,7 +53,6 @@ public class MinimalAutonomousAgent {
         var gt = agent.waitUntilTheGoalIsConcluded();
         gt.printGoalStructureStatus();
         agent.stop();
-
     }
 
 }

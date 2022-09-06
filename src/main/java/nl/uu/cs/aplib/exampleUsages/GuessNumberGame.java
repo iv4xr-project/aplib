@@ -22,7 +22,7 @@ public class GuessNumberGame {
      * We define a custom agent-state to keep track which numbers it knows for sure
      * cannot be the user's magic number.
      */
-    static public class MyAgentState extends SimpleState {
+    static public class MyAgentState extends SimpleState<ConsoleEnvironment> {
 
         Random rnd = new Random();
 
@@ -35,11 +35,6 @@ public class GuessNumberGame {
                 if (!excluded[k])
                     candidates.add(k);
             return candidates;
-        }
-
-        @Override
-        public ConsoleEnvironment env() {
-            return (ConsoleEnvironment) super.env();
         }
 
     }
@@ -94,8 +89,10 @@ public class GuessNumberGame {
         // creating an agent, attaching state to it, and the above topgoal to it:
         GoalStructure topgoal = g.lift().maxbudget(100000);
         var belief = new MyAgentState();
-        belief.setEnvironment(new ConsoleEnvironment());
-        var agent = new BasicAgent().attachState(belief).setGoal(topgoal);
+        var agent = new BasicAgent()
+        			.attachState(belief)
+        			.attachEnvironment(new ConsoleEnvironment())
+        			.setGoal(topgoal);
 
         // now, run the agent :
         belief.env().println("Think a secret number in the interval [0..10] ...");

@@ -341,9 +341,10 @@ public class FiveGame {
     	
     }
 
+    // A small demo of two instances of RandomPlayer playing the FiveGame
+    // TODO: there are still some bugs :|
+    //
     static public void main(String[] args) {
-
-        // a small demo of two instances of RandomPlayer playing the FiveGame
 
         FiveGame game = new FiveGame(6, 3);
         RandomPlayer player1 = new RandomPlayer(SQUARE.CIRCLE, game);
