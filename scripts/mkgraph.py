@@ -5,16 +5,44 @@
 #
 #    Header: posx,posy,posz,time,prop-name-1,prop-name-2,...
 #    The rows follow accordingly.
+#    Note: (posx,posy,posx) represents a 3D coordinate of a position/location.
+#           posy is for now ignored.
 #
 # Two type of graphs can be produced:
 #
 #     (1) time-graph plots the values of chosen properties vs time
 #     (2) heatmap shows the values of chosen properties vs position (x,z)
 #
+#  General syntax to use this script:
+#   
+#     > mkgraph [options] arg1 arg2 ...
+#
+#  You can do "mkgraph --help" to get some help-info. 
 #  Example usages:
 #
-#     mkgraph -i input.csv
+#     > mkgraph -i input.csv prop-name-1
+#     > mkgraph -i input.csv health  (if health is a property-name in the csv-file)
 #
+#  You can also do: 
+#
+#     > mkgraph --help
+#
+#
+#  Options:
+#  -i filename   : specify the input csv-file
+#  -o output     : specify the name of the file to save the resulting graph (.png format)
+#  -g graphtype  : either "timegraph" or "heatmap"
+#
+#  For heatmaps, we have further options:
+#  --hmWidth=w and --hmHeight=h  : the width and height of the produced map (1 unit length
+#                                  corespond to one 1-unit length of the coordinate-system
+#                                  used to express positions in the input csv-file).
+#  --hmScale=s  : you can imagine the heatmap to be constructed from tiles of sxs in size.
+#                 Positions in the same tile are then considered as representing the same
+#                 position.
+#  --hmMinval=a, --hmMaxval=b : the assumed minimum and maximum values of attributes whose values
+#                               are to be plotted into the heatmap./
+# 
 
 saveToFile = True
 import sys
@@ -50,10 +78,8 @@ scriptOptions = None
 selectedProperties = None
 
 
-#
-# A help function to read a csv-file
-#
 def loadCSV(csvfile):
+   """ A help function to read a csv-file. """
    # need to use a correct character encoding.... latin-1 does it
    with open(csvfile, encoding='latin-1') as file:
       content = csv.DictReader(file, delimiter=',')
@@ -61,11 +87,11 @@ def loadCSV(csvfile):
       for row in content: rows.append(row)
       return rows
 
-#
-# A help function to parse the command-line arguments of this script.
-#
+
 def parseCommandLineArgs():
-    parser = OptionParser()
+    """ A help function to parse the command-line arguments of this script. """
+
+    parser = OptionParser("usage: %prog [options] arg1 arg2 (each arg is a property-name/column-name in the inputfile)")
     parser.add_option("-i", dest="inputFile",  help="input csv-file")
     parser.add_option("-o", dest="outputFile", default="plot.png", help="output file")
     parser.add_option("-g", dest="graphType", default="timegraph",
@@ -94,11 +120,11 @@ def parseCommandLineArgs():
     selectedProperties = args
 
 
-
-#  A function to draw a time-graph. This plots the values of the properties
-#  specified in propertiesToDisplay over time.
 def mkTimeProgressionGraph(filename):
-
+    """
+    A function to draw a time-graph. This plots the values of the properties
+    specified in propertiesToDisplay over time.
+    """
     # read the data from the file:
     dataset = loadCSV(filename)
 
@@ -122,14 +148,13 @@ def mkTimeProgressionGraph(filename):
     else : plt.show()
 
 
-#  A function to draw heatmap.
-#
 def mkHeatMap(filename,
         width,
         height,
         scale,
         minvalue,
         maxvalue):
+    """ A function to draw heatmap. """
 
     dataset = loadCSV(filename)
     white = maxvalue
