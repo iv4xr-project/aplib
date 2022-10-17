@@ -9,10 +9,41 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.utils.CSVUtility;
 import nl.uu.cs.aplib.utils.Pair;
 
+/**
+ * Represente a sequence/trace of states read from a CSV-file. Such a file is
+ * assumed represent an execution trace of an agent, where each row describes
+ * the agent state at a particular moment. The first row of the file specifies
+ * the column-names, which corresponds to the names of the properties/variables
+ * that are present in the states. 
+ * 
+ * <p>Example of property names: posx, posy, posz, time, health, point, fear.
+ * The first three properties represent the agent position, and time represents,
+ * as the name says: time. Values are all assumed to be of float-type, except
+ * time, which is assumed to be a long.
+ * 
+ * <p> Each row will be parsed to an instance of {@link XState}, and the whole
+ * CSV-file will be parse to a sequence of XStates.
+ * 
+ * @author Wish
+ *
+ */
 public class XStateTrace {
 	
 	String id ;
 	List<XState> trace = new LinkedList<>() ;
+	
+	static String posxName = "posx" ;
+	static String posyName = "posy" ;
+	static String poszName = "posz" ;
+	static String timeName = "time" ;
+	
+	static public void use_xyzt_naming() {
+		posxName = "x" ;
+		posyName = "y" ;
+		poszName = "z" ;
+		timeName = "t" ;
+	}
+	
 	
 	/**
 	 * For each variable x, the diff of x is simply the difference between its value
@@ -57,6 +88,9 @@ public class XStateTrace {
 		}
 	}
 	
+	/**
+	 * Enrich this trace with derived information.
+	 */
 	public void enrichTrace(String ... varsToEnhanceWithHistory) {
 		calculateDiffs() ;
 		addHistory(varsToEnhanceWithHistory) ;
@@ -82,17 +116,18 @@ public class XStateTrace {
 	 * Read an XState-trace from a CSV-file.
 	 * 
 	 * @param filename
-	 * @return
+	 * @return A sequence of {@link XState}, represented as an instance of
+	 *         {@link XStateTrace}.
 	 * @throws IOException
 	 */
 	public static XStateTrace readFromCSV(String filename) throws IOException {
 		List<String[]> data = CSVUtility.readCSV(',', filename) ;
 		if (data.size() == 0) return null ;
 		String[] columnNames = data.get(0) ;
-		Integer indexPosx = getColumIndex("posx",columnNames) ;
-		Integer indexPosy = getColumIndex("posy",columnNames) ;
-		Integer indexPosz = getColumIndex("posz",columnNames) ;
-		Integer indexTime = getColumIndex("time",columnNames) ;
+		Integer indexPosx = getColumIndex(posxName,columnNames) ;
+		Integer indexPosy = getColumIndex(posyName,columnNames) ;
+		Integer indexPosz = getColumIndex(poszName,columnNames) ;
+		Integer indexTime = getColumIndex(timeName,columnNames) ;
 		
 		XStateTrace trace = new XStateTrace() ;
 		
@@ -128,11 +163,17 @@ public class XStateTrace {
 		return trace ;
 	}
 
-	
+	/**
+	 * Check if this trace satisfies the given LTL property.
+	 */	
 	public SATVerdict satisfy(LTL<XState> ltl) {
 		return ltl.sat(trace) ;
 	}
 	
+	/**
+	 * Check if there exists at least one trace that satisfies the given
+	 * LTL property.
+	 */
 	public static boolean satisfy(LTL ltl, List<XStateTrace> traces) {
 		for (var tr : traces) {
 			SATVerdict verdict = tr.satisfy(ltl) ;
@@ -141,16 +182,33 @@ public class XStateTrace {
 		return false ;
 	}
 	
+	/**
+	 * Check if the LTL property is valid on all the given traces.
+	 * More precisely this means that no trace violates the LTL,
+	 * and there is at least one trace that satisfies the LTL.
+	 */
 	public static boolean valid(LTL ltl, List<XStateTrace> traces) {
+		boolean hasSAT = false ;
 		for (var tr : traces) {
 			SATVerdict verdict = tr.satisfy(ltl) ;
 			if (verdict == SATVerdict.UNSAT) return false ;
+			if (verdict == SATVerdict.SAT) hasSAT = true ;
 		}
-		return true ;
+		return hasSAT ;
 	}
 	
+	/**
+	 * True if none of the given trace satisfies the given LTL property,
+	 * and at least one trace gives unsat.
+	 */
 	public static boolean unsat(LTL ltl, List<XStateTrace> traces) {
-		return ! unsat(ltl,traces) ;
+		boolean hasUNSAT = false ;
+		for (var tr : traces) {
+			SATVerdict verdict = tr.satisfy(ltl) ;
+			if (verdict == SATVerdict.SAT) return false ;
+			if (verdict == SATVerdict.UNSAT) hasUNSAT = true ;
+		}
+		return hasUNSAT ;
 	}
 
 }

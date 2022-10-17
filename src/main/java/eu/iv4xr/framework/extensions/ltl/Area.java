@@ -6,21 +6,25 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
- * An "area" represents some 3D-space. It can be a "surface", but generally it is
- * a space. More prescisely, it is defined as a set of disjoint voxels. Typically,
- * these voxels are of the same size, and their positions are all defined with
- * respect to the same world-origin (by default (0,0,0)).
+ * An "area" represents some 3D-space. It can be a "surface", but generally it
+ * is a space. More precisely, it is defined as a set of disjoint voxels.
+ * Typically, these voxels are of the same size, and their positions are all
+ * defined with respect to the same world-origin (by default (0,0,0)).
  * 
- * <p>Two main methods are provided: contains(p) checks if a location p is within
- * the area, and covered(ps) returns the list of voxels in the area that are
- * "visited" by the list of locations ps.
+ * <p>
+ * Two main methods are provided: {@link #contains(Vec3)} checks if a location p
+ * is within the area, and {@link #covered(List)} returns the list of voxels in the area
+ * that are "visited" by the list of locations ps.
  * 
- * <p>The primitive-form of areas is a Rectangle. Two areas can combined using union,
- * intersect, and substract operators. The requirement is that the composed areas
- * are made of voxels of the same size and have the same world-origin.
+ * <p>
+ * The primitive-form of areas is a Rectangle. Two areas can combined using
+ * union, intersect, and substract operators. The requirement is that the
+ * composed areas are made of voxels of the same size and have the same
+ * world-origin.
  * 
- * <p>NOTE: the implementation of Areas physically creates the set of voxels; so they
- * are NOT suitable for representing huge areas.
+ * <p>
+ * NOTE: the implementation of Areas physically creates the set of voxels; so
+ * they are NOT suitable for representing huge areas.
  * 
  * @author Wish
  *
@@ -48,7 +52,7 @@ public abstract class Area {
 	public HashSet<Pair<Vec3,Vec3>> voxels = new HashSet<>() ;
 	
 	/**
-	 * Check is the given location is inside the area.
+	 * Check if the given location is inside this area.
 	 */
 	abstract public boolean contains(Vec3 location) ;
 	
@@ -59,10 +63,10 @@ public abstract class Area {
 	}
 	
 	/**
-	 * Return the set of voxels in this area that are visited by the given list of locations.
-	 * Each voxel is represented by a pair (a,b) where a is the bottom coordinate of the voxel,
-	 * and b is its top coordinate. "Bottom" means the corner of the voxel with the lowest
-	 * (x,y,z), and top is the opposite.
+	 * Return the set of voxels in this area that are visited by the given list of
+	 * locations. Each voxel is represented by a pair (a,b) where a is the bottom
+	 * coordinate of the voxel, and b is its top coordinate. "Bottom" means the
+	 * corner of the voxel with the lowest (x,y,z), and top is the opposite.
 	 */
 	public Set<Pair<Vec3,Vec3>> covered(List<Vec3> visits) {
 		Set<Pair<Vec3,Vec3>> covered = new HashSet<>() ;
@@ -79,8 +83,9 @@ public abstract class Area {
 	}
 	
 	/**
-	 * Return the proportion of the number of voxels visited by the given list of locations,
-	 * with repect to the total number of voxels in this area.
+	 * Return the proportion of the number of voxels visited by the given list of
+	 * locations, with repect to the total number of voxels in this area.
+	 * See also {@link #covered(List)}.
 	 */
 	public float coveredPortion(List<Vec3> visits) {
 		float covered = (float) covered(visits).size() ;
@@ -88,15 +93,31 @@ public abstract class Area {
 	}
 	
 	
-	
-
+	/**
+	 * An instance of {@link Area} that represent a rectangle-shaped area.
+	 * The height of this area is just one voxel-size. So, a Rectangle-area
+	 * of size w*h will have exactly w*h*1 voxels, assuming voxel-size of 1.
+	 * Voxel-size is stored in the field {@link Area#voxelSize}.
+	 * 
+	 * @author Wish
+	 */
 	public static class RectangleArea extends Area {
+		
 		/**
 		 * The corner of the rectangle with the lowest (x,-,z).
 		 */
 		public Vec3 bottom ;
+		
+		/**
+		 * The width of this rectangle (along z-axis).
+		 */
 		public float width ;
+		
+		/**
+		 * The length of this rectangle (along x-axis).
+		 */
 		public float length ;
+		
 		/**
 		 * The corner of the rectangle with the highest (x,-,z). It y-position
 		 * should be the same as bottom.
@@ -105,18 +126,18 @@ public abstract class Area {
 		
 		/**
 		 * A y coordinate (altitude) such that 
-		 *   (1) y = origin.y + k*voxelSize, and k is an integer.
+		 *   (1) y = origin.y + k*voxelSize, for some integer k.
 		 *   (2) y <= bottom.y
-		 *   (3) bottom.y - y <= voxelSixe.
+		 *   (3) y + voxelSize > bottom.y
 		 * 
 		 * In other words, it is the closest altitude to bottom.y, which is a multiple of
 		 * voxelsize, counting with respect to the world-origin.
 		 */
 		public float flooredAltitude ;
 		
-		public RectangleArea(Vec3 bottom, float w, float l) {
+		public RectangleArea(Vec3 bottom, float length, float width) {
 			this.bottom = bottom.copy() ;
-			width = w ; length = l ;
+			this.width = width ; this.length = length ;
 			top = new Vec3(bottom.x + length, bottom.y, bottom.z + width) ;
 			flooredAltitude = getClosetsMultiple(origin.y, bottom.y, voxelSize) ;
 			calculateVoxels() ;
@@ -177,8 +198,15 @@ public abstract class Area {
 		}
 	}
 	
-	public enum AreaCombinator { UNION, INTERSECTION, SUBSTRACTION }
+	/**
+	 * Different operators to combine areas.
+	 */
+	public enum AreaCombinator { UNION, INTERSECTION, SUBTRACTION }
 	
+	/**
+	 * Representing an area that is composed from two other areas
+	 * using one of the combinators (see {@link AreaCombinator}.
+	 */
 	public static class CompositeArea extends Area {
 		
 		public AreaCombinator combinator ;
@@ -201,7 +229,7 @@ public abstract class Area {
 			   case INTERSECTION:
 				   this.voxels.removeIf(vx -> ! A2.voxels.contains(vx)) ;
 				   break ;
-			   case SUBSTRACTION:
+			   case SUBTRACTION:
 				   this.voxels.removeIf(vx -> A2.voxels.contains(vx)) ;
 			}
 		}
@@ -213,7 +241,7 @@ public abstract class Area {
 				   return A1.contains(location) || A2.contains(location) ;
 			   case INTERSECTION:
 			       return A1.contains(location) && A2.contains(location)  ;
-			   case SUBSTRACTION:
+			   case SUBTRACTION:
 				   return A1.contains(location) && ! A2.contains(location)  ;
 			}
 			return false ;
@@ -248,7 +276,7 @@ public abstract class Area {
 	 * Construct an area which is obtained by subtracting A from this area.
 	 */
 	public Area minus(Area A) {
-		return new CompositeArea(AreaCombinator.SUBSTRACTION,this,A) ;
+		return new CompositeArea(AreaCombinator.SUBTRACTION,this,A) ;
 	}
 
 }
