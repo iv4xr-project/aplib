@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import eu.iv4xr.framework.extensions.ltl.LTL;
-import eu.iv4xr.framework.extensions.ltl.SATVerdict;
-
 import static eu.iv4xr.framework.extensions.ltl.LTL.* ;
+import eu.iv4xr.framework.extensions.ltl.SATVerdict;
+import eu.iv4xr.framework.extensions.ltl.Area;
+import static eu.iv4xr.framework.extensions.ltl.Area.* ;
+
 import eu.iv4xr.framework.spatial.Vec3;
 
 
@@ -82,19 +84,25 @@ public class Test_XStateTrace {
 		String file = projectroot + slash + "scripts" + slash + "samplePXTracefile.csv" ;
 		
 		XStateTrace.use_xyzt_naming();
+		XStateTrace.posyName = "z" ;
+		XStateTrace.poszName = "y" ;
 		XStateTrace trace = XStateTrace.readFromCSV(file) ;
-    	trace.enrichTrace("joy");
+    	trace.enrichTrace("satisfaction");
 		
 		LTL<XState> f1 = always(S -> S.distress() == 0) ;
 		LTL<XState> f2 = eventually(S -> S.satisfaction() > 0) ;
 		LTL<XState> f3 = eventually(S -> S.dHope() != null && S.dHope() > 0) ;
 		LTL<XState> f4 = eventually(S -> S.distress() > 0) ;
 		
+		Area A1 = rect(new Vec3(45,0,15), new Vec3(50,0,20)) ;
 		
+		LTL<XState> f5 = eventually(S ->  A1.covered(S.history("satisfaction")).size() > 0) ;
+
 		assertEquals(SATVerdict.SAT, trace.satisfy(f1))  ;
 		assertEquals(SATVerdict.SAT, trace.satisfy(f2))  ;
 		assertEquals(SATVerdict.SAT, trace.satisfy(f3))  ;
 		assertEquals(SATVerdict.UNSAT, trace.satisfy(f4))  ;
+		assertEquals(SATVerdict.SAT, trace.satisfy(f5))  ;
 	}
 	
 
