@@ -1,6 +1,8 @@
 package eu.iv4xr.framework.extensions.ltl.offline;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.utils.Pair;
@@ -72,6 +74,59 @@ public class XState {
 			values.put(kv.fst, kv.snd) ;
 		}
 	}
+	
+	@Override
+	public String toString() {
+		String s = "" ;
+		s += "@" + pos + ", t:" + time ;
+		for (var entry : values.entrySet()) {
+			s += ", " + entry.getKey() + ":" + entry.getValue() ;
+		}
+		return s ;	
+	}
+	
+	/**
+	 * Return the value of the variable/property of the given name.
+	 */
+	public Float val(String vname) {
+		return values.get(vname) ;
+	}
+
+	/**
+	 * Return the difference of value of the variable/property of the given name
+	 * in this state and its value in the "previous" state. This is the same
+	 * as this.diff.get(vname).
+	 */
+	public Float diff(String vname) {
+		return diff.get(vname) ;
+	}
+	
+	public List<Vec3> history(String vname) {
+		if (history.get(vname) == null) 
+			return null ;
+		return history.get(vname).stream().map(e -> e.fst).collect(Collectors.toList()) ;
+	}
+	
+	public List<Vec3> history(String vname, Predicate<Float> p) {
+		if (history.get(vname) == null) 
+			return null ;
+		return history.get(vname).stream()
+				.filter(e -> p.test(e.snd))
+				.map(e -> e.fst)
+				.collect(Collectors.toList()) ;
+	}
+	
+	public Float max(String vname) {
+		var z = history.get(vname) ;
+		if (z == null || z.size() == 0) 
+			return null ;
+		float m = z.get(0).snd ;
+		for (var e : z) {
+			if (e.snd > m) m = e.snd ;
+		}
+		return m ;
+	}
+	
 	
 	static final String HEALTH = "health" ;
 	static final String HOPE = "hope" ;

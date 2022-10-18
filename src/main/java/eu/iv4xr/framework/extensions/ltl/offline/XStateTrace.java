@@ -32,16 +32,37 @@ public class XStateTrace {
 	String id ;
 	List<XState> trace = new LinkedList<>() ;
 	
+	@Override
+	public String toString() {
+		return trace.toString() ;
+	}
+
+	
 	static String posxName = "posx" ;
 	static String posyName = "posy" ;
 	static String poszName = "posz" ;
 	static String timeName = "time" ;
 	
+	/**
+	 * Set the CSV-reader to use short-names "x", "y", "z", "t" for the posx, posy,
+	 * posz, and time properties.
+	 */
 	static public void use_xyzt_naming() {
 		posxName = "x" ;
 		posyName = "y" ;
 		poszName = "z" ;
 		timeName = "t" ;
+	}
+	
+	/**
+	 * Set the CSV-reader to use the default-names "posx", "posy", "posz", "time"
+	 * for the posx, posy, posz, and time properties.
+	 */
+	static public void use_default_xyzt_naming() {
+		posxName = "posx" ;
+		posyName = "posy" ;
+		poszName = "posz" ;
+		timeName = "time" ;
 	}
 	
 	
@@ -52,8 +73,10 @@ public class XStateTrace {
 	 */
 	void calculateDiffs() {
 		XState previous = null ;
-		for (var st : trace) {
+		for (int k=0; k < trace.size(); k++) {
+			XState st = trace.get(k) ;
 			if (previous != null) {
+				//ystem.out.println(">>> " + previous + "-->" + st) ;
 				for (String vname : st.values.keySet()) {
 					Float v = st.values.get(vname) ;
 					Float v0 = previous.values.get(vname) ;
@@ -96,13 +119,13 @@ public class XStateTrace {
 		addHistory(varsToEnhanceWithHistory) ;
 	}
 	
-	private static Integer getColumIndex(String name, String[] colNames) {
+	private static int getColumIndex(String name, String[] colNames) {
 		for(int k=0; k<colNames.length; k++) {
 			if (colNames[k].equals(name)) {
 				return k ;
 			}
 		}
-		return null ;
+		return -1 ;
 	}
 	
 	private Vec3 constructPosition(Float x, Float y, Float z) {
@@ -124,10 +147,10 @@ public class XStateTrace {
 		List<String[]> data = CSVUtility.readCSV(',', filename) ;
 		if (data.size() == 0) return null ;
 		String[] columnNames = data.get(0) ;
-		Integer indexPosx = getColumIndex(posxName,columnNames) ;
-		Integer indexPosy = getColumIndex(posyName,columnNames) ;
-		Integer indexPosz = getColumIndex(poszName,columnNames) ;
-		Integer indexTime = getColumIndex(timeName,columnNames) ;
+		int indexPosx = getColumIndex(posxName,columnNames) ;
+		int indexPosy = getColumIndex(posyName,columnNames) ;
+		int indexPosz = getColumIndex(poszName,columnNames) ;
+		int indexTime = getColumIndex(timeName,columnNames) ;
 		
 		XStateTrace trace = new XStateTrace() ;
 		
@@ -138,16 +161,16 @@ public class XStateTrace {
 			   if (indexPosx >= 0) {
 				   float x = Float.parseFloat(row[indexPosx]) ;
 				   float y = 0 ;
-				   if (indexPosy>=0) {
+				   if (indexPosy >= 0) {
 					   y = Float.parseFloat(row[indexPosy]) ;
 				   }
 				   float z = 0 ;
-				   if (indexPosz>=0) {
+				   if (indexPosz >= 0) {
 					   z = Float.parseFloat(row[indexPosz]) ;
 				   }
 				   st.pos = new Vec3(x,y,z) ;
 			   }
-			   if (indexTime>=0) {
+			   if (indexTime >= 0) {
 				   st.time = Long.parseLong(row[indexTime]) ;
 			   }
 			   for (int c=0 ; c < row.length; c++) {
@@ -210,5 +233,5 @@ public class XStateTrace {
 		}
 		return hasUNSAT ;
 	}
-
+	
 }
