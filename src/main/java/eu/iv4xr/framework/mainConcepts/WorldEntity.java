@@ -211,5 +211,25 @@ public class WorldEntity implements Serializable {
         var copied = (WorldEntity) in.readObject();
         return copied;
     }
+    
+    @Override
+    public String toString() {
+    	StringBuffer z = new StringBuffer() ;
+    	z.append("Id:" + this.id);
+    	z.append("\nPos:" + this.position + ", vel:" + this.velocity + ", extent:" + this.extent) ;
+    	z.append("\nT:" + this.timestamp) ;
+    	z.append("\nProperties:") ;
+    	for (var p : this.properties.entrySet()) {
+    		z.append("\n   " + p.getKey() + ":" + p.getValue().toString()) ;
+    	}
+    	z.append("\nSub-objs: ") ;
+    	int k = 0 ;
+    	for (var e : this.elements.values()) {
+    		if (k>0) z.append(", ") ;
+    		z.append(e.id) ;
+    		k++ ;
+    	}
+    	return z.toString() ;
+    }
 
 }
