@@ -1,6 +1,9 @@
 package eu.iv4xr.framework.extensions.ltl.gameworldmodel;
 
+import java.io.IOException;
 import java.util.Set;
+
+import com.google.gson.JsonIOException;
 
 import eu.iv4xr.framework.extensions.ltl.BuchiModelChecker;
 import eu.iv4xr.framework.extensions.ltl.IExplorableState;
@@ -14,33 +17,47 @@ public class LabRecruitsModel {
 	static String SWITCH = "switch" ;
 	static String DOOR = "door" ;
 	
-	public static WorldEntity mkButton(String id) {
-		WorldEntity button = new WorldEntity(id,SWITCH,true) ;
+	public static GWObject mkButton(String id) {
+		GWObject button = new GWObject(id,SWITCH) ;
 		return button ;
 	}
 	
-	public static WorldEntity mkClosedDoor(String id) {
-		WorldEntity door = new WorldEntity(id,DOOR,true) ;
+	public static GWObject mkClosedDoor(String id) {
+		GWObject door = new GWObject(id,DOOR) ;
 		door.properties.put(GameWorldModel.IS_OPEN_NAME,false) ;
 		return door ;
 	}
 	
-	public static void alphaFunction(WorldEntity button, Set<WorldEntity>  affectedDoors) {
+	public static GWObject mkOpenDoor(String id) {
+		GWObject door = new GWObject(id,DOOR) ;
+		door.properties.put(GameWorldModel.IS_OPEN_NAME,true) ;
+		return door ;
+	}
+	
+	public static void alphaFunction(GWObject button, Set<GWObject>  affectedDoors) {
 		for (var door : affectedDoors) {
 			boolean doorState = (Boolean) door.properties.get(GameWorldModel.IS_OPEN_NAME) ;
 			door.properties.put(GameWorldModel.IS_OPEN_NAME, !doorState) ; 
 		}
 	}
 	
+	/**
+	 * Attach default alpha-component typical for LabRecruits models.
+	 */
+	public static GameWorldModel attachLabRecruitsAlpha(GameWorldModel model) {
+		model.alpha = (button -> (affected -> { alphaFunction(button,affected); return null ; } )) ;
+		return model ;
+	}
+	
 	public static GameWorldModel mk_ButtonDoor1Level() {
 		// create the objects:
-		WorldEntity button1 = mkButton("button1") ;
-		WorldEntity button2 = mkButton("button2") ;
-		WorldEntity button3 = mkButton("button3") ;
-		WorldEntity button4 = mkButton("button4") ;
-		WorldEntity door1 = mkClosedDoor("door1") ;
-		WorldEntity door2 = mkClosedDoor("door2") ;
-		WorldEntity door3 = mkClosedDoor("door3") ;
+		GWObject button1 = mkButton("button1") ;
+		GWObject button2 = mkButton("button2") ;
+		GWObject button3 = mkButton("button3") ;
+		GWObject button4 = mkButton("button4") ;
+		GWObject door1 = mkClosedDoor("door1") ;
+		GWObject door2 = mkClosedDoor("door2") ;
+		GWObject door3 = mkClosedDoor("door3") ;
 		// create an initial state, adding those objects to it:
 		GWState initialstate = new GWState() ;
 		initialstate.addObjects(
@@ -61,20 +78,20 @@ public class LabRecruitsModel {
 		zoneTreasure.addMembers(door3.id);
 		
 		// create the model, add zones to it, etc:
-		GameWorldModel buttondoor1 = new GameWorldModel(initialstate) ;
-		buttondoor1.addZones(zoneMain, zoneB3, zoneB4, zoneTreasure);
-		buttondoor1.markAsBlockers(door1.id, door2.id, door3.id);
+		GameWorldModel buttondoor1 = new GameWorldModel(initialstate) 
+		   . addZones(zoneMain, zoneB3, zoneB4, zoneTreasure)
+		   . markAsBlockers(door1.id, door2.id, door3.id)
 		// objects-connection:
-		buttondoor1.registerObjectLinks(button1.id, door1.id);
-		buttondoor1.registerObjectLinks(button3.id, door1.id, door2.id, door3.id);
-		buttondoor1.registerObjectLinks(button4.id, door1.id);
+		   . registerObjectLinks(button1.id, door1.id)
+		   . registerObjectLinks(button3.id, door1.id, door2.id, door3.id)
+		   . registerObjectLinks(button4.id, door1.id);
 		// set alpha-function:
 		buttondoor1.alpha = (button -> (affected -> { alphaFunction(button,affected); return null ; } )) ;
 
 		return buttondoor1 ;
 	}
 	
-	static public void main(String[] args) {
+	static public void main(String[] args) throws JsonIOException, IOException {
 		
 		var buttondoor1 = mk_ButtonDoor1Level() ;
 		buttondoor1.travelTo("button1");
@@ -89,10 +106,32 @@ public class LabRecruitsModel {
 		buttondoor1.travelTo("door2");
 		buttondoor1.travelTo("door1");
 		buttondoor1.travelTo("door3");
-	
-		//System.out.println(buttondoor1.toString()) ;
 		
-		buttondoor1 = mk_ButtonDoor1Level() ;
+		buttondoor1.save("cobaLRsave.json");
+		
+		GameWorldModel model2 = GameWorldModel.loadGameWorldModelFromFile("cobaLRsave.json") ;
+		LabRecruitsModel.attachLabRecruitsAlpha(model2) ;
+	
+	    // System.out.println(model2.toString()) ;
+		
+		var b10 = mkClosedDoor("b10") ;
+		var b10b = mkClosedDoor("b10") ;
+		var b20 = mkClosedDoor("b20") ;
+		var b30 = mkClosedDoor("b30") ;
+		
+		GWState S1 = new GWState() ;
+		S1.currentAgentLocation = "z0" ;
+		S1.addObjects(b10,b20);
+		
+		GWState S2 = new GWState() ;
+		S2.currentAgentLocation = "z0" ;
+		S2.addObjects(b10,b20);
+		
+		System.out.println(">>> " + S1.equals(S2)) ;
+		
+		// buttondoor1 = mk_ButtonDoor1Level() ;
+		buttondoor1 = model2 ;
+		
 		var mc = new BuchiModelChecker(buttondoor1) ;
 		LTL<IExplorableState> solved = eventually(S -> {
 			GWState st = (GWState) S ;
@@ -111,6 +150,7 @@ public class LabRecruitsModel {
 		}
 		System.out.println(">>> count=" + buttondoor1.count) ;
 		System.out.println(buttondoor1.toString()) ;
+
 	}
 	
 

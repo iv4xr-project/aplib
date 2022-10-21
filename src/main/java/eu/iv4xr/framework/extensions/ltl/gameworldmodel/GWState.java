@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import eu.iv4xr.framework.extensions.ltl.IExplorableState;
-import eu.iv4xr.framework.mainConcepts.WorldEntity;
+
 
 /**
  * Representing the state of the game-world; or more precisely a state in
@@ -15,13 +15,11 @@ import eu.iv4xr.framework.mainConcepts.WorldEntity;
  * @author Samira, Wish.
  */
 public class GWState implements IExplorableState {
-	
-	public static final String DESTROYED = "destroyed_" ;
-	
+		
 	/**
 	 * The objects in the game.
 	 */
-	public Map<String,WorldEntity> objects = new HashMap<>() ;
+	public Map<String,GWObject> objects = new HashMap<>() ;
 	
 	/**
 	 * Current agent location, which is an id of an object, representing that the
@@ -33,13 +31,13 @@ public class GWState implements IExplorableState {
 	
 	public GWState() { }
 	
-	public void addObjects(WorldEntity ... objects) {
+	public void addObjects(GWObject ... objects) {
 		for (var e : objects) {
 			this.objects.put(e.id,e) ;
 		}
 	}
 	
-	public void setAsCurrentLocation(WorldEntity e) {
+	public void setAsCurrentLocation(GWObject e) {
 		currentAgentLocation = e.id ;
 	}
 	
@@ -47,7 +45,7 @@ public class GWState implements IExplorableState {
 		var e = objects.get(id)	;
 		if (e==null) 
 			throw new IllegalArgumentException("Object with id " + id + " does not exists.") ;
-		e.properties.put(DESTROYED,true) ;
+		e.destroyed = true ;
 	}
 		
 	@Override
@@ -67,7 +65,7 @@ public class GWState implements IExplorableState {
 		GWState copy = new GWState() ;
 		for (var e : objects.values()) {
 			try {
-				copy.objects.put(e.id, e.deepclone()) ;
+				copy.objects.put(e.id, (GWObject) e.clone()) ;
 			}
 			catch (Exception excp) {
 				throw new Error(excp) ;
@@ -88,12 +86,20 @@ public class GWState implements IExplorableState {
 		GWState st2 = (GWState) o ;
 		if (! this.currentAgentLocation.equals(st2.currentAgentLocation))
 			return false ;
-		for (var z : this.objects.entrySet()) {
-			WorldEntity e1 = objects.get(z.getKey()) ;
-			WorldEntity e2 = st2.objects.get(z.getKey()) ;
-			boolean quiteTheSame = e1.hasSameState(e2) ;
-			if (!quiteTheSame) return false ;
+		if (this.objects.keySet().size() != st2.objects.keySet().size())
+			return false ;
+		for (var e : this.objects.entrySet()) {
+			GWObject x = e.getValue() ;
+			String id = e.getKey() ;
+			if (! st2.objects.keySet().contains(id))
+				return false ;
+			GWObject y = st2.objects.get(id) ;
+			if (x==null && y==null)
+				continue ;
+			if (x != null && ! x.equals(y)) {
+				return false ;
+			}
 		}
-		return this.objects.keySet().equals(st2.objects.keySet()) ;
+		return true ;
 	}
 }

@@ -1,15 +1,22 @@
 package eu.iv4xr.framework.extensions.ltl.gameworldmodel;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 
 import eu.iv4xr.framework.extensions.ltl.IExplorableState;
 import eu.iv4xr.framework.extensions.ltl.ITargetModel;
 import eu.iv4xr.framework.extensions.ltl.ITransition;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition.GWTransitionType;
-import eu.iv4xr.framework.mainConcepts.WorldEntity;
-import eu.iv4xr.framework.mainConcepts.WorldModel;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
@@ -38,6 +45,8 @@ public class GameWorldModel implements ITargetModel {
 	public Map<String,Set<String>> objectlinks = new HashMap<>() ;	
 	public Set<String> blockers = new HashSet<>();
 	
+	GameWorldModel() { } 
+	
 	/**
 	 * Create an instance of GameWorldModel with the specified state as the 
 	 * initial state.
@@ -49,16 +58,18 @@ public class GameWorldModel implements ITargetModel {
 	
 	
 	/**
-	 * Add the given zones to this GameWorldModel.
+	 * Add the given zones to this GameWorldModel. It returns this model.
 	 */
-	public void addZones(GWZone ... zones) {
+	public GameWorldModel addZones(GWZone ... zones) {
 		for (var zn : zones) this.zones.add(zn) ;
+		return this ;
 	}
 	
 	/**
 	 * Mark the specified objects (identified by their ids) as blockers.
+	 * The method returns this model.
 	 */
-	public void markAsBlockers(String ... objectIds) {
+	public GameWorldModel markAsBlockers(String ... objectIds) {
 		GWState state = getCurrentState() ;
 		for (var id : objectIds) {
 			if (! state.objects.keySet().contains(id)) {
@@ -66,6 +77,7 @@ public class GameWorldModel implements ITargetModel {
 			}
 			this.blockers.add(id) ;
 		}
+		return this ;
 	}
 	
 	public GWZone getZone(String zoneId) {
@@ -79,8 +91,10 @@ public class GameWorldModel implements ITargetModel {
 	 * When we register (i,o1,o2,..) we are saying that interacting with
 	 * the object i will affect o1, o2, ... These connections will be added
 	 * to [{@link #objectlinks}.
+	 * 
+	 * <p>The method returns this model.
 	 */
-	public void registerObjectLinks(String switcherId, String ... newAffectedIds) {
+	public GameWorldModel registerObjectLinks(String switcherId, String ... newAffectedIds) {
 		Set<String> affected = objectlinks.get(switcherId) ;
 		if (affected == null) {
 			affected = new HashSet<>() ;
@@ -89,6 +103,7 @@ public class GameWorldModel implements ITargetModel {
 		for (var y : newAffectedIds) {
 			affected.add(y) ;
 		}
+		return this ;
 	}
 	
 	public boolean isBlocker(String id) {
@@ -129,8 +144,8 @@ public class GameWorldModel implements ITargetModel {
 			// forbid travel to the current-position ... pointless
 			return false ;
 		}
-		WorldEntity t = state.objects.get(destinationId) ;
-		if (t.properties.get(GWState.DESTROYED) != null) {
+		GWObject t = state.objects.get(destinationId) ;
+		if (t.destroyed) {
 			// the destination has been destroyed; travel is not possible:
 			return false ;
 		}
@@ -173,7 +188,7 @@ public class GameWorldModel implements ITargetModel {
 		throw new IllegalArgumentException("Travel to " + destinationId + " is not possible (unreachable).") ;
 	}
 	
-	public Function<WorldEntity,Function<Set<WorldEntity>,Void>> alpha ;
+	public Function<GWObject,Function<Set<GWObject>,Void>> alpha ;
 	
 	public boolean StressingMode = false ;
 	
@@ -184,7 +199,7 @@ public class GameWorldModel implements ITargetModel {
 			return false ;
 		}
 		//System.out.println(">>>>") ;
-		WorldEntity target = state.objects.get(targetId) ;
+		GWObject target = state.objects.get(targetId) ;
 		GWTransition previousTransition = history.get(0).snd ;
 		if (previousTransition == null || previousTransition.type == GWTransitionType.TRAVEL)
 			return true ;
@@ -200,12 +215,12 @@ public class GameWorldModel implements ITargetModel {
 	public void interact(String targetId) {
 		if (canInteract(targetId)) {
 			GWState newState = (GWState) getCurrentState().clone() ;
-			WorldEntity target = newState.objects.get(targetId) ;
+			GWObject target = newState.objects.get(targetId) ;
 			if(objectlinks.get(targetId) != null) {
-				Set<WorldEntity> affected = objectlinks.get(targetId)
+				Set<GWObject> affected = objectlinks.get(targetId)
 						.stream()
 						.map(id -> newState.objects.get(id))
-						.filter(e -> e.properties.get(GWState.DESTROYED) == null)
+						.filter(e -> ! e.destroyed)
 						.collect(Collectors.toSet()) ;
 				alpha.apply(target).apply(affected) ;
 			}
@@ -304,13 +319,60 @@ public class GameWorldModel implements ITargetModel {
 		return z.toString() ;		
 	}
 	
-	public void save(String filename) {
-		// TODO
+	static class GameWorldModelBase { 
+		public String initialAgentLocation ;
+		public List<GWObject> objects ;
+		public Set<String> blockers ;
+		public Set<GWZone> zones ;
+		public Map<String,Set<String>> objectlinks ;
 	}
 	
-	public static GameWorldModel loadGameWorldModelFromFile(String filename) {
-		// TODO
-		return null;
+	/**
+	 * Save this model as a JSON-object to a file. The alpha-component is not
+	 * saved though, as it is a function.
+	 */
+	public void save(String filename) throws JsonIOException, IOException {
+		GameWorldModelBase base = new GameWorldModelBase() ;
+		base.initialAgentLocation = this.initialState.currentAgentLocation ;
+		base.objects = this.initialState.objects.values().stream().collect(Collectors.toList()) ;
+		base.blockers = this.blockers ;
+		base.zones = this.zones ;
+		base.objectlinks = this.objectlinks ;
+		
+		FileWriter fwriter = new FileWriter(filename) ;
+		
+		Gson gson = new GsonBuilder()
+			    . setPrettyPrinting()
+			    . serializeNulls()
+			    . create(); 
+		//System.out.println(">>>> " + gson.toJson(base)) ;
+		gson.toJson(base, fwriter);
+		
+		fwriter.flush();
+		fwriter.close();
+		
+	}
+	
+	/**
+	 * Read saved model (in JSON) from a file, and return the corresponding
+	 * GameWorldModel object. The alpha-component is left null, as it
+	 * cannot be saved, being a function.
+	 */
+	public static GameWorldModel loadGameWorldModelFromFile(String filename) throws IOException {
+		Gson gson = new Gson();
+		Reader reader = Files.newBufferedReader(Paths.get(filename));
+		GameWorldModelBase base = gson.fromJson(reader,GameWorldModelBase.class);
+		GameWorldModel model = new GameWorldModel() ;
+		model.initialState = new GWState() ;
+		model.initialState.currentAgentLocation = base.initialAgentLocation ;
+		for (var o : base.objects) {
+			model.initialState.objects.put(o.id, o) ;
+		}
+		model.zones = base.zones ;
+		model.blockers = base.blockers ;
+		model.objectlinks = base.objectlinks ;
+		model.reset(); 
+		return model ;
 	}
 	
 
