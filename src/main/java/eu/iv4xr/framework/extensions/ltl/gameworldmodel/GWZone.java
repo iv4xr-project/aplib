@@ -51,5 +51,29 @@ public class GWZone {
 	public void addMembers(String ... members) {
 		for (var id : members) this.members.add(id) ;
 	}
+	
+	public String toString() {
+		String z = "zone " + id + ": " ;
+		int k = 0 ;
+		for (String o : members) {
+			if (k>0) z += ", " ;
+			z += o ;
+			k++ ;
+		}
+		return z ;
+	}
+	
+	@Override
+    public int hashCode() {
+        return Objects.hash(id,members);
+    }
+	
+	@Override
+	public boolean equals(Object o) {
+		if (! (o instanceof GWZone)) return false ;
+		var zn = (GWZone) o ;
+		return id.equals(zn.id)
+				&& members.equals(zn.members) ;
+	}
 
 }

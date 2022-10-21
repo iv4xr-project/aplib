@@ -91,6 +91,7 @@ public class LabRecruitsModel {
 		return buttondoor1 ;
 	}
 	
+	// just for test:
 	static public void main(String[] args) throws JsonIOException, IOException {
 		
 		var buttondoor1 = mk_ButtonDoor1Level() ;
@@ -107,30 +108,9 @@ public class LabRecruitsModel {
 		buttondoor1.travelTo("door1");
 		buttondoor1.travelTo("door3");
 		
-		buttondoor1.save("cobaLRsave.json");
+	    System.out.println(buttondoor1.toString()) ;
 		
-		GameWorldModel model2 = GameWorldModel.loadGameWorldModelFromFile("cobaLRsave.json") ;
-		LabRecruitsModel.attachLabRecruitsAlpha(model2) ;
-	
-	    // System.out.println(model2.toString()) ;
-		
-		var b10 = mkClosedDoor("b10") ;
-		var b10b = mkClosedDoor("b10") ;
-		var b20 = mkClosedDoor("b20") ;
-		var b30 = mkClosedDoor("b30") ;
-		
-		GWState S1 = new GWState() ;
-		S1.currentAgentLocation = "z0" ;
-		S1.addObjects(b10,b20);
-		
-		GWState S2 = new GWState() ;
-		S2.currentAgentLocation = "z0" ;
-		S2.addObjects(b10,b20);
-		
-		System.out.println(">>> " + S1.equals(S2)) ;
-		
-		// buttondoor1 = mk_ButtonDoor1Level() ;
-		buttondoor1 = model2 ;
+	    buttondoor1.reset();
 		
 		var mc = new BuchiModelChecker(buttondoor1) ;
 		LTL<IExplorableState> solved = eventually(S -> {
@@ -148,7 +128,7 @@ public class LabRecruitsModel {
 			System.out.println("") ;
 			k++ ;	
 		}
-		System.out.println(">>> count=" + buttondoor1.count) ;
+		//System.out.println(">>> count=" + buttondoor1.count) ;
 		System.out.println(buttondoor1.toString()) ;
 
 	}

@@ -29,7 +29,7 @@ public class GameWorldModel implements ITargetModel {
 	
 	public GWState initialState ;
 	
-	public int count = 0 ;
+	//public int count = 0 ;
 	
 	/**
 	 * The history of the the states, stored in reverse order (the head of the list
@@ -294,7 +294,7 @@ public class GameWorldModel implements ITargetModel {
 	@Override
 	public void execute(ITransition tr) {
 		//System.out.println(">>> " + tr.getId()) ;
-		count++ ;
+		//count++ ;
 		GWTransition tr_ = (GWTransition) tr ;
 		switch(tr_.type) {
 			case TRAVEL   : travelTo(tr_.target) ; break ;
