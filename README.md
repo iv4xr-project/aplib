@@ -8,27 +8,11 @@
 * [Papers](README.md#papers)
 * **Video:** [10m demo of iv4xr](https://youtu.be/Hc8NP4NuHAk).
 
-Despite the packaging name 'aplib' this project should be called *iv4XR-core*, of which aplib is part of.
+Despite the packaging name 'aplib' this project should be called *iv4XR-core*, of which aplib is part of. Iv4xr-core is a Java Library providing intelligent agents for automated testing. The primary use case is for testing highly interactive systems such as computer games though the library is generic enough to also be able to handle other types of systems. Within this Core, the aplib part forms its original agent programming inner-core.
 
-**Iv4xr-core** (which we will also refer to as the 'Core') forms the core of a bigger framework with the same name: **iv4xr Framework**, and hence the name 'core'. Outside the Framework, both the Core and its aplib part can also be used independently.
+**Iv4xr-core** forms the core of a bigger framework with the same name: [**iv4xr Framework**](https://github.com/iv4xr-project/iv4xr-framework). The latter integrates other approaches such as model-based testing (MBT), automated scriptless testing (through TESTAR), and player/user experience testing along side the Core.
 
-Iv4xr Framework aims to provide tools for agent-based automated testing for testing highly interactive systems. The Core provides the underlying agent-based programming and agent-based testing infrastructure.
-Our own use case is to use the framework for testing Extended Reality (XR) systems. Within this use case, the framework has been piloted for testing 3D games. The framework itself is generic: it can be used to target *any system* (even systems that are not interactive, such as a collection of APIs) as long as the agents can interface with the system. To do this, an interface needs to be provided, which boils down to implementing a certain interface-like class.
-
-
-
-The position of the iv4xr-core in the **Framework** is shown in the picture below:
-
-   <img src="./docs/iv4xr-architecture.png" width="60%">
-
-The **Core** provides the agent-based testing infrastructure. The pure agent-programming part is provided by a package (in the Core) called **aplib** (shorthand of Agent Programming Library) within the Core. This library is actually general purpose, and can be used to program agents for purposes other than testing.
-On top of aplib, the Core adds testing-related functionalities and few other extra functionalities like a common world representation.
-Using iv4xr-core can be seen as a special case of using aplib, where you get some testing-specific extra capabilities, such as expressing test oracles.
-
-In the picture above, *setup-2* is a setup where we only use the Core to target a System Under Test (SUT). This is possible, and we will have access to aplib's agent programming to program the test automation.
-When the entire framework is ready, *setup-1* uses the entire framework. The 'framework' adds other testing-related tools, such as a model-based testing library, explorative testing using Testar, etc, which are then also at your disposal.
-
-The entire iv4xr-core is a Java library. The simplest setup to use iv4xr is:
+The simplest setup to use iv4xr-core is:
 
   1. Create a Java method m() where you create one agent a.
   1. An agent is typically used to control some environment (e.g. a game). Attach an interface that would connect the agent a to the environment.
@@ -36,6 +20,10 @@ The entire iv4xr-core is a Java library. The simplest setup to use iv4xr is:
   1. run the method m().
 
 When the agent is used for testing, then we need an agent that is also a test agent; this would have some extra functionalities such as collecting test verdicts. For concrete examples see the tutorials povided [here (general about agent)](./docs/agentprogramming.md) and [here (for test-agent)](./docs/agentbasedtesting.md).
+
+The inner-core **aplib** (shorthand of Agent Programming Library) is btw actually general purpose, and can be used to program agents for purposes other than testing.
+On top of aplib, the Core adds testing-related functionalities and few other extra functionalities like a common world representation.
+Using iv4xr-core can be seen as a special case of using aplib, where you get some testing-specific extra capabilities, such as expressing test oracles.
 
 **Features:**
 
