@@ -8,6 +8,11 @@ A **tactic** is a program for solving a goal. Every leaf-goal in a goal structur
 
 For explanation on how tactics are executed to solve a goal (or in other words: agents' execution model), [see this document ](aplibConcepts.md).
 
+Most of the contsructs below are defined in:
+
+  * [AplibEDSL.java](../../src/main/java/nl/uu/cs/aplib/AplibEDSL.java)
+  * [Iv4xrEDSL.java](../../src/main/java/eu/iv4xr/framework/Iv4xrEDSL.java)
+
 
 ### Goal
 
@@ -30,21 +35,21 @@ _goal-structure_ ::=
   * **lift(** _action_ **)**
   * **FIRSTof(** _goal-structure_+ **)**
   * **SEQ(** _goal-structure_+ **)**
-  * **IFELSE(** _predicate_ **,** _goal-structure_ **,** _goal-structure **)**
-  * **WHILEDO(** _predicate_ **,** _goal-structure_ **)**
+  * **IF(** _predicate_ **,** _goal-structure_ **,** _goal-structure **)**
+  * **TRYIF(** _predicate_ **,** _goal-structure_ **,** _goal-structure **)**  
+  * **WHILE(** _predicate_ **,** _goal-structure_ **)**
   * **REPEAT(** _goal-structure_+ **)**
   * **DEPLOYonce(** _agent_ **,** _GoalFunction_ )  -- Note: a goal function is a function that evaluates the current agent state and constructs a goal.
+  * **DEPLOY(** _agent_ **,** _GoalFunction_ )  
 
 The syntax for assigning a goal structure to an agent:
 
  * _agent_**.setGoal(** _goal-structure_ **)**
 
-An agent can also dynamically add and remove goals in its goal-structure (the goal-structure that was given to the agent to solve). This can be done from inside an action/tactic.
+An agent can also dynamically add and remove goals in its goal-structure (the goal-structure that was given to the agent to solve). This using the following actions:
 
-The syntax for dynamically adding and removing a sub-goal within the goal-structure that the agent has now:
-
- * _agent_**. addAfter(** _goal-structure_ **)**
- * _agent_**. addBefore(** _goal-structure_ **)**
+ * addAfter(** _GoalFunction_ **)**
+ * addBefore(** _goal-_GoalFunction_ **)**
  * _agent_**. remove(** _goal-structure_ **)**
 
 A testing-goal is a special kind of goal. It can only be given to a test-agent (an instance of the class `eu.iv4xr.framework.mainConcepts.TestAgent`).
@@ -60,29 +65,31 @@ The syntax of testing goals:
 
    This is actually a test-goal with a trivial 'true' as the goal to solve (so it will always be solved), and the asserted predicate as the invariant to check. Effectively, this checks whether the current agent state satisfies the invariant.
 
-   ### Tactic and action
+### Tactic and action
 
-   The syntax of tactics and actions is shown below.
+The syntax of tactics and actions is shown below.
 
-   _tactic_ ::=
-     * _action_**.lift()**
-     * **ABORT()**
-     * **ANYof(** _tactic_+ **)**
-     * **FIRSTof(** _tactic_+ **)**
-     * **SEQ(** _tactic_+ **)**
+_tactic_ ::=
 
-   _action_ ::=
-     * **action(** _name_ **).do1(** _function_ **).on(** _predicate_ **)**
-     * **action(** _name_ **).do2(** _bifunction_ **).on(** _query_ **)**
+* _action_**.lift()**
+* **ABORT()**
+* **ANYof(** _tactic_+ **)**
+* **FIRSTof(** _tactic_+ **)**
+**SEQ(** _tactic_+ **)**
 
-   A _function_ is a Java-function, which can be formed with a lambda expression. For example `(int x) -> x*x` constructs a function that returns _2x_ given an integer _x_ as input. A bi-function is a Java-function that takes two arguments. Similarly, it can be constructed using a lambda-expression.
+_action_ ::=
+
+* **action(** _name_ **).do1(** _function_ **).on(** _predicate_ **)**
+* **action(** _name_ **).do2(** _bifunction_ **).on(** _query_ **)**
+
+A _function_ is a Java-function, which can be formed with a lambda expression. For example `(int x) -> x*x` constructs a function that returns _2x_ given an integer _x_ as input. A bi-function is a Java-function that takes two arguments. Similarly, it can be constructed using a lambda-expression.
 
 
 # DSL for expressing LTL specifications/properties
 
 'LTL' stands for _Linear Temporal Logic_.
 
-An LTL formula is essentially a sequence predicate. It can be evaluated on a sequence of values to give a judgement whether or not the sequence satisfies the formula.
+An LTL formula is essentially a sequence predicate. It can be evaluated on a sequence of values to give a judgement whether or not the sequence satisfies the formula. Available LTL operators/constructs are listed below. They are defined in [LTL.java](../../src/main/java/eu/iv4xr/framework/extensions/ltl/LTL.java)
 
 _ltl_ ::=
 
@@ -101,6 +108,12 @@ The syntax to check an LTL-formula on a sequence:
 _ltl_.**sat**(_sequence_)
 
 For example, the sequence could be a trace collected from the execution of a test-agent.
+
+It is also possible to check LTL formulas on-line on a running agent (the formulas will then be checked on the sequence of states that the execution induces). See the following methods of the class [TestAgent](../../src/main/java/eu/iv4xr/framework/mainConcepts/TestAgent.java):
+
+* _testagent_.`addLTL`(..)
+* _testagent_.`resetLTLs`()
+* _testagent_.`evaluateLTLs`()
 
 In addition to LTL, we also provide 'bounded'-LTL. A bounded-LTL formula F is essentially a tuple (p,q,phi,n) where p and q are state predicates and phi is an LTL formula. Given a sequence, F holds on the sequence if every pq-segment in the sequence satisfies the LTL phi. A pq-segment is a segment that starts with a value satisfying p and ends in a value satisfying q and is maximal in the sense that it does not contain another pq-segment inside it, and its length is at most n.
 

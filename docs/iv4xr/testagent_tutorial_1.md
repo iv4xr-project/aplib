@@ -36,12 +36,12 @@ public class GCDGame {
 }
 ```
 
-The full code is in [GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/GCDGame.java).
+The full code of this game is in [GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/GCDGame.java).
 
 Imagine now that we want to test this class. To do this with `iv4xr` we would need a test agent, which is an instance of the class [`TestAgent`](../../src/main/java/eu/iv4xr/framework/mainConcepts/TestAgent.java).
 
 **For impatient ones:**
-* 'Wrapping' approach, suitable for testing a Java class: see [TestWithWrappingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithWrappingEnv_GCDGame.java).
+* 'Wrapping' approach (this tutorial) suitable for testing a Java class: see [TestWithWrappingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithWrappingEnv_GCDGame.java).
 * 'Remoting' approach, suitable for testing an external program that does not run in the same JVM as the test agent: see [Test_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/Test_GCDGame.java).
 
 To test `GCDGame` with a test agent, roughly the steps are as follows:
@@ -51,6 +51,7 @@ To test `GCDGame` with a test agent, roughly the steps are as follows:
 1. We need to specify the testing task. This amounts to specifying at least one goal, a tactic on how to solve the goal, and the correctness property to check when the goal is solved.
 1. We can now run the test agent and collect the findings.
 
+The steps are explained below. The full code of the test can be found in [TestWithWrappingEnv_GCDGame.java](../../src/test/java/eu/iv4xr/framework/exampleTestAgentUsage/TestWithWrappingEnv_GCDGame.java).
 
 ### Step 1: Defining an Environment
 

@@ -143,10 +143,11 @@ public class TestWithWrappingEnv_GCDGame {
                 // assert the correctness property that must hold on the state where the goal is
                 // solved;
                 // we will check that the gcd field and win() have correct values:
+                // use .oracle(...)  or .invariant(...) both do the same 
                 .oracle(agent,
                         (MyState S) -> assertTrue_("", info,
                                 S.env().gcdgameUnderTest.gcd == expectedGCD
-                                        && S.env().gcdgameUnderTest.win() == expectedWinConclusion))
+                                && S.env().gcdgameUnderTest.win() == expectedWinConclusion))
                 // finally we lift the goal to become a GoalStructure, for technical reason.
                 .lift();
 

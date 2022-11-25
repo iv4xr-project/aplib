@@ -404,7 +404,7 @@ public class AplibEDSL {
     }
     
     /**
-     * Like {@link #addBefore(Function)}, but allows the returned proposal to be specifiedf, rather
+     * Like {@link #addBefore(Function)}, but allows the returned proposal to be specified, rather
      * than just null.
      */
     public static <AgentState extends SimpleState, Proposal> Action addBefore(Function<AgentState,GoalStructure> fgoal, Proposal v) {
@@ -442,7 +442,7 @@ public class AplibEDSL {
     }
     
     /**
-     * Like {@link #addBefore(Function)}, but allows the returned proposal to be specifiedf, rather
+     * Like {@link #addAfter(Function)}, but allows the returned proposal to be specified, rather
      * than just null.
      */
     public static <AgentState extends SimpleState, Proposal> Action addAfter(Function<AgentState,GoalStructure> fgoal, Proposal v) {
