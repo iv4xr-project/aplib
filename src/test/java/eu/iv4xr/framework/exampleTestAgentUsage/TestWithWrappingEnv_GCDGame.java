@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import static eu.iv4xr.framework.Iv4xrEDSL.*;
 import static nl.uu.cs.aplib.AplibEDSL.*;
+
+import eu.iv4xr.framework.exampleTestAgentUsage.Test_GCDGame.MyState;
 import eu.iv4xr.framework.mainConcepts.*;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.agents.State;
@@ -77,37 +79,37 @@ public class TestWithWrappingEnv_GCDGame {
         public GCDEnv env() {
             return (GCDEnv) super.env();
         }
-        
-
     }
+    
+    /**
+	 * A constructor to construct "actions" (an instance of type 
+	 * {@link Action}). They will be identified by their names:
+	 * "up", "down", "left", "right", and "observe". When the action
+	 * is invoked, the corresponding command will be sent to the GCDGame
+	 * via the GCDEnv.
+	 */
+	Action myaction(String actionName) {
+		return action("action " + actionName).do1((MyState S) -> {
+			switch (actionName) {
+			    case "up"      : S.env().gcdgameUnderTest.up(); break ;
+			    case "down"    : S.env().gcdgameUnderTest.down(); break ;
+			    case "left"    : S.env().gcdgameUnderTest.left(); break ;
+			    case "right"   : S.env().gcdgameUnderTest.right(); break ;
+			    case "observe" : break ;
+			    default : throw new IllegalArgumentException() ;
+			}
+			Logging.getAPLIBlogger().info("new state: " + S);
+			return S;
+		});
+	}
 
     // Construct a tactic to auto-drive the player to position X,Y:
     Tactic navigateTo(int X, int Y) {
-        Action up = action("action_up").do1((MyState S) -> {
-            S.env().gcdgameUnderTest.up();
-            Logging.getAPLIBlogger().info("UP. New state: " + S.env());
-            return S;
-        });
-        Action down = action("action_down").do1((MyState S) -> {
-            S.env().gcdgameUnderTest.down();
-            Logging.getAPLIBlogger().info("DOWN. New state: " + S.env());
-            return S;
-        });
-        Action right = action("action_right").do1((MyState S) -> {
-            S.env().gcdgameUnderTest.right();
-            Logging.getAPLIBlogger().info("RIGHT. New state: " + S.env());
-            return S;
-        });
-        Action left = action("action_left").do1((MyState S) -> {
-            S.env().gcdgameUnderTest.left();
-            Logging.getAPLIBlogger().info("LEFT. New state: " + S.env());
-            return S;
-        });
-
-        return FIRSTof(up.on_((MyState S) -> S.env().gcdgameUnderTest.y < Y).lift(),
-                down.on_((MyState S) -> S.env().gcdgameUnderTest.y > Y).lift(),
-                right.on_((MyState S) -> S.env().gcdgameUnderTest.x < X).lift(),
-                left.on_((MyState S) -> S.env().gcdgameUnderTest.x > X).lift());
+        return FIRSTof(
+        	myaction("up")   .on_((MyState S) -> S.env().gcdgameUnderTest.y < Y).lift(),
+        	myaction("down") .on_((MyState S) -> S.env().gcdgameUnderTest.y > Y).lift(),
+        	myaction("right").on_((MyState S) -> S.env().gcdgameUnderTest.x < X).lift(),
+        	myaction("left") .on_((MyState S) -> S.env().gcdgameUnderTest.x > X).lift());
     }
 
     /**

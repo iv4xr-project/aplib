@@ -91,27 +91,19 @@ public class Test_GCDGame {
 		protected Object sendCommand_(EnvOperation cmd) {
 			logger.info("Command " + cmd.command);
 			switch (cmd.command) {
-			case "up":
-				gameUnderTest.up();
-				return null;
-			case "down":
-				gameUnderTest.down();
-				return null;
-			case "right":
-				gameUnderTest.right();
-				return null;
-			case "left":
-				gameUnderTest.left();
-				return null;
-			case "observe":
-				Object[] obs = new Object[4];
-				obs[0] = gameUnderTest.x;
-				obs[1] = gameUnderTest.y;
-				obs[2] = gameUnderTest.gcd;
-				obs[3] = gameUnderTest.win();
-				return obs;
+			case "up"   : gameUnderTest.up(); break ;
+			case "down" : gameUnderTest.down(); break ;
+			case "right": gameUnderTest.right(); break ;
+			case "left" : gameUnderTest.left(); break ;			
+			case "observe": break ;
+			default : throw new IllegalArgumentException() ;
 			}
-			throw new IllegalArgumentException();
+			Object[] obs = new Object[4];
+			obs[0] = gameUnderTest.x;
+			obs[1] = gameUnderTest.y;
+			obs[2] = gameUnderTest.gcd;
+			obs[3] = gameUnderTest.win();
+			return obs;			
 		}
 
 	}
@@ -122,11 +114,6 @@ public class Test_GCDGame {
 	 * actually need a new state-structure, but let's just pretend that we do.
 	 */
 	static class MyState extends State {
-
-		// int counter = 0 ;
-		// String last = null ;
-		// int result = 0 ;
-
 		int x;
 		int y;
 		int time=0 ;
@@ -162,32 +149,31 @@ public class Test_GCDGame {
 	Tactic skip() {
 		return action("skip").do1((MyState S) -> S).lift();
 	}
+	
+	/**
+	 * A constructor to construct "actions" (an instance of type 
+	 * {@link Action}). They will be identified by their names:
+	 * "up", "down", "left", "right", and "observe". When the action
+	 * is invoked, the corresponding command will be sent to the GCDGame
+	 * via the GCDEnv.
+	 */
+	Action myaction(String actionName) {
+		return action("action " + actionName).do1((MyState S) -> {
+			S.env().sendCommand(null, null,actionName, null);
+			Logging.getAPLIBlogger().info("new state: " + S);
+			return S;
+		});
+	}
+	
 
 	// Construct a tactic to auto-drive the player to position X,Y:
 	Tactic navigateTo(int X, int Y) {
-		Action up = action("action_up").do1((MyState S) -> {
-			S.env().sendCommand(null, null, "up", null);
-			Logging.getAPLIBlogger().info("new state: " + S);
-			return S;
-		});
-		Action down = action("action_down").do1((MyState S) -> {
-			S.env().sendCommand(null, null, "down", null);
-			Logging.getAPLIBlogger().info("new state: " + S);
-			return S;
-		});
-		Action right = action("action_up").do1((MyState S) -> {
-			S.env().sendCommand(null, null, "right", null);
-			Logging.getAPLIBlogger().info("new state: " + S);
-			return S;
-		});
-		Action left = action("action_left").do1((MyState S) -> {
-			S.env().sendCommand(null, null, "left", null);
-			Logging.getAPLIBlogger().info("new state: " + S);
-			return S;
-		});
-
-		return FIRSTof(up.on_((MyState S) -> S.y < Y).lift(), down.on_((MyState S) -> S.y > Y).lift(),
-				right.on_((MyState S) -> S.x < X).lift(), left.on_((MyState S) -> S.x > X).lift(), skip());
+		return FIRSTof(
+				myaction("up")   .on_((MyState S) -> S.y < Y).lift(), 
+				myaction("down") .on_((MyState S) -> S.y > Y).lift(),
+				myaction("right").on_((MyState S) -> S.x < X).lift(), 
+				myaction("left") .on_((MyState S) -> S.x > X).lift(), 
+				skip());
 	}
 
 	/**
