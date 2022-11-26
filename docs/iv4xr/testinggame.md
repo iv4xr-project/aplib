@@ -1,10 +1,12 @@
 # Testing a Computer Game with iv4xr
 
+<a name="archtop"></a>
+
 [Tutorial-1](./testagent_tutorial_1.md)  and [tutorial-2](./testagent_tutorial_2.md) introduced the general idea of using an iv4xr to test a computer game along with some of the basic concepts of iv4xr testing, such as _goal_ and _tactic_. We also pointed out that the agent will need an interface (called 'environment') to the game and its own 'agent state'.
 
 The game used in those tutorials was rather artificial. To handle an actual game it is recommended to use a more extended architecture, shown in the UML diagram below:
 
-<a name="archtop"></a>
+
 ![architecture for testing game](testinggame_arch1.png)
 
 In this architecture the [test agent](../../src/main/java/eu/iv4xr/framework/mainConcepts/TestAgent.java) will need several components; see below. Some of these components are game-specific, so we can't provide general components that would work for all games.
@@ -24,7 +26,7 @@ To implenent the class [`Iv4xrEnvironment`](../../src/main/java/eu/iv4xr/framewo
 
 1. `observe(agentId)` : this returns an observation on the SUT's state. This observation is expected to be an instance of the a `WorldModel`.
 
-1. Implement other primitive interactions with the SUT, e.g. a command to move the player-character a small distance to a certain direction and a command to make the player-character interacts with a gameobject next to it. You can optionally make use of the method `sendCommand()` that is provided by the superclass [`Environment`](../../src/main/java/nl/uu/cs/aplib./mainConcepts/Environment.java) to send commands to the SUT. In turn, `sendCommand()` invokes `sendCommand_()` whose implementation you need to provide (via overriding).
+1. Implement other primitive interactions with the SUT, e.g. a command to move the player-character a small distance to a certain direction and a command to make the player-character interacts with a gameobject next to it. You can optionally make use of the method `sendCommand()` that is provided by the superclass [`Environment`](../../src/main/java/nl/uu/cs/aplib/mainConcepts/Environment.java) to send commands to the SUT. In turn, `sendCommand()` invokes `sendCommand_()` whose implementation you need to provide (via overriding).
 
 1. Optionally implement the method `worldNavigableMesh()`. This method is expected to construct a surface-mesh of the navigable parts/surfaces of your gameworld. The class [`Iv4xrAgentState`](../../src/main/java/eu/iv4xr/framework/mainConcepts/Iv4xrAgentState.java) has some utilities to conver such a mesh to a navigation graph. Ultimately, what is needed is a navigation graph (at least, if you want the agent to be able to automatically navigate to places). So, if you can't provide a mesh, there are other means to construct a navigation graph. Check the classes in the package `eu.iv4xr.framework.extensions.pathfinding`.
 
@@ -43,7 +45,7 @@ Both WorldModel and WorldEntity have timestamps to indicate how recent the obser
 
 ### The structure of `Iv4xrAgentState`
 
-As said before, your test agent needs a state. Such a state is an instance of [`SimpleState`](../../src/main/java/nl/uu/cs/aplib./mainConcepts/SimpleState.java) but it is recommended to use the class [`Iv4xrAgentState`](../../src/main/java/eu/iv4xr/framework/mainConcepts/Iv4xrAgentState.java), for example because this class already integrate `WorldModel` and has some utility to support pathfinding. Either you use this class directly, or make your own subclass.
+As said before, your test agent needs a state. Such a state is an instance of [`SimpleState`](../../src/main/java/nl/uu/cs/aplib/mainConcepts/SimpleState.java) but it is recommended to use the class [`Iv4xrAgentState`](../../src/main/java/eu/iv4xr/framework/mainConcepts/Iv4xrAgentState.java), for example because this class already integrate `WorldModel` and has some utility to support pathfinding. Either you use this class directly, or make your own subclass.
 
 The structure of `Iv4xrAgentState` is shown below.
 
