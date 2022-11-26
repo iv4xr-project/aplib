@@ -399,7 +399,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 		List<String> lines = new LinkedList<>() ;
 		lines = dungeon.showGameStatus().lines().collect(Collectors.toList()) ;
 		lines.add("Commands:") ;
-		lines.add("Frodo:   wasd to move | e:use-healpot | e:use-ragepot") ;
+		lines.add("Frodo:   wasd to move | e:use-healpot | r:use-ragepot") ;
 		lines.add("Smaegol: ijkl to move | o:use-healpot | p:use-ragepot") ;
 		lines.add("q:quit | z:restart") ;
 		lines.add("") ;

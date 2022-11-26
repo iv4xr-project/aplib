@@ -253,7 +253,7 @@ public class AplibEDSL {
                 .toSolve((AgentState state) -> false )
                 .withTactic(FIRSTof(
                         action("deploying a goal")
-                            .do1((AgentState state) -> {
+                            .do1((AgentState state) -> { 
                                 agent.addAfter(dynamicgoal.apply(state));
                                 deployed[0] = true ;
                                 //System.out.println(">>> action: deployed[0] = " + deployed[0]) ;
