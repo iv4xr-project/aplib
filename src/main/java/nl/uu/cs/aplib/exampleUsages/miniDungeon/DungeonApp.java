@@ -84,7 +84,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 		
 		// loading the sprites:
 		Toolkit t=Toolkit.getDefaultToolkit();  
-		Path p = Path.of("assets","NethackImages.png") ;
+		Path p = Path.of(config.assetsLocation,"NethackImages.png") ;
         sprites = t.getImage(p.toString()); 
         
 		restart(config) ;
@@ -98,7 +98,7 @@ public class DungeonApp extends JPanel implements KeyListener {
         	"welcome", "exit", "death", "die", "punch"
         } ;
         for(var soundName: soundNames) {
-        	p = Path.of("assets", soundName + ".wav") ;  
+        	p = Path.of(config.assetsLocation, soundName + ".wav") ;  
             File f = new File(p.toString()) ;
             AudioInputStream ais = AudioSystem.getAudioInputStream(f);
             Clip sound = AudioSystem.getClip() ;

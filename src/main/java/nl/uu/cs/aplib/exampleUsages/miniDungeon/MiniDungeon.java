@@ -1,6 +1,7 @@
 package nl.uu.cs.aplib.exampleUsages.miniDungeon;
 
 import java.io.Console;
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -73,6 +74,7 @@ public class MiniDungeon {
 		public int numberOfRagePots = 2 ;
 		public int numberOfScrolls = 3 ;
 		public boolean enableSmeagol = true ;
+		public String assetsLocation = Path.of("assets","minidungeon").toString() ; ;
 		
 		/**
 		 * Producing a default configuration.
