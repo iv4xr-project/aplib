@@ -8,7 +8,7 @@
 * [Papers](README.md#papers)
 * **Video:** [10m demo of iv4xr](https://youtu.be/Hc8NP4NuHAk).
 
-Despite the packaging name 'aplib' this project should be called *iv4XR-core*, of which aplib is part of. Iv4xr-core is a Java Library providing intelligent agents for automated testing. The primary use case is for testing highly interactive systems such as computer games though the library is generic enough to also be able to handle other types of systems. Within this Core, the aplib part forms its original agent programming inner-core.
+Despite the packaging name 'aplib' this project should be called *iv4XR-core*, of which _aplib_ is part of. Iv4xr-core is a Java Library providing intelligent agents for automated testing. The primary use case is for testing highly interactive systems such as computer games though the library is generic enough to also be able to handle other types of systems. Within this Core, the aplib part forms its original agent programming inner-core.
 
 **Iv4xr-core** forms the core of a bigger framework with the same name: [**iv4xr Framework**](https://github.com/iv4xr-project/iv4xr-framework). The latter integrates other approaches such as model-based testing (MBT), automated scriptless testing (through TESTAR), and player/user experience testing along side the Core.
 
