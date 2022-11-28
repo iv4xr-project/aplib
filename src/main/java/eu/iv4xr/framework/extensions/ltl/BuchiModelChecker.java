@@ -108,6 +108,44 @@ public class BuchiModelChecker {
 	}
 	
 	/**
+	 * Similar to {@link #find(Buchi, int)}, but it will return the shortest execution
+	 * (of the specified max-length) that satisfies the Buchi.
+	 */
+	public Path<Pair<IExplorableState,String>> findShortest(Buchi buchi, int maxDepth) {
+		if (maxDepth < 0) 
+			throw new IllegalArgumentException() ;
+		int lowbound = 0 ;
+		int upbound = maxDepth+1 ;
+				
+		Path<Pair<IExplorableState,String>> bestpath = null ;
+		while (upbound > lowbound) {
+			int mid = lowbound + (upbound - lowbound)/2 ;
+			Path<Pair<IExplorableState,String>> path = find(buchi,mid) ;
+			if (path != null) {
+				upbound = mid ;
+				bestpath = path ;
+			}
+			else {
+				if(mid==lowbound) {
+				   upbound = mid ;
+				}
+				else {
+					lowbound = mid ;
+				}
+			}
+		}
+		return bestpath ;	
+	}
+	/**
+	 * Similar to {@link #find(LTL, int)}, but it will return the shortest execution
+	 * (of the specified max-length) that satisfies the given LTL.
+	 */
+	public Path<Pair<IExplorableState,String>> findShortest(LTL<IExplorableState> phi, int maxDepth) {
+		Buchi B = LTL2Buchi.getBuchi(phi) ;
+		return findShortest(B,maxDepth) ;
+	}
+	
+	/**
 	 * Check if the target 'program' {@link #model} can produce an infinite execution that
 	 * would be accepted by the given Buchi automaton. If so a witness is returned, and else
 	 * null.

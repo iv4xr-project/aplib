@@ -17,3 +17,4 @@ The tutorials below should guide you through the steps of testing with iv4xr age
   * [Collecting data and visualizing them](./iv4xr/datacollection.md)
   * [Using LTL properties](./iv4xr/testagent_tutorial_3.md)
   * [Using iv4xr agents to test a game](./iv4xr/testinggame.md). This provides a more in-depth information on the architecture and components needed to use iv4xr to test an actual computer game.
+  * [Solvers](./iv4xr/solvers.md): iv4xr offers several solvers that an agent can use to help it reason out what to do next.
