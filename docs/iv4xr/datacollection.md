@@ -117,6 +117,10 @@ gcd,posx,posz,time,win
 
 ### Data analysis and visualisation
 
-Collected traces are csv-files containing numeric values, so they can be subjected data analyses and visualisation with external tools. The project itself contains a Python-script to produce time-graphs and heatmaps from trace files. The script can be found in `./scripts`. Running it with the `--help` option will show available options. An example of produced timegraph is shown below:
+Collected traces are csv-files containing numeric values, so they can be subjected data analyses and visualisation with external tools. The project itself contains several Python-scripts to produce time-graphs and heatmaps from trace files. The scripts can be found in `./python/src/aplib`. Running one with the `--help` option will show available options. An example of produced timegraph is shown below:
 
-<img src="./tplot.png" width="60%"> 
+<img src="./tplot.png" width="60%">
+
+This is a heatmap showing visits in locations in a game world:
+
+<img src="./heatmap.png" width="60%">
