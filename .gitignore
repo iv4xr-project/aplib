@@ -8,4 +8,4 @@
 .idea/
 *.iml
 **/.DS_Store
-
+__pycache__/
