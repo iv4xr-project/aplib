@@ -18,7 +18,7 @@ import nl.uu.cs.aplib.mainConcepts.Environment;
  * {@link WorldModel}. And, along with it it can also hold a navigation graph to
  * facilitate automated navigation over the target world.
  * 
- * @param NavgraphNode The type of the nodes in {@link #worldNavigation}, or the type
+ * The type paremeter NavgraphNode represents the type of the nodes in {@link #worldNavigation}, or the type
  * that is used to identify the nodes.
  * 
  * @author Wish

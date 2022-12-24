@@ -331,7 +331,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     
     /**
      * For representing "phi || psi". We could define this as
-     * a derived operator "not(not phi && not psi)", but for
+     * a derived operator "not(not phi &and; not psi)", but for
      * e.g. translation to Buchi we need to be able to structurally
      * identify the "phi || psi" pattern. So we add this explicit
      * representation.
@@ -701,7 +701,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     }
 
     /**
-     * ltlAnd(phi1, ..., phin ) constructs the LTL formula "phi1 && phi2 ... && phin".
+     * ltlAnd(phi1, ..., phin ) constructs the LTL formula "phi1 &and; phi2 ... &and; phin".
      */
     public static <State>  And<State> ltlAnd(LTL<State>... phis) {
         if (phis == null)

@@ -57,7 +57,7 @@ public class SimpleState {
 
     /**
      * A logger. Don't set this logger yourself. When you attach this state to an
-     * agent, the method {@link BasicAgent#attachState(SimpleState) will set this to
+     * agent, the method {@link BasicAgent#attachState(SimpleState)} will set this to
      * the right logger.
      */
     Logger logger;

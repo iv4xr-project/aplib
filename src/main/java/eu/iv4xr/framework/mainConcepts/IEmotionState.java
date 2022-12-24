@@ -6,7 +6,7 @@ import java.util.List;
  * A generic interface for representing the emotional state of an agent. Since
  * this is only an interface, you need to provide a concrete implementation of
  * it. To use it, attach it to an emotional-test-agent using
- * {@link EmotiveTestAgent#attachEmptionState(IEmotionState)}. Then, whenever
+ * {@link EmotiveTestAgent#attachEmotionState(IEmotionState)}. Then, whenever
  * the agent is updated (through a call to its {@link EmotiveTestAgent#update()}
  * method), it will also update the emotion-state attached to it by calling the
  * method {@link #updateEmotion(EmotiveTestAgent)}.

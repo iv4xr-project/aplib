@@ -265,8 +265,6 @@ public class Environment {
      * Will record the id of the party that trigger this instrumentation step and
      * then call the update() method of every instrumenter registered to this
      * environement.
-     * 
-     * @param id An unique id of whoever trigger this instrumentation step.
      */
     protected void instrument(EnvOperation operation) {
         if (debugmode) {

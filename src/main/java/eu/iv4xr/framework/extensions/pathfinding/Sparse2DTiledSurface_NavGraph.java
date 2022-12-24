@@ -14,7 +14,7 @@ import eu.iv4xr.framework.spatial.Vec3;
  * These are tiles that block movement through them. There are two types: Wall and
  * Door. A wall is always non-navigable. A door can be made blocking/unblocking.
  * 
- * <p>The class also implements {@link Xnavigatable}, so it offers methods to do
+ * <p>The class also implements {@link XPathfinder}, so it offers methods to do
  * pathfinding and exploration over the world.
  * 
  * @author Wish

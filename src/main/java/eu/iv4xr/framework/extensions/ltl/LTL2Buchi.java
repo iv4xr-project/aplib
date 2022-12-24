@@ -13,7 +13,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * exclude the following patterns:
  * 
  *    <ol>
- *    <li> The translator does not handle conjunctions "phi && psi";
+ *    <li> The translator does not handle conjunctions "phi &and; psi";
  *    <li> also does not handle left-recursive until and weak-until.
  *         E.g. "(p U q) U r" cannot be handled.
  *    </ol>     
@@ -23,10 +23,10 @@ import nl.uu.cs.aplib.utils.Pair;
  * 
  *    <ol>
  *    <li> "not X phi" to "X not phi"
- *    <li> "not(phi && psi)" to "(not phi) || (not psi)"  
- *    <li> "not(phi || psi)" to "(not phi) && (not psi)"  
- *    <li> "not(phi U psi) to "(phi && not psi) W (not phi && not psi)"
- *    <li> "not(phi W psi) to "(phi && not psi) U (not phi && not psi)"  
+ *    <li> "not(phi &and; psi)" to "(not phi) || (not psi)"  
+ *    <li> "not(phi || psi)" to "(not phi) &and; (not psi)"  
+ *    <li> "not(phi U psi) to "(phi &and; not psi) W (not phi &and; not psi)"
+ *    <li> "not(phi W psi) to "(phi &and; not psi) U (not phi &and; not psi)"  
  *    </ol>
  * 
  * After the normalization, a Buchi automaton is constructed recursively.
@@ -57,7 +57,7 @@ import nl.uu.cs.aplib.utils.Pair;
  *    the combined Buchi. We remove S2, and change every transition that goes
  *    from or to S2 to go from/to S1.
  *    
- *    <li> phi && psi. Not implemented. TODO.
+ *    <li> phi &and; psi. Not implemented. TODO.
  *    
  *    </ol>
  * 
@@ -161,7 +161,7 @@ public class LTL2Buchi {
 	}
 	
 	/**
-	 * Recognize "not(p && ... && q)" . Returns "p && ... && q".
+	 * Recognize "not(p &and; ... &and; q)" . Returns "p &and; ... &and; q".
 	 */
 	public static <State> And<State> isNotAnd(LTL<State> psi) {
 		var f = isNotPhi(psi) ;
@@ -606,16 +606,16 @@ public class LTL2Buchi {
 	 * rewrite rules:
 	 * 
 	 * <ul>
-	 *    <li> p && q         =  (\s -> p(s) && q(s))
-	 *    <li> f && (g || h)  = (f && g) || (f && h)
-	 *    <li> p && (f U g)   = (p && g) || (p && f && X(f U g))
-	 *    <li> p && (f W g)   = (p && g) || (p && f && X(f W g))
-	 *    <li> Xf && Xg       = X(f && g)
-	 *    <li> (*) Xf && (g U h)  = (Xf && h) || (g && X(f && (g U h))
-	 *    <li> (*) Xf && (g W h)  = (Xf && h) || (g && X(f && (g W h)))
-	 *    <li> (a U b)  && (f U g)  = (a && f  U  (b && (f U g)))  ||  (a && f  U  (g && (a U b)))
-	 *    <li> (a U b)  && (f W g)  = (a && f  U  (b && (f W g)))  ||  (a && f  U  (g && (a U b)))  ... notice that two U in the middle. They are correct.
-	 *    <li> (a W b)  && (f W g)  = (a && f  W  (b && (f W g)))  ||  (a && f  W  (g && (a U b)))
+	 *    <li> p &and; q         =  (\s -> p(s) &and; q(s))
+	 *    <li> f &and; (g || h)  = (f &and; g) || (f &and; h)
+	 *    <li> p &and; (f U g)   = (p &and; g) || (p &and; f &and; X(f U g))
+	 *    <li> p &and; (f W g)   = (p &and; g) || (p &and; f &and; X(f W g))
+	 *    <li> Xf &and; Xg       = X(f &and; g)
+	 *    <li> (*) Xf &and; (g U h)  = (Xf &and; h) || (g &and; X(f &and; (g U h))
+	 *    <li> (*) Xf &and; (g W h)  = (Xf &and; h) || (g &and; X(f &and; (g W h)))
+	 *    <li> (a U b)  &and; (f U g)  = (a &and; f  U  (b &and; (f U g)))  ||  (a &and; f  U  (g &and; (a U b)))
+	 *    <li> (a U b)  &and; (f W g)  = (a &and; f  U  (b &and; (f W g)))  ||  (a &and; f  U  (g &and; (a U b)))  ... notice that two U in the middle. They are correct.
+	 *    <li> (a W b)  &and; (f W g)  = (a &and; f  W  (b &and; (f W g)))  ||  (a &and; f  W  (g &and; (a U b)))
 	 * </ul>
 	 * 
 	 * IMPORTANT: the rewrites in (*) unroll the U/W into a X-formula. This 
@@ -791,7 +791,7 @@ public class LTL2Buchi {
 	
 	/**
 	 * Check if the cunjunction is irreducible. It is irreducible if it is of the form
-	 * p && Xphi. Such a form cannot be further rewritten.
+	 * p &and; Xphi. Such a form cannot be further rewritten.
 	 */
 	public static <State>  boolean isIrreducibleConj(And<State> phi) {
 		if (phi.conjuncts.length != 2) return false ;

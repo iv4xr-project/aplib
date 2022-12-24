@@ -72,7 +72,7 @@ public class BuchiModelChecker {
 	 * execution that would be accepted by the given Buchi automaton. If so SAT is
 	 * returned, and else UNSAT. <b>Be careful</b> that this method may not
 	 * terminate if the target program has an infinite state space. Use
-	 * {@link #sat(Predicate, int)} instead.
+	 * {@link #sat(Buchi, int)} instead.
 	 */
 	public SATVerdict sat(Buchi buchi) {
 		return sat(buchi, Integer.MAX_VALUE) ; 

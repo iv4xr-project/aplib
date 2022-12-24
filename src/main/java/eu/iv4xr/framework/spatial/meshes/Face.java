@@ -253,7 +253,7 @@ public class Face implements Iterable<Integer> {
     }
 
     /**
-     * Clamping x between 0 and 1. That is, if x<=0, we return 0, if x>=1 we return
+     * Clamping x between 0 and 1. That is, if x&le;0, we return 0, if x&ge;1 we return
      * 1, and else the original x is returned.
      */
     static float clamp(float x) {

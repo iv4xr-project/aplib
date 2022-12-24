@@ -135,10 +135,11 @@ public class Sa1Solver<NavgraphNode>  {
 	 *   <li> Else, the agent check if there is a reachable entity e whose properties satisfy 
 	 *   the given selector, and not yet tried before. If there is such an e, the agent
 	 *   moves to it and interacts with it. Then it repeats from step-1.
-	 *   <li> If there is no such e in step-3, the agent checks if there the world has some
+	 *   <li> If there is no such e in step-3, the agent checks if the world has some
 	 *   unvisited place (has some area to explore). If so, the agent explores for some budget,
-	 *   then we 
-	 * it should be a "switch"). This e is interacted
+	 *   then we go back to step-3.
+	 *   <li> If there is no more place to explore, the search fails.
+	 * </ol>
 	 */
 	
 	public GoalStructure solver(BasicAgent agent, 

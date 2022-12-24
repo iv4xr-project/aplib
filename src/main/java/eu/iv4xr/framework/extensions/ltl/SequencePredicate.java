@@ -34,7 +34,7 @@ import java.util.List;
  *           invoke {@link #endChecking()}
  *   <li>(d) invoke {@link #sat()} to get the result.
  *   </ol>
- * </ol>
+ * </ul>
  * 
  * @author Wish
  */

@@ -70,8 +70,6 @@ public class FiveGame_withAgent {
         /**
          * Attach the FiveGame environment to this state, and configure the prolog
          * engine to contain the AI for playing the game.
-         * 
-         * @throws InvalidTheoryException
          */
         @Override
         public MyState setEnvironment(Environment env) {
