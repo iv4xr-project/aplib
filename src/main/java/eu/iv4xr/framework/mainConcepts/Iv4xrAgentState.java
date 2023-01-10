@@ -1,5 +1,10 @@
 package eu.iv4xr.framework.mainConcepts;
 
+import java.util.function.BiFunction;
+
+import eu.iv4xr.framework.extensions.ltl.BasicModelChecker;
+import eu.iv4xr.framework.extensions.ltl.BuchiModelChecker;
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Navigatable;
 import eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph;
 import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
@@ -53,6 +58,43 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * this state.
 	 */
 	public Navigatable<NavgraphNode> worldNavigation;
+	
+	/**
+	 * A behavior model of the game-under-test. As a model, it may describe the
+	 * system under test at a certain level of abstraction. If such a model is
+	 * given, the agent (that owns this state) can then exploit it, e.g. to help it
+	 * solves goals. The model can for example implements an extended Finite State
+	 * Machine (EFSM). Importantly, note that the model, as an instance of
+	 * {@link GameWorldModel}, implements the interface
+	 * {@link eu.iv4xr.framework.extensions.ltl.ITargetModel} and hence it can be
+	 * queried using e.g. {@link eu.iv4xr.framework.extensions.BasicModelChecker}.
+	 * 
+	 * Alternatively, the model that is given may also be empty initially, and the
+	 * agent may be equipped with instrumentation to incrementally build the model.
+	 * This is done by {@link #gwmodelLearner}.
+	 */
+	public GameWorldModel gwmodel ;
+	
+	/**
+	 * A function that incrementally builds the behavior model attached to
+	 * this state, see {@link #gwmodel}. This function, if defined, is called by 
+	 * {@link #updateState(String)}. The function inspects this state, and 
+	 * can be used to register new model elements discovered in the current state.
+	 */
+	@SuppressWarnings("rawtypes")
+	public BiFunction<Iv4xrAgentState,GameWorldModel,Void> gwmodelLearner ;
+	
+	/**
+	 * A model checker which can be used to query {@link #gwmodel}. This checker can be used
+	 * to find a sequence of steps over  the gwmodel that lead to a certain state (on the model).
+	 */
+	public BasicModelChecker checker ;
+	
+	/**
+	 * A LTL-model checker which to query {@link #gwmodel}.
+	 */
+	public BuchiModelChecker ltlchecker ;
+	
 
 	@Override
 	public Iv4xrEnvironment env() {
@@ -95,6 +137,39 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 		super.setEnvironment(env);
 		return this;
 	}
+	
+	/**
+	 * Attach behavior model of the game-under-test. Such a model is an instance of
+	 * {@link GameWorldModel}. As a model, it may describe the system under test at
+	 * a certain level of abstraction. If such a model is given, the agent (that
+	 * owns this state) can then exploit it, e.g. to help it solves goals. The model
+	 * can for example implements an extended Finite State Machine (EFSM).
+	 * Importantly, note that the model, as an instance of {@link GameWorldModel},
+	 * implements the interface
+	 * {@link eu.iv4xr.framework.extensions.ltl.ITargetModel} and hence it can be
+	 * queried using e.g. {@link eu.iv4xr.framework.extensions.BasicModelChecker}.
+	 * 
+	 * <p>
+	 * Alternatively, the model that is given may also be empty initially, and the
+	 * agent may be equipped with instrumentation to incrementally build the model.
+	 * If not null, the parameter gwmodelLearner specifies this instrumentation
+	 * function mentioned above. This function will be called by
+	 * {@link #updateState(String)}. The function inspects this state, and can be
+	 * used to register new model elements discovered in the current state.
+	 */
+	@SuppressWarnings("rawtypes")
+	public Iv4xrAgentState<NavgraphNode> attachBehaviorModel(
+			GameWorldModel model,
+			BiFunction<Iv4xrAgentState,GameWorldModel,Void> gwmodelLearner) {
+		if (model == null)
+			throw new IllegalArgumentException("The model can't be null.") ;
+		this.gwmodel = model ;
+		this.gwmodelLearner = gwmodelLearner ;
+		this.checker = new BasicModelChecker(model) ;
+		this.ltlchecker = new BuchiModelChecker(model) ;
+		return this ;
+	}
+	
 
 	/**
 	 * This will call the observe() method of the environment attached to this state
@@ -111,6 +186,10 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 		}
 		else {
 			worldmodel = newObs ;
+		}
+		if (gwmodel != null && gwmodelLearner !=null){
+			// if model learner is not null, invoke it:
+			gwmodelLearner.apply(this,gwmodel) ;
 		}
 	}
 

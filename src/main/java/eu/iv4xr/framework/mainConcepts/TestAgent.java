@@ -3,10 +3,12 @@ package eu.iv4xr.framework.mainConcepts;
 import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import eu.iv4xr.framework.extensions.ltl.LTL;
 import eu.iv4xr.framework.extensions.ltl.SATVerdict;
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import nl.uu.cs.aplib.agents.AutonomousBasicAgent;
 import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.CostFunction;
@@ -161,7 +163,20 @@ public class TestAgent extends AutonomousBasicAgent {
         super.attachState(state);
         return this;
     }
-
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public TestAgent attachBehaviorModel(
+    		GameWorldModel model,
+			BiFunction<Iv4xrAgentState,GameWorldModel,Void> gwmodelLearner) {
+    	if (this.state == null)
+    		throw new IllegalArgumentException("Cannot attach a model. Attach a state first.") ;
+    	if (! (this.state instanceof Iv4xrAgentState)) {
+    		throw new IllegalArgumentException("Cannot attach a model on a state which is not an instance of Iv4xrAgentState.") ;
+    	}
+    	((Iv4xrAgentState) this.state).attachBehaviorModel(model, gwmodelLearner) ;
+    	return this ;
+    }
+    
     /**
      * Attach an Environment to this agent. To be more precise, to attach the
      * Environment to the state structure of this agent. The method returns the

@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,10 @@ public class GameWorldModel implements ITargetModel {
 	 * initial state.
 	 */
 	public GameWorldModel(GWState initialState) {
+		this.setInitialState(initialState);
+	}
+	
+	public void setInitialState(GWState initialState) {
 		this.initialState = (GWState) initialState.clone() ;
 		this.reset();
 	}
@@ -130,7 +135,8 @@ public class GameWorldModel implements ITargetModel {
 	}
 	
 	/**
-	 * Check whether two objects are in the same zone.
+	 * Check whether two objects are in the same zone. This is the case if there is one
+	 * zone Z that contains both objects.
 	 */
 	public boolean inTheSameZone(String obj1, String obj2) {
 		var zones1 = zonesOf(obj1) ;
@@ -153,24 +159,42 @@ public class GameWorldModel implements ITargetModel {
 		GWTransition previousTransition = history.get(0).snd ;
 		GWTransitionType previousTransitionType = previousTransition != null ? previousTransition.type : null ;
 		
-		if (previousLocation != null && ! inTheSameZone(state.currentAgentLocation,destinationId)) {
-			// the destination is not in the same zone as the current location;
+		// special case:
+		if (previousLocation != null 
+				&& previousTransitionType == GWTransitionType.TRAVEL
+				&& inTheSameZone(previousLocation,destinationId)) {
+				// Two travels one after another, within the same zone will be disallowed,
+				// for efficiency reason. Such a transition if pointless.
+				return false ;
+		}
+		
+		if (! inTheSameZone(state.currentAgentLocation,destinationId)) {
+			// CASE (1): the destination is not in the same zone as the current location;
 			// direct travel is not possible:
 			return false ;
 		}
+		// ELSE: CASE (2a), current and destination are in the same zone.
+		// travel is possible if current-location is NOT a blocker, or it is an open blocker:
+		if (! isBlocker(state.currentAgentLocation) || ! isBlocking(state.currentAgentLocation)) {
+			return true ;
+		}
+		// else, CASE (2b): current and destination are in the same zone,
+		// current is a blocker and it is closed ...
+		
 		if (previousLocation != null
 			&& ! inTheSameZone(previousLocation,destinationId)) {
-			// travel to cross two zones; only possible if the current
-			// location is a blocker and it is non-blocking:
-			return isBlocker(state.currentAgentLocation) && ! isBlocking(state.currentAgentLocation) ;
-		}
-		if (previousLocation != null 
-			&& previousTransitionType == GWTransitionType.TRAVEL
-			&& inTheSameZone(previousLocation,destinationId)) {
-			// Two travels one after another, within the same zone will be disallowed,
-			// for efficiency reason. Such a transition if pointless.
+			// travel to cross two zones; this is not possible since the current location 
+			// is a closed blocker:
 			return false ;
 		}
+		if (previousLocation != null
+				&& previousLocation.equals(state.currentAgentLocation)) {
+			// the previous location is the same as current, and the current location is
+			// still a closed blocker,
+			// forbid this:
+			return false ;
+		}
+		
 		// System.out.println(">>>>> ") ;
 		// else travel is possible:
 		return true ;
@@ -188,18 +212,27 @@ public class GameWorldModel implements ITargetModel {
 		throw new IllegalArgumentException("Travel to " + destinationId + " is not possible (unreachable).") ;
 	}
 	
-	public Function<GWObject,Function<Set<GWObject>,Void>> alpha ;
+	/**
+	 * The semantic function of interaction. Suppose S is the current state. Consider an
+	 * interaction on an object i, and suppose this interaction is possible (defined by {@link #canInteract(String)n}).
+	 * Suppose that i is linked to object o and q (defined by {@link #objectlinks}). The semantic
+	 * of the interaction is implemented through alpha(i,{o,q},S). This semantic may update the
+	 * state S to S', which would then yield the next state of the model.
+	 */
+	public BiFunction<String,Set<String>,Function<GWState,Void>> alpha ;
 	
 	public boolean StressingMode = false ;
 	
 	public boolean canInteract(String targetId) {
-		GWState state = (GWState) getCurrentState() ;
+		GWState state = getCurrentState() ;
 		if (! targetId.equals(state.currentAgentLocation)) {
 			// we can only interact with the object at the agent's current location:
 			return false ;
 		}
 		//System.out.println(">>>>") ;
 		GWObject target = state.objects.get(targetId) ;
+		if (target.destroyed) 
+			return false ;
 		GWTransition previousTransition = history.get(0).snd ;
 		if (previousTransition == null || previousTransition.type == GWTransitionType.TRAVEL)
 			return true ;
@@ -216,14 +249,17 @@ public class GameWorldModel implements ITargetModel {
 		if (canInteract(targetId)) {
 			GWState newState = (GWState) getCurrentState().clone() ;
 			GWObject target = newState.objects.get(targetId) ;
+			alpha.apply(targetId, objectlinks.get(targetId)).apply(newState) ;
+			/*
 			if(objectlinks.get(targetId) != null) {
 				Set<GWObject> affected = objectlinks.get(targetId)
 						.stream()
 						.map(id -> newState.objects.get(id))
 						.filter(e -> ! e.destroyed)
 						.collect(Collectors.toSet()) ;
-				alpha.apply(target).apply(affected) ;
+				alpha.apply(target,affected) ;
 			}
+			*/
 			GWTransition tr = new GWTransition(GWTransitionType.INTERACT, targetId) ;
 			history.add(0,new Pair<GWState,GWTransition>(newState,tr)) ;
 			return ;
@@ -308,6 +344,7 @@ public class GameWorldModel implements ITargetModel {
 		StringBuffer z = new StringBuffer() ;
 		z.append("**** State:\n") ;
 		z.append(history.get(0).fst.showState()) ;
+		z.append("\n**** blockers: " + this.blockers) ;
 		z.append("\n**** Zones:") ;
 		for (var zn : zones) {
 			z.append("\n   " + zn.id + ":" + zn.members) ;

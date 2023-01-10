@@ -2,6 +2,7 @@ package eu.iv4xr.framework.extensions.ltl.gameworldmodel;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gson.JsonIOException;
 
@@ -34,8 +35,11 @@ public class LabRecruitsModel {
 		return door ;
 	}
 	
-	public static void alphaFunction(GWObject button, Set<GWObject>  affectedDoors) {
-		for (var door : affectedDoors) {
+	public static void alphaFunction(String button, Set<String>  affectedDoors, GWState S) {
+		if (affectedDoors == null || affectedDoors.isEmpty()) return ;
+		GWObject B = S.objects.get(button) ;
+		Set<GWObject> doors = affectedDoors.stream().map(id -> S.objects.get(id)).collect(Collectors.toSet()) ;
+ 		for (var door : doors) {
 			boolean doorState = (Boolean) door.properties.get(GameWorldModel.IS_OPEN_NAME) ;
 			door.properties.put(GameWorldModel.IS_OPEN_NAME, !doorState) ; 
 		}
@@ -45,7 +49,7 @@ public class LabRecruitsModel {
 	 * Attach default alpha-component typical for LabRecruits models.
 	 */
 	public static GameWorldModel attachLabRecruitsAlpha(GameWorldModel model) {
-		model.alpha = (button -> (affected -> { alphaFunction(button,affected); return null ; } )) ;
+		model.alpha = (button,affected) -> S -> { alphaFunction(button,affected,S); return null ; }  ;
 		return model ;
 	}
 	
@@ -86,8 +90,7 @@ public class LabRecruitsModel {
 		   . registerObjectLinks(button3.id, door1.id, door2.id, door3.id)
 		   . registerObjectLinks(button4.id, door1.id);
 		// set alpha-function:
-		buttondoor1.alpha = (button -> (affected -> { alphaFunction(button,affected); return null ; } )) ;
-
+		buttondoor1 = attachLabRecruitsAlpha(buttondoor1) ;
 		return buttondoor1 ;
 	}
 	
@@ -118,7 +121,7 @@ public class LabRecruitsModel {
 			boolean door3isOpen = (Boolean) st.objects.get("door3").properties.get(GameWorldModel.IS_OPEN_NAME) ;
 			return st.currentAgentLocation.equals("door3") && door3isOpen ;
 		});
-		var sequence = mc.find(solved,13) ;
+		var sequence = mc.findShortest(solved,13) ;
 		System.out.println(">>> solution: " + sequence.path.size()) ;
 		int k = 0 ;
 		for (var step : sequence.path) {

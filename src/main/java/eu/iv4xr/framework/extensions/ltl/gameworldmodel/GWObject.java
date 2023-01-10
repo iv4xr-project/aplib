@@ -1,5 +1,10 @@
 package eu.iv4xr.framework.extensions.ltl.gameworldmodel;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.*;
 import eu.iv4xr.framework.spatial.Vec3;
 
@@ -75,11 +80,28 @@ public class GWObject {
         return Objects.hash(id, type, position, extent, velocity, destroyed, properties);
     }
 	
+	private Object mkCopy(Serializable o) {
+		try {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(o);
+        //De-serialization of object
+        ByteArrayInputStream bis = new   ByteArrayInputStream(bos.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(bis);
+        return in.readObject();
+		}
+		catch(Exception e) { 
+			return null ;
+		}
+		
+	}
+	
 	@Override
 	public Object clone() {
 		var o = new GWObject(this.id, this.type, this.position, this.extent, this.velocity) ;
 		o.destroyed = this.destroyed ;
 		for (var e : this.properties.entrySet()) {
+			//Object val2 = mkCopy((Serializable) e.getValue()) ;
 			o.properties.put(e.getKey(),e.getValue()) ;
 		}
 		return o ;
