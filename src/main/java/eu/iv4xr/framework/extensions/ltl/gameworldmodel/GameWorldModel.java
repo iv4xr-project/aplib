@@ -21,7 +21,39 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition.GWTransitio
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
- * An EFSM-like model of a game-world.
+ * An EFSM-like model of a game-world. The model can be used to capture the
+ * layout and logic of the non-mobile part of the game-world. The game-world is
+ * modeled to consists of a zones. A zone is inhabited by game-objects, each may
+ * have its own state/properties. A zone represent an area in the game-world
+ * where travel within it is unrestriced/unhindered. Traveling between two zone
+ * must go through a game-object called "blocker". We can imagine a blocker to
+ * be a door or a corridor that connects two zones. As such, this blocker is a
+ * member of the zones it connects. A blocker has blocking-state, which is
+ * either blocking of open. Only when it is open, then travel between the zones
+ * that it connects is possible.
+ * 
+ * <p>
+ * Objects in the model can be interacted with. Interacting with a game-object
+ * can change the state of other game-objects. A table called
+ * {@link #objectlinks} keep tracks of which objects would be affected. If (i,O)
+ * is in the table, then interacting with i may affect the state of objects in
+ * O. The exact effect is specified by the function {@link #alpha}.
+ * 
+ * <p>
+ * This class also implements the interface {@link ITargetModel}, so it can be
+ * targeted by a model checker if we need to perform queries or analyses on the
+ * model. Part of the deal is that this requires the state of the model to be
+ * cloneable. A cloning function is provided, but keep in mind the following
+ * limitation. The state of the model consists of the state of the game-objects
+ * included in the model. The state of an object includes its properties, which
+ * are represented as a mapping of property-names to property-values. E.g. if an
+ * object o has properties named "p1" and "p2", their values could be v1 and v2 respectively.
+ * When cloning o, the mapping is clones, but the values v1 and v2 are NOT deep-cloned.
+ * This is fine if they are primitive values. If for example v1 is an array, then
+ * you have to take caution. In this case we should not update the property p1 of o
+ * by directly side-effecting the array v1. Instead, make a clone of the array itself,
+ * and apply the update to the clone. Then make p1 points to the clone.
+ * 
  * 
  * @author Samira, Wish.
  *

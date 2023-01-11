@@ -65,6 +65,9 @@ public class Entity {
 		public String name ;
 		// when 0 the player is not raged; when raged, it AR counts double
 		public int rageTimer = 0 ;
+		public int score = 0 ;
+		public int nextKillThrophy = 1 ;
+		public int killCount = 0 ;
 		public int maxBagSize  ;
 		public List<Entity> bag = new LinkedList<>() ;
 		

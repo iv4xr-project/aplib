@@ -541,7 +541,10 @@ public class MiniDungeon {
 			} else {
 				var P = hpotions.get(0);
 				player.bag.remove(P);
+				int oldHp = player.hp ;
 				player.hp = Math.min(player.hp + 5, player.hpMax);
+				if (oldHp <  player.hpMax && player.hp == player.hpMax) 
+					player.score += 5 ;
 				return "> That tastes good!";
 			}
 		case USERAGE:
@@ -615,6 +618,11 @@ public class MiniDungeon {
 			attack(player, m);
 			aPlayerHasAttacked = true ;
 			if (m.hp <= 0) {
+				player.killCount++ ;
+				if (player.killCount == player.nextKillThrophy) {
+					player.score += 100 ;
+					player.nextKillThrophy = 2 * player.nextKillThrophy ;
+				}
 				msg += ". The monster is killed!";
 			}
 			return msg ;
@@ -624,6 +632,10 @@ public class MiniDungeon {
 			String msg = "> " + player.name + " attacked " + otherPlayer.name;
 			attack(player, otherPlayer);
 			if (otherPlayer.hp <= 0) {
+				// you lose point if you deliberately kill other player
+				player.score = Math.round(0.75f * (float) player.score) ;
+				if (player.score > otherPlayer.score)
+					player.score = otherPlayer.score ;
 				msg += ". " + otherPlayer.name + " is killed!";
 			}
 			return msg ;
@@ -691,11 +703,13 @@ public class MiniDungeon {
 					else {
 						status = GameStatus.SMEAGOLWIN ;
 					}
+					player.score += 1000 ;
 					return "> ROAR! " 
 								+ player.name + " blessed an IMORTAL shrine. " 
 								+ player.name + " WINS!" ;
 				}
 				else {
+					player.score += 100 ;
 					return "> Alkabra! " + player.name + " blessed a shrine." ;
 				}
 
@@ -771,6 +785,7 @@ public class MiniDungeon {
 		StringBuffer z = new StringBuffer() ;
 		z.append("[" + turnNr + "] Frodo hp: " + frodo().hp + "/" + frodo().hpMax
 				+ ", AR:" + frodo().attackRating 
+				+ ", score:" + frodo().score
 				+ (frodo().rageTimer>0 ? " [ENRAGED]" : "")
 				+ "\n#heal-pots:" + frodo().itemsInBag(EntityType.HEALPOT).size()
 				+ ", #rage-pots:" + frodo().itemsInBag(EntityType.RAGEPOT).size()
@@ -779,6 +794,7 @@ public class MiniDungeon {
 		if (config.enableSmeagol) {
 			z.append("\nSmeagol hp: " + smeagol().hp + "/" + smeagol().hpMax
 					+ ", AR:" + smeagol().attackRating 
+					+ ", score:" + smeagol().score
 					+ (smeagol().rageTimer>0 ? " [ENRAGED]" : "")
 					+ "\n#heal-pots:" + smeagol().itemsInBag(EntityType.HEALPOT).size()
 					+ ", #rage-pots:" + smeagol().itemsInBag(EntityType.RAGEPOT).size()

@@ -60,6 +60,11 @@ public class GWState implements IExplorableState {
 		return z.toString() ;
 	}
 	
+	/**
+	 * Clone the state of {@link #GameWorldModel}. Do note that values of the properties of the object 
+	 * are not deep-cloned. This is fine if those values are primitive values. But if they are e.g. 
+	 * arrays you will still need to clone them yourself too.
+	 */
 	@Override
 	public IExplorableState clone() {
 		GWState copy = new GWState() ;

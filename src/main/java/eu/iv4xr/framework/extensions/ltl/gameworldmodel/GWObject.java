@@ -96,6 +96,11 @@ public class GWObject {
 		
 	}
 	
+	/**
+	 * Clone this object. Do note that values of the properties of the object (in {@link #properties})
+	 * are not deep-cloned. This is fine if those values are primitive values. But if they are e.g. 
+	 * arrays you will still need to clone them yourself too.
+	 */
 	@Override
 	public Object clone() {
 		var o = new GWObject(this.id, this.type, this.position, this.extent, this.velocity) ;
