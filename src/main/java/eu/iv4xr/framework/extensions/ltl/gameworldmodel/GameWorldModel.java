@@ -60,6 +60,8 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class GameWorldModel implements ITargetModel {
 	
+	public GWState defaultInitialState ;
+	
 	public GWState initialState ;
 	
 	//public int count = 0 ;
@@ -86,6 +88,7 @@ public class GameWorldModel implements ITargetModel {
 	 */
 	public GameWorldModel(GWState initialState) {
 		this.setInitialState(initialState);
+		this.defaultInitialState = (GWState) initialState.clone() ;
 	}
 	
 	public void setInitialState(GWState initialState) {
@@ -93,6 +96,9 @@ public class GameWorldModel implements ITargetModel {
 		this.reset();
 	}
 	
+	public void copyDefaultInitialStateToInitialState() {
+		setInitialState(defaultInitialState) ;
+	}
 	
 	/**
 	 * Add the given zones to this GameWorldModel. It returns this model.
@@ -402,8 +408,8 @@ public class GameWorldModel implements ITargetModel {
 	 */
 	public void save(String filename) throws JsonIOException, IOException {
 		GameWorldModelBase base = new GameWorldModelBase() ;
-		base.initialAgentLocation = this.initialState.currentAgentLocation ;
-		base.objects = this.initialState.objects.values().stream().collect(Collectors.toList()) ;
+		base.initialAgentLocation = this.defaultInitialState.currentAgentLocation ;
+		base.objects = this.defaultInitialState.objects.values().stream().collect(Collectors.toList()) ;
 		base.blockers = this.blockers ;
 		base.zones = this.zones ;
 		base.objectlinks = this.objectlinks ;
@@ -432,15 +438,15 @@ public class GameWorldModel implements ITargetModel {
 		Reader reader = Files.newBufferedReader(Paths.get(filename));
 		GameWorldModelBase base = gson.fromJson(reader,GameWorldModelBase.class);
 		GameWorldModel model = new GameWorldModel() ;
-		model.initialState = new GWState() ;
-		model.initialState.currentAgentLocation = base.initialAgentLocation ;
+		model.defaultInitialState = new GWState() ;
+		model.defaultInitialState.currentAgentLocation = base.initialAgentLocation ;
 		for (var o : base.objects) {
-			model.initialState.objects.put(o.id, o) ;
+			model.defaultInitialState.objects.put(o.id, o) ;
 		}
 		model.zones = base.zones ;
 		model.blockers = base.blockers ;
 		model.objectlinks = base.objectlinks ;
-		model.reset(); 
+		model.copyDefaultInitialStateToInitialState() ;
 		return model ;
 	}
 	

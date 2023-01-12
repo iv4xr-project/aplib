@@ -19,7 +19,7 @@ public class ModelLearner {
 	
 	
 	boolean isInModel(WorldEntity e, GameWorldModel model) {
-		return model.initialState.objects.get(e.id) != null ;
+		return model.defaultInitialState.objects.get(e.id) != null ;
 	}
 	
 	List<String> scrollsPreviouslyInBag = new LinkedList<>() ;
@@ -59,6 +59,11 @@ public class ModelLearner {
 		return shTy == ShrineType.ShrineOfImmortals ;
 	}
 
+	/**
+	 * Read the current state of MiniDungeon, if to see if it contains new elements
+	 * or relations that can be added to the given model. Invoke this method at
+	 * every game-update to gradually learn a model of the game (or game level).
+	 */
 	public void learn(MyAgentState state, GameWorldModel model) {
 		
 		String scrollJustUsed = null ;
@@ -92,7 +97,7 @@ public class ModelLearner {
 				GWObject o = new GWObject(e.id,e.type) ;
 				o.position = e.position ;
 				// adding the entity to the model:
-				model.initialState.addObjects(o);
+				model.defaultInitialState.addObjects(o);
 				// adding needed properties to o:
 				if (isScroll(e)) {
 					// no property to add...
@@ -136,8 +141,24 @@ public class ModelLearner {
 					zone = new GWZone(mazeId) ;
 					model.addZones(zone) ;
 				}
-				// players are not put in any zone
-				if(isScroll(e) || isShrine(e)) {
+				// players are not put in any zone, but we create fake objects representing
+				// their start location, and put it in the zone:
+				if (isSmeagol(e)) {
+					GWObject startLocation = new GWObject("STARTSmeagol","STARTLOC") ;
+					startLocation.position = e.position ;
+					startLocation.destroyed = true ;
+					model.defaultInitialState.addObjects(startLocation) ;
+					zone.addMembers(startLocation.id) ;
+				}
+				else if (isFrodo(e) ) {
+					GWObject startLocation = new GWObject("STARTFrodo","STARTLOC") ;
+					startLocation.position = e.position ;
+					startLocation.destroyed = true ;
+					model.defaultInitialState.addObjects(startLocation) ;
+					zone.addMembers(startLocation.id) ;
+				}
+				else{
+					// e is not a player, so it is a scroll or a shrine. Always add it to the zone:
 					zone.addMembers(o.id);	
 				}
 				

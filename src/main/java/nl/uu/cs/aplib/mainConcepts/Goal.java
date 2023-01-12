@@ -88,7 +88,8 @@ public class Goal {
      * returns this Goal itself so that it can be used in the Fluent Interface
      * style.
      */
-    public Goal toSolve_(Predicate predicateToSolve) {
+    @SuppressWarnings("rawtypes")
+	public Goal toSolve_(Predicate predicateToSolve) {
         checkPredicate = o -> predicateToSolve.test(o) ? 0.0 : 1;
         return this;
     }

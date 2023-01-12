@@ -1,5 +1,5 @@
 {
-  "initialAgentLocation": null,
+  "initialAgentLocation": "STARTFrodo",
   "objects": [
     {
       "id": "Frodo",
@@ -17,9 +17,9 @@
       "id": "S0_0",
       "type": "SCROLL",
       "position": {
-        "x": 8.0,
+        "x": 13.0,
         "y": 0.0,
-        "z": 1.0
+        "z": 13.0
       },
       "extent": null,
       "velocity": null,
@@ -30,9 +30,9 @@
       "id": "S0_1",
       "type": "SCROLL",
       "position": {
-        "x": 6.0,
+        "x": 11.0,
         "y": 0.0,
-        "z": 4.0
+        "z": 10.0
       },
       "extent": null,
       "velocity": null,
@@ -43,9 +43,9 @@
       "id": "S1_0",
       "type": "SCROLL",
       "position": {
-        "x": 12.0,
+        "x": 17.0,
         "y": 0.0,
-        "z": 4.0
+        "z": 2.0
       },
       "extent": null,
       "velocity": null,
@@ -88,9 +88,9 @@
       "id": "S2_2",
       "type": "SCROLL",
       "position": {
-        "x": 2.0,
+        "x": 7.0,
         "y": 0.0,
-        "z": 6.0
+        "z": 16.0
       },
       "extent": null,
       "velocity": null,
@@ -101,7 +101,7 @@
       "id": "S0_2",
       "type": "SCROLL",
       "position": {
-        "x": 8.0,
+        "x": 6.0,
         "y": 0.0,
         "z": 16.0
       },
@@ -114,9 +114,9 @@
       "id": "S1_1",
       "type": "SCROLL",
       "position": {
-        "x": 13.0,
+        "x": 16.0,
         "y": 0.0,
-        "z": 11.0
+        "z": 10.0
       },
       "extent": null,
       "velocity": null,
@@ -144,9 +144,9 @@
       "id": "S2_0",
       "type": "SCROLL",
       "position": {
-        "x": 6.0,
+        "x": 14.0,
         "y": 0.0,
-        "z": 10.0
+        "z": 15.0
       },
       "extent": null,
       "velocity": null,
@@ -174,9 +174,9 @@
       "id": "S1_2",
       "type": "SCROLL",
       "position": {
-        "x": 12.0,
+        "x": 13.0,
         "y": 0.0,
-        "z": 8.0
+        "z": 17.0
       },
       "extent": null,
       "velocity": null,
@@ -187,13 +187,26 @@
       "id": "S2_1",
       "type": "SCROLL",
       "position": {
-        "x": 4.0,
+        "x": 16.0,
         "y": 0.0,
-        "z": 15.0
+        "z": 2.0
       },
       "extent": null,
       "velocity": null,
       "destroyed": false,
+      "properties": {}
+    },
+    {
+      "id": "STARTFrodo",
+      "type": "STARTLOC",
+      "position": {
+        "x": 9.0,
+        "y": 0.0,
+        "z": 9.0
+      },
+      "extent": null,
+      "velocity": null,
+      "destroyed": true,
       "properties": {}
     },
     {
@@ -236,7 +249,8 @@
         "S0_2",
         "SM0",
         "S0_0",
-        "S0_1"
+        "S0_1",
+        "STARTFrodo"
       ]
     },
     {
@@ -266,10 +280,10 @@
   ],
   "objectlinks": {
     "SM1": [
-      "S1_0"
+      "S1_2"
     ],
     "SM0": [
-      "S0_1"
+      "S0_2"
     ],
     "SI2": [
       "S2_0"

@@ -431,7 +431,7 @@ public class DungeonApp extends JPanel implements KeyListener {
 	
 	public static void main(String[] args) throws Exception {		
 		MiniDungeonConfig config = new MiniDungeonConfig() ;
-		config.numberOfMonsters = 20 ;
+		config.numberOfMonsters = 4 ;
 		config.numberOfHealPots = 8 ;
 		config.numberOfRagePots = 8 ;
 		config.numberOfScrolls = 6 ;

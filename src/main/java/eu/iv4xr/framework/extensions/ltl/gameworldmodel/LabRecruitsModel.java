@@ -13,6 +13,10 @@ import static eu.iv4xr.framework.extensions.ltl.LTL.* ;
 
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 
+/**
+ * Provides the semantic-function (alpha) for interactions, to be used to construct a model
+ * for the Lab Recruits game using {@link GameWorldModel}.
+ */
 public class LabRecruitsModel {
 	
 	static String SWITCH = "switch" ;

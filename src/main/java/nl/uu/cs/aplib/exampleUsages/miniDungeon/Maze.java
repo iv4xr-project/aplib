@@ -76,11 +76,15 @@ public class Maze {
 	}
 	
 	/**
-	 * Construct an NxN maze with a single zig-zag corridor.
+	 * Construct an NxN maze with a single zig-zag corridor. There is some a probability
+	 * it generates a buggy-wall in the maze.
 	 */
 	public static Maze buildSimpleMaze(int mazeId, Random rnd, int size, int numberOfCorridors) {
 		Maze maze = new Maze(mazeId,size) ;
 		var world = maze.world ;
+		int numberOfBuggyWall = 0 ;
+		int maxNumberOfBuggyWalls = 1 ;
+		float probabilityBuggyWall = 0.05f ;
 		// walls that build the maze (just a simple maze) :
 		int corridorWidth = size / numberOfCorridors;
 		int coridorX = size;
@@ -90,12 +94,20 @@ public class Maze {
 			if (alt) {
 				for (int y = 1; y < size - 2; y++) {
 					Wall w = new Wall(coridorX, y,"") ;
+					if (numberOfBuggyWall <maxNumberOfBuggyWalls && rnd.nextFloat() <= probabilityBuggyWall) {
+						w.brokenwall = true ;
+						numberOfBuggyWall++ ;
+					}
 					assignIdToWall(w,mazeId) ;
 					world[coridorX][y] = w ;
 				}
 			} else {
 				for (int y = size - 2; 1 < y; y--) {
 					Wall w = new Wall(coridorX, y,"") ;
+					if (numberOfBuggyWall <maxNumberOfBuggyWalls && rnd.nextFloat() <= probabilityBuggyWall) {
+						w.brokenwall = true ;
+						numberOfBuggyWall++ ;
+					}
 					assignIdToWall(w,mazeId) ;
 					world[coridorX][y] = w ;
 				}

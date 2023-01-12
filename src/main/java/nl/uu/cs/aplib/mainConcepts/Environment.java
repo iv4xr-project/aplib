@@ -128,7 +128,8 @@ public class Environment {
      *         <p>
      *         The method may also throws a runtime exception.
      */
-    public Object sendCommand(String invokerId, String targetId, String command, Object arg,
+    @SuppressWarnings("rawtypes")
+	public Object sendCommand(String invokerId, String targetId, String command, Object arg,
             Class expectedTypeOfResult) {
         var cmd = new EnvOperation(invokerId, targetId, command, arg, expectedTypeOfResult);
         var response = sendCommand_(cmd);
@@ -209,7 +210,8 @@ public class Environment {
         /**
          * If not null, thus specifies the expected type of result of this operation.
          */
-        public Class expectedTypeOfResult;
+        @SuppressWarnings("rawtypes")
+		public Class expectedTypeOfResult;
 
         /**
          * Used to store the result of the operation, if any. If the field
@@ -218,7 +220,8 @@ public class Environment {
          */
         public Object result = null;
 
-        public EnvOperation(String invokerId, String targetId, String command, Object arg, Class expectedTypeOfResult) {
+        @SuppressWarnings("rawtypes")
+		public EnvOperation(String invokerId, String targetId, String command, Object arg, Class expectedTypeOfResult) {
             this.invokerId = invokerId;
             this.targetId = targetId;
             this.command = command;

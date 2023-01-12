@@ -38,6 +38,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.PrintUtils;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MiniDungeonModel;
+
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 
@@ -52,110 +54,13 @@ public class Test_MiniDungeon_ModelConstruction {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = true ;
+	
+	String mainplayer = "Frodo" ;
 
 	
 	//@Test
 	public void testConstructModel() throws Exception {
-		testFullPlay("Frodo") ;
-	}
-	
-	String mainplayer = "Frodo" ;
-	
-	GWObject get(Set<GWObject> affected, String id) {
-		for (var e : affected) {
-			if (e.id.equals(id)) return e ;
-		}
-		return null ;
-	}
-	
-	List<String> bagContent(GWObject player) {
-		List<String> bag = new LinkedList<>() ;
-		String i = (String) player.properties.get("bagslot1") ;
-		if (! i.equals("xxx"))  bag.add(i) ;
-		if (player.id.equals("Frodo"))  {
-			i = (String) player.properties.get("bagslot2") ;
-			if (! i.equals("xxx"))  bag.add(i) ;
-		}
-		return bag ;	
-	}
-	
-	void putInBag(GWObject player, String item) {
-		if (player.id.equals("Smeagol"))  {
-			 player.properties.put("bagslot1",item) ;
-		}
-		else {
-			String i = (String) player.properties.get("bagslot1") ;
-			if (i.equals("xxx")) {
-				player.properties.put("bagslot1",item) ;
-			}
-			else {
-				player.properties.put("bagslot2",item) ;
-			}
-		}
-	}
-	
-	void removeFromBag(GWObject player, String item) {
-		player.properties.put("bagslot1", "xxx") ;
-	}
-	
-	boolean isMoonShrine(GWObject o) {
-		return o.type.equals("SHRINE")
-				&& o.properties.get("shrinetype").equals("MoonShrine") ;
-	}
-	
-	boolean isImmortalShrine(GWObject o) {
-		return o.type.equals("SHRINE")
-				&& o.properties.get("shrinetype").equals("ShrineOfImmortals") ;
-	}
-	
-	public void myAlpha(String i, Set<String> affected, GWState S) {
-		GWObject interacted = S.objects.get(i) ;
-		if (interacted.type.equals("SCROLL")) {
-			GWObject P = S.objects.get(mainplayer) ;
-			int N = bagContent(P).size() ;
-			//System.out.println(">>> alpla interact scroll " + i) ;
-			// conservatively reject if the player already has an item:
-			if (N>=1) return ;
-			// else the scroll will be picked:
-			interacted.destroyed = true ;
-			putInBag(P,interacted.id) ;
-			var bag = bagContent(P) ;
-			//System.out.println(">>> alpla interact scroll " + i) ;
-			//System.out.println(">>> frodo bag: " + P.properties.get("bagslot1") + ", # in bags:" + bag.size()) ;
-			return ;
-		}
-		// else i is shrine:
-		//System.out.println(">>> alpla interact shrine " + i) ;
-		if (isMoonShrine(interacted) || isImmortalShrine(interacted)) {
-			//System.out.println(">>> shrine ...") ;
-			if ((Boolean) interacted.properties.get("cleansed"))
-				return ;
-			if (affected == null || affected.size() == 0)
-				return ;
-			GWObject P = S.objects.get(mainplayer) ;
-			var bag = bagContent(P) ;
-			//System.out.println(">>> bag size.") ;
-			if (bag.size()==0) {
-				// bag has no scroll... in this case implies N=0
-				return ;
-			}
-			//System.out.println(">>> using a scroll...") ;
-			String openingScroll = null ;
-			for (var o : affected) {
-				openingScroll = o ; break ;
-			}
-			if (openingScroll!= null && bag.contains(openingScroll)) {
-				//System.out.println(">>> shrine " + i + " cleansed! with scroll " + bag.size() + ", " + bag.get(0)) ;
-				interacted.properties.put("cleansed", true) ;
-				if (isMoonShrine(interacted)) {
-					interacted.properties.put(GameWorldModel.IS_OPEN_NAME,true) ;
-				}
-			}
-			else {
-				//System.out.println(">>> shrine " + i + " attempted! with scroll " + bag.size() + ", " + bag.get(0)) ;
-			}
-			removeFromBag(P,openingScroll) ;	
-		}
+		testFullPlay() ;
 	}
 	
 	@Test
@@ -163,7 +68,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("modelMD0.json") ;
 		
 		// attaching alpha to the model:
-		model.alpha = (i,affected) -> S -> { myAlpha(i,affected,S) ; return null ; } ;
+		model.alpha = (i,affected) -> S -> { MiniDungeonModel.alphaFunction(mainplayer,i,affected,S) ; return null ; } ;
 
 		// setting initial state:
 		GWState init = model.initialState ;
@@ -171,8 +76,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		model.setInitialState(init);
 		
 		GWObject sh = init.objects.get("SM0") ;
-		System.out.println("### SM0 is moon shrine: " + isMoonShrine(sh)) ;
-		System.out.println("### shrine type =  " + sh.properties.get("shrinetype")) ;
+		System.out.println("### SM0 shrine type =  " + sh.properties.get("shrinetype")) ;
 		boolean isMoon = sh.properties.get("shrinetype").equals("MoonShrine") ;
 		System.out.println("### SM0 is moon shrine: " + isMoon) ;
 		
@@ -203,13 +107,39 @@ public class Test_MiniDungeon_ModelConstruction {
 			k++ ;	
 		}
 		
+		/*
+		MiniDungeonConfig config = myMiniDungeonConfiguration() ;
+		System.out.println(">>> Configuration:\n" + config);
 		
-	}
-	
-	
-	//@Test
-	public void testFullPlaySmeagol() throws Exception {
-		testFullPlay("Smeagol") ;
+		// setting sound on/off, graphics on/off etc:
+		DungeonApp app = new DungeonApp(config);
+		app.soundOn = false;
+		app.headless = !withGraphics ;
+		if(withGraphics) DungeonApp.deploy(app);
+		
+		
+		MyAgentEnv env = new MyAgentEnv(app);
+		MyAgentState state = new MyAgentState();
+		
+		var agent = new TestAgent("Frodo", "tester");
+		GoalStructure G = MiniDungeonModel.convert2ToGoalStructure(agent,sequence) ;
+		agent.attachState(state).attachEnvironment(env).setGoal(G);
+
+		Thread.sleep(1000);
+		
+		// Now we run the agent:
+		System.out.println(">> Start agent loop...") ;
+	    k = 0 ;
+		while(G.getStatus().inProgress()) {
+			agent.update();
+			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
+			// delay to slow it a bit for displaying:
+			Thread.sleep(50); 
+			if (k>=2000) break ;
+			k++ ;
+		}	
+		assertTrue(G.getStatus().success())	 ;
+		*/
 	}
 	
 	MiniDungeonConfig myMiniDungeonConfiguration() {
@@ -223,7 +153,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		return config ;
 	}
 	
-	public void testFullPlay(String agentId) throws Exception {
+	public void testFullPlay() throws Exception {
 		// Create an instance of the game, attach an environment to it:
 		MiniDungeonConfig config = myMiniDungeonConfiguration() ;
 		System.out.println(">>> Configuration:\n" + config);
@@ -241,6 +171,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		var tacticLib = new TacticLib();
 
 		// create an agent:
+		String agentId = "Frodo" ;
 		var agent = new TestAgent(agentId, "tester");
 		
 		// should be after create the agent, else the constructor sets the visibility again
@@ -320,6 +251,9 @@ public class Test_MiniDungeon_ModelConstruction {
 			k++ ;
 		}	
 		assertTrue(G.getStatus().success())	 ;
+		
+		model.defaultInitialState.currentAgentLocation = "START" + agentId ;
+		model.copyDefaultInitialStateToInitialState();
 		
 		System.out.println(">>> model: \n" + model) ;
 		

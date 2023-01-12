@@ -104,7 +104,8 @@ public class Tactic {
      * actions are persistent, this method should return null. Else the next tactic
      * is determined by the presence of SEQ and uncompleted persistent actions.
      */
-    Tactic calcNextTactic() {
+    @SuppressWarnings("incomplete-switch")
+	Tactic calcNextTactic() {
 
         if (parent == null)
             // the root tactic itself cannot have any next-tactic:

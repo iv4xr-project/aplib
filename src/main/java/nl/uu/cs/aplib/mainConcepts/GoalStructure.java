@@ -177,7 +177,8 @@ public class GoalStructure {
      * Set the status of this goal to success, and propagating this accordingly to
      * its ancestors.
      */
-    void setStatusToSuccess(String info) {
+    @SuppressWarnings("incomplete-switch")
+	void setStatusToSuccess(String info) {
         status.setToSuccess(info);
         if (!isTopGoal()) {
             switch (parent.combinator) {
@@ -200,7 +201,8 @@ public class GoalStructure {
      * Set the status of this goal to fail, and propagating this accordingly to its
      * ancestors.
      */
-    void setStatusToFail(String reason) {
+    @SuppressWarnings("incomplete-switch")
+	void setStatusToFail(String reason) {
         status.setToFail(reason);
         if (!isTopGoal()) {
             if (parent.budget <= 0d) {
@@ -257,7 +259,8 @@ public class GoalStructure {
      * will also be allocated for it. Recursively, all its ancestors that just
      * become current will also get freshly allocated budget.
      */
-    PrimitiveGoal getNextPrimitiveGoal_andAllocateBudget() {
+    @SuppressWarnings("incomplete-switch")
+	PrimitiveGoal getNextPrimitiveGoal_andAllocateBudget() {
 
         if (status.inProgress())
             // this method should not be called on a goal-structure that is still in

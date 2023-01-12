@@ -590,6 +590,14 @@ public class MiniDungeon {
 			return "" ;
 		} 
 		if (target.type == EntityType.WALL) {
+			Wall w = (Wall) target ;
+			if (w.brokenwall) {
+				world[player.x][player.y] = null;
+				player.x = xx;
+				player.y = yy;
+				world[xx][yy] = player;
+				return "" ;
+			}
 			return null ;
 		}
 		if (target.type == EntityType.HEALPOT 

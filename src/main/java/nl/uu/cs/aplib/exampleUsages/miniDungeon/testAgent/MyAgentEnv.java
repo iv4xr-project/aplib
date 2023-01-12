@@ -149,6 +149,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				we.properties.put("hp",player.hp) ;
 				we.properties.put("hpmax",player.hpMax) ;
 				we.properties.put("ar",player.attackRating) ;
+				we.properties.put("score",player.score) ;
 				we.properties.put("bagUsed",player.bag.size()) ;
 				we.properties.put("maxBagSize",player.maxBagSize) ;
 				we.properties.put("scrollsInBag",player.itemsInBag(EntityType.SCROLL).size()) ;

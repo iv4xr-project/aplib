@@ -28,6 +28,8 @@ public class Entity {
 
 	public static class Wall extends Entity{
 		
+		boolean brokenwall = false ;  
+		
 		public Wall(int x, int y, String id) {
 			this.x = x ; this.y = y ;
 			this.id = id ;

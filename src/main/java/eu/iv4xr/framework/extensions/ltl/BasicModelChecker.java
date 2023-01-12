@@ -262,6 +262,7 @@ public class BasicModelChecker {
 		 * Note that a test-case would typically covers more targets than just this o;
 		 * we just mention this o for convenience. 
 		 */
+		@SuppressWarnings("rawtypes")
 		public List<Pair<Path,CoverageItem>> tests = new LinkedList<>() ;
 		
 		/**
@@ -320,6 +321,7 @@ public class BasicModelChecker {
 	 * 
 	 * @return The resulting test-suite.
 	 */
+	@SuppressWarnings("rawtypes")
 	public <CoverageItem> TestSuite<CoverageItem> testSuite(
 			List<CoverageItem> itemsToCover, 
 			Function<IExplorableState,CoverageItem> coverageFunction,
