@@ -76,8 +76,11 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	public static List<WorldEntity> nearItems(MyAgentState S, EntityType itemType, int withinDistance) {
 		//var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		//Tile p = toTile(player.position) ;
+		//var A = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		//int agentMaze = Utils.mazeId(A) ;
 		List<WorldEntity> ms = S.worldmodel.elements.values().stream()
 				.filter(e -> e.type.equals(itemType.toString())
+						 	 //&& agentMaze == Utils.mazeId(e)
 						 	 && TacticLib.distTo(S,e) <= withinDistance
 						 	 )
 				.collect(Collectors.toList()) ;

@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Scanner;
+
 import static nl.uu.cs.aplib.AplibEDSL.*;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
@@ -51,8 +53,8 @@ public class SimpleTestMiniDungeonWithAgent {
 		// Specify a goal for the agent: search and grab scroll S0 then use it on the Shrine.
 		//
 		var G = SEQ(
-				  goalLib.smartEntityInCloseRange(agent,"S0_1"),
-				  goalLib.entityInteracted("S0_1"),
+				  goalLib.smartEntityInCloseRange(agent,"S0_2"),
+				  goalLib.entityInteracted("S0_2"),
 				  goalLib.smartEntityInCloseRange(agent,"SM0"),
 				  goalLib.entityInteracted("SM0"),
 				  SUCCESS()
@@ -80,6 +82,7 @@ public class SimpleTestMiniDungeonWithAgent {
 		WorldEntity shrine = state.worldmodel.elements.get("SM0") ;
 		System.out.println("=== " + shrine) ;
 		assertTrue((Boolean) shrine.properties.get("cleansed")) ;
+		//(new Scanner(System.in)).nextLine() ;
 	}
 	
 }

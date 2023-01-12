@@ -65,7 +65,7 @@ public class MiniDungeon {
 	
 	public static class MiniDungeonConfig {
 		public int worldSize = 20 ;
-		public int nuberOfMaze = 2 ;
+		public int numberOfMaze = 2 ;
 		public int numberOfCorridors = 4 ;
 		public float viewDistance = 100f ;
 		public long randomSeed = 34793 ;
@@ -74,7 +74,7 @@ public class MiniDungeon {
 		public int numberOfRagePots = 2 ;
 		public int numberOfScrolls = 3 ;
 		public boolean enableSmeagol = true ;
-		public String assetsLocation = Path.of("assets","minidungeon").toString() ; ;
+		public String assetsLocation = Path.of("assets","minidungeon").toString() ; 
 		
 		/**
 		 * Producing a default configuration.
@@ -86,7 +86,7 @@ public class MiniDungeon {
 			String s = "" ;
 			s += "randomseed   : " + randomSeed ;
 			s += "\nWorldsize    : " + worldSize ;
-			s += "\n#mazes       : " + nuberOfMaze ;
+			s += "\n#mazes       : " + numberOfMaze ;
 			s += "\n#corridors   : " +  numberOfCorridors ;
 			s += "\nview distance: " +  viewDistance ;
 			s += "\n#monsters    : " +  numberOfMonsters ;
@@ -107,7 +107,8 @@ public class MiniDungeon {
 	public List<Maze> mazes = new LinkedList<>();
 	public List<Player> players = new LinkedList<>() ;
 	public List<String> recentlyRemoved = new LinkedList<>() ;
-	Random rnd  ;
+	Random mainRnd  ;
+	Random rndForMazeGen ;
 	public int turnNr = 0 ;
 	public GameStatus status = GameStatus.INPROGRESS ;
 	
@@ -121,14 +122,15 @@ public class MiniDungeon {
 		if (config.numberOfMonsters + numberOfItems > (size-2)*(size-2)/3) 
 			throw new IllegalArgumentException("too many monsters and items") ;
 		
-		rnd = new Random(config.randomSeed) ;
+		mainRnd = new Random(config.randomSeed) ;
+		rndForMazeGen = new Random(config.randomSeed) ;
 		
-		var firstMaze = Maze.buildSimpleMaze(0, rnd, size, config.numberOfCorridors) ;
+		var firstMaze = Maze.buildSimpleMaze(0, rndForMazeGen, size, config.numberOfCorridors) ;
 		firstMaze.id = 0 ;
 		mazes.add(firstMaze) ;
 		var world = firstMaze.world ;
 		
-		seedMaze(firstMaze) ;
+		seedMaze(firstMaze,rndForMazeGen) ;
 		
 		// place players (in the first maze):
 		int center = size/2 ;
@@ -157,7 +159,7 @@ public class MiniDungeon {
 	/**
 	 * Seed a maze with items, monsters, and shrine.
 	 */
-	void seedMaze(Maze maze) {
+	void seedMaze(Maze maze, Random rnd) {
 		// place the Shrine:
 		var world = maze.world;
 		int size = world.length;
@@ -168,7 +170,7 @@ public class MiniDungeon {
 		S.shrineType = ShrineType.MoonShrine ;
 		S.id = "SM" + maze.id ;
 		world[size - 2][1] = S;
-		if (maze.id == config.nuberOfMaze-1) {
+		if (maze.id == config.numberOfMaze-1) {
 			// this is the final maze
 			S.shrineType = ShrineType.ShrineOfImmortals ;
 			S.id = "SI" + maze.id ;
@@ -202,17 +204,9 @@ public class MiniDungeon {
 			   				   && sq.snd >= mid-1 && sq.snd <= mid+1))
 			   .collect(Collectors.toList());
 		}
-		// seed monsters:
-		int m = 0;
-		while (m < config.numberOfMonsters && freeSquares.size() > 0) {
-			int k = rnd.nextInt(freeSquares.size());
-			var sq = freeSquares.remove(k);
-			String id = "M" + maze.id + "_" + m ;
-			Monster M = new Monster(sq.fst, sq.snd, id);
-			M.mazeId = maze.id;
-			world[sq.fst][sq.snd] = M;
-			m++;
-		}
+		
+
+		Maze.removeThoseWithTooManyOccupiedNeighbours(freeSquares,maze,4);
 
 		// seed heal-potions:
 		int h = 0;
@@ -254,6 +248,18 @@ public class MiniDungeon {
 		// choose one holy scroll:
 		Scroll holyScroll = scrolls.get(rnd.nextInt(scrolls.size()));
 		holyScroll.holy = true;
+		
+		// seed monsters:
+		int m = 0;
+		while (m < config.numberOfMonsters && freeSquares.size() > 0) {
+			int k = rnd.nextInt(freeSquares.size());
+			var sq = freeSquares.remove(k);
+			String id = "M" + maze.id + "_" + m ;
+			Monster M = new Monster(sq.fst, sq.snd, id);
+			M.mazeId = maze.id;
+			world[sq.fst][sq.snd] = M;
+			m++;
+		}
 	}
 	
 	
@@ -433,7 +439,7 @@ public class MiniDungeon {
 						//
 						// Then move
 						candidates.add(null);
-						sq = candidates.get(rnd.nextInt(candidates.size()));
+						sq = candidates.get(mainRnd.nextInt(candidates.size()));
 						if (sq == null)
 							// the monster decides to stay where it is:
 							continue;
@@ -617,7 +623,7 @@ public class MiniDungeon {
 			if (target instanceof RagePotion)
 				return "> " + player.name + " found a vial of liquid. It smells bad.";
 			else
-				return "> " + player.name + " found a key.";
+				return "> " + player.name + " found an old scroll.";
 			
 		}
 		if (target.type == EntityType.MONSTER) {
@@ -666,8 +672,8 @@ public class MiniDungeon {
 				int nextMazeId = shrine.shrineType == ShrineType.SunShrine ? maze.id-1 : maze.id+1 ;
 				if (mazes.size() == nextMazeId) {
 					// generate the next maze:
-					Maze nextmaze = Maze.buildSimpleMaze(nextMazeId, rnd, config.worldSize, config.numberOfCorridors) ;
-					seedMaze(nextmaze) ;
+					Maze nextmaze = Maze.buildSimpleMaze(nextMazeId, rndForMazeGen, config.worldSize, config.numberOfCorridors) ;
+					seedMaze(nextmaze,rndForMazeGen) ;
 					mazes.add(nextmaze) ;
 				}
 				Maze nextmaze = mazes.get(nextMazeId) ;

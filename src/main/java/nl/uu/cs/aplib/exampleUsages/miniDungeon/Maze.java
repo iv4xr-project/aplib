@@ -13,7 +13,11 @@ public class Maze {
 	public enum MazeShape { SIMPLE } 
 	
 	public int id ;
+	/**
+	 * An NxN maze.
+	 */
 	public Entity[][] world ;
+	public int size ;
 	
 	static private void assignIdToWall(Wall w, int mazeId) {
 		w.mazeId = mazeId ;
@@ -25,6 +29,7 @@ public class Maze {
 	 */
 	public Maze(int mazeId, int size) {
 		this.id = mazeId;
+		this.size = size ;
 		world = new Entity[size][size];
 		// walls around the arena:
 		for (int i = 0; i < size; i++) {
@@ -114,7 +119,37 @@ public class Maze {
 			}
 			alt = !alt;
 		}
+		// HACK
+		// add a wall above shrines to prevent oscilating path-planning around
+		// a shrine. 
+		//Wall w = new Wall(size-2,2,"") ;
+		//assignIdToWall(w,mazeId) ;
+		//world[size-2][2] = w ;
+		//w = new Wall(1,2,"") ;
+		//assignIdToWall(w,mazeId) ;
+		//world[1][2] = w ;
 		return maze ;
+	}
+	
+	public static boolean has_atleast_K_FreeNeighbours(int x, int y, 
+			Maze maze, 
+			int minNumberOfFreeNeighbours) {
+		if (! (0<x && x < maze.size-1 && 0<y && y < maze.size-1)) 
+			return false ;
+		int free = 0  ;
+		if (maze.world[x-1][y] == null) free++ ;
+		if (maze.world[x+1][y] == null) free++ ;
+		if (maze.world[x][y-1] == null) free++ ;
+		if (maze.world[x][y+1] == null) free++ ;
+		
+		return free >= minNumberOfFreeNeighbours ;					
+	}
+	
+	public static void removeThoseWithTooManyOccupiedNeighbours(
+			List<Pair<Integer,Integer>> freeTiles,
+			Maze maze,
+			int minNumberOfFreeNeighbours) {
+		freeTiles.removeIf(tile -> ! has_atleast_K_FreeNeighbours(tile.fst,tile.snd,maze,minNumberOfFreeNeighbours)) ;
 	}
 
 }

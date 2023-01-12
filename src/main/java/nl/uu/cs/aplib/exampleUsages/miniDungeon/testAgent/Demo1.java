@@ -31,8 +31,8 @@ public class Demo1 {
 		// Specify a goal for the agent: search and grab scroll S0 then use it on the Shrine.
 		//
 		var G = SEQ(
-				goalLib.entityInCloseRange("S0_0"),
-				goalLib.entityInteracted("S0_0"),
+				goalLib.entityInCloseRange("S0_1"),
+				goalLib.entityInteracted("S0_1"),
 				goalLib.entityInCloseRange("SM0"),
 				goalLib.entityInteracted("SM0")) ;
 

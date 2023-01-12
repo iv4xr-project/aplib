@@ -58,12 +58,12 @@ public class Test_MiniDungeon_ModelConstruction {
 	String mainplayer = "Frodo" ;
 
 	
-	//@Test
+	@Test
 	public void testConstructModel() throws Exception {
 		testFullPlay() ;
 	}
 	
-	@Test
+	//@Test
 	public void test_constructed_model() throws Exception {
 		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("modelMD0.json") ;
 		
@@ -148,7 +148,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		config.viewDistance = 4;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 4 ;
-		config.nuberOfMaze = 3 ;
+		config.numberOfMaze = 3 ;
 		config.randomSeed = 1393;
 		return config ;
 	}

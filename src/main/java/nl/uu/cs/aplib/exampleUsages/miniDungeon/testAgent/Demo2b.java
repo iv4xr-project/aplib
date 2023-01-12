@@ -33,10 +33,10 @@ public class Demo2b {
 	public static void main(String[] args) throws Exception {
 		// Create an instance of the game:
 		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 4 ;
+		config.numberOfHealPots = 6 ;
 		config.numberOfRagePots = 6 ;
 		config.viewDistance = 4 ;
-		config.nuberOfMaze = 2 ;
+		config.numberOfMaze = 2 ;
 		System.out.println(">>> Configuration:\n" + config);
 		DungeonApp app = new DungeonApp(config);
 		app.soundOn = false ;
@@ -50,8 +50,8 @@ public class Demo2b {
 		var agent = new TestAgent(player,player)  ;
 		
 		var G = SEQ(
-				  goalLib.smartEntityInCloseRange(agent,"S0_2"),
-				  goalLib.entityInteracted("S0_2"),
+				  goalLib.smartEntityInCloseRange(agent,"S0_1"),
+				  goalLib.entityInteracted("S0_1"),
 				  goalLib.smartEntityInCloseRange(agent,"SM0"),
 				  goalLib.entityInteracted("SM0"),
 				  goalLib.entityInteracted("SM0"),
@@ -92,7 +92,7 @@ public class Demo2b {
 					) ;
 			//System.out.println("   #entities SS1 in wom:" + SS1.count()) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(20); 
+			Thread.sleep(50); 
 			if (k>=1000) break ;
 			k++ ;
 		}	

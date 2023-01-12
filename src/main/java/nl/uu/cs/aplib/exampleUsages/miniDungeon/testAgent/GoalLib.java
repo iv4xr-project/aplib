@@ -142,8 +142,8 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	
 	   var G = INTERRUPTIBLE(
 			       ((PrimitiveGoal) entityInCloseRange(targetId)).getGoal(),
-			       HANDLE(whenToGoAfterHealPot, grabPot(agent, EntityType.HEALPOT)),
-			       HANDLE(whenToGoAfterRagePot, grabPot(agent, EntityType.RAGEPOT))
+			       HANDLE(whenToGoAfterHealPot, grabPot(agent, EntityType.HEALPOT))
+			       //HANDLE(whenToGoAfterRagePot, grabPot(agent, EntityType.RAGEPOT))
 			    ) ;
 	   // Add an extra checking because an interruptible goal-struct always succeeds:
 	   return SEQ(G, checkIfEntityIsInCloseRange(targetId)) ;
