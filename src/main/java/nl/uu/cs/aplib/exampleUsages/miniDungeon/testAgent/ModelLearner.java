@@ -140,6 +140,13 @@ public class ModelLearner {
 					// so, we see a new maze, add it:
 					zone = new GWZone(mazeId) ;
 					model.addZones(zone) ;
+					// adding some dummy object :
+					if (mazeNr>0) {
+						GWObject somewhere = new GWObject("SOMEWHERE_" + mazeNr, "DUMMY") ;
+						somewhere.destroyed = true ;
+						model.defaultInitialState.addObjects(somewhere) ;
+						zone.members.add(somewhere.id) ;
+					}				
 				}
 				// players are not put in any zone, but we create fake objects representing
 				// their start location, and put it in the zone:

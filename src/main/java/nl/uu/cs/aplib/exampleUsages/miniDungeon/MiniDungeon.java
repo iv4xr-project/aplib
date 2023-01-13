@@ -107,8 +107,22 @@ public class MiniDungeon {
 	public List<Maze> mazes = new LinkedList<>();
 	public List<Player> players = new LinkedList<>() ;
 	public List<String> recentlyRemoved = new LinkedList<>() ;
+	
+	// using separate random generators to make the dungeon creation more controlable for experiments
+	
+	/**
+	 * Random generator for combats, monster movements etc.
+	 */
 	Random mainRnd  ;
+	/**
+	 * Random generator for mazes creation and seeding.
+	 */
 	Random rndForMazeGen ;
+	/**
+	 * Random generator for selection of the holy-scrolls.
+	 */
+	Random holyScrollRnd ;
+	
 	public int turnNr = 0 ;
 	public GameStatus status = GameStatus.INPROGRESS ;
 	
@@ -124,13 +138,14 @@ public class MiniDungeon {
 		
 		mainRnd = new Random(config.randomSeed) ;
 		rndForMazeGen = new Random(config.randomSeed) ;
+		holyScrollRnd = new Random(config.randomSeed) ;
 		
 		var firstMaze = Maze.buildSimpleMaze(0, rndForMazeGen, size, config.numberOfCorridors) ;
 		firstMaze.id = 0 ;
 		mazes.add(firstMaze) ;
 		var world = firstMaze.world ;
 		
-		seedMaze(firstMaze,rndForMazeGen) ;
+		seedMaze(firstMaze) ;
 		
 		// place players (in the first maze):
 		int center = size/2 ;
@@ -159,7 +174,7 @@ public class MiniDungeon {
 	/**
 	 * Seed a maze with items, monsters, and shrine.
 	 */
-	void seedMaze(Maze maze, Random rnd) {
+	void seedMaze(Maze maze) {
 		// place the Shrine:
 		var world = maze.world;
 		int size = world.length;
@@ -211,7 +226,7 @@ public class MiniDungeon {
 		// seed heal-potions:
 		int h = 0;
 		while (h < config.numberOfHealPots && freeSquares.size() > 0) {
-			int k = rnd.nextInt(freeSquares.size());
+			int k = rndForMazeGen.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
 			String id = "H" + maze.id + "_" + h ;
 			HealingPotion H = new HealingPotion(sq.fst, sq.snd, id);
@@ -223,7 +238,7 @@ public class MiniDungeon {
 		// seed rage-potions:
 		int r = 0;
 		while (r < config.numberOfRagePots && freeSquares.size() > 0) {
-			int k = rnd.nextInt(freeSquares.size());
+			int k = rndForMazeGen.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
 			String id = "R" + maze.id + "_" + r ;
 			RagePotion R = new RagePotion(sq.fst, sq.snd, id);
@@ -236,7 +251,7 @@ public class MiniDungeon {
 		int ky = 0;
 		List<Scroll> scrolls = new LinkedList<>();
 		while (ky < config.numberOfScrolls && freeSquares.size() > 0) {
-			int k = rnd.nextInt(freeSquares.size());
+			int k = rndForMazeGen.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
 			String id = "S" + maze.id + "_" + ky ;
 			Scroll K = new Scroll(sq.fst, sq.snd, id);
@@ -246,13 +261,13 @@ public class MiniDungeon {
 			ky++;
 		}
 		// choose one holy scroll:
-		Scroll holyScroll = scrolls.get(rnd.nextInt(scrolls.size()));
+		Scroll holyScroll = scrolls.get(holyScrollRnd.nextInt(scrolls.size()));
 		holyScroll.holy = true;
 		
 		// seed monsters:
 		int m = 0;
 		while (m < config.numberOfMonsters && freeSquares.size() > 0) {
-			int k = rnd.nextInt(freeSquares.size());
+			int k = rndForMazeGen.nextInt(freeSquares.size());
 			var sq = freeSquares.remove(k);
 			String id = "M" + maze.id + "_" + m ;
 			Monster M = new Monster(sq.fst, sq.snd, id);
@@ -673,7 +688,7 @@ public class MiniDungeon {
 				if (mazes.size() == nextMazeId) {
 					// generate the next maze:
 					Maze nextmaze = Maze.buildSimpleMaze(nextMazeId, rndForMazeGen, config.worldSize, config.numberOfCorridors) ;
-					seedMaze(nextmaze,rndForMazeGen) ;
+					seedMaze(nextmaze) ;
 					mazes.add(nextmaze) ;
 				}
 				Maze nextmaze = mazes.get(nextMazeId) ;

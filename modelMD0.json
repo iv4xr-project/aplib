@@ -14,6 +14,24 @@
       }
     },
     {
+      "id": "SOMEWHERE_1",
+      "type": "DUMMY",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": true,
+      "properties": {}
+    },
+    {
+      "id": "SOMEWHERE_2",
+      "type": "DUMMY",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": true,
+      "properties": {}
+    },
+    {
       "id": "S0_0",
       "type": "SCROLL",
       "position": {
@@ -237,6 +255,7 @@
       "id": "1",
       "members": [
         "SS1",
+        "SOMEWHERE_1",
         "S1_1",
         "SM1",
         "S1_2",
@@ -270,6 +289,7 @@
     {
       "id": "2",
       "members": [
+        "SOMEWHERE_2",
         "SS2",
         "S2_2",
         "S2_0",
@@ -280,10 +300,10 @@
   ],
   "objectlinks": {
     "SM1": [
-      "S1_2"
+      "S1_0"
     ],
     "SM0": [
-      "S0_2"
+      "S0_1"
     ],
     "SI2": [
       "S2_2"

@@ -58,28 +58,18 @@ public class Test_MiniDungeon_ModelConstruction {
 	String mainplayer = "Frodo" ;
 
 	
-	@Test
+	//@Test
 	public void testConstructModel() throws Exception {
 		testFullPlay() ;
 	}
 	
-	//@Test
+	@Test
 	public void test_constructed_model() throws Exception {
 		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("modelMD0.json") ;
 		
 		// attaching alpha to the model:
 		model.alpha = (i,affected) -> S -> { MiniDungeonModel.alphaFunction(mainplayer,i,affected,S) ; return null ; } ;
 
-		// setting initial state:
-		GWState init = model.initialState ;
-		init.currentAgentLocation = "S0_0" ;
-		model.setInitialState(init);
-		
-		GWObject sh = init.objects.get("SM0") ;
-		System.out.println("### SM0 shrine type =  " + sh.properties.get("shrinetype")) ;
-		boolean isMoon = sh.properties.get("shrinetype").equals("MoonShrine") ;
-		System.out.println("### SM0 is moon shrine: " + isMoon) ;
-		
 		System.out.println(">>> model: \n" + model) ;
 
 		var mc = new BuchiModelChecker(model) ;
@@ -107,7 +97,7 @@ public class Test_MiniDungeon_ModelConstruction {
 			k++ ;	
 		}
 		
-		/*
+		
 		MiniDungeonConfig config = myMiniDungeonConfiguration() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -134,12 +124,17 @@ public class Test_MiniDungeon_ModelConstruction {
 			agent.update();
 			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(50); 
+			Thread.sleep(10); 
 			if (k>=2000) break ;
 			k++ ;
 		}	
 		assertTrue(G.getStatus().success())	 ;
-		*/
+		state.updateState(mainplayer);
+		var finalShrine = state.worldmodel.elements.get("SI2") ;
+		System.out.println(">> final shrine: " + finalShrine) ;
+		assertTrue((Boolean) finalShrine.properties.get("cleansed")) ;
+		//(new Scanner(System.in)).nextLine() ;
+		
 	}
 	
 	MiniDungeonConfig myMiniDungeonConfiguration() {

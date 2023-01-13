@@ -133,57 +133,42 @@ public class MiniDungeonModel {
 	}
 	
 	public static GoalStructure convertToGoalStructure(TestAgent agent, Path<IExplorableState> sequence) {
-		GoalStructure[] subgoals = new GoalStructure[sequence.path.size() - 1] ;
+		List<GoalStructure> subgoals = new LinkedList<>() ;
 		var goalLib = new GoalLib() ;
-		int k = 0 ;
 		GWState previousState = null ;
 		for(var step : sequence.path) {
-			if (k>0) {
-				GWTransition tr = (GWTransition) step.fst ;
+			GWTransition tr = (GWTransition) step.fst ;
+			if (tr == null) {
+				previousState = (GWState) step.snd ;
+				continue ;
+			}
+			if (tr.type == GWTransitionType.INTERACT) {
+					subgoals.add(goalLib.entityInteracted(tr.target)) ;	
+			}
+			else {
+				// else it is a travel
 				
-				if (tr.type == GWTransitionType.INTERACT) {
-					subgoals[k-1] = goalLib.entityInteracted(tr.target) ;
+				// special case when the travel is a teleport-step:
+				if (previousState != null
+					&& isShrineId(tr.target)
+					&& isShrineId(previousState.currentAgentLocation)
+					&& Math.abs(getMapNrFromShrineId(tr.target) - getMapNrFromShrineId(previousState.currentAgentLocation))
+						   == 1								
+					) {
+					// the previous location is a shrine paired with the current one,
+					// so the travel is a teleport travel, triggered by the previous
+					// transition.
+					// For the teleport step itself, no need to do anything:
+					subgoals.add(goalLib.entityInteracted(previousState.currentAgentLocation)) ;
 				}
 				else {
-					// else it is a travel
-					// (1) target is not a shrine
-					if (! isShrineId(tr.target)) {
-						subgoals[k-1] = goalLib.smartEntityInCloseRange(agent, tr.target) ;
-					}
-					else {
-						// (2) the travel target is a shrine 
-						// (2a) 
-						if (isShrineId(previousState.currentAgentLocation)
-								&& Math.abs(getMapNrFromShrineId(tr.target) - getMapNrFromShrineId(previousState.currentAgentLocation))
-								   == 1								
-								) {
-							// the previous location is a shrine paired with the current one,
-							// so the travel is a teleport travel, triggered by the previous
-							// transition.
-							// For the teleport step itself, no need to do anything:
-							subgoals[k-1] = SUCCESS() ;
-						}
-						else {
-						// (2b) the shrine is cleansed/open:
-							if (previousState!=null && (Boolean) previousState.objects.get(tr.target)
-									.properties.get("cleansed")) {
-								subgoals[k-1] = SEQ(
-										goalLib.smartEntityInCloseRange(agent, tr.target),
-										goalLib.entityInteracted(tr.target)) ;
-							}
-							else {
-							// (2c) the shrine is closed:
-								subgoals[k-1] = goalLib.smartEntityInCloseRange(agent, tr.target) ;
-							}
-						}	
-					}
-					
+					subgoals.add(goalLib.smartEntityInCloseRange(agent, tr.target)) ;
 				}
 			}
 			previousState = (GWState) step.snd ;
-			k++ ;
 		}
-		GoalStructure G = SEQ(subgoals) ;
+		GoalStructure[] dummy = {} ;
+		GoalStructure G = SEQ(subgoals.toArray(dummy)) ;
 		return G ;
 	}
 
