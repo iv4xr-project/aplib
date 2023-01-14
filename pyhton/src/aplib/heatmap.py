@@ -196,7 +196,7 @@ class HeatmapCommandLine:
         (options,args) = parser.parse_args()
         #print("xxx", options, "yyy", args)
         #print("a ", options.fileIn)
-        if(options.inputFile == None):
+        if(options.inputFile == None and options.inputDir == None):
             print("   Specify an input-file.")
             exit(2)
         return { "scriptOptions": options, "selectedProperties": args }  
