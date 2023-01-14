@@ -4,6 +4,9 @@ import static eu.iv4xr.framework.extensions.ltl.LTL.eventually;
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -54,35 +57,61 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
  */
 public class Test_MiniDungeon_ModelConstruction {
 	
-	boolean withGraphics = true ;
+	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 	
 	String mainplayer = "Frodo" ;
 
 	
-	//@Test
+	@Test
 	public void testConstructModel() throws Exception {
-		testFullPlay() ;
+		var model = runAPlay_and_ConstructModel() ;
+		assertTrue(model != null) ;
+		System.out.println(">>> model: \n" + model) ;
+		assertTrue(model.zones.size() == 5) ;
 	}
 	
 	@Test
 	public void testDOTConversion1() throws Exception {
-		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD0.json") ;
-		System.out.println(model) ;
-		CoverterDot.saveAs("./tmp/modelMD0.dot", model, true, true) ;
+		String fileName1 = "./tmp/modelMD0.json" ;
+		Path path1 = Paths.get(fileName1);
+		Files.deleteIfExists(path1) ;
+		
+		String fileName2 = "./tmp/modelMD0.dot" ;
+		Path path2 = Paths.get(fileName2);
+		Files.deleteIfExists(path2) ;
+		
+		var model = runAPlay_and_ConstructModel() ;
+		model.save(fileName1);
+		assertTrue(Files.exists(path1));
+		assertTrue(Files.size(path1)>0) ;
+		
+		GameWorldModel model2 = GameWorldModel.loadGameWorldModelFromFile(fileName1) ;
+		System.out.println(model2) ;
+		
+		CoverterDot.saveAs(fileName2, model, true, true) ;
+		assertTrue(Files.exists(path2));
+		assertTrue(Files.size(path2)>0) ;
 	}
 	
-	//@Test
+	@Test
 	public void testDOTConversion2() throws Exception {
+		String fileName = "./tmp/modelButtonDoors1.dot" ;
+		Path path = Paths.get(fileName);
+		Files.deleteIfExists(path) ;
+
 		GameWorldModel model = LabRecruitsModel.mk_ButtonDoor1Level() ;
 		System.out.println(model) ;
-		CoverterDot.saveAs("./tmp/modelButtonDoors1.dot", model, true, true) ;
+		CoverterDot.saveAs(fileName, model, true, true) ;
+		
+		assertTrue(Files.exists(path));
+		assertTrue(Files.size(path)>0) ;
 	}
 	
-	//@Test
+	@Test
 	public void test_constructed_model() throws Exception {
-		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD0.json") ;
-		
+		//GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD0.json") ;
+		GameWorldModel model = runAPlay_and_ConstructModel() ;
 		// attaching alpha to the model:
 		model.alpha = (i,affected) -> S -> { MiniDungeonModel.alphaFunction(mainplayer,i,affected,S) ; return null ; } ;
 
@@ -140,7 +169,7 @@ public class Test_MiniDungeon_ModelConstruction {
 			agent.update();
 			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(10); 
+			//Thread.sleep(10); 
 			if (k>=2000) break ;
 			k++ ;
 		}	
@@ -149,8 +178,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		var finalShrine = state.worldmodel.elements.get("SI2") ;
 		System.out.println(">> final shrine: " + finalShrine) ;
 		assertTrue((Boolean) finalShrine.properties.get("cleansed")) ;
-		//(new Scanner(System.in)).nextLine() ;
-		
+		//(new Scanner(System.in)).nextLine() ;	
 	}
 	
 	MiniDungeonConfig myMiniDungeonConfiguration() {
@@ -164,7 +192,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		return config ;
 	}
 	
-	public void testFullPlay() throws Exception {
+	public GameWorldModel runAPlay_and_ConstructModel() throws Exception {
 		// Create an instance of the game, attach an environment to it:
 		MiniDungeonConfig config = myMiniDungeonConfiguration() ;
 		System.out.println(">>> Configuration:\n" + config);
@@ -257,7 +285,7 @@ public class Test_MiniDungeon_ModelConstruction {
 			agent.update();
 			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
-			Thread.sleep(10); 
+			//Thread.sleep(10); 
 			if (k>=2000) break ;
 			k++ ;
 		}	
@@ -267,10 +295,7 @@ public class Test_MiniDungeon_ModelConstruction {
 		model.copyDefaultInitialStateToInitialState();
 		model.name = "MiniDungeon" ;
 		
-		System.out.println(">>> model: \n" + model) ;
-		
-		model.save("./tmp/modelMD0.json");
-
+		return model ;
 	}
 	
 	

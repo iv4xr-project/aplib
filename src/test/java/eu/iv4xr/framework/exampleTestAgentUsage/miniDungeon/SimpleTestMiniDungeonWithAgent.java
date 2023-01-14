@@ -53,8 +53,8 @@ public class SimpleTestMiniDungeonWithAgent {
 		// Specify a goal for the agent: search and grab scroll S0 then use it on the Shrine.
 		//
 		var G = SEQ(
-				  goalLib.smartEntityInCloseRange(agent,"S0_2"),
-				  goalLib.entityInteracted("S0_2"),
+				  goalLib.smartEntityInCloseRange(agent,"S0_1"),
+				  goalLib.entityInteracted("S0_1"),
 				  goalLib.smartEntityInCloseRange(agent,"SM0"),
 				  goalLib.entityInteracted("SM0"),
 				  SUCCESS()
