@@ -75,10 +75,10 @@ public class LabRecruitsModel {
 		initialstate.currentAgentLocation = button2.id ;
 		
 		// create the zones:
-		GWZone zoneMain = new GWZone("zmain") ;
-		GWZone zoneB3 = new GWZone("zb3") ;
-		GWZone zoneB4 = new GWZone("zb4") ;
-		GWZone zoneTreasure = new GWZone("ztreasure") ;
+		GWZone zoneMain = new GWZone("Main") ;
+		GWZone zoneB3 = new GWZone("ThiefCatcher") ;
+		GWZone zoneB4 = new GWZone("Closet") ;
+		GWZone zoneTreasure = new GWZone("Treasure") ;
 		// populate the zones:
 		zoneMain.addMembers(button1.id, button2.id, door1.id, door3.id);
 		zoneB3.addMembers(button3.id, door1.id, door2.id);
@@ -95,6 +95,7 @@ public class LabRecruitsModel {
 		   . registerObjectLinks(button4.id, door1.id);
 		// set alpha-function:
 		buttondoor1 = attachLabRecruitsAlpha(buttondoor1) ;
+		buttondoor1.name = "ButtonDoors_1" ;
 		return buttondoor1 ;
 	}
 	

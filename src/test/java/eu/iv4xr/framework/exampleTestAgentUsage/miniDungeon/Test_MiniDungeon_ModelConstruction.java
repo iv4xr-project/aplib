@@ -18,10 +18,12 @@ import nl.uu.cs.aplib.Logging;
 import eu.iv4xr.framework.extensions.ltl.BuchiModelChecker;
 import eu.iv4xr.framework.extensions.ltl.IExplorableState;
 import eu.iv4xr.framework.extensions.ltl.LTL;
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWObject;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.LabRecruitsModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
@@ -64,8 +66,22 @@ public class Test_MiniDungeon_ModelConstruction {
 	}
 	
 	@Test
+	public void testDOTConversion1() throws Exception {
+		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD0.json") ;
+		System.out.println(model) ;
+		CoverterDot.saveAs("./tmp/modelMD0.dot", model, true, true) ;
+	}
+	
+	//@Test
+	public void testDOTConversion2() throws Exception {
+		GameWorldModel model = LabRecruitsModel.mk_ButtonDoor1Level() ;
+		System.out.println(model) ;
+		CoverterDot.saveAs("./tmp/modelButtonDoors1.dot", model, true, true) ;
+	}
+	
+	//@Test
 	public void test_constructed_model() throws Exception {
-		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("modelMD0.json") ;
+		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD0.json") ;
 		
 		// attaching alpha to the model:
 		model.alpha = (i,affected) -> S -> { MiniDungeonModel.alphaFunction(mainplayer,i,affected,S) ; return null ; } ;
@@ -249,10 +265,11 @@ public class Test_MiniDungeon_ModelConstruction {
 		
 		model.defaultInitialState.currentAgentLocation = "START" + agentId ;
 		model.copyDefaultInitialStateToInitialState();
+		model.name = "MiniDungeon" ;
 		
 		System.out.println(">>> model: \n" + model) ;
 		
-		model.save("modelMD0.json");
+		model.save("./tmp/modelMD0.json");
 
 	}
 	

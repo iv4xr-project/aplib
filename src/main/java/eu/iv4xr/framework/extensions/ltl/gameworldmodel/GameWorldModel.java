@@ -64,6 +64,8 @@ public class GameWorldModel implements ITargetModel {
 	
 	public GWState initialState ;
 	
+	public String name = "" ;
+	
 	//public int count = 0 ;
 	
 	/**
@@ -380,6 +382,7 @@ public class GameWorldModel implements ITargetModel {
 	@Override
 	public String toString() {
 		StringBuffer z = new StringBuffer() ;
+		z.append("**** Name:" + name + "\n") ;
 		z.append("**** State:\n") ;
 		z.append(history.get(0).fst.showState()) ;
 		z.append("\n**** blockers: " + this.blockers) ;
@@ -395,6 +398,7 @@ public class GameWorldModel implements ITargetModel {
 	}
 	
 	static class GameWorldModelBase { 
+		public String name ;
 		public String initialAgentLocation ;
 		public List<GWObject> objects ;
 		public Set<String> blockers ;
@@ -408,6 +412,7 @@ public class GameWorldModel implements ITargetModel {
 	 */
 	public void save(String filename) throws JsonIOException, IOException {
 		GameWorldModelBase base = new GameWorldModelBase() ;
+		base.name = this.name ;
 		base.initialAgentLocation = this.defaultInitialState.currentAgentLocation ;
 		base.objects = this.defaultInitialState.objects.values().stream().collect(Collectors.toList()) ;
 		base.blockers = this.blockers ;
@@ -438,6 +443,7 @@ public class GameWorldModel implements ITargetModel {
 		Reader reader = Files.newBufferedReader(Paths.get(filename));
 		GameWorldModelBase base = gson.fromJson(reader,GameWorldModelBase.class);
 		GameWorldModel model = new GameWorldModel() ;
+		model.name = base.name ; 
 		model.defaultInitialState = new GWState() ;
 		model.defaultInitialState.currentAgentLocation = base.initialAgentLocation ;
 		for (var o : base.objects) {
