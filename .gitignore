@@ -1,6 +1,7 @@
 /bin/
 /target/
 tmp/*
+!tmp/keepthis.txt
 /javadocs/
 /.settings/
 /.idea/
