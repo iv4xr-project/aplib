@@ -25,10 +25,30 @@ public class Sa1Solver<NavgraphNode>  {
 	 * A function that returns the "distance" between an entity and the agent. 
 	 */
 	public BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent ;
+	/**
+	 * A function that returns the "distance" between two entities.
+	 */
 	public Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceBetweenEntities ;
+	/**
+	 * A goal constructor that given the id of an entity, constructs a goal that would
+	 * make the entity interacted.
+	 */
 	public Function<String,GoalStructure> gCandidateIsInteracted ;
+	/**
+	 * A goal constructor that given the id of an entity, constructs a goal that would
+	 * make the agent to refresh its knowledge on the entity.
+	 */
 	public Function<String,GoalStructure> gTargetIsRefreshed ;
+	/**
+	 * A predicate  for checking if exploration is exhausted in the current state.
+	 * "Exhausted" means that there is no reachable place left in the current state
+	 * where the agent can explore to.
+	 */
 	public Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted ;
+	/**
+	 * A goal constructor that would cause the agent to explore areas for
+	 * some amount of budget.
+	 */
 	public Function<Integer,GoalStructure> exploring ;
 	
 	public Sa1Solver() { }

@@ -19,7 +19,7 @@ public interface IInteractiveWorldTacticLib<Location> {
 	 * when this navigation is possible, and else the tactic is not
 	 * enabled.
 	 */
-	public Tactic navigateToTac(Location heuristicLocation) ;
+	public Tactic navigateToTac(Location location) ;
 	
 	/**
 	 * Construct a tactic to auto-navigate to a world-entity with the given id.
@@ -43,7 +43,8 @@ public interface IInteractiveWorldTacticLib<Location> {
 	public Tactic explore(Location heuristicLocation) ;
 
 	/**
-	 * Return true when in the current state there is no more place to explore.
+	 * Return true when in the given state (representing the current state) 
+	 * there is no more place to explore.
 	 */
 	public boolean explorationExhausted(SimpleState state) ;
 		
