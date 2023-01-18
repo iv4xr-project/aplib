@@ -194,8 +194,12 @@ public class ModelLearner {
 					&& e.lastStutterTimestamp  < 0
 					&& (Boolean) e.properties.get("cleansed")
 					) {
-				// we register the link other way around; it links shrine to scroll that unlocks it:
+				// we register the link in both directions; it links shrine to scroll that unlocks it:
+				//   the alpha-function needs the shrine->scroll link
+				//   the SA2 algorithm needs the scroll->scrine link
 				model.registerObjectLinks(e.id, scrollJustUsed) ;
+				model.registerObjectLinks(scrollJustUsed,e.id) ;
+				
 			}
 		}
 	}

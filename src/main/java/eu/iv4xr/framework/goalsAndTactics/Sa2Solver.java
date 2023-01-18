@@ -171,11 +171,9 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		Set<String> visited2 = new HashSet<>() ;
 		
 		
-		GoalStructure G = 
-		   // loop while the target-blocker is closed/blocking:
-		   WHILE((Iv4xrAgentState S) -> ! psi.test(S), 
-				
-			  DEPLOY(agent, (Iv4xrAgentState S) -> {
+		GoalStructure search = 
+		  // this "search" will be put as the body of an enclosing REPEAT-loop:
+		  DEPLOY(agent, (Iv4xrAgentState S) -> {
 				  WorldEntity target = S.worldmodel.elements.get(targetEntity) ;
 				  WorldEntity enabler = selectEnabler(S,policy,visited2,target,
 						  enablersSelector,
@@ -185,27 +183,38 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 						  ) ;
 				  
 				  if (enabler == null) {
-					  return exploringWithHeuristic.apply(heuristicLocation,incrementalExplorationBudget) ;
+					  if (explorationExhausted.test(S)) {
+						  System.out.println(">>> low-level search EXHAUSTED explore") ;
+						  // to terminate the enclosing repeat:
+						  return SUCCESS() ;
+					  }
+					  System.out.println(">>> low-level search invokes explore") ;
+					  return SEQ(exploringWithHeuristic.apply(heuristicLocation,incrementalExplorationBudget),
+								 FAIL()) ; // to make the enclosing repeat-loop to continue iterating
 				  }
 				  
 				  visited2.add(enabler.id) ;
 				  
-				  return SEQ(gTargetIsRefreshed.apply(enabler.id),
-						     gCandidateIsInteracted.apply(enabler.id),
-						     REPEAT(FIRSTof(gTargetIsRefreshed.apply(enabler.id),
+				  System.out.println(">>> low-level search invokes interact " + enabler.id) ;
+				  
+				  return SEQ(gCandidateIsInteracted.apply(enabler.id),
+						     REPEAT(FIRSTof(gTargetIsRefreshed.apply(targetEntity),
 						    		        // un-lock mechanism if the above get the agent locked:
 						    		        SEQ(unLock(agent,
 						    		        		enabler.id,
 						    		        		getConnectedEnablersFromBelief,
 						    		        		getCriticalBlockerFromBelief,
-						    		        		targetEntity)),
-						    		            FAIL()) // make it fail so gTargetIsRefreshed can resume
-						    	   )
+						    		        		targetEntity),
+						    		            FAIL()) // make it fail so gTargetIsRefreshed can be tried again
+						    		        )
+						    	   ),
+						     lift(psi) // check psi
 						     ) ; 
-			  })
-			  )
-		   ;
-		return G ;
+			  }) ;
+		return SEQ(gTargetIsRefreshed.apply(targetEntity), 
+				   FIRSTof(lift(psi),
+				           SEQ(REPEAT(search),
+				    	       lift(psi)))) ;
 	}
 	
 	/**
@@ -234,7 +243,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			(Iv4xrAgentState S) -> { 
 				// get key blockers that would re-open the way to the target
 				List<String> criritcalBlockers = getCriticalBlockerFromBelief.apply(targetBlocker,S) ;
-				if (criritcalBlockers.isEmpty())
+				if (criritcalBlockers == null || criritcalBlockers.isEmpty())
 					return FAIL() ;
 				// else we will just pick one
 				String selected = criritcalBlockers.get(0) ;
@@ -258,8 +267,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					// if we can't then choose it anyway:
 					selectedOpener = S.worldmodel.getElement(excludeThisEnabler) ;
 				}
-				return SEQ(gTargetIsRefreshed.apply(selectedOpener.id),
-						   gCandidateIsInteracted.apply(selectedOpener.id),
+				return SEQ(gCandidateIsInteracted.apply(selectedOpener.id),
 						   gTargetIsRefreshed.apply(targetBlocker)
 						) ;
 			}	
@@ -283,12 +291,11 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		
 		Random rnd = new Random() ;
 		
+		// keeping track blockers that were already tried, so that we dont try them multiple times:
 		Set<String> visited = new HashSet<>() ;
-		
-		GoalStructure G = 
-			// loop while phi is not established:
-			WHILE((Iv4xrAgentState S) -> ! phi.test(S),
-			     DEPLOY(agent,
+		GoalStructure search = 
+			// this "search" will be put as the body of an enclosing REPEAT-loop:
+			DEPLOY(agent,
 				 	(Iv4xrAgentState S) -> {
 				    
 				 	// select an entity to work on:
@@ -296,10 +303,21 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 						
 					// if there is no candidate entity available, explore:
 				    if (e == null) {
-						return exploringWithHeuristic.apply(heuristicLocation,incrementalExplorationBudget) ;
+				    	if (explorationExhausted.test(S)) {
+				    		System.out.println(">>> top-level search EXHAUSTED explore") ;
+				    		// to terminate the enclosing repeat:
+							return SUCCESS() ;
+				    	}
+				    	System.out.println(">>> top-level search invokes explore") ;
+						return 
+								SEQ(
+								exploringWithHeuristic.apply(heuristicLocation,incrementalExplorationBudget),
+								FAIL() // to make the enclosing repeat-loop to continue iterating
+								) ;
 					}
 				    // if the selected entity is the goal-entity tId, then call a solver for phi:
-					if (e.id.equals(tId)) {		
+					if (e.id.equals(tId)) {	
+						System.out.println(">>> invoking solve(phi)") ;
 						return lowerleverSolver(agent,
 								   tId,
 								   heuristicLocation,
@@ -311,12 +329,15 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 								   getCriticalBlockerFromBelief,
 								   incrementalExplorationBudget,
 								   rnd) ;
+								   // lift(phi) --- no need to check this, the solver already checked that
 					}
 					// if the selected entity is a (closed) blocker, call a solver to unblock it, 
 					// then explore
 					else {
 						
 						visited.add(e.id) ;
+						System.out.println(">>> invoking unblock " + e.id) ;
+
 						return SEQ(// get to the blocker first, this then also checks
 								   // if the agent can actually approach the blocker to observe it
 								   gTargetIsRefreshed.apply(e.id), 
@@ -334,16 +355,18 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 										   getEnablersInSameZoneFromBelief,
 										   getCriticalBlockerFromBelief,
 										   incrementalExplorationBudget,
-										   rnd)
+										   rnd),
 								   // we can optionally force exploration here, but to keep it
 								   // the same as in ATEST paper, let's not do that:
 								   // exploringWithHeuristic.apply(heuristicLocation,incrementalExplorationBudget)
+								   FAIL()  // to make the enclosing repeat-loop to continue iterating
 								   ) ;
 					}
 				 })
-		   ) ;
+		    ;
 				  
-		return G ;
+		return FIRSTof(lift(phi),
+				       SEQ(REPEAT(search), lift(phi))) ;
 	}
 
 }
