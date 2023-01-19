@@ -285,6 +285,17 @@ public class LayeredAreasNavigation<
 
 	@Override
 	public List<Pair<Integer, NodeId>> explore(Pair<Integer, NodeId> startNode, Pair<Integer, NodeId> heuristicNode) {
+		
+		int startArea = startNode.fst ;
+		int heuristicArea = heuristicNode.fst ;
+		
+		if (startArea == heuristicArea) {
+			var nav = areas.get(startArea) ;
+			List<NodeId> path = nav.explore(startNode.snd, heuristicNode.snd) ;
+			if (path != null && !path.isEmpty()) 
+				return path.stream().map(nd -> new Pair<Integer, NodeId>(startArea,nd)).collect(Collectors.toList()) ;
+		}
+		
 		var candidates = getFrontier() ;
 		if (candidates.size() == 0) 
 			return null ;

@@ -37,7 +37,7 @@ public class Test_SA2 {
 	Pair<Integer,Tile> covertToMDLocation(Vec3 p) {
 		int mapNr = Math.round(p.y) ;
 		Tile t = new Tile(Math.round(p.x), Math.round(p.z)) ;
-		return new Pair(mapNr,t) ;
+		return new Pair<Integer,Tile>(mapNr,t) ;
 	}
 	
 	@Test
@@ -98,9 +98,10 @@ public class Test_SA2 {
 				(heuristicLocation,budget) -> goalLib.smartExploring(agent, covertToMDLocation(heuristicLocation), budget));
 
 		// Goal-1: find the first shrine and cleanse it:
+		String targetShrine = "SM0" ;
 		var G = sa2Solver.solver(agent, 
-				"SM0", 
-				new Vec3(1,0,30),
+				targetShrine, 
+				new Vec3(1,0,1),
 				e -> e.type.equals("" + EntityType.SHRINE),
 				e -> e.type.equals("" + EntityType.SCROLL), 
 				e -> e.type.equals("" + EntityType.SHRINE) && (boolean) e.properties.get("cleansed"),
@@ -110,7 +111,7 @@ public class Test_SA2 {
 				// we can't close a shrine again once it is cleaned, so this is not needed:
 				(shrine,S) -> null,
 				S -> { var S_ = (MyAgentState) S;
-					   var e = S.worldmodel.elements.get("SM0");
+					   var e = S.worldmodel.elements.get(targetShrine);
 					   if (e == null)
 						   return false;
 					   var clean = (boolean) e.properties.get("cleansed");

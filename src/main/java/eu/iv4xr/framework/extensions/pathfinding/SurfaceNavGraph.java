@@ -430,6 +430,7 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         // System.out.println(">> distance: " + distance) ;
         return distance;
     }
+    
 
     /**
      * Return a path from the given start-vertex to the goal-vertex. If the

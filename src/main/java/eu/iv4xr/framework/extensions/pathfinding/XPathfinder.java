@@ -62,7 +62,7 @@ public interface XPathfinder<NodeId> extends Pathfinder2<NodeId> {
 	 * except the last node which could be an unexplored node. It is up to the implementation 
 	 * to guarantee (or at least make effort for it) that the returned path is navigable. 
 	 * 
-	 * To help chosing which frontier or unexplored node to explore to, a 'heuristic node'
+	 * <p>To help chosing which frontier or unexplored node to explore to, a 'heuristic node'
 	 * is also given. The chosen exploration target is expected to be the closest one,
 	 * among candidate targets, to the given heuristic node.
 	 */
@@ -78,7 +78,7 @@ public interface XPathfinder<NodeId> extends Pathfinder2<NodeId> {
 	 * When true then the pathfinder will consider all nodes in the graph to have been seen.
 	 */
 	public void setPerfectMemoryPathfinding(Boolean flag) ;
-	
+		
 	/** 
 	 * Clear the marking of "has been seen". So, after this all nodes are again considered
 	 * as has not been seen.

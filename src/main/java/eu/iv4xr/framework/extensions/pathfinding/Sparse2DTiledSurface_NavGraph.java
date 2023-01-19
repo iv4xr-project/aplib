@@ -375,8 +375,9 @@ public class Sparse2DTiledSurface_NavGraph
         
         if (frontiers.isEmpty())
             return null;
-        // sort the frontiers ascendingly, by their geometric distance to (x,y):
-        frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,x,y), distSq(p2.x,p2.y,heuristicX,heuristicY)));
+        // sort the frontiers ascendingly, by their geometric distance to the heuristic (x,y)
+        frontiers.sort((p1, p2) -> Float.compare(distSq(p1.x,p1.y,heuristicX,heuristicY), 
+        		                                 distSq(p2.x,p2.y,heuristicX,heuristicY)));
 
         //System.out.println(">>> #frontiers:" + frontiers.size()) ;
         

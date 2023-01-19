@@ -17,4 +17,5 @@ public interface Pathfinder<NodeId> {
      * @return An arraylist with the path. Null if no path is found.
      */
     public ArrayList<NodeId> findPath(Navigatable<NodeId> graph, NodeId start, NodeId goal);
+    	
 }
