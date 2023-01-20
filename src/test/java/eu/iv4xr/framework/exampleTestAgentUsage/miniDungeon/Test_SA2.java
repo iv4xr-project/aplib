@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
@@ -63,6 +64,7 @@ public class Test_SA2 {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
+		config.numberOfMaze = 3 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -93,15 +95,15 @@ public class Test_SA2 {
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
-				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
+				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId), goalLib.entityInteracted(eId)),
 				S -> tacticLib.explorationExhausted(S), 
 				(heuristicLocation,budget) -> goalLib.smartExploring(agent, covertToMDLocation(heuristicLocation), budget));
 
 		// Goal-1: find the first shrine and cleanse it:
-		String targetShrine = "SM0" ;
+		String targetShrine = "SI2" ;
 		var G = sa2Solver.solver(agent, 
 				targetShrine, 
-				new Vec3(1,0,1),
+				new Vec3(20,1,1),
 				e -> e.type.equals("" + EntityType.SHRINE),
 				e -> e.type.equals("" + EntityType.SCROLL), 
 				e -> e.type.equals("" + EntityType.SHRINE) && (boolean) e.properties.get("cleansed"),
@@ -121,7 +123,9 @@ public class Test_SA2 {
 
 		
 		agent.attachState(state).attachEnvironment(env).setGoal(G);
-		GameWorldModel model = new GameWorldModel(new GWState()) ;
+		//GameWorldModel model = new GameWorldModel(new GWState()) ;
+		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD1.json") ;
+		
 		ModelLearner modelLearner = new ModelLearner() ;
 		agent.attachBehaviorModel(model, (S,m) -> {
 			modelLearner.learn((MyAgentState) S, (GameWorldModel) m) ;
@@ -136,14 +140,22 @@ public class Test_SA2 {
 
 		// Now we run the agent:
 		int delay = 20 ;
+		long time0 = System.currentTimeMillis() ;
 		TestMiniDungeonWithAgent.runAndCheck(agent,G,false,delay,2000) ;
 
 		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine() ;
+		//scanner.nextLine() ;
 		assertTrue(G.getStatus().success()) ;
-			
 		
+		System.out.println(">>> exec-time = " + (System.currentTimeMillis() - time0))  ;
 		
+		model.defaultInitialState.currentAgentLocation = "START" + agentId ;
+		model.copyDefaultInitialStateToInitialState();
+		model.name = "MiniDungeon" ;
+		String fileName1 = "./tmp/modelMD1.json" ;
+		String fileName2 = "./tmp/modelMD1.dot" ;
+		//model.save(fileName1);
+		//CoverterDot.saveAs(fileName2, model, true, true) ;
 	}
 
 }

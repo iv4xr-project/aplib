@@ -56,8 +56,10 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		WorldEntity closest = candidates.get(0) ;
 		float minDistance = Float.MAX_VALUE ;
 		for (var e : candidates) {
-			if (Vec3.distSq(e.position, target) < minDistance) {
+			float distSq = Vec3.distSq(e.position, target) ;
+			if (distSq < minDistance) {
 				closest = e ;
+				minDistance = distSq ;
 			}
 		}
 		return closest ;
@@ -85,9 +87,9 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			Predicate<WorldEntity> isOpen,
 			Vec3 heuristicLocation,
 			Random rnd) {
-		
-		WorldEntity target = S.worldmodel.getElement(tId) ;
-		if (tId != null) 
+		//System.out.println(">>> invoking selectNode()") ;
+ 		WorldEntity target = S.worldmodel.getElement(tId) ;
+		if (target != null) 
 			return target ;
 		
 		List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
@@ -96,6 +98,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 						&& ! visited.contains(e.id))
 				.collect(Collectors.toList()) ;
 				
+		//System.out.println(">>> selectNode #candidates:" + candidates.size()) ;
 		if (candidates.isEmpty())
 			return null ;
 		
@@ -124,8 +127,11 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				.map(id -> S.worldmodel.getElement(id))
 				.collect(Collectors.toList()) ;
 				
-		
+		if (!candidates.isEmpty()) {
+			System.out.println(">>>    using enabler from model") ;
+		}
 		if (candidates.isEmpty()) {
+			//System.out.println(">>>    no enabler known from model") ;
 			candidates = getEnablersInSameZoneFromBelief.apply(targetBlocker.id, S).stream()
 					.filter(id -> ! visited.contains(id))
 					.map(id -> S.worldmodel.getElement(id))
@@ -151,7 +157,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		if (policy == Policy.NEAREST_TO_AGENT || myHeuristicLocation == null) {
 			myHeuristicLocation = S.worldmodel.position ;
 		}
-		
+		//System.out.println(">>>    heuristic loc: " + myHeuristicLocation) ;
 		return getClosestsElement(candidates,myHeuristicLocation) ;
 	}
 	

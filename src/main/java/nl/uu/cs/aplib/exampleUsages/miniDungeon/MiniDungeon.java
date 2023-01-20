@@ -28,10 +28,12 @@ import nl.uu.cs.aplib.utils.Pair;
  * idle during this turn. The game engine does not in itself limits players to move
  * in a strict alteration.
  * 
- * <p>In the current setup, there is only one maze. The players start somewhere in the
- * maze. There is also a shrine somewhere in the maze. A player wins if it manages
- * to bless the shrine.
- * 
+ * <p>The game has one or more mazes (configurable). From the starting maze a player can
+ * go to the next one by using a shrine. The shrine can only be used if it has been cleansed.
+ * It can be cleansed by applying a specific scroll on it, though the player does not know
+ * which scroll would cleanse a shrine. Once cleansed, using it will teleport the player
+ * to the next maze. Cleasing the shrine in the final maze wins the game for the player.
+
  * <ul>
  * <li>Monsters are randomly placed in the dungeon. When a monster is adjacent to a player,
  * it will attack the player. Similarly, a player can attack an adjacent monster (or
@@ -45,7 +47,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * the  bag. Frodo's bag can hold two items. Smeagol has a smaller bag that can only
  * hold one item.
  * 
- * <li>The shrine is tainted, and must be cleansed by using a scroll. However, only
+ * <li>Shrines are tainted, and must be cleansed by using a scroll. However, only
  * a holy scroll can do this. The player does not know up front which scroll is holy
  * until it uses it. Using a scroll consumes it.
  * 
@@ -60,7 +62,6 @@ import nl.uu.cs.aplib.utils.Pair;
  * 
  * @author wish
  */
-
 public class MiniDungeon {
 	
 	public static class MiniDungeonConfig {

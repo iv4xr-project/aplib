@@ -187,11 +187,11 @@ public class ModelLearner {
 				}
 			}
 
-
 			// if e is a moon or immortal shrine and it is just cleansed, then add a new link:
 			if ((isMoonShrine(e) || isImmortalShrine(e))
 					&& scrollJustUsed != null
 					&& e.lastStutterTimestamp  < 0
+					&& e.timestamp == state.worldmodel.timestamp
 					&& (Boolean) e.properties.get("cleansed")
 					) {
 				// we register the link in both directions; it links shrine to scroll that unlocks it:
