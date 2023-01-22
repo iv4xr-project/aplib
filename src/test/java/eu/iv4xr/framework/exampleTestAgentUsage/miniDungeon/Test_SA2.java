@@ -1,6 +1,6 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon;
 
-import static nl.uu.cs.aplib.AplibEDSL.SEQ;
+import static nl.uu.cs.aplib.AplibEDSL.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.*;
@@ -28,6 +28,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.Pair;
 
 public class Test_SA2 {
@@ -41,9 +42,18 @@ public class Test_SA2 {
 		return new Pair<Integer,Tile>(mapNr,t) ;
 	}
 	
+	
 	@Test
 	public void test0() throws Exception {
 		testFullPlay("Frodo") ;
+	}
+	
+	GoalStructure exhaustiveExplore(TestAgent agent, 
+			GoalLib goalLib,
+			TacticLib tacticLib) {
+		return WHILE(S -> ! tacticLib.explorationExhausted(S),
+				goalLib.smartExploring(agent, null, Integer.MAX_VALUE)
+				);
 	}
 	
 	List<String> getConnectedEnablersFromBelief(String shrine, MyAgentState S) {
@@ -95,11 +105,13 @@ public class Test_SA2 {
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
-				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId), goalLib.entityInteracted(eId)),
+				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), 
+						   goalLib.entityInteracted(eId), 
+						   goalLib.entityInteracted(eId)),
 				S -> tacticLib.explorationExhausted(S), 
-				(heuristicLocation,budget) -> goalLib.smartExploring(agent, covertToMDLocation(heuristicLocation), budget));
+				dummy -> exhaustiveExplore(agent,goalLib,tacticLib));
 
-		// Goal-1: find the first shrine and cleanse it:
+		// Goal: find a shrine and cleanse it:
 		String targetShrine = "SI2" ;
 		var G = sa2Solver.solver(agent, 
 				targetShrine, 
@@ -107,8 +119,6 @@ public class Test_SA2 {
 				e -> e.type.equals("" + EntityType.SHRINE),
 				e -> e.type.equals("" + EntityType.SCROLL), 
 				e -> e.type.equals("" + EntityType.SHRINE) && (boolean) e.properties.get("cleansed"),
-				(shrine,S) -> getConnectedEnablersFromBelief(shrine, (MyAgentState) S),
-				// well the same as above, as the enabling scroll is always in the same level:
 				(shrine,S) -> getConnectedEnablersFromBelief(shrine, (MyAgentState) S),
 				// we can't close a shrine again once it is cleaned, so this is not needed:
 				(shrine,S) -> null,
@@ -118,9 +128,9 @@ public class Test_SA2 {
 						   return false;
 					   var clean = (boolean) e.properties.get("cleansed");
 					   return clean; }, 
-				Policy.NEAREST_TO_TARGET, 
-				explorationBudget);
+				Policy.NEAREST_TO_TARGET);
 
+		var G0 = exhaustiveExplore(agent,goalLib,tacticLib) ;
 		
 		agent.attachState(state).attachEnvironment(env).setGoal(G);
 		//GameWorldModel model = new GameWorldModel(new GWState()) ;
@@ -137,11 +147,14 @@ public class Test_SA2 {
 		// why do we need this starting update?
 		state.updateState(agentId);
 		//Utils.printEntities(state);
+		
 
 		// Now we run the agent:
 		int delay = 20 ;
 		long time0 = System.currentTimeMillis() ;
 		TestMiniDungeonWithAgent.runAndCheck(agent,G,false,delay,2000) ;
+
+		System.out.println("=== exploration exhausted: " + tacticLib.explorationExhausted(state)) ;
 
 		Scanner scanner = new Scanner(System.in);
 		//scanner.nextLine() ;
