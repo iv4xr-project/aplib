@@ -133,8 +133,8 @@ public class Test_SA2 {
 		var G0 = exhaustiveExplore(agent,goalLib,tacticLib) ;
 		
 		agent.attachState(state).attachEnvironment(env).setGoal(G);
-		//GameWorldModel model = new GameWorldModel(new GWState()) ;
-		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD1.json") ;
+		GameWorldModel model = new GameWorldModel(new GWState()) ;
+		//GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD1.json") ;
 		
 		ModelLearner modelLearner = new ModelLearner() ;
 		agent.attachBehaviorModel(model, (S,m) -> {

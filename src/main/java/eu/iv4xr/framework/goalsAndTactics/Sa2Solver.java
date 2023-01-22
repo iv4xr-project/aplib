@@ -111,11 +111,12 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			previouslyTriedEnablers = new HashSet<String>() ;
 			triedEnablers.put(targetBlocker,previouslyTriedEnablers) ;
 		}
+		final Set<String> previouslyTriedEnablers_ = previouslyTriedEnablers ;
 		List<String> connectedEnablers = getConnectedEnablersFromBelief.apply(targetBlocker, S) ;
 		
 		return S.worldmodel.elements.values().stream()
 		  . filter(e -> enablersSelector.test(e) 
-					&& !triedEnablers.containsKey(e.id)
+					&& ! previouslyTriedEnablers_.contains(e.id)
 					&& (connectedEnablers == null || !connectedEnablers.contains(e.id)))
 		  . map(e -> e.id)
 		  . collect(Collectors.toList()) ;
