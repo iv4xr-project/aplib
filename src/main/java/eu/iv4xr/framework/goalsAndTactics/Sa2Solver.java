@@ -236,11 +236,10 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 						  + " invokes interact " + enabler.id) ;
 				  
 				  return SEQ(gCandidateIsInteracted.apply(enabler.id),
-						     REPEAT(FIRSTof(gTargetIsRefreshed.apply(targetEntity),
-						    		        // un-lock mechanism if the above get the agent locked:
-						    		        SEQ(unLock(enabler.id,targetEntity),
-						    		            FAIL()) // make it fail so gTargetIsRefreshed can be tried again
-						    		        )
+						     REPEAT(
+						       FIRSTof(gTargetIsRefreshed.apply(targetEntity),
+						    		   // un-lock mechanism if the above get the agent locked:
+						    		   unLock(enabler.id,targetEntity))
 						    	   ),
 						     lift(psi) // check psi
 						     ) ; 
@@ -270,34 +269,42 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				List<String> criritcalBlockers = getCriticalBlockerFromBelief.apply(targetBlocker,S) ;
 				if (criritcalBlockers == null || criritcalBlockers.isEmpty()){
 					System.out.println("    cannot identify a critical on-the-way blocker.") ;
-					return FAIL() ;
+					return SUCCESS() ; // to terminate the outer repeat-loop
 				}
 				// else we will just pick one
 				String selected = criritcalBlockers.get(0) ;
-				System.out.println("    crirtical blocker: on-the-way blocker" + selected) ;
+				System.out.println("    crirtical blocker: on-the-way blocker " + selected) ;
 				WorldEntity selected_ = S.worldmodel.getElement(selected) ;
 				List<WorldEntity> openers  = getConnectedEnablersFromBelief.apply(selected, S)
 						.stream()
+						.filter(o -> ! o.equals(excludeThisEnabler))
 						.map(id -> S.worldmodel.getElement(id))
+						.filter(e -> reachabilityChecker.apply(S,e))
 						.collect(Collectors.toList());
-				if (openers.isEmpty())
-					return FAIL() ;
-				List<WorldEntity> openers2 = openers.stream()
-						.filter(o -> ! o.id.equals(excludeThisEnabler))
-						.collect(Collectors.toList()) ;
+				
+				if (openers.isEmpty()) {
+					openers = S.worldmodel.elements.values().stream()
+							.filter(e -> enablersSelector.test(e) && ! e.id.equals(excludeThisEnabler))
+							.filter(e -> reachabilityChecker.apply(S,e))
+							.collect(Collectors.toList())
+							;
+							
+				}
+				
 				WorldEntity selectedOpener = null ;
-				if (!openers2.isEmpty()) {
-					// check if we can find an opener, which is NOT the one to be exluced:
-					selectedOpener = getClosestsElement(openers2, selected_.position) ;
+				if (! openers.isEmpty()) {
+					// just choose the closest one
+					selectedOpener = getClosestsElement(openers, selected_.position) ;
 				}
-				else {
-					// if we can't then choose it anyway:
-					selectedOpener = S.worldmodel.getElement(excludeThisEnabler) ;
-				}
-				System.out.println("    opener:" + selectedOpener.id) ;
+				if (openers.isEmpty())
+					// if no candidate can be found we will just try the excluded enabler:
+					selectedOpener = S.worldmodel.elements.get(excludeThisEnabler) ;
+				
+				System.out.println("    trying as an opener: " + selectedOpener.id) ;
 				return SEQ(gCandidateIsInteracted.apply(selectedOpener.id),
-						   gTargetIsRefreshed.apply(targetBlocker)
-						) ;
+						   gTargetIsRefreshed.apply(selected),
+						   FAIL() // to force the outer repeat-loop to try again...
+						   ) ;
 			}	
 				) ;
 		return G ;
@@ -358,7 +365,9 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 	// else, (2) if the target is found, and there are some untried enablers ,
 				 	// make an attempt to solve phi. For now, we will limit to try only
 				 	// reachable enablers:
-				 	if (target != null && selectEnabler(S,target) != null) {
+				 	if (target != null 
+				 			&& reachabilityChecker.apply(S, target)
+				 			&& selectEnabler(S,target) != null) {
 				 		System.out.println("=== invoking solve(phi)") ;
 						return lowerleverSolver(tId,heuristicLocation,phi) ;
 				 	}
