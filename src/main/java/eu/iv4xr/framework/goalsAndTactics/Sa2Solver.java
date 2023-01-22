@@ -99,6 +99,11 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		return ! untriedEnablers(S,target).isEmpty() ;
 	}
 	
+	boolean hasUntriedReachableEnablers(Iv4xrAgentState S, String target) {
+		var candidates = untriedEnablers(S,target) ;
+		return candidates.stream().anyMatch(id -> reachabilityChecker.apply(S, S.worldmodel.getElement(id))) ;
+	}
+	
 	/**
 	 * Get currently known enablers that have not been tried for affecting the
 	 * given target entity, and moreover are not themselves affectors of the 
@@ -149,7 +154,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 						&& ! isOpen.test(e)  // only target closed blockers
 						&& ! e.id.equals(finalTargetId)
 						//&& isUnsolvedBlocker(S,e.id)
-						&& isUntriedBlocker(S,e.id)
+						&& (isUntriedBlocker(S,e.id) || hasUntriedReachableEnablers(S,e.id))
 						// has one reachable enabler to try:
 						&& selectEnabler(S,e) != null)
 				.collect(Collectors.toList()) ;
@@ -262,6 +267,9 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 * by using another enabler.
 	 */
 	GoalStructure unLock(String excludeThisEnabler,String targetBlocker) {
+		
+		List<String> tried = new LinkedList<>() ;
+		
 		GoalStructure G = DEPLOY(agent,
 			(Iv4xrAgentState S) -> { 
 				System.out.println("=== trying to unlock path to: " + targetBlocker + ", exclude enabler: " + excludeThisEnabler) ;
@@ -277,14 +285,16 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				WorldEntity selected_ = S.worldmodel.getElement(selected) ;
 				List<WorldEntity> openers  = getConnectedEnablersFromBelief.apply(selected, S)
 						.stream()
-						.filter(o -> ! o.equals(excludeThisEnabler))
+						.filter(o -> ! o.equals(excludeThisEnabler) && ! tried.contains(o))
 						.map(id -> S.worldmodel.getElement(id))
 						.filter(e -> reachabilityChecker.apply(S,e))
 						.collect(Collectors.toList());
 				
 				if (openers.isEmpty()) {
 					openers = S.worldmodel.elements.values().stream()
-							.filter(e -> enablersSelector.test(e) && ! e.id.equals(excludeThisEnabler))
+							.filter(e -> enablersSelector.test(e) 
+									     && ! e.id.equals(excludeThisEnabler)
+									     && ! tried.contains(e.id))
 							.filter(e -> reachabilityChecker.apply(S,e))
 							.collect(Collectors.toList())
 							;
@@ -295,6 +305,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				if (! openers.isEmpty()) {
 					// just choose the closest one
 					selectedOpener = getClosestsElement(openers, selected_.position) ;
+					tried.add(selectedOpener.id) ;
 				}
 				if (openers.isEmpty())
 					// if no candidate can be found we will just try the excluded enabler:
