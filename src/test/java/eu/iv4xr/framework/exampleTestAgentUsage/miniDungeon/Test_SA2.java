@@ -98,9 +98,7 @@ public class Test_SA2 {
 			Logging.getAPLIBlogger().setLevel(Level.OFF);
 		}
 		
-		int explorationBudget = 20;
 		
-
 		var sa2Solver = new Sa2Solver<Void>((S, e) -> Utils.isReachable((MyAgentState) S, e),
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
@@ -130,7 +128,7 @@ public class Test_SA2 {
 					   return clean; }, 
 				Policy.NEAREST_TO_TARGET);
 
-		var G0 = exhaustiveExplore(agent,goalLib,tacticLib) ;
+		//var G0 = exhaustiveExplore(agent,goalLib,tacticLib) ;
 		
 		agent.attachState(state).attachEnvironment(env).setGoal(G);
 		GameWorldModel model = new GameWorldModel(new GWState()) ;

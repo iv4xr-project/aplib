@@ -11,6 +11,25 @@ import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.mainConcepts.*;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
+/**
+ * This class implements a "solver". Imagine a test-agent and a game-under-test (GUT).
+ * We want to move the GUT to a state where some game object/entity satisfies some
+ * predicate phi. The solver produces a goal-structure, that when given to a test-agent
+ * for execution, it will do just that. The algorithm implemented by the solver is to
+ * simply explore the world to discover candidates interactables, and then try them
+ * one by one to see if one would flip the state of tId to phi. Some heuristic is used
+ * to determine which candidates are tried first, e.g. by their distance to tId, or
+ * by their distance to the test-agent.
+ * 
+ * <p>The solver will need a bunch of ingredients to work. For example goal-constructors
+ * that need to be given to this class-constructor. See {@link #Sa1Solver(BiFunction, BiFunction, Function, Function, Function, Predicate, Function)}.
+ * After constructed, you can invoke the method {@link #solver(BasicAgent, String, Predicate, Predicate, Policy, int)}.
+ * This will produce a goal-structure that carries the above mentioned solving algorithm.
+ * 
+ * @author Samira, Wish. Based on Samira's algorithm in ATEST 2021.
+ *
+ * @param <NavgraphNode>
+ */
 public class Sa1Solver<NavgraphNode>  {
 	
 	/**
@@ -53,6 +72,28 @@ public class Sa1Solver<NavgraphNode>  {
 	
 	public Sa1Solver() { }
 	
+	/**
+	 * A constructor for the solver.
+	 * 
+	 * @param reachabilityChecker  A function to check if an entity is reachable from the agent's position.
+	 * 				See also {@link #reachabilityChecker}.
+	 * 
+	 * @param distanceToAgent  A function that returns the "distance" between an entity and the agent. 
+	 * @param distanceFunction A function that returns the "distance" between two entities.
+	 * 
+	 * @param gCandidateIsInteracted A goal constructor that given the id of an entity, constructs a goal that would
+	 * make the entity interacted.
+	 * 
+	 * @param gTargetIsRefreshed A goal constructor that given the id of an entity, constructs a goal that would
+	 * make the agent to refresh its knowledge on the entity.
+	 * 
+	 * @param explorationExhausted  A predicate  for checking if exploration is exhausted in the current state.
+	 * "Exhausted" means that there is no reachable place left in the current state
+	 * where the agent can explore to.
+	 * 
+	 * @param exploring  A goal constructor that would cause the agent to explore areas for
+	 * some amount of budget.
+	 */
 	public Sa1Solver(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
 			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
 			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
@@ -122,7 +163,7 @@ public class Sa1Solver<NavgraphNode>  {
 
 		
 	
-	/**
+	/*
 	 * Perform exploration for the given budget. It will explore until there is 
 	 * nothing left to explore, or until the budget runs out. 
 	 * The goal is intentionally made to always fail.
@@ -146,7 +187,9 @@ public class Sa1Solver<NavgraphNode>  {
 	
 	
 	/**
-	 * This tries to make the environment to move to a state where the entity tId satisfies the 
+	 * This method produces a goal structure G that tries to "solve" a given predicate phi on
+	 * some target game object/entity tId. When executed, this G tries to move the game-under-test 
+	 * to a state where the game object/entity tId satisfies the 
 	 * predicate phi as a goal. The algorithm is as follows:
 	 * 
 	 * <ol>
@@ -160,8 +203,18 @@ public class Sa1Solver<NavgraphNode>  {
 	 *   then we go back to step-3.
 	 *   <li> If there is no more place to explore, the search fails.
 	 * </ol>
+	 * 
+	 * @param agent The agent that will execute the goal-structure produced by this method.
+	 * @param tId   The id of the target game object/entity.
+	 * @param selector  A predicate to filter which objects would be tried in order to flip the
+	 *     state of tId.
+	 * @param phi   A predicate on tId that we want to achieve/establish.
+	 * @param policy  A seach policy: check candidates closest to tId first, or closest to the 
+	 *     executing agent first, or random.
+	 * @param incrementalExplorationBudget  Time budget for each exploration round.
+	 * @return A goal-structure; when executed on the above agent would try to move the game-under-test
+	 *    to a state where phi holds on tId.
 	 */
-	
 	public GoalStructure solver(BasicAgent agent, 
 			String tId, 
 			Predicate<WorldEntity> selector,
