@@ -323,19 +323,23 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			Vec3 heuristicLocation,
 			Predicate<Iv4xrAgentState> psi) {
 				
-		
+		  System.out.println("=== invoking low level search, target: " + targetEntity) ;
+		  
 		  GoalStructure search = 
 		  // this "search" will be put as the body of an enclosing REPEAT-loop:
 		  DEPLOY(agent, (Iv4xrAgentState S) -> {
 				  WorldEntity target = S.worldmodel.elements.get(targetEntity) ;
-				  WorldEntity enabler = selectEnabler(S,target) ;
+				  WorldEntity enabler = selectEnabler(S,target) ;				  
 				  
 				  if (enabler == null) {
+					  System.out.println("    cannot find any candidate enabler!") ;
 					  // should not happen...
 					  // to terminate the enclosing repeat:
 					  return SUCCESS() ;
 				  }				  
-				  
+
+				  System.out.println("    enabler to try: " + enabler.id) ;
+
 				  Set<String> previouslyTriedEnablers = triedEnablers.get(targetEntity) ;
 				  if (previouslyTriedEnablers == null) {
 					  previouslyTriedEnablers = new HashSet<String>() ;
@@ -519,12 +523,18 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 
 					return SEQ(// get to the blocker first, this then also checks
 							// if the agent can actually approach the blocker to observe it
-							gTargetIsRefreshed.apply(e.id), 
-							// then unblock it:
+							// gTargetIsRefreshed.apply(e.id), 
+							// NOTE: the above targetRefreshed is not needed because lowerleverSolver
+							// will do it anyway, and worse it triggers a looping behavior (not sure
+							// why) ... need to investigate this. TODO
+							// Anyway, not doing it seems to solve the problem.
+							
+							// unblock it:
 							lowerleverSolver(e.id,
 									e.position,
 									T -> { 
 										WorldEntity blocker = T.worldmodel.getElement(e.id) ;
+										//System.out.println("### " + e.id + " open: " + isOpen.test(blocker)) ;
 										return blocker != null && isOpen.test(blocker) ;
 									}),
 							// we can optionally force exploration here, but to keep it
