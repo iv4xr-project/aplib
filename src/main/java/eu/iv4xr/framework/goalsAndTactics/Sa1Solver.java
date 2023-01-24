@@ -12,19 +12,29 @@ import nl.uu.cs.aplib.mainConcepts.*;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 /**
- * This class implements a "solver". Imagine a test-agent and a game-under-test (GUT).
- * We want to move the GUT to a state where some game object/entity satisfies some
- * predicate phi. The solver produces a goal-structure, that when given to a test-agent
- * for execution, it will do just that. The algorithm implemented by the solver is to
- * simply explore the world to discover candidates interactables, and then try them
- * one by one to see if one would flip the state of tId to phi. Some heuristic is used
- * to determine which candidates are tried first, e.g. by their distance to tId, or
+ * This class implements a "solver" we call SA1. Imagine a test-agent and a
+ * game-under-test (GUT). We want to move the GUT to a state where some game
+ * object/entity o satisfies some predicate phi. The solver produces a
+ * goal-structure, that when given to a test-agent for execution, it will do
+ * just that. The algorithm implemented by the solver is to simply explore the
+ * world to discover candidates interactables, and then try them one by one to
+ * see if one would flip the state of o to phi. Some heuristic is used to
+ * determine which candidates are tried first, e.g. by their distance to tId, or
  * by their distance to the test-agent.
  * 
- * <p>The solver will need a bunch of ingredients to work. For example goal-constructors
- * that need to be given to this class-constructor. See {@link #Sa1Solver(BiFunction, BiFunction, Function, Function, Function, Predicate, Function)}.
- * After constructed, you can invoke the method {@link #solver(BasicAgent, String, Predicate, Predicate, Policy, int)}.
- * This will produce a goal-structure that carries the above mentioned solving algorithm.
+ * <p>
+ * SA1 requires the target object o to be in the same zone as where the test
+ * agent is when it starts the solver. In particular, SA1 does not actively
+ * trying to open/unlock access to zones. 
+ * 
+ * <p>
+ * The solver will need a bunch of ingredients to work. For example
+ * goal-constructors that need to be given to this class-constructor. See
+ * {@link #Sa1Solver(BiFunction, BiFunction, Function, Function, Function, Predicate, Function)}.
+ * After constructed, you can invoke the method
+ * {@link #solver(BasicAgent, String, Predicate, Predicate, Policy, int)}. This
+ * will produce a goal-structure that carries the above mentioned solving
+ * algorithm.
  * 
  * @author Samira, Wish. Based on Samira's algorithm in ATEST 2021.
  *
@@ -187,33 +197,41 @@ public class Sa1Solver<NavgraphNode>  {
 	
 	
 	/**
-	 * This method produces a goal structure G that tries to "solve" a given predicate phi on
-	 * some target game object/entity tId. When executed, this G tries to move the game-under-test 
-	 * to a state where the game object/entity tId satisfies the 
-	 * predicate phi as a goal. The algorithm is as follows:
+	 * Produces SA1 solver. More precisely, this method produces a goal structure G
+	 * that tries to "solve" a given predicate phi on some target game object/entity
+	 * tId. To actually solve phi, you need to give G to a test-agent who will then
+	 * execute it. When executed, G tries to move the game-under-test to a state
+	 * where the game object/entity tId satisfies the predicate phi as a goal. The
+	 * algorithm is as follows:
 	 * 
 	 * <ol>
-	 *   <li> The agent moves to tId until it can see it. 
-	 *   <li> It checks the predicate phi. If it is satisfied we are done.
-	 *   <li> Else, the agent check if there is a reachable entity e whose properties satisfy 
-	 *   the given selector, and not yet tried before. If there is such an e, the agent
-	 *   moves to it and interacts with it. Then it repeats from step-1.
-	 *   <li> If there is no such e in step-3, the agent checks if the world has some
-	 *   unvisited place (has some area to explore). If so, the agent explores for some budget,
-	 *   then we go back to step-3.
-	 *   <li> If there is no more place to explore, the search fails.
+	 * <li>The agent moves to tId until it can see it.
+	 * <li>It checks the predicate phi. If it is satisfied we are done.
+	 * <li>Else, the agent check if there is a reachable entity e whose properties
+	 * satisfy the given selector, and not yet tried before. If there is such an e,
+	 * the agent moves to it and interacts with it. Then it repeats from step-1.
+	 * <li>If there is no such e in step-3, the agent checks if the world has some
+	 * unvisited place (has some area to explore). If so, the agent explores for
+	 * some budget, then we go back to step-3.
+	 * <li>If there is no more place to explore, the search fails.
 	 * </ol>
 	 * 
-	 * @param agent The agent that will execute the goal-structure produced by this method.
-	 * @param tId   The id of the target game object/entity.
-	 * @param selector  A predicate to filter which objects would be tried in order to flip the
-	 *     state of tId.
-	 * @param phi   A predicate on tId that we want to achieve/establish.
-	 * @param policy  A seach policy: check candidates closest to tId first, or closest to the 
-	 *     executing agent first, or random.
-	 * @param incrementalExplorationBudget  Time budget for each exploration round.
-	 * @return A goal-structure; when executed on the above agent would try to move the game-under-test
-	 *    to a state where phi holds on tId.
+	 * @param agent                        The agent that will execute the
+	 *                                     goal-structure produced by this method.
+	 * @param tId                          The id of the target game object/entity.
+	 * @param selector                     A predicate to filter which objects would
+	 *                                     be tried in order to flip the state of
+	 *                                     tId.
+	 * @param phi                          A predicate on tId that we want to
+	 *                                     achieve/establish.
+	 * @param policy                       A seach policy: check candidates closest
+	 *                                     to tId first, or closest to the executing
+	 *                                     agent first, or random.
+	 * 
+	 * @param incrementalExplorationBudget Time budget for each exploration round.
+	 * 
+	 * @return A goal-structure; when executed on the above agent would try to move
+	 *         the game-under-test to a state where phi holds on tId.
 	 */
 	public GoalStructure solver(BasicAgent agent, 
 			String tId, 

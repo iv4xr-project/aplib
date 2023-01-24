@@ -19,28 +19,129 @@ import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
+/**
+ * This class implements a "solver" we call SA2. Imagine a test-agent and a
+ * game-under-test (GUT). We want to move the GUT to a state where some game
+ * object/entity o satisfies some predicate phi. The solver produces a
+ * goal-structure, that when given to a test-agent for execution, it will do
+ * just that. The algorithm implemented by the solver works by exploring the
+ * world zone/room by zone until the test-agent sees o. Then it will try out
+ * various interactables that it can reach until it manages to flip the state of
+ * o to satisfy phi.
+ * 
+ * <p>
+ * SA2 is implemented as a subclass of SA1. However, unlike {@link SA1}, SA2
+ * does try to actively unlock zones so that the test-agent can explore them. If
+ * an approximate location of o is given, as a "heuristic location", the zones
+ * will be tried, roughly, in the direction towards this heuristic location.
+ * 
+ * <p>
+ * The solver will need a bunch of ingredients to work. For example
+ * goal-constructors that need to be given to this class-constructor. See
+ * {@link #Sa1Solver(BiFunction, BiFunction, Function, Function, Function, Predicate, Function)}.
+ * After constructed, you can invoke the method {@link #solver(BasicAgent,
+ * String, Vec3, Predicate, Predicate, Predicate, BiFunction, BiFunction,
+ * Predicate, Policy). This will produce a goal-structure that carries the above
+ * mentioned solving algorithm.
+ * 
+ * <p>Terminologies:
+ * 
+ * <ul>
+ *   <li> A game world is populated by game objects/entities. Each may have a state.
+ *   <li> A zone/room is a closed area in the world. Travel within a zone is possible.
+ *        However, access to a zone is usually guarded by "doors" or "gates". We will
+ *        call these "blockers". A zone can only be entered through a blocker that
+ *        guards it, and its state should be "open" (non-blocking).
+ *   <li> Some gane objects can be interacted. They are called "interactables". Some 
+ *        of these can affect the state of other objects as well. Such interactables
+ *        are called "enablers". When an enabler e can affect the state of an object
+ *        o, we say that they are "connected". While it is reasonable to provide
+ *        information wich objects are, or could be, enablers, it is usually harder
+ *        to provide knowledge which objects are connected to which enablers. Typically,
+ *        a test-agent will have to figure out, or discover, the latter type of relation.
+ *   <li> An enabler that can open a door is called an "opener" of the door.  
+ * </ul>
+ * 
+ * @author Samira, Wish. Based on Samira's algorithm in ATEST 2022.
+ *
+ * @param <NavgraphNode>
+ */
 public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
-
+	// some internal variables:
+	
+	/**
+	 * The test-agent that will execute the solver (well, more precisely, the agent
+	 * that will execute the goal-structure produced by the solver).
+	 */
 	BasicAgent agent ;
+	
+	/**
+	 * The id of the target game-object whose state we want to flip.
+	 */
 	String finalTargetId ;
+	
+	/**
+	 * Approximate location of {@link #finalTargetId}.
+	 */
 	Vec3 heuristicLocation ;
+	
+	/**
+	 * A filter specifying which game-objects are zones' blockers.
+	 */
 	Predicate<WorldEntity> blockersSelector ;
+	
+	/**
+	 * A filter specifying which game-objects are enablers.
+	 */
 	Predicate<WorldEntity> enablersSelector ;
+	
+	/**
+	 * A predicate that can decide if a blocker is in the open (non-blocking)
+	 * state.
+	 */
 	Predicate<WorldEntity> isOpen ;
+	
+	/**
+	 * A function to wuery the agent's belief/state to see if it has information on
+	 * openners of a given blocker. So getConnectedEnablersFromBelief(o,S) queries
+	 * the state S and returns known openners of o, if such information is available.
+	 */
 	BiFunction<String,Iv4xrAgentState,List<String>> getConnectedEnablersFromBelief ;
-	//BiFunction<String,Iv4xrAgentState,List<String>> getEnablersInSameZoneFromBelief ;
+	
+	/**
+	 * Suppose the agent wants to navigate to an object o, but it can't because
+	 * all paths from the agent position to o are closed. Suppose one of the 
+	 * paths is only blocked by a single blocker, such that opening this blocker
+	 * would make o reachable. This block is called critical blocker towards o.
+	 */
 	BiFunction<String,Iv4xrAgentState,List<String>> getCriticalBlockerFromBelief ;
 	Predicate<Iv4xrAgentState> phi ;
 	Policy policy ;
 	
 	Random rnd = new Random() ;
 	
+	/**
+	 * To keep track of enablers that have been tried to flip the state of an
+	 * object. Members if this mapping are pairs (o,es) where o is an object,
+	 * and es is a set of enablers that have been tried to flip o.
+	 */
 	Map<String,Set<String>> triedEnablers = new HashMap<>() ;
 	
 	
 	public Sa2Solver() { super() ; }
 	
+	/**
+	 * A constructor for SA2.
+	 * 
+	 * @param reachabilityChecker
+	 * @param distanceToAgent
+	 * @param distanceFunction
+	 * @param gCandidateIsInteracted
+	 * @param gTargetIsRefreshed
+	 * @param explorationExhausted
+	 * @param gExploring
+	 */
 	public Sa2Solver(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
 			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
 			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
@@ -77,7 +178,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	}
 	
 	/**
-	 * Return the blockers that has not been tried yet.
+	 * Return blockers that have not been tried yet.
 	 */
 	boolean isUntriedBlocker(Iv4xrAgentState S, String blockerId) {
 		var ez = triedEnablers.get(blockerId) ;
@@ -85,20 +186,25 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	}
 	
 	/**
-	 * Check is the given blocker is still unsolved.
+	 * Check if the given blocker is still unsolved. See also 
+	 * {@link #unsolvedBlockers(Iv4xrAgentState)}.
 	 */
 	boolean isUnsolvedBlocker(Iv4xrAgentState S, String blockerId) {
 		return unsolvedBlockers(S).contains(blockerId) ;
 	}
 	
 	/**
-	 * Check if the given target still has untried and non-affector enablers
-	 * to try.
+	 * Check if the given target still has untried enablers and are not themselves
+	 * openers for the target.
 	 */
 	boolean hasUntriedEnablers(Iv4xrAgentState S, String target) {
 		return ! untriedEnablers(S,target).isEmpty() ;
 	}
 	
+	/**
+	 * Check if the given target still has untried enablers and are not themselves
+	 * openers for the target, and are reachable from the current agent's location.
+	 */
 	boolean hasUntriedReachableEnablers(Iv4xrAgentState S, String target) {
 		var candidates = untriedEnablers(S,target) ;
 		return candidates.stream().anyMatch(id -> reachabilityChecker.apply(S, S.worldmodel.getElement(id))) ;
@@ -106,7 +212,7 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	/**
 	 * Get currently known enablers that have not been tried for affecting the
-	 * given target entity, and moreover are not themselves affectors of the 
+	 * given target entity, and moreover are not themselves openers of the 
 	 * target.
 	 */
 	List<String> untriedEnablers(Iv4xrAgentState S, String targetBlocker) {
@@ -322,7 +428,24 @@ public class Sa2Solver<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	}
 	
 	
-	
+	/**
+	 * SA2 solver. More precisely, this method produces a goal-structure that can
+	 * be given to a test-agent.
+	 * 
+	 * <p> Describe this :) TODO.
+	 * 
+	 * @param agent
+	 * @param tId
+	 * @param heuristicLocation
+	 * @param blockersSelector
+	 * @param enablersSelector
+	 * @param isOpen
+	 * @param getConnectedEnablersFromBelief
+	 * @param getCriticalBlockerFromBelief
+	 * @param phi
+	 * @param policy
+	 * @return
+	 */
 	public GoalStructure solver(BasicAgent agent, 
 			String tId, 
 			Vec3 heuristicLocation,
