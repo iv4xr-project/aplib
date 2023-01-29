@@ -234,6 +234,9 @@ public class TestSimple_and_SurfaceNavGraph {
         path = pathfinder.findPath(navgraph, 0, 3);
         System.out.println("** " + path);
         assertTrue(checkPath(path, 0, 1, 2, 3));
+        path = pathfinder.findPath(navgraph, 0, 0);
+        System.out.println("** " + path);
+        assertTrue(checkPath(path, 0));
 
     }
 

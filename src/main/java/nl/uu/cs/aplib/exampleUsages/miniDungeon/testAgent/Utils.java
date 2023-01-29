@@ -15,7 +15,7 @@ public class Utils {
 		return new Tile((int)p.x, (int) p.z ) ;
 	}
 
-	static Pair<Integer,Tile> loc3(int mazeId, int x, int y) {
+	public static Pair<Integer,Tile> loc3(int mazeId, int x, int y) {
 		return new Pair<>(mazeId, new Tile(x,y)) ;
 	}
 

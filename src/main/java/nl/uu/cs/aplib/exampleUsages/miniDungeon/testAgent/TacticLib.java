@@ -91,7 +91,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	Logger logger = Logging.getAPLIBlogger() ;
 	
 
-	WorldModel moveTo(MyAgentState state, Tile targetTile) {
+	public WorldModel moveTo(MyAgentState state, Tile targetTile) {
 		Tile t0 = Utils.toTile(state.worldmodel.position) ;
 		if(!Utils.adjacent(t0,targetTile))
 				throw new IllegalArgumentException() ;
@@ -113,7 +113,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	/**
 	 * Construct an action that would guide the agent to the given location.
 	 */
-	Action navigateToAction(int mazeId, int x, int y) {
+	public Action navigateToAction(int mazeId, int x, int y) {
 		return action("move-to")
 		.do2((MyAgentState S) ->  (Tile nextTile) -> {
 			WorldModel newwom = moveTo(S,nextTile) ;
@@ -256,7 +256,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	/**
 	 * Construct an action that would use a healing pot. The action is left unguarded.
 	 */
-	Action useHealingPotAction() {
+	public Action useHealingPotAction() {
 		return action("use healpot")
 			.do1((MyAgentState S) -> {
 				logger.info(">>> " + S.worldmodel.agentId + " drinks HEALPOT ") ;
@@ -270,7 +270,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	 * Construct an action that would attack an adjacent monster. The action is
 	 * unguarded.
 	 */
-	Action attackMonsterAction() { 
+	public Action attackMonsterAction() { 
 		return action("attack")
 			.do1((MyAgentState S) -> {
 					var ms = S.adajcentMonsters() ;
@@ -285,7 +285,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	/**
 	 * Construct an action that would use a rage pot. The action is left unguarded.
 	 */
-	Action useRagePotAction() {
+	public Action useRagePotAction() {
 		return action("use ragepot")
 			.do1((MyAgentState S) -> {
 					logger.info(">>> " + S.worldmodel.agentId + " drinks RAGEPOT ") ;

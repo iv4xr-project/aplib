@@ -77,7 +77,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 		return G.lift() ;		
 	}
 	
-	Predicate<MyAgentState> whenToGoAfterHealPot = S -> {
+	public Predicate<MyAgentState> whenToGoAfterHealPot = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 		int maxBagSize = (int) player.properties.get("maxBagSize") ;
@@ -87,7 +87,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 				&& healPotsInVicinity.size() > 0 ;
 	} ;
 	
-	Predicate<MyAgentState> whenToGoAfterRagePot = S -> {
+	public Predicate<MyAgentState> whenToGoAfterRagePot = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 		int maxBagSize = (int) player.properties.get("maxBagSize") ;
@@ -103,7 +103,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	 * A goal to send the agent to pick up a heal or rage pot nearby. It is a dynamic goal,
 	 * as it will pick any such pot (rather than a specific one decided upfront).
 	 */
-	GoalStructure grabPot(TestAgent agent, EntityType potionType) { 
+	public GoalStructure grabPot(TestAgent agent, EntityType potionType) { 
 		return DEPLOY(agent,
 		  (MyAgentState S) -> {
 			  var potsInVicinity = TacticLib.nearItems(S,potionType,5) ;
