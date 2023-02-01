@@ -5,6 +5,7 @@ import static eu.iv4xr.framework.mainConcepts.ObservationEvent.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import eu.iv4xr.framework.extensions.ltl.LTL;
 import eu.iv4xr.framework.extensions.ltl.SATVerdict;
@@ -200,6 +201,20 @@ public class TestAgent extends AutonomousBasicAgent {
     }
     
     /**
+     * Add one or more invariants that would be checked as the agent runs. An "invariant"
+     * is a state predicate I that is required to hold at every state along an execution.
+     * Each given I will be translated to the LTL formula always(I).
+     */
+    public TestAgent addInv(Predicate<SimpleState> ... invs) {
+    	for (var I : invs) {
+    		LTL<SimpleState> I_ = LTL.always(I) ;
+    		ltls.add(I_) ;
+    		I_.startChecking();
+    	}
+    	return this ;
+    }
+    
+    /**
      * Reset the state of the LTL-formulas attached/registered to this agent.
      */
     public TestAgent resetLTLs() {
@@ -215,11 +230,19 @@ public class TestAgent extends AutonomousBasicAgent {
     public boolean evaluateLTLs() {
     	boolean hasUnSat = false ;
     	// evaluate all ltls, if they were not evaluated yet:
+    	int k = 0 ;
+    	System.out.println("## Checking " + ltls.size() + " LTL properties...") ;
     	for (var phi : ltls)  {
     		if (!phi.fullyEvaluated) phi.endChecking();
-    		if (!hasUnSat  &&  phi.sat() == SATVerdict.UNSAT) 
+    		//if (!hasUnSat  &&  phi.sat() == SATVerdict.UNSAT) {
+        	if (phi.sat() == SATVerdict.UNSAT) {
     			hasUnSat = true ;
+    			System.out.println("   " + k + "-th LTL-property is violated!") ;
+    		}
+    		k++ ;
     	}
+    	if (!hasUnSat) 
+    		System.out.println("   No LTL violation found.") ;
     	return !hasUnSat ;
     }
     

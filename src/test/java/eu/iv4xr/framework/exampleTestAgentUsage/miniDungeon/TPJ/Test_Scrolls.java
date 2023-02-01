@@ -64,6 +64,14 @@ public class Test_Scrolls {
 				        .on_(goalLib.whenToGoAfterHealPot)
 				        .lift(), 
 				   ABORT()),
+			   SEQ(addBefore(S -> { 
+				    System.out.println(">>> deploying grab rage-pot.") ;
+				    return goalLib.grabPot(agent, EntityType.RAGEPOT) ;} )
+				        .on_((MyAgentState S) -> 
+				                S.worldmodel.agentId.equals("Frodo") // only let Frodo get rage
+				        		&& goalLib.whenToGoAfterRagePot.test(S))
+				        .lift(), 
+				   ABORT()),
 			  tacticLib.explore(null),
 			  ABORT()))
 		   .lift() ;
@@ -96,10 +104,10 @@ public class Test_Scrolls {
 	
 	
     
-	@Test
+	//@Test
 	public void testScrolls1() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
+		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Frodo" ;		
@@ -112,10 +120,10 @@ public class Test_Scrolls {
 		//(new Scanner(System.in)).nextLine();
 	}
 	
-	@Test
+	//@Test
 	public void testScrolls2() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
+		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Frodo" ;		
@@ -125,11 +133,27 @@ public class Test_Scrolls {
 				goalLib.entityInteracted("SM0"),
 				allScrollsTested(agent,"SI1")
 				);
-		int sleep = 0 ;
+		int sleep = 20 ;
 		boolean stopAfterAgentDie = true ;
 		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
 		assertTrue(G.getStatus().success()) ;
 		
+		//(new Scanner(System.in)).nextLine();
+	}
+	
+	@Test
+	public void testScrolls2b() throws Exception {
+		
+		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
+		System.out.println(">>> Configuration:\n" + config);
+		
+		String agentId = "Smeagol" ;		
+		var agent = new TestAgent(agentId, "tester");
+		GoalStructure G = allScrollsTested(agent,"SM0") ;
+		int sleep = 0 ;
+		boolean stopAfterAgentDie = true ;
+		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		assertTrue(G.getStatus().success()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	

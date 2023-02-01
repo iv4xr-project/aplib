@@ -150,6 +150,7 @@ public class Test_Random {
 		int sleep = 0 ;
 		boolean stopAfterAgentDie = true ;
 		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
@@ -167,6 +168,7 @@ public class Test_Random {
 		int sleep = 0 ;
 		boolean stopAfterAgentDie = true ;
 		TPJUtils.runAgent(agent, config, G, 4000, sleep,stopAfterAgentDie,withGraphics, supressLogging);
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
@@ -184,6 +186,7 @@ public class Test_Random {
 		int sleep = 0 ;
 		boolean stopAfterAgentDie = true ;
 		TPJUtils.runAgent(agent,config,G,3000,sleep,stopAfterAgentDie,withGraphics,supressLogging) ;		
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}
 	
@@ -201,6 +204,7 @@ public class Test_Random {
 		int sleep = 0 ;
 		boolean stopAfterAgentDie = true ;
 		TPJUtils.runAgent(agent,config,G,3000,sleep,stopAfterAgentDie,withGraphics,supressLogging) ;		
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}
 	

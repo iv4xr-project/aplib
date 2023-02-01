@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.mainConcepts;
 
+import java.io.Serializable;
 import java.util.function.BiFunction;
 
 import eu.iv4xr.framework.extensions.ltl.BasicModelChecker;
@@ -109,6 +110,88 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	public WorldModel worldmodel() {
 		return worldmodel;
 	}
+	
+	/**
+	 * Return the WorldEntity in {@link #worldmodel} with the given id.
+	 */
+	public WorldEntity get(String eId) {
+		return worldmodel.elements.get(eId) ;
+	}
+	
+    /**
+	 * Return the value of the given property of an entity e (in this state's
+	 * worldmodel) with the given entity id. Return null if the property does not
+	 * exist in e.
+	 * 
+	 * <p>
+	 * The method requires e to exists in {@link #worldmodel}.
+	 */
+	public Serializable val(String eId, String propertyName) {
+		return worldmodel.val(eId, propertyName) ;
+	}
+	
+    /**
+     * Return the value of the given property of an entity a that represents
+     * the agent that owns this WorldModel. Return null if the property 
+     * does not exist in e.
+     * 
+     * <p>The method requires the agent to have its own WorldEntity representation
+     * in {@link #worldmodel}.
+     */
+	public Serializable val(String propertyName) {
+		return worldmodel.val(propertyName) ;
+	}
+	
+    /**
+     * Checks if an entity is "recent". The entity is recent if it is just recently
+     * observed by the agent. Technically, it is recent if it has the same timestamp 
+     * and the WorldModel in {@link #worldmodel}.
+     */
+	public boolean recent(String eId) {
+		return worldmodel.recent(eId) ;
+	}
+	
+    /**
+     * Checks if an entity is "recent". The entity is recent if it is just recently
+     * observed by the agent. Technically, it is recent if it has the same timestamp 
+     * and the WorldModel in {@link #worldmodel}.
+     */
+	public boolean recent(WorldEntity e) {
+		return worldmodel.recent(e) ;
+	}
+	
+    /**
+     * Get the value of a property of a WorldEntity e at the sampling time <b>
+     * before</b> its e.timestamp. Return null if e does not have the property,
+     * or if has no such "before" state.
+     */
+	public Serializable before(String eId, String propertyName) {
+		return worldmodel.before(eId, propertyName) ;
+	}
+	
+    /**
+     * Let e be the WorldEntity with the given id. This method
+     * returns the value of a property of a WorldEntity e at the sampling time <b>
+     * before</b> its e.timestamp. Return null if e does not have the property,
+     * or if has no such "before" state.
+     * 
+     * <p>The method requires e to exist in {@link #worldmodel}.
+     */
+	public Serializable before(WorldEntity e, String propertyName) {
+		return worldmodel.before(e,propertyName) ;
+	}
+	
+	/**
+     * Let a be the WorldEntity representing the agent that owns this WorldModel.
+     * This method returns the value of a property of a at the sampling time <b>
+     * before</b> its a.timestamp. It Returns null if a does not have the property,
+     * or if has no such "before" state.
+     * 
+     * <p>The method requires a to exist in {@link #worldmodel}.
+     */
+    public Serializable before(String propertyName) {
+    	return worldmodel.before(propertyName) ;
+    }
 
 	/**
 	 * Return the navigation-graph in {@link Iv4xrAgentState#worldNavigation}.

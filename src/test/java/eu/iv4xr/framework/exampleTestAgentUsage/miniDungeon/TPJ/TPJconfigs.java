@@ -21,5 +21,15 @@ public class TPJconfigs {
 		config.randomSeed = 79371;
 		return config ;
 	}
+	
+	public static MiniDungeonConfig MDconfig2() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 4;
+		config.numberOfRagePots = 4;
+		config.viewDistance = 4;
+		config.numberOfMonsters = 8 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
 
 }

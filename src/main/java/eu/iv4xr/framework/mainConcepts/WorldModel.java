@@ -57,30 +57,124 @@ public class WorldModel implements Serializable {
     public WorldEntity getElement(String id) {
         return elements.get(id);
     }
+    
+    /**
+     * True if an entity with the given id is in this WorldModel.
+     */
+    public boolean contains(String id) {
+    	return elements.get(id) != null ;
+    }
+    
+    /**
+     * Return the value of the given property of an entity e with the given
+     * entity id. Return null if the property does not exist in e.
+     * 
+     * <p>The method requires e to exists in this WorldModel. 
+     */
+    public Serializable val(String eId, String propertyName) {
+        return elements.get(eId).getProperty(propertyName) ;
+    }
+    
+    /**
+     * Return the value of the given property of an entity a that represents
+     * the agent that owns this WorldModel. Return null if the property 
+     * does not exist in e.
+     * 
+     * <p>The method requires the agent to have its own WorldEntity representation
+     * in this WorldModel.
+     */
+    public Serializable val(String propertyName) {
+        return elements.get(this.agentId).getProperty(propertyName) ;
+    }
+    
+    /**
+     * Checks if an entity is "recent". The entity is recent if it is just recently
+     * observed by the agent. Technically, it is recent if it has the same timestamp 
+     * and this WorldModel.
+     */
+    public boolean recent(String eId) {
+    	return elements.get(eId).timestamp == this.timestamp ;
+    }
+    
+    /**
+     * Checks if an entity is "recent". The entity is recent if it is just recently
+     * observed by the agent. Technically, it is recent if it has the same timestamp 
+     * and this WorldModel.
+     */
+    public boolean recent(WorldEntity e) {
+    	return e.timestamp == this.timestamp ;
+    }
+    
+    /**
+     * Get the value of a property of a WorldEntity e at the sampling time <b>
+     * before</b> its e.timestamp. Returns null if e does not have the property,
+     * or if has no such "before" state.
+     * 
+     * <p>The method requires e to exist in this WorldModel. 
+     */
+    public Serializable before(WorldEntity e, String propertyName) {
+    	if (e.lastStutterTimestamp >= 0) {
+    		// then the state at the previuous sampling time must be the same
+    		// as the current state:
+    		return e.getProperty(propertyName) ;
+    	}
+    	// else, case-1: e changes when it was sampled at e.timestamp
+    	WorldEntity prev = e.getPreviousState() ;
+    	if (prev != null) {
+    		return prev.properties.get(propertyName) ;
+    	}
+    	// or case-2: e has no previous state
+    	return null ;
+    }
+    
+    /**
+     * Let e be the WorldEntity with the given id. This method
+     * returns the value of a property of a WorldEntity e at the sampling time <b>
+     * before</b> its e.timestamp. It returns null if e does not have the property,
+     * or if has no such "before" state.
+     * 
+     * <p>The method requires e to exist in this WorldModel. 
+     */
+    public Serializable before(String eId, String propertyName) {
+    	return before(elements.get(eId),propertyName) ;
+    }
+    
+    /**
+     * Let a be the WorldEntity representing the agent that owns this WorldModel.
+     * This method returns the value of a property of a at the sampling time <b>
+     * before</b> its a.timestamp. It Returns null if a does not have the property,
+     * or if has no such "before" state.
+     * 
+     * <p>The method requires a to exist in this WorldModel. 
+     */
+    public Serializable before(String propertyName) {
+    	return before(elements.get(this.agentId),propertyName) ;
+    }
+    
 
     /**
      * This will add or update an entity e in this WorldModel. The entity can be an
      * entity observed by the agent that owns the WorldModel, or it can also be
      * information sent by another agent.
      * 
-     * IMPORTANT: this update may have some side effect on e itself, so e should be
+     * <p>IMPORTANT: this update may have some side effect on e itself, so e should be
      * a fresh instance. In particular, if e is sent from another agent, it should
      * be cloned first before it is sent.
      * 
-     * Case-1: a version ex of e is already in this WorldModel, its state will be
+     * <p>Case-1: a version ex of e is already in this WorldModel, its state will be
      * updated with e if e's timestamp is more recent and if e's state is different.
      * More specifically, this means that we replace ex with e, and then link ex as
      * e's previous state.
-     * 
+     * <p>
      * Case-2: e is more recent, but its state is the same as ex. We do not add e to
      * the world model; we update ex' timestamp to that of e.
      * 
-     * Case-3: e is older than ex, but more recent than ex.previousState. In this
+     * <p>Case-3: e is older than ex, but more recent than ex.previousState. In this
      * case we replace ex.previousState with e.
      * 
-     * Case-4: e has no copy in this WorldModel. It will then be added.
+     * <p>Case-4: e has no copy in this WorldModel. It will then be added.
      * 
-     * The method returns the Entity f which then represents e in the WorldModel.
+     * <p>The method returns the Entity f which then represents e in the WorldModel.
      * Note that e reflects some state change in the WorldModel if and only if the
      * returned f = e (pointer equality).
      */
@@ -131,13 +225,13 @@ public class WorldModel implements Serializable {
      * This will merge a sampled (and more recent) observation (represented as
      * another WorldModel) made by the agent into WorldModel.
      * 
-     * IMPORTANT: do not use this to merge WorldModel from other agents. Use instead
+     * <p>IMPORTANT: do not use this to merge WorldModel from other agents. Use instead
      * {@link updateEntity} for this purpose. Also note if an agent want to send
      * information about an entity it knows to share it with another agent, it
      * should send a copy of the entity as {@link updateEntity} may have side effect
      * on the entity.
      * 
-     * This method will basically add all entities in the new observation into this
+     * <p>This method will basically add all entities in the new observation into this
      * WorldModel. More precisely, if an entity e was not in this WorldModel, it
      * will be added. But if e was already in the WorldModel, it will not be
      * literally be added anew. Instead, we update e's state in the WorldModel to
@@ -145,24 +239,19 @@ public class WorldModel implements Serializable {
      * will still be linked to the new state, just in case the agent needs it. Only
      * one past-state will be stored though.
      * 
-     * The method will check if the given observation is at least as recent as this
+     * <p> The method will check if the given observation is at least as recent as this
      * WorldModel. It fails if this is not the case. If the check passes, the the
      * timestamp of this WorldModel will be updated to that of the observation. All
      * entities that were added (so, all entities in observation) will get this new
      * timestamp as well to reflect the fact that their states are freshly sampled.
      * 
-     * The method returns the list of entities that were identified as changing the
+     * <p>The method returns the list of entities that were identified as changing the
      * state of this WorldModel (e.g. either because they are new or because their
      * states are different).
      * 
-     * IMPORTANT: note that the implemented merging algorithm is additive. That is,
+     * <p>IMPORTANT: note that the implemented merging algorithm is additive. That is,
      * it adds entities into the target WorldModel or updates existing ones, but it
-     * will NEVER REMOVE an entity. In theory this can be handled with some bit of
-     * reasoning, e.g. when the agent has an unobstructed line of sight to the
-     * entity, and the entity is within the agent's visibility range, but it is not
-     * present in the new observation, then we can conclude that the entity is no
-     * longer in the world, and hence can be removed from the WorldModel.
-     * Implementing this reasoning is still TODO.
+     * will NEVER REMOVE an entity. 
      */
     public List<WorldEntity> mergeNewObservation(WorldModel observation) {
         // check if the observation is not null

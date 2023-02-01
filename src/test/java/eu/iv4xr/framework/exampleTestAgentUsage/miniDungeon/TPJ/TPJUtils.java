@@ -41,6 +41,10 @@ public class TPJUtils {
 		MyAgentState state = new MyAgentState();
 		
 		agent. attachState(state) . attachEnvironment(env)  .setGoal(G) ;
+		
+		agent.addInv(new MD_invs().allInvs) ;
+		agent.resetLTLs() ;
+		
 		Thread.sleep(1000);
 		// Now we run the agent:
 		System.out.println(">> Start agent loop...") ;

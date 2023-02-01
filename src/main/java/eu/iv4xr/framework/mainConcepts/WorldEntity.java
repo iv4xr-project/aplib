@@ -5,6 +5,26 @@ import java.util.*;
 
 import eu.iv4xr.framework.spatial.Vec3;
 
+/**
+ * A WorldEntity is used to represent a game object in a target game world.
+ * It has an <b>id</b> (a string) that uniquely identifies it. It has some basic
+ * properties such as its position in the world. A general list of properties
+ * is maintained in the form property-name to value mapping.
+ * 
+ * <p>Other features, when a WorldEntity is used as a part of {@link WorldModel}:
+ * 
+ * <ul>
+ * <li>A WorldEntity has {@link #timestamp}, indicating when it was last observed.
+ * <li>The field {@link #linkPreviousState(WorldEntity)} gives the time since when
+ * the state of this entity does not change.
+ * <li>The method {@link #getPreviousState()} gives the state of this entity just before
+ * it changes state to as it is now.
+ * <li>Deepcloning is supported.
+ * </ul> 
+ * 
+ * @author Wish
+ *
+ */
 public class WorldEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -63,7 +83,7 @@ public class WorldEntity implements Serializable {
      */
     private WorldEntity previousState = null;
 
-    private boolean equal_(Object a, Object b) {
+    private static boolean equal_(Object a, Object b) {
         if (a == null)
             return b == null;
         return a.equals(b);
@@ -74,7 +94,7 @@ public class WorldEntity implements Serializable {
      * same ID), but its state is possibly different than this entity. This method
      * checks if both entity have the same state.
      * 
-     * Dynamic entity is assumed not to change state. Else this method first check
+     * <p>Non-dynamic entity is assumed not to change state. Else this method first check
      * the hash-value of both entities. If they are the same, this method performs
      * deep comparison of position, velocity, properties, and sub-entities. This
      * might be a bit expensive; override this method if a faster implementation is
@@ -112,6 +132,10 @@ public class WorldEntity implements Serializable {
         return true;
     }
 
+    /**
+     * Return the value of the property of the given name. Return null if the
+     * entity does not have the asked property.
+     */
     public Serializable getProperty(String propertyName) {
         return properties.get(propertyName);
     }
@@ -155,17 +179,22 @@ public class WorldEntity implements Serializable {
 
     /**
      * Return a WorldEntity representing this entity's previous state, if that is
-     * tracked.
+     * tracked. By "previous state" we mean the last state that is different than
+     * the current state. In particular, this does NOT refer to the state of e in
+     * e.g. the previous sampling time.
      */
     public WorldEntity getPreviousState() {
         return previousState;
     }
 
     /**
-     * True if this entity has no previous state, or if its state differs from its
-     * previous. Note that we only track 1x previous state (so there is no longer
-     * chain of previous states).
+     * DEPRECATED.
+     * 
+     * <p>True if this entity has no previous state, or if its state differs from the
+     * maintained previous state. Note that we only track 1x previous state (so there is no longer
+     * chain of previous states). 
      */
+    @Deprecated
     public boolean hasChangedState() {
         if (previousState == null)
             return true;

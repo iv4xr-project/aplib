@@ -35,6 +35,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 	
 	public MyAgentEnv(DungeonApp app) {
 		this.app = app ;
+		this.turnOnDebugInstrumentation() ;
 	}
 	
 	public MiniDungeon thegame() {
@@ -86,6 +87,10 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		return wom ;
 	}
 	
+	/**
+	 * Do move up/down/left/right and use a potion. It does not do quite nor
+	 * reload.
+	 */
 	public WorldModel action(String agentId, Command cmd) {
 		Player player = null ;
 		Character c = null ; 
@@ -117,6 +122,8 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		if (c==null) {
 			throw new UnsupportedOperationException("Command " + cmd + " is not supported") ;
 		}
+		// to remember the command that is sent:
+		this.instrument(new EnvOperation(agentId,null,"" + cmd,null,null));
 		app.keyPressedWorker(c);
 		return observe(agentId) ;
 	}
