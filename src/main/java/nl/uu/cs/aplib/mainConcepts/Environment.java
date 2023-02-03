@@ -263,7 +263,7 @@ public class Environment {
     public EnvOperation getLastOperation() {
         return lastOperation;
     }
-
+    
     /**
      * Will record the id of the party that trigger this instrumentation step and
      * then call the update() method of every instrumenter registered to this
@@ -314,7 +314,7 @@ public class Environment {
     public static interface EnvironmentInstrumenter {
 
         /**
-         * Will be invoked by the Environment when its sendCommand() and refresh()
+         * Will be invoked by the Environment when its sendCommand().
          * methods are invoked.
          */
         public void update(Environment env);

@@ -25,6 +25,8 @@ public class Test_Walls {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = true ;
+	boolean stopAfterAgentDie = true ;	
+	boolean verbosePrint = false ;
 	
 	TacticLib tacticLib = new TacticLib() ;
 	GoalLib goalLib = new GoalLib() ;
@@ -386,14 +388,18 @@ public class Test_Walls {
 				goalLib.entityInteracted("W_0_0_10"));
 		*/
 		
-		int sleep = 10 ;
-		boolean stopAfterAgentDie = true ;
-		var state = TPJUtils.runAgent(agent, config, G, 8000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		int sleep = 1 ;
+		var state = TPJUtils.runAgent(agent, config, G, 8000, sleep, 
+				stopAfterAgentDie, 
+				withGraphics, 
+				supressLogging,
+				verbosePrint);
 		
 		//System.out.println("path = " + TacticLib.adjustedFindPath(state, 0,2,9,0,0,9)) ;
 		//System.out.println("path = " + TacticLib.adjustedFindPath(state, 0,2,9,0,1,9)) ;
 
-		
+		assertTrue(G.getStatus().success()) ;
+		assertTrue(agent.evaluateLTLs()) ;
 		(new Scanner(System.in)).nextLine() ;
 	}
 	

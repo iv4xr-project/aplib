@@ -9,6 +9,7 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Navigatable;
 import eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph;
 import eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph;
+import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.Mesh;
 import nl.uu.cs.aplib.agents.State;
 import nl.uu.cs.aplib.mainConcepts.Environment;
@@ -180,6 +181,16 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	public Serializable before(WorldEntity e, String propertyName) {
 		return worldmodel.before(e,propertyName) ;
 	}
+	
+	/**
+     * Return the position of the agent at the last sampling time.
+     * 
+     * <p>The method requires the agent to also have its own 
+     * WorldEntity in this WorldModel.
+     */
+    public Vec3 positionBefore() {
+    	return worldmodel.positionBefore() ;
+    }
 	
 	/**
      * Let a be the WorldEntity representing the agent that owns this WorldModel.

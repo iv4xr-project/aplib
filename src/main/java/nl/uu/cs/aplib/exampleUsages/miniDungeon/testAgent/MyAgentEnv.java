@@ -47,6 +47,9 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 	 */
 	@Override
 	public WorldModel observe(String agentId) {
+		// instrument a non-command to env:
+		this.instrument(null);
+		
 		WorldModel wom = new WorldModel() ;
 		Player player = null ;
 		if(agentId.equals(Frodo.class.getSimpleName())) {
@@ -122,10 +125,11 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		if (c==null) {
 			throw new UnsupportedOperationException("Command " + cmd + " is not supported") ;
 		}
-		// to remember the command that is sent:
-		this.instrument(new EnvOperation(agentId,null,"" + cmd,null,null));
 		app.keyPressedWorker(c);
-		return observe(agentId) ;
+		var obs = observe(agentId) ;
+		// to remember the command that is sent; has to be done after observe :| 
+		this.instrument(new EnvOperation(agentId,null,"" + cmd,null,null));
+		return  obs ;
 	}
 	
 

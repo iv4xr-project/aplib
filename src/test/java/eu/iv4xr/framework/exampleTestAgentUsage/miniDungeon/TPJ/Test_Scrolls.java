@@ -38,6 +38,8 @@ public class Test_Scrolls {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = true ;
+	boolean stopAfterAgentDie = true ;	
+	boolean verbosePrint = false ;
 	
 	TacticLib tacticLib = new TacticLib() ;
 	GoalLib goalLib = new GoalLib() ;
@@ -104,7 +106,7 @@ public class Test_Scrolls {
 	
 	
     
-	//@Test
+	@Test
 	public void testScrolls1() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
@@ -114,13 +116,17 @@ public class Test_Scrolls {
 		var agent = new TestAgent(agentId, "tester");
 		GoalStructure G = allScrollsTested(agent,"SM0") ;
 		int sleep = 0 ;
-		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
+				stopAfterAgentDie, 
+				withGraphics, 
+				supressLogging,
+				verbosePrint);
 		assertTrue(G.getStatus().success()) ;
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
-	//@Test
+	@Test
 	public void testScrolls2() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
@@ -135,9 +141,13 @@ public class Test_Scrolls {
 				);
 		int sleep = 20 ;
 		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
+				stopAfterAgentDie, 
+				withGraphics, 
+				supressLogging,
+				verbosePrint);
 		assertTrue(G.getStatus().success()) ;
-		
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
@@ -151,9 +161,13 @@ public class Test_Scrolls {
 		var agent = new TestAgent(agentId, "tester");
 		GoalStructure G = allScrollsTested(agent,"SM0") ;
 		int sleep = 0 ;
-		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
+				stopAfterAgentDie, 
+				withGraphics, 
+				supressLogging,
+				verbosePrint);
 		assertTrue(G.getStatus().success()) ;
+		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	

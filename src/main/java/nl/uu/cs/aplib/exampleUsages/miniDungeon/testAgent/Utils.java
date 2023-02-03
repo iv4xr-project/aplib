@@ -35,6 +35,43 @@ public class Utils {
 	public static int mazeId(WorldEntity e) {
 		return (int) e.properties.get("maze") ;
 	}
+	
+	public static boolean isScroll(WorldEntity e) {
+		return e.type.startsWith("SC") ;
+	}
+	
+	public static boolean isHealPot(WorldEntity e) {
+		return e.type.startsWith("H") ;
+	}
+	
+	public static boolean isRagePot(WorldEntity e) {
+		return e.type.startsWith("R") ;
+	}
+	
+	public static boolean isShrine(WorldEntity e) {
+		return e.type.startsWith("SH") ;
+	}
+	
+	public static boolean isMoonShrine(WorldEntity e) {
+		return e.id.startsWith("SM") ;
+	}
+	
+	public static boolean isSunShrine(WorldEntity e) {
+		return e.id.startsWith("SS") ;
+	}
+	
+	public static boolean isImmortalShrine(WorldEntity e) {
+		return e.id.startsWith("SI") ;
+	}
+	
+	public static boolean isMonster(WorldEntity e) {
+		return e.type.startsWith("M") ;
+	}
+	
+	public static boolean isWall(WorldEntity e) {
+		return e.type.startsWith("W") ;
+	}
+	
 
 	/**
 	 * Give the straight-line distance-square between two entities, if they

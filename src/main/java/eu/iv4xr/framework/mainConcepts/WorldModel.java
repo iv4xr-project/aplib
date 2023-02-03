@@ -139,6 +139,21 @@ public class WorldModel implements Serializable {
     	return before(elements.get(eId),propertyName) ;
     }
     
+    public WorldEntity before(WorldEntity e) {
+    	if (e.lastStutterTimestamp >= 0) {
+    		// then the state at the previuous sampling time must be the same
+    		// as the current state:
+    		return e ;
+    	}
+    	// else, case-1: e changes when it was sampled at e.timestamp
+    	WorldEntity prev = e.getPreviousState() ;
+    	if (prev != null) {
+    		return prev ;
+    	}
+    	// or case-2: e has no previous state
+    	return null ;
+    }
+    
     /**
      * Let a be the WorldEntity representing the agent that owns this WorldModel.
      * This method returns the value of a property of a at the sampling time <b>
@@ -149,6 +164,28 @@ public class WorldModel implements Serializable {
      */
     public Serializable before(String propertyName) {
     	return before(elements.get(this.agentId),propertyName) ;
+    }
+    
+    /**
+     * Return the position of the agent at the last sampling time.
+     * 
+     * <p>The method requires the agent to also have its own 
+     * WorldEntity in this WorldModel.
+     */
+    public Vec3 positionBefore() {
+    	WorldEntity a = elements.get(this.agentId) ;
+    	if (a.lastStutterTimestamp >= 0) {
+    		// then the state at the previuous sampling time must be the same
+    		// as the current state:
+    		return a.position ;
+    	}
+    	// else, case-1: e changes when it was sampled at e.timestamp
+    	WorldEntity prev = a.getPreviousState() ;
+    	if (prev != null) {
+    		return prev.position ;
+    	}
+    	// or case-2: e has no previous state
+    	return null ;
     }
     
 

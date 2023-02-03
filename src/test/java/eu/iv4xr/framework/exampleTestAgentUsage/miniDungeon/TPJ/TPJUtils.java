@@ -24,7 +24,8 @@ public class TPJUtils {
 			int sleep,
 			boolean stopAfterAgentDie,
 			boolean withGraphics,
-			boolean supressLogging) throws Exception {
+			boolean supressLogging,
+			boolean verbosePrint) throws Exception {
 		
 		// setting sound on/off, graphics on/off etc:
 		DungeonApp app = new DungeonApp(config);
@@ -52,7 +53,7 @@ public class TPJUtils {
 		int aterdieCount = 2 ;
 		while(G.getStatus().inProgress()) {
 			agent.update();
-			System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
+			if (verbosePrint) System.out.println("** [" + k + "] agent @" + Utils.toTile(state.worldmodel.position)) ;
 			// delay to slow it a bit for displaying:
 			if (sleep>0) Thread.sleep(sleep); 
 			if (k>=budget) break ;

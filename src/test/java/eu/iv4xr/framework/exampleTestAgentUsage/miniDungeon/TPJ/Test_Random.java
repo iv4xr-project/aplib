@@ -38,6 +38,8 @@ public class Test_Random {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = true ;
+	boolean stopAfterAgentDie = true ;	
+	boolean verbosePrint = false ;
 	
 	TacticLib tacticLib = new TacticLib() ;
 	GoalLib goalLib = new GoalLib() ;
@@ -148,8 +150,11 @@ public class Test_Random {
 
 		GoalStructure G = randomTest();
 		int sleep = 0 ;
-		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, stopAfterAgentDie, withGraphics, supressLogging);
+		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
+				stopAfterAgentDie, 
+				withGraphics, 
+				supressLogging,
+				verbosePrint);
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
@@ -166,8 +171,11 @@ public class Test_Random {
 
 		GoalStructure G = randomTest();
 		int sleep = 0 ;
-		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep,stopAfterAgentDie,withGraphics, supressLogging);
+		TPJUtils.runAgent(agent, config, G, 4000, sleep,
+				stopAfterAgentDie,
+				withGraphics, 
+				supressLogging,
+				verbosePrint);
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
@@ -184,8 +192,11 @@ public class Test_Random {
 		
 		GoalStructure G = smarterRandomTest(agent) ;
 		int sleep = 0 ;
-		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent,config,G,3000,sleep,stopAfterAgentDie,withGraphics,supressLogging) ;		
+		TPJUtils.runAgent(agent,config,G,3000,sleep,
+				stopAfterAgentDie,
+				withGraphics,
+				supressLogging,
+				verbosePrint) ;		
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}
@@ -202,8 +213,11 @@ public class Test_Random {
 		
 		GoalStructure G = smarterRandomTest(agent) ;
 		int sleep = 0 ;
-		boolean stopAfterAgentDie = true ;
-		TPJUtils.runAgent(agent,config,G,3000,sleep,stopAfterAgentDie,withGraphics,supressLogging) ;		
+		TPJUtils.runAgent(agent,config,G,3000,sleep,
+				stopAfterAgentDie,
+				withGraphics,
+				supressLogging,
+				verbosePrint) ;		
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}
