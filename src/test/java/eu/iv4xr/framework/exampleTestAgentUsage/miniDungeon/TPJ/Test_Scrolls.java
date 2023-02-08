@@ -36,7 +36,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 
 public class Test_Scrolls {
 	
-	boolean withGraphics = true ;
+	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 	boolean stopAfterAgentDie = true ;	
 	boolean verbosePrint = false ;
@@ -109,13 +109,14 @@ public class Test_Scrolls {
 	@Test
 	public void testScrolls1() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
+		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Frodo" ;		
 		var agent = new TestAgent(agentId, "tester");
 		GoalStructure G = allScrollsTested(agent,"SM0") ;
 		int sleep = 0 ;
+		//withGraphics = true ;
 		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
 				stopAfterAgentDie, 
 				withGraphics, 
@@ -129,7 +130,7 @@ public class Test_Scrolls {
 	@Test
 	public void testScrolls2() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
+		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Frodo" ;		
@@ -139,8 +140,7 @@ public class Test_Scrolls {
 				goalLib.entityInteracted("SM0"),
 				allScrollsTested(agent,"SI1")
 				);
-		int sleep = 20 ;
-		boolean stopAfterAgentDie = true ;
+		int sleep = 0 ;
 		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
 				stopAfterAgentDie, 
 				withGraphics, 

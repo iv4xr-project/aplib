@@ -89,7 +89,8 @@ public class Maze {
 		var world = maze.world ;
 		int numberOfBuggyWall = 0 ;
 		int maxNumberOfBuggyWalls = 1 ;
-		float probabilityBuggyWall = 0.05f ;
+		//float probabilityBuggyWall = 0.05f ;
+		float probabilityBuggyWall = 0f ;
 		// walls that build the maze (just a simple maze) :
 		int corridorWidth = size / numberOfCorridors;
 		int coridorX = size;

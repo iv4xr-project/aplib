@@ -36,7 +36,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 
 public class Test_Random {
 	
-	boolean withGraphics = true ;
+	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 	boolean stopAfterAgentDie = true ;	
 	boolean verbosePrint = false ;
@@ -171,6 +171,8 @@ public class Test_Random {
 
 		GoalStructure G = randomTest();
 		int sleep = 0 ;
+		//withGraphics = true ;
+		//verbosePrint = true ;
 		TPJUtils.runAgent(agent, config, G, 4000, sleep,
 				stopAfterAgentDie,
 				withGraphics, 

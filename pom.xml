@@ -146,12 +146,22 @@
                     <param>nl.uu.cs.aplib.exampleUsages.miniDungeon.Maze</param>
                     <param>nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity*</param>
                 </targetClasses>
+                <excludedMethods>
+                    <!-- this does not work, pass it a the command line
+                    with -DexcludedMethods=main,toString
+                   <param>main,toString</param>
+                 -->
+                </excludedMethods>
                 <targetTests>
-                  <!--
-                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TestMiniDungeon</param>
+<!--
+                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.Test_Random</param>
+
+                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.Test_Scrolls</param>
                 -->
-                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.UnitTest*</param>
+
+                  <param>eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.UnitTest*</param> 
                 </targetTests>
+                <timeoutConstant> 1500 </timeoutConstant>
                 <reportsDirectory>
                     ./pitresults
                 </reportsDirectory>

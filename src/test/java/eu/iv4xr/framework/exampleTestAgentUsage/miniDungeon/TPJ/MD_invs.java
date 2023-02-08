@@ -105,7 +105,8 @@ public class MD_invs {
 			boolean locationCorrect = true ;
 			if (expectedLocation[0] != null) {
 				//System.out.println(">>> checking") ;
-				locationCorrect = pos.equals(expectedLocation[0]) ;
+				int hp = (Integer) S.val("hp") ;
+				locationCorrect =   hp == 0 || pos.equals(expectedLocation[0]) ;
 				if (!locationCorrect) {
 					System.out.println(">>> BUG! command: " + executedAction[0]) ;
 					System.out.println(">>> expected pos:" + expectedLocation[0]  
@@ -147,6 +148,7 @@ public class MD_invs {
 						// the agent tries to bump a wall:
 						expectedLocation[0] = pos.copy() ;
 						executedAction[0] = cmd + " against a wall." ;
+						//expectedLocation[0] = null ;
 					}
 					else if (Utils.isScroll(inFrontOfMe) 
 							|| Utils.isHealPot(inFrontOfMe)

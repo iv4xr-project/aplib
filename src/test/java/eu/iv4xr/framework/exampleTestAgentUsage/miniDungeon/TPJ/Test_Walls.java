@@ -23,7 +23,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 
 public class Test_Walls {
 	
-	boolean withGraphics = true ;
+	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 	boolean stopAfterAgentDie = true ;	
 	boolean verbosePrint = false ;
@@ -400,7 +400,7 @@ public class Test_Walls {
 
 		assertTrue(G.getStatus().success()) ;
 		assertTrue(agent.evaluateLTLs()) ;
-		(new Scanner(System.in)).nextLine() ;
+		//(new Scanner(System.in)).nextLine() ;
 	}
 	
 
