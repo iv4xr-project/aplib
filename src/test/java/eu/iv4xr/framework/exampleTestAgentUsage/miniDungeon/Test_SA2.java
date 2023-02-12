@@ -33,7 +33,7 @@ import nl.uu.cs.aplib.utils.Pair;
 
 public class Test_SA2 {
 	
-	boolean withGraphics = true ;
+	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 	
 	Pair<Integer,Tile> covertToMDLocation(Vec3 p) {
@@ -150,7 +150,7 @@ public class Test_SA2 {
 		// Now we run the agent:
 		int delay = 20 ;
 		long time0 = System.currentTimeMillis() ;
-		TestMiniDungeonWithAgent.runAndCheck(agent,G,false,delay,2000) ;
+		TestMiniDungeonWithAgent.runAndCheck(agent,G,false,delay,3000) ;
 
 		System.out.println("=== exploration exhausted: " + tacticLib.explorationExhausted(state)) ;
 
