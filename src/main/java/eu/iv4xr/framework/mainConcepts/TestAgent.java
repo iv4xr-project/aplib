@@ -224,7 +224,7 @@ public class TestAgent extends AutonomousBasicAgent {
     
     /**
      * Call this at the end of agent's run to evaluate all LTL properties
-     * registered to it. If one gives UNSAT, this method returns false (
+     * registered to the agent (see [{@link #addLTL(LTL...)}). If one gives UNSAT, this method returns false (
      * one of the LTL is violated), else it returns true (no LTL is violated).
      */
     public boolean evaluateLTLs() {
@@ -244,6 +244,16 @@ public class TestAgent extends AutonomousBasicAgent {
     	if (!hasUnSat) 
     		System.out.println("   No LTL violation found.") ;
     	return !hasUnSat ;
+    }
+    
+    /**
+     * Call this at the end of agent's run to evaluate all invariants
+     * registered to the agent (see {@link #addInv(Predicate...)} )If one gives UNSAT, this method returns false (
+     * one of the invariant is violated), else it returns true (no invariant is violated).
+     * The implementation of this method simply calls the more generic {@link #evaluateLTLs()}.
+     */
+    public boolean evaluateInvs() {
+    	return evaluateLTLs() ;
     }
     
     

@@ -616,7 +616,7 @@ public class BasicAgent {
         chosenAction.action.totalRuntime += elapsed;
         currentGoal.registerUsedTime(elapsed);
 
-        // if the current goal is not decided (still in progres), check if its budget is
+        // if the current goal is not decided (still in progress), check if its budget is
         // not exhausted:
         if (currentGoal.getStatus().inProgress() && currentGoal.budget <= 0d) {
             logger.info("Agent " + id + " FAILs the goal " + currentGoal.goal.name + "; its budget is exhausted.");

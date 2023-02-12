@@ -376,19 +376,19 @@ public class Test_DynamicGoalStructure {
         	
         }) ;
         
-        GoalStructure G = SEQ(g10.lift(), g15) ;
+        GoalStructure G = SEQ(g10.lift(), g15, SUCCESS()) ;
         agent.setGoal(G) ;
         
         //G.printGoalStructureStatus();     
         //System.out.println(">>> " + getPrimgoals(G).size()) ;
-        assertTrue(getPrimgoals(G).size() == 5) ;
+        assertTrue(getPrimgoals(G).size() == 3) ;
         
         executeAgent(agent,20) ;
         
         assertTrue(state.x == 15) ;
         assertTrue(G.status.success()) ;
-        assertTrue(getPrimgoals(G).size() == 5) ; // 
         G.printGoalStructureStatus();     
+        assertTrue(getPrimgoals(G).size() == 3) ; // 
     }
     
     /**
@@ -417,18 +417,18 @@ public class Test_DynamicGoalStructure {
         	
         }) ;
         
-        GoalStructure G = SEQ(g10.lift(), g15) ;
+        GoalStructure G = FIRSTof(SEQ(g10.lift(), g15), FAIL()) ;
         agent.setGoal(G) ;
         
         //G.printGoalStructureStatus();     
         //System.out.println(">>> " + getPrimgoals(G).size()) ;
-        assertTrue(getPrimgoals(G).size() == 5) ;
+        assertTrue(getPrimgoals(G).size() == 3) ;
         
         executeAgent(agent,20) ;
         
         assertTrue(state.x == 15) ;
         assertTrue(G.status.failed()) ;
-        assertTrue(getPrimgoals(G).size() == 5) ; // 
+        assertTrue(getPrimgoals(G).size() == 3) ; // 
         G.printGoalStructureStatus();     
     }
 

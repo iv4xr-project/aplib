@@ -272,8 +272,36 @@ public class AplibEDSL {
      * based on it, and this H is the one that is deployed. Notice that the kind of H produced can thus
      * be made dependent on the current agent state.
      * 
-     * After H is executed, it is removed from the goal-tree.
+     * <p>After H is executed, it is removed from the goal-tree.
+     * 
+     * <p>DEPRACATED. We don't need the agent-parameter anymore. Use
+     * {@link #DEPLOY(Function)} instead.
      */
+    @SuppressWarnings("unchecked")
+	public static <AgentState> GoalStructure  DEPLOY(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
+    	GoalStructure G = goal("deploy a goal")
+          .toSolve((Boolean v) -> true)
+          .withTactic(addAfter(S -> dynamicgoal.apply((AgentState) S),true).lift())
+          .lift();
+    	
+    	return SEQ(G) ;
+    }
+    
+    /**
+     * The combinator will "dynamically" deploy a goal to be executed/adopted after executing this
+     * combinator. The paramerter dynamic goal takes the agent current state and constructs a goal H
+     * based on it, and this H is the one that is deployed. Notice that the kind of H produced can thus
+     * be made dependent on the current agent state.
+     * 
+     * <p>After H is executed, it is removed from the goal-tree.
+     */
+    public static <AgentState> GoalStructure  DEPLOY(Function<AgentState,GoalStructure> dynamicgoal) {
+    	return DEPLOY(null,dynamicgoal) ;
+    }
+    
+    /* 
+     // Older implementation of DEPLOY in v1.5.5 and earlier; it does not make use of
+     // auto-remove goal:
     public static <AgentState> GoalStructure  DEPLOY(BasicAgent agent, Function<AgentState,GoalStructure> dynamicgoal) {
         GoalStructure[] newGoal = { null } ; 
         GoalStructure G = goal("deploy a goal")
@@ -307,6 +335,7 @@ public class AplibEDSL {
         		   // make the whole construct fail:
         		   SEQ(remove.apply(null),FAIL())) ;  
     }
+    */
     
     /**
      * Construct a goal that will be interrupted on a certain conditions. The goal is
