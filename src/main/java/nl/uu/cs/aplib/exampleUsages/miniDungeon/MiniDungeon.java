@@ -2,10 +2,12 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon;
 
 import java.io.Console;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.IntVec2D;
@@ -107,7 +109,10 @@ public class MiniDungeon {
 	
 	public List<Maze> mazes = new LinkedList<>();
 	public List<Player> players = new LinkedList<>() ;
-	public List<String> recentlyRemoved = new LinkedList<>() ;
+	/**
+	 * Keeping track of removed entities.
+	 */
+	public List<String> removed = new LinkedList<>() ;
 	
 	// using separate random generators to make the dungeon creation more controlable for experiments
 	
@@ -306,7 +311,7 @@ public class MiniDungeon {
 	void removeFromMaze(Entity e) {
 		var maze = mazes.get(e.mazeId) ;
 		maze.world[e.x][e.y] = null ;
-		recentlyRemoved.add(e.id) ;
+		removed.add(e.id) ;
 	}
 	
 	void attack(CombativeEntity attacker, CombativeEntity defender) {
@@ -492,13 +497,21 @@ public class MiniDungeon {
 		
 		Player player = c_.fst ;
 		boolean wasEnraged = player.rageTimer > 0;	
-		List<String> copyOfRemoved = new LinkedList<>() ;
-		copyOfRemoved.addAll(recentlyRemoved) ;
-		recentlyRemoved.clear();
+		// Clearing removed list to only keep track of entities that were last 
+		// removed does not work in two-player setup. This is also more complicated
+		// as the players do not necessarily play in turn.
+		// So we will just keep a list of all removed entities.
+		
+		//List<String> copyOfRemoved = new LinkedList<>() ;
+		//copyOfRemoved.addAll(recentlyRemoved) ;
+		//if (this.turnNr % 4 == 0) {
+		//	System.out.println(">>>> Clearing recentlyRemoved list") ;
+		//	recentlyRemoved.clear();
+		//}
 		String msg = doCommandWorker(player,c_.snd) ;
 		//xSystem.out.println(">>> " + recentlyRemoved) ;
 		if (msg == null) {
-			recentlyRemoved.addAll(copyOfRemoved) ;
+			//recentlyRemoved.addAll(copyOfRemoved) ;
 			return "" ;
 		}
 		// putting the logic for rage time-out here:
@@ -793,8 +806,10 @@ public class MiniDungeon {
 	 * Tiles that are visible to the players (so, visible to either Frodo
 	 * or Smeagol).
 	 */
-	public List<Pair<Integer,IntVec2D>> visibleTiles() {
-		List<Pair<Integer,IntVec2D>> visible = new LinkedList<>() ;
+	public Set<Pair<Integer,IntVec2D>> visibleTiles() {
+		// BUG found by system test.
+		// It was a LIST, which may then add some tiles 2x !
+		Set<Pair<Integer,IntVec2D>> visible = new HashSet<>() ;
 		for(int row = config.worldSize-1 ; 0<=row; row--) {
 			for(int x = 0; x<config.worldSize; x++) {
 				var location = new IntVec2D(x,row) ;

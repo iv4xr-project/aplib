@@ -29,7 +29,7 @@ public class UnitTestMiniDungeon {
 		assertTrue(dungeon.smeagol() != null) ;
 		assertTrue(dungeon.status == GameStatus.INPROGRESS) ;
 		assertTrue(dungeon.mazes.size() == 1) ;
-		assertTrue(dungeon.recentlyRemoved.size() == 0) ;
+		assertTrue(dungeon.removed.size() == 0) ;
 		assertTrue(dungeon.turnNr == 0) ;
 		assertTrue(dungeon.aPlayerHasAttacked == false) ;
 		

@@ -134,9 +134,23 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	}
 	
 	/**
+	 * If set to true then {@link #navigateToAction(String)}, and other tactics that use it,
+	 * will not keep calculating path to the target entity. Instead, it stores the path,
+	 * and then follows the stored path for several turns, or until the path becomes "disconnected"
+	 * from the agent. This happens e.g. if the agent decides to move to some direction that is
+	 * not along the saved path. If this happens,  {@link #navigateToAction(String) will recalculate
+	 * the path.
+	 */
+	public boolean delayPathReplan = false ;
+	
+	/**
 	 * Construct an action that would guide the agent to a tile adjacent to the target entity.
 	 */
 	Action navigateToAction(String targetId) {
+		// memorize path if instructed to, avoid invoking pathfinder every time 
+		List[] memorized = { null } ;
+		final int memoryDuration = 10 ;
+		int[] memoryCountdown = {0} ;
 		return action("move-to")
 				.do2((MyAgentState S) ->  (Tile[] nextTile) -> {
 					if (nextTile.length == 0) {
@@ -151,23 +165,56 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					//   (2) empty array of tiles --> the agent is already next to the target
 					//   (3) a singleton array of tile --> the next tile to move to
 					//
-					if (!S.agentIsAlive()) return null ;
+					if (!S.agentIsAlive()) {
+						return null ;
+					}
 					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
 					WorldEntity e = S.worldmodel.elements.get(targetId) ;
 					if (e == null) {
 						return null ;
 					}
+					
 					Tile target = Utils.toTile(e.position) ;
 					if (Utils.mazeId(a)==Utils.mazeId(e) && Utils.adjacent(agentPos,target)) {
 						Tile[] nextTile = {} ;
 						return nextTile ;
 					}
-					var path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;
+					
+					//System.out.println("###### " + S.worldmodel.agentId) ;
+					List<Pair<Integer,Tile>> path = null ;
+					if (delayPathReplan) {
+						if (memoryCountdown[0] <= 0) {
+							memoryCountdown[0] = memoryDuration ;
+						}
+						else {
+							path = memorized[0] ;
+							path.remove(0) ;
+							memoryCountdown[0] -- ;
+							if (path.size()==0) {
+								//System.out.println("### 1") ;
+								path = null ;
+								memoryCountdown[0] = memoryDuration ;
+							}
+							else {
+								Tile next = path.get(0).snd ;
+								if(!Utils.adjacent(agentPos,next)) {
+									//System.out.println("### 2") ;
+									path = null ;
+									memoryCountdown[0] = memoryDuration ;
+								}
+							}
+						}
+					}			
 					if (path == null) {
-						return null ;
+						path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;
+						if (path == null) {
+							return null ;
+						}
+						path.remove(0) ;
+						memorized[0] = path ;
 					}
-					Tile[] nextTile = {path.get(1).snd} ;
+					Tile[] nextTile = {path.get(0).snd} ;
 					return nextTile ;
 				}) 
 				;
@@ -277,6 +324,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					// just choose the first one:
 					Tile m = Utils.toTile(ms.get(0).position) ;
 					logger.info(">>> " + S.worldmodel.agentId + " attacks " + m) ;
+					//System.out.println(">>> " + S.worldmodel.agentId + " attacks " + ms.get(0)) ;
 					WorldModel newwom = moveTo(S,m) ;
 					return new Pair<>(S,newwom) ;
 				}) ;

@@ -169,7 +169,8 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				we.properties.put("rageTimer",player.rageTimer) ;
 				return we ;
 			case MONSTER:
-				we = new WorldEntity(e.id,"" + e.type,true) ;
+				//System.out.println(">>>> observing: " + e.id) ;
+ 				we = new WorldEntity(e.id,"" + e.type,true) ;
 				we.position = new Vec3(e.x,0,e.y) ;
 				we.properties.put("maze",e.mazeId) ;
 				Monster m = (Monster) e ;	
@@ -190,9 +191,9 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 		aux.properties.put("smeagolOn",thegame().config.enableSmeagol) ;
 		
 		// recently removed objects:
-		String[] removed = new String[thegame().recentlyRemoved.size()] ;
+		String[] removed = new String[thegame().removed.size()] ;
 		int k = 0 ;
-		for(var id : thegame().recentlyRemoved) {
+		for(var id : thegame().removed) {
 			removed[k] = id ;
 			k++ ;
 		}

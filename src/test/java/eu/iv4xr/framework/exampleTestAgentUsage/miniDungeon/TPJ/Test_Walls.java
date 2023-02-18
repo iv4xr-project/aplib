@@ -31,27 +31,6 @@ public class Test_Walls {
 	TacticLib tacticLib = new TacticLib() ;
 	GoalLib goalLib = new GoalLib() ;
 
-	static List<Tile> adjacentTiles(MyAgentState S, Tile current) {
-		List<Tile> adjacents = new LinkedList<>() ;
-		Tile q = new Tile(current.x, current.y+1) ;
-		if (inMap(S,q)) adjacents.add(q) ;
-		q = new Tile(current.x, current.y-1) ;
-		if (inMap(S,q)) adjacents.add(q) ;
-		q = new Tile(current.x+1, current.y) ;
-		if (inMap(S,q)) adjacents.add(q) ;
-		q = new Tile(current.x-1, current.y) ;
-		if (inMap(S,q)) adjacents.add(q) ;
-		return adjacents ;
-	}
-	
-	static int currentMazeNr(MyAgentState S) {
-		return (int) S.worldmodel.position.y ;
-	}
-	
-	static int currentMazeNr(WorldModel wom) {
-		return (int) wom.position.y ;
-	}
-	
 	static enum Direction { NORTH, SOUTH, EAST, WEST } 
 	
 	static class AlgorithmState {
@@ -82,7 +61,7 @@ public class Test_Walls {
 	
 	boolean leftIsWall(MyAgentState S, AlgorithmState st) {
 		Tile left = leftTile(S,st.walkDirection) ;
-		return isWall(S,left) 
+		return Utils.isWall(S,left) 
 			   || (left.x == st.N-2 && left.y == 1) 
 			   || (left.x == 1 && left.y == 1)
 				;
@@ -90,7 +69,7 @@ public class Test_Walls {
 	
 	boolean frontIsWall(MyAgentState S, AlgorithmState st) {
 		Tile front = frontTile(S,st.walkDirection) ;
-		return isWall(S,front) 
+		return Utils.isWall(S,front) 
 				|| (front.x == st.N-2 && front.y == 1) 
 				|| (front.x == 1 && front.y == 1)
 				;
@@ -216,7 +195,7 @@ public class Test_Walls {
 
 	private GoalStructure wallChecked(Tile current, Tile wall) {
 		Action checking = action("checking wall").do1((MyAgentState S) -> {
-			if (!isWall(S,wall)) {
+			if (!Utils.isWall(S,wall)) {
 				return S.env().observe(S.worldmodel.agentId) ;
 			}
 			var obs = tacticLib.moveTo(S, wall) ;
@@ -262,7 +241,7 @@ public class Test_Walls {
 			else return SUCCESS() ;
 			*/
 			return FIRSTof(
-					  lift((MyAgentState T) -> ! inMap(T,wallToCheck)),
+					  lift((MyAgentState T) -> ! Utils.inMap(T,wallToCheck)),
 					  wallChecked(current,wallToCheck)
 				    );
 		}) ;
@@ -276,16 +255,11 @@ public class Test_Walls {
 				   wallChecked(agent,Direction.EAST)) ;		
 	}
 	
-	static boolean inMap(MyAgentState S, Tile tile) {
-		int N = S.auxState().getIntProperty("worldSize") ;
-		return 0<=tile.x && 0<=tile.y && tile.x < N && tile.y < N ;
-	}
-	
 	GoalStructure atTile(int mazeNr, Tile q) {
 		return goal("At tile " + q + " in maze " + mazeNr)
 		  .toSolve((Pair<MyAgentState,WorldModel> prop) -> {
 			  //System.out.println("### goal: " + q) ;
-			  return currentMazeNr(prop.snd) == mazeNr && q.equals(Utils.toTile(prop.snd.position)) ;
+			  return Utils.currentMazeNr(prop.snd) == mazeNr && q.equals(Utils.toTile(prop.snd.position)) ;
 		  }
 		  ) 
 		  .withTactic(FIRSTof(
@@ -295,19 +269,6 @@ public class Test_Walls {
 		  .lift() ;	
 	}
 	
-	boolean isFreeTile(MyAgentState S, Tile q) {
-		int mazeNr = currentMazeNr(S) ;
-		var maze = S.multiLayerNav.areas.get(mazeNr) ;
-		return ! maze.isBlocking(q) ;
-	}
-	
-	boolean isWall(MyAgentState S, Tile q) {
-		int mazeNr = currentMazeNr(S) ;
-		var maze = S.multiLayerNav.areas.get(mazeNr) ;
-		return maze.isWall(q.x, q.y) ;
-	}
-	
-	
 	Action initializeWalk(AlgorithmState st) {
 		return action("initialize a walk")
 				.do1((MyAgentState S) -> {
@@ -315,8 +276,8 @@ public class Test_Walls {
 					st.N = S.auxState().getIntProperty("worldSize") ;
 					st.walkStartingLocation = null ;
 					//st.walkStartingLocation = currentTile ;
-					for (Tile q : adjacentTiles(S,currentTile)) {
-						if (isWall(S,q)) {
+					for (Tile q : Utils.adjacentTiles(S,currentTile)) {
+						if (Utils.isWall(S,q)) {
 							if (q.x < currentTile.x) st.walkDirection = Direction.NORTH ;
 							else if (q.x > currentTile.x) st.walkDirection = Direction.SOUTH ;
 							else if (q.y < currentTile.y) st.walkDirection = Direction.WEST ;
@@ -332,8 +293,8 @@ public class Test_Walls {
 		for (var e : S.worldmodel.elements.values()) {
 			if (e.id.startsWith("W")) {
 				Tile te = Utils.toTile(e.position) ;
-				for (Tile q : adjacentTiles(S,te)) {
-					if (isFreeTile(S,q) && !visited.contains(q)) {
+				for (Tile q : Utils.adjacentTiles(S,te)) {
+					if (Utils.isFreeTile(S,q) && !visited.contains(q)) {
 						return q ;
 					}
 				}
@@ -348,7 +309,7 @@ public class Test_Walls {
 			if (q != null) {
 				//System.out.println("### invoking atTile " + q) ;
 				//return SEQ(atTile(currentMazeNr(S),q), FAIL()) ;
-				return atTile(currentMazeNr(S),q) ;
+				return atTile(Utils.currentMazeNr(S),q) ;
 			}
 			return FAIL() ;
 		}) ;

@@ -15,14 +15,21 @@ public class MD_invs {
 	
 	boolean hpInv(MyAgentState S) {
 		int hp = (Integer) S.val("hp") ;
+		Integer hpPrev = (Integer) S.before("hp") ;
 		int hpmax = (Integer) S.val("hpmax") ;
-		return hp>=0 && hp <= hpmax && hpmax>0 ;
+		return (hp>=0 || (hpPrev!=null && (hpPrev>0 || hp == hpPrev))) 
+				&& hp <= hpmax && hpmax>0 ;
 	}
 	
 	boolean scoreInv(MyAgentState S) {
 		int score = (Integer) S.val("score") ;
 		Integer prev = (Integer) S.before("score") ;
-		return prev!=null ? score >= prev : true ;		
+		String B = Utils.otherPlayer(S) ;
+		boolean otherAgentJustDead =
+				S.worldmodel.elements.get(B) != null 
+				&& (Integer) S.val(B,"hp") <=0 
+				&& (Integer) S.before(B,"hp") > 0 ;
+		return prev!=null ? score >= prev || otherAgentJustDead : true ;		
 	}
 	
 	boolean positionInv(MyAgentState S) {
@@ -108,7 +115,7 @@ public class MD_invs {
 				int hp = (Integer) S.val("hp") ;
 				locationCorrect =   hp == 0 || pos.equals(expectedLocation[0]) ;
 				if (!locationCorrect) {
-					System.out.println(">>> BUG! command: " + executedAction[0]) ;
+					System.out.println(">>> BUG! " + S.worldmodel.agentId + " command: " + executedAction[0]) ;
 					System.out.println(">>> expected pos:" + expectedLocation[0]  
 							+ ", actual pos:" + pos) ;
 					System.out.println(">>>") ;
@@ -124,6 +131,10 @@ public class MD_invs {
 			if (cmd==null) {
 				expectedLocation[0] = null ;
 				executedAction[0] = null ;
+			}
+			else if(! S.agentIsAlive()) {
+				expectedLocation[0] = S.worldmodel.position.copy() ;
+				executedAction[0] = cmd ;
 			}
 			else {
 				Vec3 moveToLoc = null ;

@@ -2,10 +2,13 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib.adjustedFindPath;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
+import eu.iv4xr.framework.mainConcepts.WorldModel;
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.utils.Pair;
 
@@ -30,6 +33,11 @@ public class Utils {
 
 	public static int manhattanDist(Tile t1, Tile t2) {
 		return Math.abs(t1.x - t2.x) + Math.abs(t1.y - t2.y) ;
+	}
+	
+	public static String otherPlayer(MyAgentState S) {
+		if (S.worldmodel.agentId.equals("Frodo")) return "Smeagol" ;
+		return "Frodo" ;
 	}
 
 	public static int mazeId(WorldEntity e) {
@@ -118,6 +126,44 @@ public class Utils {
 		var t2 = toTile(e.position) ;
 		var path = adjustedFindPath(S, player_maze,t1.x,t1.y,e_maze,t2.x,t2.y) ;
 		return path!=null && path.size()>0 ;
+	}
+
+	public static List<Tile> adjacentTiles(MyAgentState S, Tile current) {
+		List<Tile> adjacents = new LinkedList<>() ;
+		Tile q = new Tile(current.x, current.y+1) ;
+		if (Utils.inMap(S,q)) adjacents.add(q) ;
+		q = new Tile(current.x, current.y-1) ;
+		if (Utils.inMap(S,q)) adjacents.add(q) ;
+		q = new Tile(current.x+1, current.y) ;
+		if (Utils.inMap(S,q)) adjacents.add(q) ;
+		q = new Tile(current.x-1, current.y) ;
+		if (Utils.inMap(S,q)) adjacents.add(q) ;
+		return adjacents ;
+	}
+
+	public static boolean inMap(MyAgentState S, Tile tile) {
+		int N = S.auxState().getIntProperty("worldSize") ;
+		return 0<=tile.x && 0<=tile.y && tile.x < N && tile.y < N ;
+	}
+
+	public static int currentMazeNr(MyAgentState S) {
+		return (int) S.worldmodel.position.y ;
+	}
+
+	public static int currentMazeNr(WorldModel wom) {
+		return (int) wom.position.y ;
+	}
+
+	public static boolean isFreeTile(MyAgentState S, Tile q) {
+		int mazeNr = currentMazeNr(S) ;
+		var maze = S.multiLayerNav.areas.get(mazeNr) ;
+		return ! maze.isBlocking(q) ;
+	}
+
+	public static boolean isWall(MyAgentState S, Tile q) {
+		int mazeNr = currentMazeNr(S) ;
+		var maze = S.multiLayerNav.areas.get(mazeNr) ;
+		return maze.isWall(q.x, q.y) ;
 	}
 
 }

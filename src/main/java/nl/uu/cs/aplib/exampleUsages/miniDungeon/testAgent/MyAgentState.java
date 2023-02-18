@@ -131,7 +131,11 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 				continue;
 			}
 			this.worldmodel.elements.remove(id);
+			//System.out.println(">>>> " + this.worldmodel.agentId 
+			//		+ " removing " + id + ", in wom: " + this.worldmodel.elements.get(id)) ; ;
 		}
+		//System.out.println(">>>> " + this.worldmodel.agentId
+		//		+ " check M0_5: "+ this.worldmodel.elements.get("M0_5")) ; ;
 
 		// set the obstacle-state of cleansed shrine to "open" (and its nav-teleport too):
 		for (var e : worldmodel.elements.values()) {

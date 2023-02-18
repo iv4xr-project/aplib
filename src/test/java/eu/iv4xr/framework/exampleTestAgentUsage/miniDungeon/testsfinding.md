@@ -17,6 +17,10 @@ Without this, it is possible that an 'item' is overwritten by placing
 a player ontop of it. Obviously, if this happens to be a scroll,
 the it is not good. Hard to find bug, as it depends on randomness.
 
+* class ``MiniDungeon``, method visibleTiles(). The method
+returned a list of tiles. However this causes some tiles to be
+added 1x. Fix: change it to set of tiles.
+
 ### Effort to write
 
 * `UnitTestEntity` : 1h
