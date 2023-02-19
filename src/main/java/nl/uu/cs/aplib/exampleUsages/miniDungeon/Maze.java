@@ -19,6 +19,12 @@ public class Maze {
 	public Entity[][] world ;
 	public int size ;
 	
+	/**
+	 * Probability of introducing a buggy wall. A buggy wall can be passed through.
+	 * There can only be maximum one buggy wall per maze.
+	 */
+	public static float probabilityBuggyWall = 0.05f ;
+	
 	static private void assignIdToWall(Wall w, int mazeId) {
 		w.mazeId = mazeId ;
 		w.id = "W_" + mazeId + "_" + w.x + "_" + w.y ;
@@ -79,7 +85,7 @@ public class Maze {
 		}
 		return minp ;
 	}
-	
+		
 	/**
 	 * Construct an NxN maze with a single zig-zag corridor. There is some a probability
 	 * it generates a buggy-wall in the maze.
@@ -89,8 +95,6 @@ public class Maze {
 		var world = maze.world ;
 		int numberOfBuggyWall = 0 ;
 		int maxNumberOfBuggyWalls = 1 ;
-		float probabilityBuggyWall = 0.05f ;
-		//float probabilityBuggyWall = 0f ;
 		// walls that build the maze (just a simple maze) :
 		int corridorWidth = size / numberOfCorridors;
 		int coridorX = size;
@@ -100,8 +104,10 @@ public class Maze {
 			if (alt) {
 				for (int y = 1; y < size - 2; y++) {
 					Wall w = new Wall(coridorX, y,"") ;
+					// injecting one buggy wall:
 					if (numberOfBuggyWall <maxNumberOfBuggyWalls && rnd.nextFloat() <= probabilityBuggyWall) {
 						w.brokenwall = true ;
+						System.out.println("### BW") ;
 						numberOfBuggyWall++ ;
 					}
 					assignIdToWall(w,mazeId) ;

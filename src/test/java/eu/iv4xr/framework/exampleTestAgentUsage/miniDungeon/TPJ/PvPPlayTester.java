@@ -60,6 +60,9 @@ public class PvPPlayTester {
 		.lift() ;	
 	}
 	
+	/**
+	 * Find and kill the given opponent.
+	 */
 	GoalStructure searchAndKill(TestAgent agent, String opponent) {
 		GoalStructure G = 
 		 REPEAT(SEQ(goalLib.smartEntityInCloseRange(agent, opponent),

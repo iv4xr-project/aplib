@@ -766,32 +766,6 @@ public class MiniDungeon {
 		throw new IllegalArgumentException() ;
 	}
 	
-	
-	
-	
-	
-	char toChar(Entity e) {
-		if (e == null) return '.' ; 
-		switch(e.type) {
-		    case WALL    : return '#' ;
-		    case FRODO   : return '@' ;
-		    case SMEAGOL : return '&' ;
-		    case MONSTER : return 'm' ;
-		    case HEALPOT : return '%' ;
-		    case RAGEPOT : return '!' ;
-		    case SCROLL  : return '?' ;
-		    case SHRINE  : return 'S' ;
-		}
-		/*
-		if (e instanceof Door) {
-			Door d = (Door) e ;
-			if (d.isOpen) return '-' ;
-			return 'X' ;
-		}
-		*/
-		throw new IllegalArgumentException() ;		
-	}
-	
 	boolean isVisible(Player player, int mazeid, int x, int y) {
 		if (player.dead()) return false ;
 		if (player.mazeId != mazeid) return false ;
@@ -849,68 +823,4 @@ public class MiniDungeon {
 		return z.toString() ;
 	}
 	
-	@Override
-	public String toString() {
-		float viewDistanceSq = config.viewDistance*config.viewDistance ;
-		StringBuffer z = new StringBuffer() ;
-		var world = currentMaze(frodo()).world ;
-		Entity[][] world2 = null ;
-		if (config.enableSmeagol) {
-			world2 = currentMaze(smeagol()).world ;
-		}
-		for(int row = config.worldSize-1 ; 0<=row; row--) {
-			for(int x = 0; x<config.worldSize; x++) {
-				boolean isVisible = 
-						isVisible(frodo(),frodo().mazeId,x,row) 
-						|| (config.enableSmeagol && world2==world && isVisible(smeagol(),smeagol().mazeId,x,row)) ;
-				
-				if (isVisible) {
-					z.append(toChar(world[x][row])) ;					
-				}
-				else 
-					z.append(" ") ;
-			}
-			if (world2 != null && world2 != world) {
-				z.append("    ") ;
-				for(int x = 0; x<config.worldSize; x++) {
-					if (isVisible(smeagol(),smeagol().mazeId,x,row)) {
-						z.append(toChar(world2[x][row])) ;					
-					}
-					else 
-						z.append(" ") ;
-				}
-			}
-			z.append("\n") ;
-		}
-		z.append(showGameStatus()) ;
-		
-		return z.toString() ;
-	}
-	
-	
-	
-	/**
-	 * An instance of the game with just simple console.
-	 */
-	public static void main(String[] args) {
-		
-		MiniDungeon dg = new MiniDungeon(new MiniDungeonConfig()) ;
-		//aaadg.config.viewDistance = 4 ;
-		while(dg.status == GameStatus.INPROGRESS) {
-			dg.consolePrint(dg.toString()) ;
-			dg.consolePrint("Commands Frodo: wasd | e:use-healpot | r:use-ragepot") ;
-			dg.consolePrint("       Smeagol: ijkl | o:use-healpot | p:use-ragepot") ;
-			if(dg.scanner == null) {
-				dg.scanner = new Scanner(System.in) ;
-			}
-			String cmd = dg.scanner.nextLine() ;
-			char[] commands = cmd.toCharArray() ;
-			for (int c=0; c<commands.length; c++) {
-				String msg = dg.doCommand(commands[c]) ;
-				if (msg!=null && msg!="") dg.consolePrint(msg) ;
-				if(dg.status != GameStatus.INPROGRESS) return ;
-			}
-		}
-	}
-
 }

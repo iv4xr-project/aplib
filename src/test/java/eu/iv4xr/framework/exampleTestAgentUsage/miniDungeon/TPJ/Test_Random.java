@@ -16,6 +16,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
@@ -34,16 +35,20 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-public class Test_Random {
+class Test_Random {
 	
-	boolean withGraphics = false ;
-	boolean supressLogging = true ;
-	boolean stopAfterAgentDie = true ;	
-	boolean verbosePrint = false ;
+	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
+	@BeforeEach
+	void testConfig() {
+		MDTestRunner.withGraphics = false ;
+		MDTestRunner.supressLogging = true ;
+		MDTestRunner.stopAfterAllAgentsDie = true ;
+		MDTestRunner.verbosePrint = false ;
+	}
 	
 	@Test
-	public void testRandom1() throws Exception {
+	void testRandom1() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		
@@ -59,18 +64,14 @@ public class Test_Random {
 
 		GoalStructure G = randomtester.randomPlay(agent) ;
 		int sleep = 0 ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
-				stopAfterAgentDie, 
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("randomTes1",agent, config, G, 4000, sleep);
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
 
 	@Test
-	public void testRandom2() throws Exception {
+	void testRandom2() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig1();
 		System.out.println(">>> Configuration:\n" + config);
@@ -85,17 +86,13 @@ public class Test_Random {
 		int sleep = 0 ;
 		//withGraphics = true ;
 		//verbosePrint = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep,
-				stopAfterAgentDie,
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("randomTest2", agent, config, G, 4000, sleep);
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
 	@Test
-	public void smarterTestRandom1() throws Exception {
+	void smarterTestRandom1() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig0() ;
 		System.out.println(">>> Configuration:\n" + config);
@@ -107,17 +104,13 @@ public class Test_Random {
 		var randomtester = new RandomPlayTester() ;
 		GoalStructure G = randomtester.randomPlay(agent);
 		int sleep = 0 ;
-		TPJUtils.runAgent(agent,config,G,3000,sleep,
-				stopAfterAgentDie,
-				withGraphics,
-				supressLogging,
-				verbosePrint) ;		
+		MDTestRunner.runAgent("smartRandomTest1",agent,config,G,3000,sleep) ;		
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}
 	
 	@Test
-	public void smarterTestRandom2() throws Exception {
+	void smarterTestRandom2() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		System.out.println(">>> Configuration:\n" + config);
@@ -129,11 +122,7 @@ public class Test_Random {
 		var randomtester = new RandomPlayTester() ;
 		GoalStructure G = randomtester.randomPlay(agent);
 		int sleep = 0 ;
-		TPJUtils.runAgent(agent,config,G,3000,sleep,
-				stopAfterAgentDie,
-				withGraphics,
-				supressLogging,
-				verbosePrint) ;		
+		MDTestRunner.runAgent("smartRamdomTest2",agent,config,G,3000,sleep) ;		
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}

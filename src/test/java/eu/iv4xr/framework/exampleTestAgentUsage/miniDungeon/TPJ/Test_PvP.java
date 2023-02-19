@@ -16,6 +16,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
@@ -34,16 +35,20 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-public class Test_PvP {
+class Test_PvP {
 	
-	boolean withGraphics = true ;
-	boolean supressLogging = false ;
-	boolean stopAfterAgentDie = true ;	
-	boolean verbosePrint = true ;
+	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
+	@BeforeEach
+	void testConfig() {
+		MDTestRunner.withGraphics = true ;
+		MDTestRunner.supressLogging = true ;
+		MDTestRunner.stopAfterAllAgentsDie = true ;
+		MDTestRunner.verbosePrint = false ;
+	}
 	
 	@Test
-	public void testPVP1() throws Exception {
+	void testPVP1() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		
@@ -65,17 +70,7 @@ public class Test_PvP {
 		
 		
 		int sleep = 0 ;
-		var states = TPJUtils.runAgent(
-				frodo, 
-				smeagol,
-				config, 
-				G1, 
-				G2, 
-				65, sleep, 
-				stopAfterAgentDie, 
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("pvp1",frodo, smeagol, config, G1, G2, 65, sleep) ;
 		assertTrue(frodo.evaluateLTLs()) ;
 		assertTrue(smeagol.evaluateLTLs()) ;	
 		//System.out.println(">>> check: " + states.snd.worldmodel.elements.get("M0_0")) ;
@@ -84,7 +79,7 @@ public class Test_PvP {
 	
 
 	@Test
-	public void testPVP2() throws Exception {
+	void testPVP2() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		
@@ -107,17 +102,7 @@ public class Test_PvP {
 		
 		
 		int sleep = 0 ;
-		var states = TPJUtils.runAgent(
-				frodo, 
-				smeagol,
-				config, 
-				G1, 
-				G2, 
-			600, sleep, 
-				stopAfterAgentDie, 
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("pvp2",frodo,smeagol,config,G1,G2,600, sleep);
 		assertTrue(frodo.evaluateLTLs()) ;
 		assertTrue(smeagol.evaluateLTLs()) ;	
 		//System.out.println(">>> check: " + states.snd.worldmodel.elements.get("M0_0")) ;

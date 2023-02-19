@@ -16,6 +16,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
@@ -34,138 +35,65 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-public class Test_Scrolls {
+class Test_Scrolls {
 	
-	boolean withGraphics = false ;
-	boolean supressLogging = true ;
-	boolean stopAfterAgentDie = true ;	
-	boolean verbosePrint = false ;
+	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
-	TacticLib tacticLib = new TacticLib() ;
-	GoalLib goalLib = new GoalLib() ;
-	
-	static WorldEntity hasScroll(WorldModel wom) {
-		for (var e : wom.elements.values()) {
-			if (e.type.equals("" + EntityType.SCROLL)) {
-				return e ;
-			}
-		}
-		return null ;
+	@BeforeEach
+	void testConfig() {
+		MDTestRunner.withGraphics = false ;
+		MDTestRunner.supressLogging = true ;
+		MDTestRunner.stopAfterAllAgentsDie = true ;
+		MDTestRunner.verbosePrint = false ;
 	}
 	
-	public GoalStructure areaExplored(TestAgent agent) {
-		GoalStructure explr = goal("exploring (persistent-goal: aborted when it is terminated)")
-		   .toSolve(belief -> false)
-		   .withTactic(FIRSTof(
-			  tacticLib.useHealingPotAction().on_(tacticLib.hasHealPot_and_HpLow).lift(),
-			  tacticLib.useRagePotAction().on_(tacticLib.hasRagePot_and_inCombat).lift(),
-			  tacticLib.attackMonsterAction().on_(tacticLib.inCombat_and_hpNotCritical).lift(),
-			  SEQ(addBefore(S -> { 
-				    System.out.println(">>> deploying grab heal-pot.") ;
-				    return goalLib.grabPot(agent, EntityType.HEALPOT) ;} )
-				        .on_(goalLib.whenToGoAfterHealPot)
-				        .lift(), 
-				   ABORT()),
-			   SEQ(addBefore(S -> { 
-				    System.out.println(">>> deploying grab rage-pot.") ;
-				    return goalLib.grabPot(agent, EntityType.RAGEPOT) ;} )
-				        .on_((MyAgentState S) -> 
-				                S.worldmodel.agentId.equals("Frodo") // only let Frodo get rage
-				        		&& goalLib.whenToGoAfterRagePot.test(S))
-				        .lift(), 
-				   ABORT()),
-			  tacticLib.explore(null),
-			  ABORT()))
-		   .lift() ;
-		
-		// could use WHILE, but let's use REPEAT here:
-		return REPEAT(
-				FIRSTof(lift((MyAgentState S) -> tacticLib.explorationExhausted(S)) , 
-				        SEQ(explr))) ;
-
-	}
-	
-	public GoalStructure allScrollsTested(TestAgent agent, String shrine) {
-		
-		GoalStructure testScroll =
-			SEQ(DEPLOY(agent,(MyAgentState S) -> {
-					  var scroll = hasScroll(S.worldmodel) ;
-					  return SEQ(goalLib.smartEntityInCloseRange(agent,scroll.id),
-						         goalLib.entityInteracted(scroll.id)) ;
-					   }),
-				 goalLib.smartEntityInCloseRange(agent,shrine),
-				 goalLib.entityInteracted(shrine)) ;
-		
-		return SEQ(areaExplored(agent),
-				   // could use WHILE here, but lets use REPEAT:
-				   REPEAT(FIRSTof(
-						   lift((MyAgentState S) -> hasScroll(S.worldmodel) == null), 
-						   SEQ(testScroll, FAIL()))) 
-				   );
-	}
-	
-	
-    
 	@Test
-	public void testScrolls1() throws Exception {
+	void testScrolls1() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Frodo" ;		
 		var agent = new TestAgent(agentId, "tester");
-		GoalStructure G = allScrollsTested(agent,"SM0") ;
+		var shrineCleanPlay = new ShrineCleanTester() ;
+		GoalStructure G = shrineCleanPlay.cleanseShrine(agent,"SM0") ;
 		int sleep = 0 ;
 		//withGraphics = true ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
-				stopAfterAgentDie, 
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("cleansingSM0",agent, config, G, 4000, sleep);
 		assertTrue(G.getStatus().success()) ;
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
 	@Test
-	public void testScrolls2() throws Exception {
+	void testScrolls2() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Frodo" ;		
 		var agent = new TestAgent(agentId, "tester");
-		GoalStructure G = SEQ(
-				allScrollsTested(agent,"SM0"),
-				goalLib.entityInteracted("SM0"),
-				allScrollsTested(agent,"SI1")
-				);
+		var shrineCleanPlay = new ShrineCleanTester() ;
+		GoalStructure G = shrineCleanPlay.cleanseAllShrines(agent,2) ;
 		int sleep = 0 ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
-				stopAfterAgentDie, 
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("cleansingSI1",agent, config, G, 4000, sleep);
 		assertTrue(G.getStatus().success()) ;
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();
 	}
 	
 	@Test
-	public void testScrolls2b() throws Exception {
+	void testScrolls2b() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		String agentId = "Smeagol" ;		
 		var agent = new TestAgent(agentId, "tester");
-		GoalStructure G = allScrollsTested(agent,"SM0") ;
+		var shrineCleanPlay = new ShrineCleanTester() ;
+		GoalStructure G = shrineCleanPlay.cleanseShrine(agent,"SM0") ;
 		int sleep = 0 ;
-		TPJUtils.runAgent(agent, config, G, 4000, sleep, 
-				stopAfterAgentDie, 
-				withGraphics, 
-				supressLogging,
-				verbosePrint);
+		MDTestRunner.runAgent("SmeagolCleansingSM0",agent, config, G, 4000, sleep);
 		assertTrue(G.getStatus().success()) ;
 		assertTrue(agent.evaluateLTLs()) ;
 		//(new Scanner(System.in)).nextLine();

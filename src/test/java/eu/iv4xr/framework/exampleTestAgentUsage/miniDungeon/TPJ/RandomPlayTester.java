@@ -3,36 +3,18 @@ package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 import nl.uu.cs.aplib.mainConcepts.Action;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
-import nl.uu.cs.aplib.utils.Pair;
+
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils.adjacent;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils.mazeId;
-import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils.toTile;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.Test;
-
-import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
-import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
-import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon ;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
 public class RandomPlayTester {
 	
@@ -162,6 +144,9 @@ public class RandomPlayTester {
 	}
 	
 	
+	/**
+	 * Produce a random play.
+	 */
 	public GoalStructure randomPlay(TestAgent agent) {
 		if (reallyRandom) return simpleRandomPlay() ;
 		else return smarterRandomPlay(agent) ;
