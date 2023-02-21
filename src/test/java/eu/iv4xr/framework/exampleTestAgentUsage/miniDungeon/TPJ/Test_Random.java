@@ -51,10 +51,7 @@ class Test_Random {
 	void testRandom1() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
-		
-		config = new MiniDungeonConfig() ;		
-		System.out.println(">>> Configuration:\n" + config);
-
+		config = new MiniDungeonConfig() ;	
 		String agentId = "Frodo";
 		// create an agent:
 		var agent = new TestAgent(agentId, "tester");
@@ -74,8 +71,6 @@ class Test_Random {
 	void testRandom2() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig1();
-		System.out.println(">>> Configuration:\n" + config);
-
 		String agentId = "Frodo";
 		// create an agent:
 		var agent = new TestAgent(agentId, "tester");
@@ -94,9 +89,7 @@ class Test_Random {
 	@Test
 	void smarterTestRandom1() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig0() ;
-		System.out.println(">>> Configuration:\n" + config);
-		
+		MiniDungeonConfig config = TPJconfigs.MDconfig0() ;	
 		String agentId = "Frodo" ;		
 		// create an agent:
 		var agent = new TestAgent(agentId, "tester");
@@ -112,9 +105,7 @@ class Test_Random {
 	@Test
 	void smarterTestRandom2() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
-		System.out.println(">>> Configuration:\n" + config);
-		
+		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;		
 		String agentId = "Frodo" ;		
 		// create an agent:
 		var agent = new TestAgent(agentId, "tester");

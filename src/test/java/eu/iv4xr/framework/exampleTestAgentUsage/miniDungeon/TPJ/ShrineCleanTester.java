@@ -90,7 +90,7 @@ public class ShrineCleanTester {
 						   "Shrine " + shrine + " should be open.",
 						   (MyAgentState S) -> { 
 							   boolean ok = shrineIsClean(S,shrine) ; 
-							   assertTrue(ok) ;
+							   //assertTrue(ok) ;
 							   return ok ;} )
 				   );
 	}

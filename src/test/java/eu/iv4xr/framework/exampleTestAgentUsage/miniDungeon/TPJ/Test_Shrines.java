@@ -35,7 +35,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-class Test_Scrolls {
+class Test_Shrines {
 	
 	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
@@ -51,8 +51,6 @@ class Test_Scrolls {
 	void testScrolls1() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
-		System.out.println(">>> Configuration:\n" + config);
-		
 		String agentId = "Frodo" ;		
 		var agent = new TestAgent(agentId, "tester");
 		var shrineCleanPlay = new ShrineCleanTester() ;
@@ -69,8 +67,6 @@ class Test_Scrolls {
 	void testScrolls2() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
-		System.out.println(">>> Configuration:\n" + config);
-		
 		String agentId = "Frodo" ;		
 		var agent = new TestAgent(agentId, "tester");
 		var shrineCleanPlay = new ShrineCleanTester() ;
@@ -86,8 +82,6 @@ class Test_Scrolls {
 	void testScrolls2b() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
-		System.out.println(">>> Configuration:\n" + config);
-		
 		String agentId = "Smeagol" ;		
 		var agent = new TestAgent(agentId, "tester");
 		var shrineCleanPlay = new ShrineCleanTester() ;

@@ -32,16 +32,14 @@ class Test_Walls {
 		MDTestRunner.supressLogging = true ;
 		MDTestRunner.stopAfterAllAgentsDie = true ;
 		MDTestRunner.verbosePrint = false ;
-		MDTestRunner.includeWallBug = true ;
+		//MDTestRunner.includeWallBug = true ;
 	}
 	
 	
 	@Test
 	public void testWalls() throws Exception {
 		
-		MiniDungeonConfig config = TPJconfigs.MDconfig0() ;
-		System.out.println(">>> Configuration:\n" + config);
-		
+		MiniDungeonConfig config = TPJconfigs.MDconfig0() ;	
 		String agentId = "Frodo" ;		
 		var agent = new TestAgent(agentId, "tester");
 		

@@ -53,8 +53,6 @@ class Test_PvP {
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		
 		config = new MiniDungeonConfig() ;		
-		System.out.println(">>> Configuration:\n" + config);
-
 		String agentId1 = "Frodo";
 		var frodo = new TestAgent(agentId1, "tester");
 		String agentId2 = "Smeagol";

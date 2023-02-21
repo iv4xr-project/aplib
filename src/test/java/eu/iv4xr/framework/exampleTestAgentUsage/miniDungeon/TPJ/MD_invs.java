@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
@@ -113,11 +115,12 @@ public class MD_invs {
 			if (expectedLocation[0] != null) {
 				//System.out.println(">>> checking") ;
 				int hp = (Integer) S.val("hp") ;
-				locationCorrect =   hp == 0 || pos.equals(expectedLocation[0]) ;
+				locationCorrect =   hp <= 0 || pos.equals(expectedLocation[0]) ;
 				if (!locationCorrect) {
 					System.out.println(">>> BUG! " + S.worldmodel.agentId + " command: " + executedAction[0]) ;
 					System.out.println(">>> expected pos:" + expectedLocation[0]  
 							+ ", actual pos:" + pos) ;
+					System.out.println(">>>" + S.get(S.worldmodel.agentId)) ;
 					System.out.println(">>>") ;
 					//System.out.println(">>>" + S.get("Frodo")) ;
 				}
@@ -128,13 +131,14 @@ public class MD_invs {
 	
 			
 			// calculate the next expected location:
+			var gstatus = (GameStatus) S.val("aux","status") ;
 			if (cmd==null) {
 				expectedLocation[0] = null ;
 				executedAction[0] = null ;
 			}
-			else if(! S.agentIsAlive()) {
+			else if(! S.agentIsAlive() || gstatus != GameStatus.INPROGRESS) {
 				expectedLocation[0] = S.worldmodel.position.copy() ;
-				executedAction[0] = cmd ;
+				executedAction[0] = cmd + ", but the agent is dead or the game is over.";
 			}
 			else {
 				Vec3 moveToLoc = null ;
@@ -167,7 +171,7 @@ public class MD_invs {
 							) {
 						if(bagSpace>0) {
 							expectedLocation[0] = moveToLoc ;
-							executedAction[0] = cmd + " to grab an item." ;
+							executedAction[0] = cmd + " to grab a " + inFrontOfMe.type ;
 						}
 						else {
 							expectedLocation[0] = pos.copy() ;

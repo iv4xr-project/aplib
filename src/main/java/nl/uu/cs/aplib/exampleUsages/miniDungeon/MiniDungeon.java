@@ -67,6 +67,7 @@ import nl.uu.cs.aplib.utils.Pair;
 public class MiniDungeon {
 	
 	public static class MiniDungeonConfig {
+		public String configname = "" ;
 		public int worldSize = 20 ;
 		public int numberOfMaze = 2 ;
 		public int numberOfCorridors = 4 ;

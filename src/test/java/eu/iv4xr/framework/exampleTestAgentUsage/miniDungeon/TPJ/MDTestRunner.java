@@ -27,6 +27,7 @@ public class MDTestRunner {
 	public boolean supressLogging = true ;
 	public boolean verbosePrint = false ;
 	public boolean stopAfterAllAgentsDie = true ;
+    public boolean inTwoPlayersSetup_StopWhenAgent1GoalIsConcluded = true ;
 	public boolean withInstrumenter = true ;
 	public boolean saveRunData = true ;
     public String runDataFolder = "./tmp" ;
@@ -110,6 +111,8 @@ public class MDTestRunner {
 			int budget,
 			int sleep) throws Exception {
 		
+		System.out.println(">> Configuration:\n" + config);
+		
 		DungeonApp app = new DungeonApp(config);
 		app.soundOn = withSound;
 		app.headless = !withGraphics ;
@@ -184,6 +187,11 @@ public class MDTestRunner {
 			// delay to slow it a bit for displaying:
 			if (sleep>0) Thread.sleep(sleep); 
 			if (k>=budget) break ;
+			if (agent2 != null 
+					&& inTwoPlayersSetup_StopWhenAgent1GoalIsConcluded
+					&& !G1.getStatus().inProgress()) {
+				break ;
+			}
 			if (stopAfterAllAgentsDie && !state1.agentIsAlive() 
 					&& (agent2==null || !state2.agentIsAlive())) {
 				aterdieCount-- ;
