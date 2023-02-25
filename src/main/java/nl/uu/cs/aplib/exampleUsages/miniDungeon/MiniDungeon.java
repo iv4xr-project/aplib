@@ -284,14 +284,7 @@ public class MiniDungeon {
 		}
 	}
 	
-	
-	public boolean showConsoleIO = true ;
-	
-	Scanner scanner ;
-	
-	void consolePrint(String s) {
-		if (showConsoleIO) System.out.println(s) ;
-	}
+	//Scanner scanner ;
 	
 	public Frodo frodo() {
 		return (Frodo) players.get(0) ;
@@ -516,8 +509,12 @@ public class MiniDungeon {
 			return "" ;
 		}
 		// putting the logic for rage time-out here:
-		if (player.rageTimer > 0)
+		if (player.rageTimer > 0) {
+			// Deliberate BUG for CUSTOM MUTATION TEST:
+			// remove the --, so the rage time never decreases
+			//
 			player.rageTimer--;
+		}
 		if (player.rageTimer == 0 && wasEnraged) {
 			msg += "\n> " + player.name + " is no longer enraged.";
 		}
@@ -578,6 +575,9 @@ public class MiniDungeon {
 				var P = hpotions.get(0);
 				player.bag.remove(P);
 				int oldHp = player.hp ;
+				// Deliberate BUG for CUSTOM MUTATION TEST:
+				// player.hp = player.hp + 5 ;
+				//
 				player.hp = Math.min(player.hp + 5, player.hpMax);
 				if (oldHp <  player.hpMax && player.hp == player.hpMax) 
 					player.score += 5 ;
@@ -747,6 +747,9 @@ public class MiniDungeon {
 					else {
 						status = GameStatus.SMEAGOLWIN ;
 					}
+					// Deliberate BUG for CUSTOM MUTATION TEST:
+					// remove giving score
+					//
 					player.score += 1000 ;
 					return "> ROAR! " 
 								+ player.name + " blessed an IMORTAL shrine. " 

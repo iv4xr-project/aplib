@@ -13,6 +13,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
  */
 public class DungeonCommandLineApp {
 	
+	//static public boolean showConsoleIO = true ;
+	
 	static char toChar(Entity e) {
 		if (e == null) return '.' ; 
 		switch(e.type) {
@@ -33,6 +35,11 @@ public class DungeonCommandLineApp {
 		}
 		*/
 		throw new IllegalArgumentException() ;		
+	}
+	
+	static void consolePrint(String s) {
+		//if (showConsoleIO) 
+		System.out.println(s) ;
 	}
 	
 	static public String showMap(MiniDungeon theGame) {
@@ -81,18 +88,16 @@ public class DungeonCommandLineApp {
 		
 		MiniDungeon dg = new MiniDungeon(new MiniDungeonConfig()) ;
 		dg.config.viewDistance = 4 ;
+		var scanner = new Scanner(System.in) ;
 		while(dg.status == GameStatus.INPROGRESS) {
-			dg.consolePrint(showMap(dg)) ;
-			dg.consolePrint("Commands Frodo: wasd | e:use-healpot | r:use-ragepot") ;
-			dg.consolePrint("       Smeagol: ijkl | o:use-healpot | p:use-ragepot") ;
-			if(dg.scanner == null) {
-				dg.scanner = new Scanner(System.in) ;
-			}
-			String cmd = dg.scanner.nextLine() ;
+			consolePrint(showMap(dg)) ;
+			consolePrint("Commands Frodo: wasd | e:use-healpot | r:use-ragepot") ;
+			consolePrint("       Smeagol: ijkl | o:use-healpot | p:use-ragepot") ;
+			String cmd = scanner.nextLine() ;
 			char[] commands = cmd.toCharArray() ;
 			for (int c=0; c<commands.length; c++) {
 				String msg = dg.doCommand(commands[c]) ;
-				if (msg!=null && msg!="") dg.consolePrint(msg) ;
+				if (msg!=null && msg!="") consolePrint(msg) ;
 				if(dg.status != GameStatus.INPROGRESS) return ;
 			}
 		}

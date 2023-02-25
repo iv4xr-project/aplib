@@ -1,6 +1,7 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.Tactic;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 import static eu.iv4xr.framework.Iv4xrEDSL.* ;
@@ -28,29 +29,43 @@ public class ShrineCleanTester {
 		return null ;
 	}
 	
+    public boolean useSurvivalTactic = true ;
+    
+    public void setToUseMemorizedPathFinding() {
+    	tacticLib.delayPathReplan = true ;
+    	goalLib.tacticLib.delayPathReplan = true ;
+    }
+	
 	public GoalStructure areaExplored(TestAgent agent) {
+		
+		Tactic exploreTac = FIRSTof(
+				  tacticLib.useHealingPotAction().on_(tacticLib.hasHealPot_and_HpLow).lift(),
+				  tacticLib.useRagePotAction().on_(tacticLib.hasRagePot_and_inCombat).lift(),
+				  tacticLib.attackMonsterAction().on_(tacticLib.inCombat_and_hpNotCritical).lift(),
+				  SEQ(addBefore(S -> { 
+					    System.out.println(">>> deploying grab heal-pot.") ;
+					    return goalLib.grabPot(agent, EntityType.HEALPOT) ;} )
+					        .on_(goalLib.whenToGoAfterHealPot)
+					        .lift(), 
+					   ABORT()),
+				   SEQ(addBefore(S -> { 
+					    System.out.println(">>> deploying grab rage-pot.") ;
+					    return goalLib.grabPot(agent, EntityType.RAGEPOT) ;} )
+					        .on_((MyAgentState S) -> 
+					                S.worldmodel.agentId.equals("Frodo") // only let Frodo get rage
+					        		&& goalLib.whenToGoAfterRagePot.test(S))
+					        .lift(), 
+					   ABORT()),
+				  tacticLib.explore(null),
+				  ABORT()) ;
+		
+		if (!useSurvivalTactic) {
+			exploreTac = FIRSTof(tacticLib.explore(null), ABORT()) ;
+		}
+		
 		GoalStructure explr = goal("exploring (persistent-goal: aborted when it is terminated)")
 		   .toSolve(belief -> false)
-		   .withTactic(FIRSTof(
-			  tacticLib.useHealingPotAction().on_(tacticLib.hasHealPot_and_HpLow).lift(),
-			  tacticLib.useRagePotAction().on_(tacticLib.hasRagePot_and_inCombat).lift(),
-			  tacticLib.attackMonsterAction().on_(tacticLib.inCombat_and_hpNotCritical).lift(),
-			  SEQ(addBefore(S -> { 
-				    System.out.println(">>> deploying grab heal-pot.") ;
-				    return goalLib.grabPot(agent, EntityType.HEALPOT) ;} )
-				        .on_(goalLib.whenToGoAfterHealPot)
-				        .lift(), 
-				   ABORT()),
-			   SEQ(addBefore(S -> { 
-				    System.out.println(">>> deploying grab rage-pot.") ;
-				    return goalLib.grabPot(agent, EntityType.RAGEPOT) ;} )
-				        .on_((MyAgentState S) -> 
-				                S.worldmodel.agentId.equals("Frodo") // only let Frodo get rage
-				        		&& goalLib.whenToGoAfterRagePot.test(S))
-				        .lift(), 
-				   ABORT()),
-			  tacticLib.explore(null),
-			  ABORT()))
+		   .withTactic(exploreTac)
 		   .lift() ;
 		
 		// could use WHILE, but let's use REPEAT here:
@@ -66,6 +81,15 @@ public class ShrineCleanTester {
 		return s.getBooleanProperty("cleansed" ) ;
 	}
 	
+	private GoalStructure myEntityInCloseRange(TestAgent agent, String id) {
+		if (useSurvivalTactic) {
+			return goalLib.smartEntityInCloseRange(agent,id) ;
+		}
+		else {
+			return goalLib.entityInCloseRange(id) ;
+		}
+	}
+	
 	/**
 	 * Cleansing a shrine.
 	 */
@@ -74,10 +98,10 @@ public class ShrineCleanTester {
 		GoalStructure testScroll =
 			SEQ(DEPLOY(agent,(MyAgentState S) -> {
 					  var scroll = hasScroll(S.worldmodel) ;
-					  return SEQ(goalLib.smartEntityInCloseRange(agent,scroll.id),
+					  return SEQ(myEntityInCloseRange(agent,scroll.id),
 						         goalLib.entityInteracted(scroll.id)) ;
 					   }),
-				 goalLib.smartEntityInCloseRange(agent,shrine),
+				 myEntityInCloseRange(agent,shrine),
 				 goalLib.entityInteracted(shrine)) ;
 		
 		return SEQ(areaExplored(agent),

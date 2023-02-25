@@ -1,6 +1,6 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,10 +13,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.utils.Pair; 
 
-public class UnitTestMiniDungeon {
+class UnitTestMiniDungeon {
 	
 	@Test
-	public void testConstructorTwoPlayers() {
+	void testConstructorTwoPlayers() {
 		
 		var config = new MiniDungeonConfig() ;
 		var dungeon = new MiniDungeon(config) ;
@@ -36,7 +36,7 @@ public class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	public void testConstructorOnePlayers() {
+	void testConstructorOnePlayers() {
 		var config = new MiniDungeonConfig() ;
 		config.enableSmeagol = false ;
 		var dungeon = new MiniDungeon(config) ;
@@ -49,7 +49,28 @@ public class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	public void testSeeding() {
+	void testInvalidConfigs() {
+		var config = new MiniDungeonConfig() ;
+		config.worldSize = 7 ;
+		assertThrows(IllegalArgumentException.class,() -> new MiniDungeon(config)) ;
+		config.worldSize = 21 ;
+		config.numberOfCorridors = 8 ; 
+		assertThrows(IllegalArgumentException.class,() -> new MiniDungeon(config)) ;
+		config.worldSize = 11 ;
+		config.numberOfCorridors = 1 ; 
+		config.numberOfHealPots = 7 ;
+		config.numberOfRagePots = 7 ;
+		config.numberOfScrolls = 7 ;
+		config.numberOfMonsters = 7 ;
+		// total items + monsters = 28
+		// available squates = 9*9 , threshold 9*9/3 = 27
+		assertThrows(IllegalArgumentException.class,() -> new MiniDungeon(config)) ;
+		config.numberOfMonsters = 6 ;
+		new MiniDungeon(config) ; // should not throw exception
+	}
+	
+	@Test
+	void testSeeding() {
 		
 		var config = new MiniDungeonConfig() ;
 		
@@ -102,7 +123,7 @@ public class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	public void testVisibility() {
+	void testVisibility() {
 
 		var config = new MiniDungeonConfig();
 		config.viewDistance = 4 ;

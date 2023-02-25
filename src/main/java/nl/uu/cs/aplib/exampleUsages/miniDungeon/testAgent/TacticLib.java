@@ -181,7 +181,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 						return nextTile ;
 					}
 					
-					//System.out.println("###### " + S.worldmodel.agentId) ;
+					//System.out.println("###### nav-action " + S.worldmodel.agentId) ;
 					List<Pair<Integer,Tile>> path = null ;
 					if (delayPathReplan) {
 						if (memoryCountdown[0] <= 0) {
@@ -189,29 +189,32 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 						}
 						else {
 							path = memorized[0] ;
-							path.remove(0) ;
-							memoryCountdown[0] -- ;
-							if (path.size()==0) {
-								//System.out.println("### 1") ;
+							if (path.size()<=1) {
+								//System.out.println("### clear memorized path case 1") ;
 								path = null ;
 								memoryCountdown[0] = memoryDuration ;
 							}
 							else {
+								path.remove(0) ;
+								memoryCountdown[0] -- ;
 								Tile next = path.get(0).snd ;
 								if(!Utils.adjacent(agentPos,next)) {
-									//System.out.println("### 2") ;
+									//System.out.println("### clear memorized path case 2") ;
 									path = null ;
 									memoryCountdown[0] = memoryDuration ;
 								}
 							}
+							//if (path!=null) System.out.println("### using memorized path") ;
 						}
 					}			
 					if (path == null) {
+						//System.out.println("### calculating new path") ;
 						path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;
-						if (path == null) {
+						if (path == null || path.isEmpty()) {
 							return null ;
 						}
 						path.remove(0) ;
+						//System.out.println("### path=" + path) ;
 						memorized[0] = path ;
 					}
 					Tile[] nextTile = {path.get(0).snd} ;
@@ -352,6 +355,11 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	 * location.
 	 */
 	Action exploreAction(Pair<Integer,Tile> heuristicLocation) {
+		
+		List[] memorized = { null } ;
+		final int memoryDuration = 10 ;
+		int[] memoryCountdown = {0} ;
+		
 		Action alpha = action("explore")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
@@ -362,20 +370,55 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
 					//System.out.println(">>> agent is " + S.worldmodel().agentId) ;
-					//System.out.println(">>> explore is invoked") ;
-					List<Pair<Integer,Tile>> path ;
-					if (heuristicLocation == null) {
-						//System.out.println(">>> @maze " + Utils.mazeId(a) + ", tile: " + agentPos) ;
-					    path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y)) ;
+						
+					//System.out.println("### explore is invoked agent @" + agentPos) ;
+					
+					List<Pair<Integer,Tile>> path = null ;
+					if (delayPathReplan) {
+						if (memoryCountdown[0] <= 0) {
+							memoryCountdown[0] = memoryDuration ;
+						}
+						else {
+							path = memorized[0] ;
+							//System.out.println("### about to use memorized path: " + path) ;
+							if (path.size()<=1) {
+								//System.out.println("### memorized path is singleton or empty, dropping it") ;
+								path = null ;
+								memoryCountdown[0] = memoryDuration ;
+							}
+							else {
+								path.remove(0) ;
+								memoryCountdown[0] -- ;
+								Tile next = path.get(0).snd ;
+								if(!Utils.adjacent(agentPos,next)) {
+									//System.out.println("### next node in memorized path is not adjacent; dropping it") ;
+									path = null ;
+									memoryCountdown[0] = memoryDuration ;
+								}
+							}
+							//if (path!=null) System.out.println("### using memorized path->" + path.get(0)) ;
+							
+						}
 					}
-					else
-						path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y), heuristicLocation) ;
 					if (path == null) {
-						//System.out.println(">>>> can't find an explore path!") ;
-						return null ;
+						if (heuristicLocation == null) {
+							//System.out.println(">>> @maze " + Utils.mazeId(a) + ", tile: " + agentPos) ;
+						    path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y)) ;
+						}
+						else
+							path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y), heuristicLocation) ;
+						
+						if (path == null || path.isEmpty()) {
+							//System.out.println(">>>> can't find an explore path!") ;
+							return null ;
+						}
+						path.remove(0) ;
+						memorized[0] = path ;
+						//System.out.println("### calculated new path-> " + path.get(0)) ;
 					}
+					
 					try {
-						return path.get(1).snd ;
+						return path.get(0).snd ;
 					}
 					catch(Exception e) {
 						System.out.println(">>> agent @" + agentPos + ", path: " + path) ;

@@ -122,5 +122,19 @@ public class TPJconfigs {
 		return config ;
 	}
 	
+	// config for survival experiment:
+	
+	public static MiniDungeonConfig BigAreaConfig() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "BigAreaConfig" ;
+		config.numberOfMaze = 1 ;
+		config.worldSize = 40 ;
+		config.numberOfHealPots = 8;
+		config.numberOfRagePots = 4;
+		config.viewDistance = 4;
+		config.numberOfMonsters = 6 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
 
 }

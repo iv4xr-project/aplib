@@ -43,11 +43,11 @@ public class WallsTester {
 		
 		boolean shouldStop(MyAgentState S) {
 			Tile currentTile = Utils.toTile(S.worldmodel.position) ;
-			System.out.println("### checking should-stop, current: " + currentTile
-					+ ", walk-start:" + walkStartingLocation);
+			//System.out.println("### checking should-stop, current: " + currentTile
+			//		+ ", walk-start:" + walkStartingLocation);
 			if (currentTile.equals(walkStartingLocation)) return true ;
 			Integer cnt = visitCount.get(currentTile) ;
-			System.out.println("   visit cnt at current:" + cnt) ;
+			//System.out.println("   visit cnt at current:" + cnt) ;
 			return cnt != null && cnt > 2 ;
 		}
 	}
@@ -135,7 +135,7 @@ public class WallsTester {
 		  .do1((MyAgentState S) -> {
 			  Tile next = frontTile(S,st.walkDirection) ;
 			  //st.registerVisit(next) ;
-			  System.out.println("=== move forward to " + next + ", dir:" + st.walkDirection) ;
+			  //System.out.println("=== move forward to " + next + ", dir:" + st.walkDirection) ;
 			  return tacticLib.moveTo(S,next) ;
 		  })  ;
 	}
@@ -146,7 +146,7 @@ public class WallsTester {
 			  Tile next = leftTile(S,st.walkDirection) ;
 			  //st.registerVisit(next) ;
 			  st.walkDirection = turnLeft(st.walkDirection) ;
-			  System.out.println("=== turn left to " + next + ", dir:" + st.walkDirection) ;
+			  //System.out.println("=== turn left to " + next + ", dir:" + st.walkDirection) ;
 			  return tacticLib.moveTo(S,next) ;
 		}) ;	
 	}
@@ -157,7 +157,7 @@ public class WallsTester {
 			  Tile next = rightTile(S,st.walkDirection) ;
 			  //st.registerVisit(next) ;
 			  st.walkDirection = turnRight(st.walkDirection) ;
-			  System.out.println("=== turn right to " + next + ", dir:" + st.walkDirection) ;
+			  //System.out.println("=== turn right to " + next + ", dir:" + st.walkDirection) ;
 			  return tacticLib.moveTo(S,next) ;
 		}) ;	
 	}
@@ -192,7 +192,7 @@ public class WallsTester {
 				return S.env().observe(S.worldmodel.agentId) ;
 			}
 			var obs = tacticLib.moveTo(S, wall) ;
-			System.out.println(">>> checking wall " + wall) ;
+			//System.out.println(">>> checking wall " + wall) ;
 			if (Utils.toTile(obs.position).equals(wall)) {
 				System.out.println("   WALL BUG!") ;
 			}

@@ -195,6 +195,7 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 		List<WorldEntity> ms = worldmodel.elements.values().stream()
 				.filter(e -> e.type.equals(EntityType.MONSTER.toString())
 						     && Utils.mazeId(player) == Utils.mazeId(e)
+						     && e.timestamp == worldmodel.timestamp
 						 	 && Utils.adjacent(p,Utils.toTile(e.position)))
 				.collect(Collectors.toList()) ;
 		return ms ;

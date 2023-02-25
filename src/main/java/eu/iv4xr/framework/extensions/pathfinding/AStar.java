@@ -32,6 +32,13 @@ public class AStar<NodeId> implements Pathfinder<NodeId> {
         return dynamicHeuristicDistance.apply(graph).apply(a, b) ;
     }
     
+    /**
+     * Return a path from the start to the goal. Such a path starts in "start" and ends in 
+     * "goal". So, if goal is the same as start, the path would be just a singleton sequence
+     * of [start].
+     * 
+     * <p> If there is no path between start and goal, null is returned.
+     */
     @Override
     public ArrayList<NodeId> findPath(Navigatable<NodeId> graph, NodeId start, NodeId goal) {
         PriorityQueue<Priotisable<NodeId>> open = new PriorityQueue<Priotisable<NodeId>>(10,

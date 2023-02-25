@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 
 
 /**
- * Running all playtests on various configurations.
+ * Running all play-tests on various configurations.
  */
-public class Experiment1 {
+class Experiment1 {
 
 	MiniDungeonConfig[] randomTestConfigs = { TPJconfigs.MDconfig1(), TPJconfigs.MDconfig2() } ;
 	MiniDungeonConfig[] shrineTestConfigs = { 
@@ -38,11 +38,11 @@ public class Experiment1 {
 	int wallTestBudget   = 8000 ;
 	int pvpTestBudget = 2000 ;
 	
-	TestAgent mkFrodo() {
+	public static TestAgent mkFrodo() {
 		return new TestAgent("Frodo","Player") ;
 	}
 	
-	TestAgent mkSmeagol() {
+	public static TestAgent mkSmeagol() {
 		return new TestAgent("Smeagol","Player") ;
 	}
 	
@@ -137,7 +137,7 @@ public class Experiment1 {
 					true,true) ;		
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testWalls() throws Exception {
 		// run only one test for wall:
@@ -176,7 +176,7 @@ public class Experiment1 {
 					false,true) ;	
 	}
 	
-	//@Disabled
+	@Disabled
 	@Test
 	void testPVP() throws Exception {
 		// run only one test for wall:

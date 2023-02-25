@@ -322,6 +322,12 @@ public class Sparse2DTiledSurface_NavGraph
 		return 1.4142f ;
 	}
 	
+	/**
+	 * Return a path from the give from-tile to to-tile. The path starts with
+	 * from, and ends with to. If form is the same as to, the path will be 
+	 * a singleton [from].
+	 * If there is no path, null is returned.
+	 */
 	public List<Tile> findPath(Tile from, Tile to) {
 		return pathfinder.findPath(this, from, to) ;
 	}

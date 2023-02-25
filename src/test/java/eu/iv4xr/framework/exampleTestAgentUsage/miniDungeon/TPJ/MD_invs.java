@@ -120,7 +120,7 @@ public class MD_invs {
 					System.out.println(">>> BUG! " + S.worldmodel.agentId + " command: " + executedAction[0]) ;
 					System.out.println(">>> expected pos:" + expectedLocation[0]  
 							+ ", actual pos:" + pos) ;
-					System.out.println(">>>" + S.get(S.worldmodel.agentId)) ;
+					//System.out.println(">>>" + S.get(S.worldmodel.agentId)) ;
 					System.out.println(">>>") ;
 					//System.out.println(">>>" + S.get("Frodo")) ;
 				}
