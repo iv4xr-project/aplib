@@ -20,6 +20,13 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.CSVUtility;
 
+/**
+ * This experiment looks into the survivability of the test agent using
+ * survival tactic, and compares it with runs without survival tactic,
+ * and runs with random.
+ * 
+ * @author Wish
+ */
 class Experiment2 {
 	
 	boolean saveRunData = false ;

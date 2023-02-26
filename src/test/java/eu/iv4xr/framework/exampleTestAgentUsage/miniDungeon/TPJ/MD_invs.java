@@ -15,12 +15,34 @@ import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
 public class MD_invs {
 	
+	/**
+	 * An invariant can set this flag to true to signal that it spots a violation.
+	 * The test agent can use this flag to stop its test early rather than waiting
+	 * until its complete run is completed. Normally invariants are checkes like
+	 * other LTL formulas, so at the end of the run. This flag gives a way for the
+	 * agent to break the test run early.
+	 */
+	public boolean bugFlagged = false ;
+	/**
+	 * The last invariant that causes bug-flagging.
+	 */
+	public String invViolated = "" ;
+	
+	boolean flagVerdict(Boolean verdict, String invName) {
+		if (!verdict) {
+			bugFlagged = true ;
+			invViolated = invName ;			
+		}
+		return verdict ;
+	}
+	
 	boolean hpInv(MyAgentState S) {
 		int hp = (Integer) S.val("hp") ;
 		Integer hpPrev = (Integer) S.before("hp") ;
 		int hpmax = (Integer) S.val("hpmax") ;
-		return (hp>=0 || (hpPrev!=null && (hpPrev>0 || hp == hpPrev))) 
+		var ok = (hp>=0 || (hpPrev!=null && (hpPrev>0 || hp == hpPrev))) 
 				&& hp <= hpmax && hpmax>0 ;
+		return flagVerdict(ok,"hpInv") ;
 	}
 	
 	boolean scoreInv(MyAgentState S) {
@@ -31,7 +53,8 @@ public class MD_invs {
 				S.worldmodel.elements.get(B) != null 
 				&& (Integer) S.val(B,"hp") <=0 
 				&& (Integer) S.before(B,"hp") > 0 ;
-		return prev!=null ? score >= prev || otherAgentJustDead : true ;		
+		var ok = prev!=null ? score >= prev || otherAgentJustDead : true ;		
+		return flagVerdict(ok,"scoreInv") ;
 	}
 	
 	boolean positionInv(MyAgentState S) {
@@ -54,9 +77,11 @@ public class MD_invs {
 			//System.out.println("## old:" + old + ", new:" + pos) ;
 			//System.out.println("## old-maze:" + prevMaze + ", new-maze:" + mazeId) ;
 			if (!ok) {
+				//bugFlagged = true ;
 				System.out.println("## BUG!") ;
 			}
 			assertTrue(ok) ;
+			flagVerdict(ok,"positionInv") ;
 			return ok ;
 		}
 		return true ;
@@ -71,17 +96,61 @@ public class MD_invs {
 			if (prevMaze < mazeId) {
 				// teleporting up:
 				float distSq = Vec3.distSq(new Vec3(1,0,1),pos) ;
-				return 1<=distSq && distSq<=2 ;
+				return flagVerdict(1<=distSq && distSq<=2 , "teleportInv") ;
 			}
 			else if (prevMaze > mazeId){
 				// teleporting down
 				int N = (Integer) S.val("aux","worldSize") ;
 				float distSq = Vec3.distSq(new Vec3(N-2,0,1),pos) ;
-				return 1<=distSq && distSq<=2 ;
+				return flagVerdict(1<=distSq && distSq<=2 , "teleportInv") ;
 			}
 		}
 		return true ;
 	}
+	
+	boolean ragingInv(MyAgentState S) {
+		var rageIHad = (Integer) S.before("ragepotsInBag") ;
+		var rageIHaveNow = (Integer) S.val("ragepotsInBag") ;
+		var rageTimeBefore = (Integer) S.before("rageTimer") ;
+		var rageTimerNow = (Integer) S.val("rageTimer") ;
+		boolean ok1 = rageIHad==null 
+				|| rageIHad <= rageIHaveNow
+				|| rageTimerNow == 10 ;
+		
+		boolean ok2 = rageTimeBefore == null || rageTimeBefore == 0
+				|| rageTimerNow == Math.max(rageTimeBefore-1 , 0) ;
+
+		return flagVerdict(ok1 && ok2,"ragingInv") ;
+	}
+	
+	private GameStatus iWin(MyAgentState S) {
+		if (S.worldmodel.agentId.equals("Frodo")) return GameStatus.FRODOWIN ;
+		else return GameStatus.SMEAGOLWIN ;
+	}
+	
+	boolean immortalShrineInv(MyAgentState S) {
+		int numberOfMazes = S.env().app.dungeon.config.numberOfMaze ;
+		String ImmortalShrineId = "SI" + (numberOfMazes - 1) ; 
+		if (S.worldmodel.elements.get(ImmortalShrineId) == null) 
+			return true ;
+		var scrollIHad = (Integer) S.before("scrollsInBag") ;
+		var scrollIHaveNow = (Integer) S.val("scrollsInBag") ;
+		var immortalStatusNow = (Boolean) S.val(ImmortalShrineId,"cleansed") ;
+		var immortalStatusBefore = (Boolean) S.before(ImmortalShrineId,"cleansed") ;
+		var gameStatus = (GameStatus) S.val("aux","status") ;
+		var scoreBefore = (Integer) S.before("score") ;
+		var scoreNow = (Integer) S.val("score") ;
+		
+		boolean ok = immortalStatusBefore == null || scrollIHad == null
+				|| immortalStatusBefore          // shrine was already clean
+				|| scrollIHad <= scrollIHaveNow  // not using a scroll
+				|| !immortalStatusNow            // use scroll but the shrine is not cleansed
+				|| (gameStatus == iWin(S)  && scoreNow == scoreBefore + 1000)  // the agent cleanse the shrine!
+				;
+		
+		return flagVerdict(ok,"immortalShrineInv") ;
+	}
+	
 	
 	WorldEntity getEntityAtTile(MyAgentState S, Tile t) {
 		int mazeId = (Integer) S.val("maze") ;
@@ -96,7 +165,13 @@ public class MD_invs {
 		return null ;
 	}
 	
+
 	
+	
+	/**
+	 * Specification of move; specifying when it is possible/impossible to move.
+	 * The spec is incomplete, but still pretty strong.
+	 */
 	Predicate<SimpleState> moveSpec() {
 		
 		Vec3[] expectedLocation = { null } ;
@@ -117,6 +192,7 @@ public class MD_invs {
 				int hp = (Integer) S.val("hp") ;
 				locationCorrect =   hp <= 0 || pos.equals(expectedLocation[0]) ;
 				if (!locationCorrect) {
+					//bugFlagged = true ;
 					System.out.println(">>> BUG! " + S.worldmodel.agentId + " command: " + executedAction[0]) ;
 					System.out.println(">>> expected pos:" + expectedLocation[0]  
 							+ ", actual pos:" + pos) ;
@@ -187,7 +263,7 @@ public class MD_invs {
 				}
 			}
 			//assertTrue(locationCorrect) ;
-			return locationCorrect ;
+			return flagVerdict(locationCorrect,"moveSpec") ;
 		} ;
 	}
 	
@@ -201,8 +277,9 @@ public class MD_invs {
 			S -> scoreInv((MyAgentState) S),
 			S -> positionInv((MyAgentState) S),
 			S -> teleportInv((MyAgentState) S),
+			S -> ragingInv((MyAgentState) S),
+			S -> immortalShrineInv((MyAgentState) S),
 			moveSpec()
-			
 	) ;
 	
 	Predicate<SimpleState>[] selectedInvs(int ... selections) {

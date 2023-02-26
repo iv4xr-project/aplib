@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import eu.iv4xr.framework.spatial.IntVec2D;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Wall;
 import nl.uu.cs.aplib.utils.Pair;
 
@@ -84,6 +85,19 @@ public class Maze {
 			}
 		}
 		return minp ;
+	}
+	
+	public boolean hasBrokenWall() {
+		for(int x=0; x<size; x++) {
+			for (int y=0; y<size;y++) {
+				var e = world[x][y] ;
+				if (e!=null && e.type == EntityType.WALL) {
+					var w = (Wall) e ;
+					if (w.brokenwall) return true ;
+				}
+			}
+		}
+		return false ;
 	}
 		
 	/**

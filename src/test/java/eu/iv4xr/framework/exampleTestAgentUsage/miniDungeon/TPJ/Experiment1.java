@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 
 
 /**
- * Running all play-tests on various configurations.
+ * Running all play-tests on various configurations. This is meant to get their
+ * coverage data. The data can be exported From Eclipse.
  */
 class Experiment1 {
 

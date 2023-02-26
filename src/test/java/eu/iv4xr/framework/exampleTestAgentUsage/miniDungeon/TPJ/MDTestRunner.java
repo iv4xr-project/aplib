@@ -13,6 +13,7 @@ import eu.iv4xr.framework.mainConcepts.TestDataCollector;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Maze;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
@@ -28,6 +29,8 @@ public class MDTestRunner {
 	public boolean verbosePrint = false ;
 	public boolean stopAfterAllAgentsDie = true ;
     public boolean inTwoPlayersSetup_StopWhenAgent1GoalIsConcluded = true ;
+    public boolean stopWhenInvriantFlagABug = false ;
+    public boolean stopWhenGameOver = false ;
 	public boolean withInstrumenter = true ;
 	public boolean saveRunData = true ;
     public String runDataFolder = "./tmp" ;
@@ -136,8 +139,10 @@ public class MDTestRunner {
 		if (withInstrumenter) {
 			agent1 . withScalarInstrumenter(S -> stateInstrumenter((MyAgentState) S)) ;
 		}
+		MD_invs invs1 = new MD_invs() ;
+		MD_invs invs2 = null ;
 		agent1
-		   . addInv(new MD_invs().allInvs) 
+		   . addInv(invs1.allInvs) 
 		   . resetLTLs() ;
 		
 		if (agent2 != null) {
@@ -149,9 +154,9 @@ public class MDTestRunner {
 			if (withInstrumenter) {
 				agent2.withScalarInstrumenter(S -> stateInstrumenter((MyAgentState) S)) ;
 			}
-			   
+			invs2 = new MD_invs() ;
 			agent2
-			   . addInv(new MD_invs().allInvs) 
+			   . addInv(invs2.allInvs) 
 			   . resetLTLs() ;
 		}
 		
@@ -197,6 +202,14 @@ public class MDTestRunner {
 				aterdieCount-- ;
 			}
 			if (aterdieCount<=0) break ;
+			if (stopWhenInvriantFlagABug 
+					&& (invs1.bugFlagged
+					    || (invs2 != null && invs2.bugFlagged))) {
+				break ;
+			}
+			if (stopWhenGameOver && ((GameStatus) state1.val("aux","status")) != GameStatus.INPROGRESS) {
+				break ;
+			}
 			k++ ;
 		}	
 		time = System.currentTimeMillis() - time ;
