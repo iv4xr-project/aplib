@@ -510,7 +510,7 @@ public class MiniDungeon {
 		}
 		// putting the logic for rage time-out here:
 		if (player.rageTimer > 0) {
-			// Deliberate BUG for CUSTOM MUTATION TEST:
+			// Deliberate BUG RMUT for CUSTOM MUTATION TEST:
 			// remove the --, so the rage time never decreases
 			//
 			player.rageTimer--;
@@ -575,9 +575,6 @@ public class MiniDungeon {
 				var P = hpotions.get(0);
 				player.bag.remove(P);
 				int oldHp = player.hp ;
-				// Deliberate BUG for CUSTOM MUTATION TEST:
-				// player.hp = player.hp + 5 ;
-				//
 				player.hp = Math.min(player.hp + 5, player.hpMax);
 				if (oldHp <  player.hpMax && player.hp == player.hpMax) 
 					player.score += 5 ;
@@ -747,7 +744,7 @@ public class MiniDungeon {
 					else {
 						status = GameStatus.SMEAGOLWIN ;
 					}
-					// Deliberate BUG for CUSTOM MUTATION TEST:
+					// Deliberate BUG SMUT for CUSTOM MUTATION TEST:
 					// remove giving score
 					//
 					player.score += 1000 ;

@@ -61,6 +61,7 @@ class Experiment2 {
 		}
 	}
 	
+	@Disabled
 	@Test
 	void view() throws Exception {
 		MiniDungeonConfig config =  TPJconfigs.BigAreaConfig() ;

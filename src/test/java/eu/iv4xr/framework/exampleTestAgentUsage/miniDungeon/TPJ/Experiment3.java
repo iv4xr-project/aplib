@@ -84,6 +84,10 @@ class Experiment3 {
 	//int[] mazeSizes = { 21 } ; 
 	//int[] mazeSizes = { 61 } ; 
 	
+	// for ragepotion-bug experiment
+	int[] numberOfRagePots = { 12,9,6,3,1 } ; 
+	//int[] numberOfRagePots = { 6 } ;
+	
 	float[] bugDetectionRateWithPlay = new float[mazeSizes.length] ;
 	float[] bugDetectionRateWithRandom = new float[mazeSizes.length] ;
 	float[] bugDetectionRateWithRandomPlus = new float[mazeSizes.length] ;
@@ -91,6 +95,15 @@ class Experiment3 {
 	float[] usedTurnsWithRandom = new float[mazeSizes.length] ;
 	float[] usedTurnsWithRandomPlus = new float[mazeSizes.length] ;
 	int numberOfReruns = 10 ;
+	
+	private void initializeData(int rowsize) {
+		bugDetectionRateWithPlay = new float[rowsize] ;
+		bugDetectionRateWithRandom = new float[rowsize] ;
+		bugDetectionRateWithRandomPlus = new float[rowsize] ;
+		usedTurnsWithPlay = new float[rowsize] ;
+		usedTurnsWithRandom = new float[rowsize] ;
+		usedTurnsWithRandomPlus = new float[rowsize] ;
+	}
 	
 	// change the seed of the config, until one is found that
 	// would generate a maze with broken wall
@@ -109,12 +122,10 @@ class Experiment3 {
 	void findingWallBugExperiment() throws Exception {
 		
 		Random seed = new Random() ;
+		initializeData(mazeSizes.length) ;
 		
 		for (int k=0; k<mazeSizes.length; k++) {
 			int N = mazeSizes[k] ;
-			bugDetectionRateWithPlay[k] = 0 ;
-			bugDetectionRateWithRandom[k] = 0 ;
-			bugDetectionRateWithRandomPlus[k] = 0 ;
 			
 			MiniDungeonConfig config =  TPJconfigs.MDconfig1() ;
 			config.enableSmeagol = false ;
@@ -131,11 +142,7 @@ class Experiment3 {
 				throw new Exception("CANNOT generate buggy wall!") ;
 			}
 			
-			
-			var play = new ShrineCleanTester() ;
 			String status = "" ;
-			play.tacticLib.delayPathReplan = true ;
-			play.goalLib.tacticLib.delayPathReplan = true ;
 			var frodo = Experiment1.mkFrodo() ;
 			// (1) with wall-play
 			boolean ok = runTest("wallTest_wallPlay_N" + N,
@@ -201,41 +208,127 @@ class Experiment3 {
 				System.out.println(">>>> N" + N + "_" + j + ":" + status) ;
 			}
 			
-
-			bugDetectionRateWithRandom[k] 
-					= bugDetectionRateWithRandom[k] / (float) numberOfReruns ;
-			usedTurnsWithRandom[k] = usedTurnsWithRandom[k] / (float) numberOfReruns ;
-			bugDetectionRateWithRandomPlus[k]
-					= bugDetectionRateWithRandomPlus[k] / (float) numberOfReruns ;
-			usedTurnsWithRandomPlus[k] = usedTurnsWithRandomPlus[k] / (float) numberOfReruns ;
-					
+			float N_ = (float) numberOfReruns ;
+			bugDetectionRateWithRandom[k] = bugDetectionRateWithRandom[k] / N_ ;
+			usedTurnsWithRandom[k] = usedTurnsWithRandom[k] / N_ ;
+			bugDetectionRateWithRandomPlus[k] = bugDetectionRateWithRandomPlus[k] / N_ ;
+			usedTurnsWithRandomPlus[k] = usedTurnsWithRandomPlus[k] / N_ ;		
 		}
 		printResults() ;
 		saveResults("wall") ;
 	}
 	
-	void findingHealingPotionBugExperiment() throws Exception {
-		
+	@Disabled
+	@Test
+	void findingRagePotionBugExperiment() throws Exception {
+		Random seed = new Random() ;
+		initializeData(numberOfRagePots.length) ;
+		for (int k=0; k<numberOfRagePots.length; k++) {
+			int R = numberOfRagePots[k] ;
+			
+			MiniDungeonConfig config =  TPJconfigs.MDconfig1() ;
+			config.numberOfRagePots = R ;
+			config.enableSmeagol = false ;
+			config.numberOfMonsters = 8 ;
+			config.numberOfMaze = 1 ;
+			config.numberOfCorridors = 5 ;
+			config.viewDistance = 6 ;
+			config.worldSize = 61 ;
+			
+			System.out.println(">>>> Starting R" + R) ;
+
+			String status = "" ;
+
+			for (int j=0; j<numberOfReruns; j++) {
+				System.out.println(">>>> R" + R + ", run " + j) ;
+				config.randomSeed = seed.nextLong() ;
+				
+				// (1) with wall-play
+				var play = new ShrineCleanTester() ;
+				play.setToUseMemorizedPathFinding(); 
+				var frodo = Experiment1.mkFrodo() ;
+				boolean ok = runTest("rageTest_ShrinePlay_R" + R,
+						frodo, 
+						config,
+						play.cleanseAllShrines(frodo,config.numberOfMaze),
+						false
+						) ;	
+				if (!ok) {
+					bugDetectionRateWithPlay[k] += 1 ;
+					status += "S " ;
+					System.out.println(">>> RAGEPOT BUG FOUND!") ;
+					usedTurnsWithPlay[k] += (Integer) ((MyAgentState) frodo.state()).val("aux","turn") ;
+				}
+				else {
+					status += "F " ;
+					usedTurnsWithPlay[k] += 10000;
+				}
+				// ==== (2) with random:
+				frodo = Experiment1.mkFrodo() ;
+				RandomPlayTester randomplay = new RandomPlayTester() ;
+				ok = runTest("rageTest_R" + R + "_random",
+						frodo, 
+						config,
+						randomplay.simpleRandomPlay(),
+						false) ;
+				// check if the agent survive
+				if (!ok) {
+					bugDetectionRateWithRandom[k] += 1 ;
+					usedTurnsWithRandom[k] += (Integer) ((MyAgentState) frodo.state()).val("aux","turn") ;
+					status += "S " ;
+				}
+				else {
+					status += "F " ;
+					usedTurnsWithRandom[k] += 10000 ; 
+				}
+				// ==== (3) with random plus:
+				frodo = Experiment1.mkFrodo() ;
+				ok = runTest("survivalTest_R" + R + "_random",
+						frodo, 
+						config,
+						randomplay.smarterRandomPlay(frodo),
+						false) ;
+				if (!ok) {
+					bugDetectionRateWithRandomPlus[k] += 1 ;
+					usedTurnsWithRandomPlus[k] += (Integer) ((MyAgentState) frodo.state()).val("aux","turn") ; 
+					status += "S " ;
+				}
+				else {
+					status += "F " ;
+					usedTurnsWithRandomPlus[k] += 10000 ; 
+				}
+				System.out.println(">>>> R" + R + "_" + j + ":" + status) ;
+			}
+			float N_ = (float) numberOfReruns ;
+			bugDetectionRateWithPlay[k] = bugDetectionRateWithPlay[k] / N_ ;
+			usedTurnsWithPlay[k] = usedTurnsWithPlay[k] / N_ ;
+			bugDetectionRateWithRandom[k] = bugDetectionRateWithRandom[k] / N_ ;
+			usedTurnsWithRandom[k] = usedTurnsWithRandom[k] / N_ ;
+			bugDetectionRateWithRandomPlus[k] = bugDetectionRateWithRandomPlus[k] / N_ ;
+			usedTurnsWithRandomPlus[k] = usedTurnsWithRandomPlus[k] / N_ ;
+		}
+		printResults() ;
+		saveResults("ragepot") ;
 	}
 	
 	void printResults() {
 		System.out.println("====") ;
 		System.out.print("With programmed-play: ") ;
-		for (int k=0; k<mazeSizes.length; k++) {
+		for (int k=0; k<bugDetectionRateWithPlay.length; k++) {
 			if (k>0) System.out.print(", ") ;
 			System.out.print("" 
 					+ bugDetectionRateWithPlay[k] 
 					+ " (#turns:" + usedTurnsWithPlay[k] +  ")") ;
 		}
 		System.out.print("\nRandom: ") ;
-		for (int k=0; k<mazeSizes.length; k++) {
+		for (int k=0; k<bugDetectionRateWithRandom.length; k++) {
 			if (k>0) System.out.print(", ") ;
 			System.out.print("" 
 					+ bugDetectionRateWithRandom[k]
 					+ " (#turns:" + usedTurnsWithRandom[k] +  ")") ;
 		}
 		System.out.print("\nSmart-random: ") ;
-		for (int k=0; k<mazeSizes.length; k++) {
+		for (int k=0; k<bugDetectionRateWithRandomPlus.length; k++) {
 			if (k>0) System.out.print(", ") ;
 			System.out.print("" 
 					+ bugDetectionRateWithRandomPlus[k]
@@ -254,7 +347,7 @@ class Experiment3 {
 				"random", "rndturns",
 				"smart-random", "srndturns" } ;
 		List<Number[]> data = new LinkedList<Number[]>() ;
-		for (int k=0; k<mazeSizes.length; k++) {
+		for (int k=0; k<bugDetectionRateWithPlay.length; k++) {
 			Number[] row = { 
 				mazeSizes[k],
 				bugDetectionRateWithPlay[k],

@@ -108,19 +108,61 @@ public class MD_invs {
 		return true ;
 	}
 	
-	boolean ragingInv(MyAgentState S) {
-		var rageIHad = (Integer) S.before("ragepotsInBag") ;
-		var rageIHaveNow = (Integer) S.val("ragepotsInBag") ;
-		var rageTimeBefore = (Integer) S.before("rageTimer") ;
-		var rageTimerNow = (Integer) S.val("rageTimer") ;
-		boolean ok1 = rageIHad==null 
-				|| rageIHad <= rageIHaveNow
-				|| rageTimerNow == 10 ;
+	Predicate<SimpleState> ragingInv() {
 		
-		boolean ok2 = rageTimeBefore == null || rageTimeBefore == 0
-				|| rageTimerNow == Math.max(rageTimeBefore-1 , 0) ;
+		String[] didAnAction = { null } ;
+		
+		Predicate<SimpleState> inv = (SimpleState T) -> {
+			
+			MyAgentState S = (MyAgentState) T ;	
+		
+			boolean didAnAction_ = didAnAction[0] != null ;
+			
+			var cmd_ = S.env().getLastOperation() ;
+			if (cmd_ == null) {
+				didAnAction[0] = null ;
+				return true ;
+			}
+			else {
+				didAnAction[0] = cmd_.command ;
+			}
+			
+			// no checking if the agent does not do any action:
+			if (!didAnAction_) return true ;
+			var gameStatus = (GameStatus) S.val("aux","status") ; 
+			// no checking if the agent died or game is over:
+			if (gameStatus != gameStatus.INPROGRESS || ! S.agentIsAlive()) return true ;
 
-		return flagVerdict(ok1 && ok2,"ragingInv") ;
+			var rageIHad = (Integer) S.before("ragepotsInBag") ;
+			var rageIHaveNow = (Integer) S.val("ragepotsInBag") ;
+			var rageTimeBefore = (Integer) S.before("rageTimer") ;
+			var rageTimerNow = (Integer) S.val("rageTimer") ;
+
+			boolean ok1 = rageIHad==null 
+					|| rageIHad <= rageIHaveNow
+					|| rageTimerNow == 9 ;
+
+			boolean ok2 = rageTimeBefore == null 
+					|| rageTimeBefore == 0 
+					|| rageTimerNow == Math.max(rageTimeBefore-1 , 0) ;
+					//|| rageTimerNow <= rageTimeBefore ;
+
+			//System.out.println(">>>>>>>  action: " + cmd_.command) ;
+			if (!ok1 || !ok2) {
+				//System.out.println(">>> RAGE BUG action: " + cmd_.command) ;
+				System.out.print  ("    violating ") ;
+				if (!ok1) System.out.print("ok1") ;
+				if (!ok2) System.out.print(" ok2") ;
+				System.out.println(", agent: " + S.worldmodel.elements.get(S.worldmodel.agentId)) ;
+				System.out.println("   ragePotInBag before: " + rageIHad) ;
+				System.out.println("   rageTimer before: " + rageTimeBefore) ;
+
+			}
+
+			return flagVerdict(ok1 && ok2,"ragingInv") ;
+		} ;
+		
+		return inv ;
 	}
 	
 	private GameStatus iWin(MyAgentState S) {
@@ -277,7 +319,7 @@ public class MD_invs {
 			S -> scoreInv((MyAgentState) S),
 			S -> positionInv((MyAgentState) S),
 			S -> teleportInv((MyAgentState) S),
-			S -> ragingInv((MyAgentState) S),
+			ragingInv(),
 			S -> immortalShrineInv((MyAgentState) S),
 			moveSpec()
 	) ;

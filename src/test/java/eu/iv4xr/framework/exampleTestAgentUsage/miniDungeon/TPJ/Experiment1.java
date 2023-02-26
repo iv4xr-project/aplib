@@ -138,7 +138,7 @@ class Experiment1 {
 					true,true) ;		
 	}
 	
-	//@Disabled
+	@Disabled
 	@Test
 	void testWalls() throws Exception {
 		// run only one test for wall:

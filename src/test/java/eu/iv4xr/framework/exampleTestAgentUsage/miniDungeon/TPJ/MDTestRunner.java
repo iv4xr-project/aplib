@@ -188,6 +188,7 @@ public class MDTestRunner {
 				   + ", score:" + state2.val("score")
 				   + ", goal-status:" + G2.getStatus());
 				}
+				//System.out.println(">>> agent1 ragetimer: " + state1.val("rageTimer") + ", before: " + state1.before("rageTimer")) ;
 			}
 			// delay to slow it a bit for displaying:
 			if (sleep>0) Thread.sleep(sleep); 
