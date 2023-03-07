@@ -41,6 +41,7 @@ public class SimpleTestMiniDungeonWithAgent {
 		app.soundOn = false;
 		app.headless = !withGraphics ;
 		if(withGraphics) DungeonApp.deploy(app);
+		//(new Scanner(System.in)).nextLine() ;
 		
 		MyAgentEnv env = new MyAgentEnv(app);
 		MyAgentState state = new MyAgentState() ;

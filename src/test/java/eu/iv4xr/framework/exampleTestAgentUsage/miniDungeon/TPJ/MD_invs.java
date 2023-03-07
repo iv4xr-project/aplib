@@ -93,19 +93,34 @@ public class MD_invs {
 		Integer prevMaze = (Integer) S.before("maze") ;
 		if (prevMaze !=null) {
 			Vec3 pos = S.worldmodel.position ;
+			//if (mazeId != prevMaze) {
+			//	System.out.println(">>> teleportInt + prevMaze:" + prevMaze
+			//			+ ", nowMaze:" + mazeId
+			//			+ ", pos:" + pos);
+			//}
+			pos.y = mazeId ;
 			if (prevMaze < mazeId) {
 				// teleporting up:
-				float distSq = Vec3.distSq(new Vec3(1,0,1),pos) ;
+				float distSq = Vec3.distSq(new Vec3(1,mazeId,1),pos) ;
 				return flagVerdict(1<=distSq && distSq<=2 , "teleportInv") ;
 			}
 			else if (prevMaze > mazeId){
 				// teleporting down
 				int N = (Integer) S.val("aux","worldSize") ;
-				float distSq = Vec3.distSq(new Vec3(N-2,0,1),pos) ;
+				float distSq = Vec3.distSq(new Vec3(N-2,mazeId-1,1),pos) ;
 				return flagVerdict(1<=distSq && distSq<=2 , "teleportInv") ;
 			}
 		}
 		return true ;
+	}
+	
+	
+
+	boolean isMoveAction(String cmd) {
+		return cmd.equals("MOVEUP")
+				|| cmd.equals("MOVEDOWN")
+				|| cmd.equals("MOVELEFT")
+				|| cmd.equals("MOVERIGHT") ;
 	}
 	
 	Predicate<SimpleState> ragingInv() {
@@ -115,20 +130,22 @@ public class MD_invs {
 		Predicate<SimpleState> inv = (SimpleState T) -> {
 			
 			MyAgentState S = (MyAgentState) T ;	
-		
-			boolean didAnAction_ = didAnAction[0] != null ;
+			
+			String actionIdid = didAnAction[0] ;
+			
+			boolean didSkippingAction = 
+					actionIdid == null 
+					|| (isMoveAction(actionIdid)
+					    && S.worldmodel.position.equals(S.positionBefore())) ;
 			
 			var cmd_ = S.env().getLastOperation() ;
-			if (cmd_ == null) {
-				didAnAction[0] = null ;
-				return true ;
-			}
-			else {
-				didAnAction[0] = cmd_.command ;
-			}
+			didAnAction[0] = cmd_ == null ? null : cmd_.command  ;
 			
-			// no checking if the agent does not do any action:
-			if (!didAnAction_) return true ;
+			// no checking if the agent did a null action, or did a move action
+			// but remain in its place (sometimes this action does not trigger a
+			// turn update, e.g. due to hitting a wall)_
+			if (didSkippingAction) return true ;
+			
 			var gameStatus = (GameStatus) S.val("aux","status") ; 
 			// no checking if the agent died or game is over:
 			if (gameStatus != gameStatus.INPROGRESS || ! S.agentIsAlive()) return true ;
@@ -144,19 +161,19 @@ public class MD_invs {
 
 			boolean ok2 = rageTimeBefore == null 
 					|| rageTimeBefore == 0 
-					|| rageTimerNow == Math.max(rageTimeBefore-1 , 0) ;
-					//|| rageTimerNow <= rageTimeBefore ;
+					|| rageIHaveNow < rageIHad  // timer still ticks, but the agent uses another rpot
+					|| rageTimerNow == rageTimeBefore-1 ;
 
-			//System.out.println(">>>>>>>  action: " + cmd_.command) ;
+			//System.out.println(">>>>>>>  action: " + actionIdid) ;
 			if (!ok1 || !ok2) {
-				//System.out.println(">>> RAGE BUG action: " + cmd_.command) ;
+				System.out.println(">>> RAGE BUG action: " + actionIdid) ;
 				System.out.print  ("    violating ") ;
 				if (!ok1) System.out.print("ok1") ;
 				if (!ok2) System.out.print(" ok2") ;
 				System.out.println(", agent: " + S.worldmodel.elements.get(S.worldmodel.agentId)) ;
 				System.out.println("   ragePotInBag before: " + rageIHad) ;
 				System.out.println("   rageTimer before: " + rageTimeBefore) ;
-
+				System.out.println("   position before: " + S.positionBefore()) ;
 			}
 
 			return flagVerdict(ok1 && ok2,"ragingInv") ;
@@ -190,6 +207,14 @@ public class MD_invs {
 				|| (gameStatus == iWin(S)  && scoreNow == scoreBefore + 1000)  // the agent cleanse the shrine!
 				;
 		
+		if (!ok) {
+			System.out.println(">>> imm-shrine bug, agent @" + S.worldmodel.position) ;
+			System.out.println(">>> imm-shrine: " + S.worldmodel.elements.get(ImmortalShrineId)) ;
+			System.out.println("    immortal-clean Before " + immortalStatusBefore) ;
+			System.out.println("    #scrolls, before=" + scrollIHad + ", now=" + scrollIHaveNow) ;
+			System.out.println("    game status: " + gameStatus) ;
+			
+		}
 		return flagVerdict(ok,"immortalShrineInv") ;
 	}
 	
@@ -262,11 +287,12 @@ public class MD_invs {
 				Vec3 moveToLoc = null ;
 				int bagSpace = (Integer) S.val("maxBagSize") - (Integer) S.val("bagUsed") ;
 				executedAction[0] = cmd ;
+				int mazeId = (Integer) S.val("maze") ;
 				switch (cmd) {
-				case "MOVEUP"   : moveToLoc = new Vec3(pos.x,0,pos.z+1)  ; break ;
-				case "MOVEDOWN" : moveToLoc = new Vec3(pos.x,0,pos.z-1)  ; break ;
-				case "MOVELEFT" : moveToLoc = new Vec3(pos.x-1,0,pos.z)  ; break ;
-				case "MOVERIGHT" : moveToLoc = new Vec3(pos.x+1,0,pos.z)  ; break ;
+				case "MOVEUP"   : moveToLoc = new Vec3(pos.x,mazeId,pos.z+1)  ; break ;
+				case "MOVEDOWN" : moveToLoc = new Vec3(pos.x,mazeId,pos.z-1)  ; break ;
+				case "MOVELEFT" : moveToLoc = new Vec3(pos.x-1,mazeId,pos.z)  ; break ;
+				case "MOVERIGHT" : moveToLoc = new Vec3(pos.x+1,mazeId,pos.z)  ; break ;
 				}
 				if (moveToLoc == null) {
 					expectedLocation[0] = S.worldmodel.position.copy() ;

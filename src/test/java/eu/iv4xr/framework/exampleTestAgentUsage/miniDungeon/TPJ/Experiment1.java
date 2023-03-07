@@ -96,7 +96,7 @@ class Experiment1 {
 		}
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testShrineWithSinglePlayer() throws Exception {
 		for(int k=0; k<shrineTestConfigs.length; k++) {
@@ -122,7 +122,7 @@ class Experiment1 {
 		}
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testShrineWithTwoPlayers() throws Exception {
 		// only run it for the first dungeon:
@@ -138,7 +138,7 @@ class Experiment1 {
 					true,true) ;		
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testWalls() throws Exception {
 		// run only one test for wall:
@@ -154,7 +154,7 @@ class Experiment1 {
 				true,true) ;		
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testCombatWithMonsters() throws Exception {
 		// run only one test for wall:
@@ -177,7 +177,7 @@ class Experiment1 {
 					false,true) ;	
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testPVP() throws Exception {
 		// run only one test for wall:

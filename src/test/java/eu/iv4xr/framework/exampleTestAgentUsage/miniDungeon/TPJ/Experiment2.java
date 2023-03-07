@@ -38,9 +38,12 @@ class Experiment2 {
 
 	int testbudget = 2000 ;
 	
+	int usedNumberOfTurns ;
+	
 	void runTest(String runId, TestAgent agent1,
 			MiniDungeonConfig config,
 			GoalStructure G1, 
+			int budget,
 			boolean assertG1IsFinished,
 			boolean assertLTLs) throws Exception {
 		
@@ -50,7 +53,9 @@ class Experiment2 {
 		runner.verbosePrint = verbosePrint ;
 		runner.saveRunData = saveRunData ;
 		
-		runner.runAgent(runId, agent1, null, config, G1, null, testbudget, sleepBetweenUpdates);
+		runner.runAgent(runId, agent1, null, config, G1, null, budget, sleepBetweenUpdates);
+		
+		usedNumberOfTurns = runner.usedNumberOfTurns ;
 		
 		// checking oracles:
 		if (assertG1IsFinished) {
@@ -93,6 +98,7 @@ class Experiment2 {
 				frodo, 
 				config,
 				play.cleanseAllShrines(frodo, config.numberOfMaze),
+				testbudget,
 				true,true) ;		
 	}
 	
@@ -138,6 +144,7 @@ class Experiment2 {
 						frodo, 
 						config,
 						play.cleanseAllShrines(frodo, config.numberOfMaze),
+						testbudget,
 						false,true) ;
 				// check if the agent survive
 				if (((MyAgentState)frodo.state()).agentIsAlive()) {
@@ -145,6 +152,7 @@ class Experiment2 {
 					status += "S " ;
 				}
 				else status += "F " ;
+				int budgetForRandom = usedNumberOfTurns ;
 				// ==== (2) without survival-tactic:
 				frodo = Experiment1.mkFrodo() ;
 				play = new ShrineCleanTester() ;
@@ -155,6 +163,7 @@ class Experiment2 {
 						frodo, 
 						config,
 						play.cleanseAllShrines(frodo, config.numberOfMaze),
+						testbudget,
 						false,true) ;
 				// check if the agent survive
 				if (((MyAgentState)frodo.state()).agentIsAlive()) {
@@ -169,6 +178,7 @@ class Experiment2 {
 						frodo, 
 						config,
 						randomplay.simpleRandomPlay(),
+						budgetForRandom,
 						false,true) ;
 				// check if the agent survive
 				if (((MyAgentState)frodo.state()).agentIsAlive()) {

@@ -37,6 +37,8 @@ public class MDTestRunner {
 	
 	boolean includeWallBug = false ;
 	
+	int usedNumberOfTurns ;
+	
 	/**
 	 * An instrumenter to collect data from a test run.
 	 */
@@ -174,12 +176,16 @@ public class MDTestRunner {
 			}
 			if (verbosePrint) {
 				System.out.println("** [" + k + "/" + state1.val("aux","turn") + "]") ;
-				System.out.println("   agent1 " + agent1.getId() 
+				System.out.print("   agent1 " + agent1.getId() 
 					+ " @" + Utils.toTile(state1.worldmodel.position) 
 				    + ", maze:" + state1.val("maze")
 				    + ", hp:" + state1.val("hp")
 				    + ", score:" + state1.val("score")
-				    + ", goal-status:" + G1.getStatus());
+				    + ", goal-status:" + G1.getStatus()) ;
+				if (state1.env().getLastOperation() != null) {
+					System.out.println(", action:" + state1.env().getLastOperation().command) ;
+				}
+				else System.out.println("") ;
 				if (agent2 != null) {
 			       System.out.println("   agent2 " + agent2.getId() 
 			       + " @" + Utils.toTile(state2.worldmodel.position)
@@ -187,6 +193,10 @@ public class MDTestRunner {
 				   + ", hp:" + state2.val("hp")
 				   + ", score:" + state2.val("score")
 				   + ", goal-status:" + G2.getStatus());
+			       if (state2.env().getLastOperation() != null) {
+						System.out.println(", action:" + state2.env().getLastOperation().command) ;
+					}
+					else System.out.println("") ;
 				}
 				//System.out.println(">>> agent1 ragetimer: " + state1.val("rageTimer") + ", before: " + state1.before("rageTimer")) ;
 			}
@@ -206,6 +216,7 @@ public class MDTestRunner {
 			if (stopWhenInvriantFlagABug 
 					&& (invs1.bugFlagged
 					    || (invs2 != null && invs2.bugFlagged))) {
+				System.out.println(">> inv violation signaled: " + invs1.invViolated) ;
 				break ;
 			}
 			if (stopWhenGameOver && ((GameStatus) state1.val("aux","status")) != GameStatus.INPROGRESS) {
@@ -213,6 +224,7 @@ public class MDTestRunner {
 			}
 			k++ ;
 		}	
+		usedNumberOfTurns = k ;
 		time = System.currentTimeMillis() - time ;
 		System.out.println(">> End of run. #turns=" + k + ", time=" + time) ;
 		System.out.println("   Game status:" + state1.val("aux","status")) ;
