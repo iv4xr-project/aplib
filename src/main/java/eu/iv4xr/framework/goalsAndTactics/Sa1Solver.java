@@ -80,6 +80,20 @@ public class Sa1Solver<NavgraphNode>  {
 	 */
 	public Function<Integer,GoalStructure> exploring ;
 	
+	/**
+	 * A global set of visited candidates used by {@link #solver(BasicAgent, String, Predicate, Predicate, Policy, int)}
+	 * to keep track of candidates that were already tried, so that they are not tried again.
+	 * This global set will be used if {@link #useGlobalVisitedSet}
+	 * is set to true (default is false), and else an internal visited-set is used,
+	 * which is fresh for each invocation of the solver.
+	 */
+	public List<String> globalVisited = new LinkedList<>() ;
+	
+	/**
+	 * See {@link #visited}. Default is false.
+	 */
+	public boolean useGlobalVisitedSet = false ;
+	
 	public Sa1Solver() { }
 	
 	/**
@@ -244,7 +258,7 @@ public class Sa1Solver<NavgraphNode>  {
 		
 		Random rnd = new Random() ;
 		
-		List<String> visited = new LinkedList<>() ;
+		List<String> visited = useGlobalVisitedSet ? globalVisited : new LinkedList<>() ;
 			
 		/*
 		  Deploy a dynamic goal to interact with a "nearest" reachable candidate interactable. Abort
