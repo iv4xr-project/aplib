@@ -328,7 +328,7 @@ class Experiment3 {
 	}
 	
 	
-	//@Disabled
+	@Disabled
 	@Test
 	void findingImmortalShrineBugExperiment() throws Exception {
 		long time = System.currentTimeMillis() ;
