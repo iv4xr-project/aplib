@@ -10,6 +10,7 @@ import nl.uu.cs.aplib.mainConcepts.Action.Abort;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.GoalsCombinator;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.utils.Time;
+import static nl.uu.cs.aplib.mainConcepts.GoalStructureStack.StackItem ;
 
 /**
  * This is the root class of all agents in aplib. As the name suggests, this
@@ -83,28 +84,31 @@ public class BasicAgent {
     protected String role;
 
     protected SimpleState state;
+    
+    /**
+     * The agent maintains a stack of goal-structures. Typically there is only
+     * one goal-structure there, which is the goal-structure that the agent will
+     * be working on. Having a stack allows the agent to push a new goal-structure H
+     * to the stack (or rather, allowing an action to push a new goal-structure).
+     * The agent will then switch to this new goal-structure and work on it until
+     * it either succeeds or fails, after which the agent will pop the H from the
+     * stack and returns to the goal-structure that it was working before H was pushed.
+     * 
+     * <p>Suppose the agent was working on a goal structure G when it pushes H.
+     * The pushing of H to the stack will happen inside the agent's update cycle. H
+     * will not be immediately pushed. The agent will first finish the update cycle,
+     * and then H is pushed (which means the agent will switch to H at the next cycle).
+     * The agent does memorize what were the current primitive goal and the current tactic
+     * within G. So, when it returns to G (after popping H), it would continue with the
+     * same prim-goal and current-tactic as they were at the moment H was pushed.
+     */
+    protected GoalStructureStack goalstack = new GoalStructureStack() ;
 
     /**
-     * The current topgoal the agent has.
+     * The last root goal-structure handled by this agent before it was detached.
      */
-    protected GoalStructure goal;
-
-    /**
-     * The last goal handled by this agent before it was detached.
-     */
-    protected GoalStructure lastHandledGoal;
-
-    /**
-     * A topgoal may consists of multiple subgoals, which the agent will work on one
-     * at a time. This field will point to the current subgoal the agent is working
-     * on.
-     */
-    protected PrimitiveGoal currentGoal;
-
-    /**
-     * The tactic the agent is currently using to solve its currentGoal.
-     */
-    protected Tactic currentTactic;
+    protected GoalStructure lastHandledRootGoalStructure;
+    
 
     protected Logger logger = Logging.getAPLIBlogger();
 
@@ -156,24 +160,34 @@ public class BasicAgent {
     }
 
     /**
-     * Set a goal for this agent. The method returns the agent itself so that this
-     * method can be used in the Fluent Interface style.
+     * Set a goal/goal-structure for this agent. More precisely, the agent maintains a stack of 
+     * goal-structures. The given goal-structure g will then be pushed onto the stack to become
+     * the current-goal structure that the agent will work on.
+     * 
+     * <p>The method returns the agent itself so that this method can be used in the Fluent Interface style.
      */
-    public BasicAgent setGoal(GoalStructure g) {
-        goal = g;
-        if (!allGoalsHaveTactic(g))
+    public BasicAgent setGoal(GoalStructure G) {
+        if (!allGoalsHaveTactic(G))
             throw new IllegalArgumentException("Agent " + id + ": some goal has no tactic.");
-        if (!g.checkIfWellformed())
+        if (!G.checkIfWellformed())
         	throw new IllegalArgumentException("Agent " + id + ": is given a goal-structure that is not well-formed.");
         
-        currentGoal = goal.getDeepestFirstPrimGoal_andAllocateBudget();
-        if (currentGoal == null)
-            throw new IllegalArgumentException("Agent " + id + ": is gievn a goal structure with NO goal.");
-        currentTactic = currentGoal.goal.getTactic();
-        if (currentTactic == null)
-            throw new IllegalArgumentException("Agent " + id + ", goal " + currentGoal.goal.name + ": has NO tactic.");
-        logger.info("Agent " + id + " is assigned a new goal structure.");
+        var GI = new StackItem(G) ;
+        goalstack.stack.add(GI) ;
+        prepareGoalStructureAtTheTopOfStack() ;
+        logger.info("Agent " + id + " is given a new goal structure " + showGoalStructShortDesc(G));
         return this;
+    }
+    
+    private void prepareGoalStructureAtTheTopOfStack() {
+    	var g = goalstack.currentRootGoal().getDeepestFirstPrimGoal_andAllocateBudget();
+    	goalstack.setCurrentPrimitiveGoal(g);
+        if (g == null)
+            throw new IllegalArgumentException("Agent " + id + " is given a goal structure with NO goal.");
+        var tac = g.goal.getTactic() ;
+        goalstack.setCurrentTactic(tac);
+        if (tac == null)
+            throw new IllegalArgumentException("Agent " + id + ", goal " + g.goal.name + ": has NO tactic.");
     }
 
     private static boolean allGoalsHaveTactic(GoalStructure g) {
@@ -187,31 +201,44 @@ public class BasicAgent {
         }
         return true;
     }
+    
+    private static String showGoalStructShortDesc(GoalStructure G) {
+    	if (G instanceof PrimitiveGoal) return G.getName() ;
+    	if (G.shortdesc == null) return "" ;
+    	return G.getName() ;
+    }
 
-    /**
-     * Set a goal for this agent, with the specified initial budget. The method
-     * returns the agent itself so that this method can be used in the Fluent
-     * Interface style.
-     */
-    public BasicAgent setGoal(double budget, GoalStructure g) {
-        g.budget = budget;
-        return setGoal(g);
+	/**
+	 * Similar to {@link #setGoal(GoalStructure)}, but will also assign the
+	 * specified initial budget for the given goal/goal-structure. The method
+	 * returns the agent itself so that this method can be used in the Fluent
+	 * Interface style.
+	 */
+    public BasicAgent setGoal(double budget, GoalStructure G) {
+        G.budget = budget;
+        return setGoal(G);
     }
 
     /**
-     * Set initial computation budget for this agent. The agent must have a goal
-     * set. This method should not be called when the agent is already working on
-     * its goal.
+     * Set initial computation budget the current/top goal-structure in the agent's
+     * goal-stack. 
+     * NOTE: This method should not be called when the agent is already working on
+     * that top goal.
      */
     public BasicAgent budget(double b) {
-        if (goal == null)
-            throw new IllegalArgumentException(
-                    "Agent " + id + ": allocating budget to an agent requires it to have a goal.");
+    	var goal = goalstack.currentRootGoal() ;
         if (b <= 0 || !Double.isFinite(b))
             throw new IllegalArgumentException();
         goal.budget = b;
-        setGoal(goal);
         return this;
+    }
+    
+    /**
+     * Panic button, to drop all goal-structures currently in the goal-stack.
+     */
+    public void dropAll() {
+    	goalstack.commitPendingPush() ;
+    	goalstack.stack.clear();
     }
 
     /**
@@ -285,17 +312,33 @@ public class BasicAgent {
     }
 
     /**
-     * As the name says, this will detach the current topgoal and subgoal from the
-     * agent. So, setting the {@code goal} and {@code currentGoal} fields to null.
+     * As the name says, this will detach/pop the entire goal-structure that is currently
+     * at the top of the agent's goal-stack (this is the goal-structure that the
+     * agent is currently working on). If that was the only goal-structure in the stack,
+     * the stack will then become empty and the agent has no further goal to work on.
+     * Else the next goal-structure in the stack becomes the top goal-structure.
      */
     protected void detachgoal() {
-        lastHandledGoal = goal;
-        goal = null;
-        currentGoal = null;
+        lastHandledRootGoalStructure = goalstack.currentRootGoal() ;
+        goalstack.pop() ;
+        int N = goalstack.stack.size() ;
+        if (N > 0) {
+        	prepareGoalStructureAtTheTopOfStack() ;
+        }
         String status = "" ;
-        if (lastHandledGoal.getStatus().success()) status = "(success)" ;
-        else if(lastHandledGoal.getStatus().failed()) status = "(fail)" ;
-        logger.info("Agent " + id + " detaches its goal structure " + status + ".") ;
+        if (lastHandledRootGoalStructure.getStatus().success()) status = "(success)" ;
+        else if(lastHandledRootGoalStructure.getStatus().failed()) status = "(fail)" ;
+        if (N==0)
+        	logger.info("Agent " + id + " detaches the last goal-structure from the stack "
+        			+ showGoalStructShortDesc(lastHandledRootGoalStructure)
+        			+ "; status: " + status + ".") ;
+        else
+        	logger.info("Agent " + id + " pops a goal-structure from the stack " 
+        			+ showGoalStructShortDesc(lastHandledRootGoalStructure)
+        			+ "(status:" + status 
+        			+ "), and switches to the next root goal-structure in the stack"
+        			+ showGoalStructShortDesc(goalstack.currentRootGoal())
+        			+ ".") ;
     }
 
     /**
@@ -303,7 +346,7 @@ public class BasicAgent {
      * detached when it is declared successful or failed.
      */
     public GoalStructure getLastHandledGoal() {
-        return lastHandledGoal;
+        return lastHandledRootGoalStructure;
     }
 
     /**
@@ -321,33 +364,20 @@ public class BasicAgent {
         logger.log(level, s);
     }
 
-    /**
-     * For marking the agent's topgoal as succees, and adding the given info string
-     * to it.
-     */
-    protected void setTopGoalToSuccess(String info) {
-        goal.setStatusToSuccess(info);
-    }
-
-    /**
-     * Set topgoal to fail, with the given reason. Then the goal is detached.
-     */
-    protected void setTopGoalToFail(String reason) {
-        goal.setStatusToFail(reason);
-        detachgoal();
-    }
 
     /**
      * Insert the goal-structure G as the <b>next</b> direct sibling of the current
-     * goal. However, if the parent of this goal-structure is REPEAT (which can only
+     * primitive goal (the primitive goal that the agent is currently working on).
+     * However, if the parent of this primitive goal is REPEAT (which can only
      * have one child), a SEQ node will first be inserted in-between, and the G is
      * added as the next sibling of this goal-structure.
      * 
      * <p>
-     * Fail if the current goal is null or if it is the top-goal.
+     * Fail if the current primitive-goal is null or if it is a root-goal.
      */
     public void addAfter(GoalStructure G) {
-        if (currentGoal == null || currentGoal.isTopGoal())
+    	var currentGoal = goalstack.currentPrimitiveGoal() ;
+        if (currentGoal == null || currentGoal.isRootGoal())
             throw new IllegalArgumentException();
 
         var parent = currentGoal.parent;
@@ -389,33 +419,34 @@ public class BasicAgent {
 
     
     @Deprecated
-    /**
-     * Deprecated. Use the non-repeating {@link #simpleAddBefore(GoalStructure)} 
-     * instead. 
-     * 
-     * <p>Insert the goal-structure G as the <b>before</b> direct sibling of the
-     * current goal. More precisely, the current goal will be replaced by
-     * REPEAT(SEQ(G,current-goal)). This is only carried out if G does not already
-     * appear as a previous sibling of the current goal under a SEQ node.
-     * 
-     * <p>
-     * If added, the REPEAT node will get the same budget and max-budget as whatever
-     * the current budget of the current-goal's parent.
-     * 
-     * <p>
-     * Note that inserting a new goal in this way has the following effect. Suppose
-     * G0 is the current goal. If it fails, the inserted REPEAT node will cause the
-     * agent to retry, but this time by trying the newly inserted G first. If it is
-     * solved, the agent will continue with re-trying G0. If this still fails, G
-     * will be tried again, and so on. It will not be added twice.
-     * 
-     * <p>
-     * Fail if the current goal is null or if it is the top-goal. The latter case is
-     * forbidden because otherwise we would have to introduce a new top-goal, which
-     * might confuse the user of this agent.
-     */
+	/**
+	 * Deprecated. Use the non-repeating {@link #simpleAddBefore(GoalStructure)}
+	 * instead.
+	 * 
+	 * <p>
+	 * Insert the goal-structure G as the <b>before</b> direct sibling of the
+	 * current primitive-goal (the primitive goal that the agent is currently
+	 * working on). More precisely, this current primitive-goal will be replaced by
+	 * REPEAT(SEQ(G,current-goal)). This is only carried out if G does not already
+	 * appear as a previous sibling of the current goal under a SEQ node.
+	 * 
+	 * <p>
+	 * If added, the REPEAT node will get the same budget and max-budget as whatever
+	 * the current budget of the current-goal's parent.
+	 * 
+	 * <p>
+	 * Note that inserting a new goal in this way has the following effect. Suppose
+	 * G0 is the current goal. If it fails, the inserted REPEAT node will cause the
+	 * agent to retry, but this time by trying the newly inserted G first. If it is
+	 * solved, the agent will continue with re-trying G0. If this still fails, G
+	 * will be tried again, and so on. It will not be added twice.
+	 * 
+	 * <p>
+	 * Fail if the current primitive-goal is null or if it is a root-goal.
+	 */
     public void addBefore(GoalStructure G) {
-        if (currentGoal == null || currentGoal.isTopGoal())
+    	var currentGoal = goalstack.currentPrimitiveGoal() ;
+        if (currentGoal == null || currentGoal.isRootGoal())
             throw new IllegalArgumentException();
 
         // currentGoal must therefore have a parent:
@@ -447,17 +478,19 @@ public class BasicAgent {
         // case-2 done
     }
     
-    /**
-     * Insert the goal-structure G as a sibling <b>before</b> the current
-     * goal. However, if the parent of this goal-structure is REPEAT (which can only
-     * have one child), a SEQ node will first be inserted in-between, and the G is
-     * added as the pre-sibling of this goal-structure.
-     * 
-     * <p>
-     * Fail if the current goal is null or if it is the top-goal.
-     */
+	/**
+	 * Insert the goal-structure G as a sibling <b>before</b> the current
+	 * primitive-goal (the primitive goal that the agent is currently working on).
+	 * However, if the parent of this primitive-goal is REPEAT (which can only have
+	 * one child), a SEQ node will first be inserted in-between, and the G is added
+	 * as the pre-sibling of this primitive-goal.
+	 * 
+	 * <p>
+	 * Fail if the current primitive-goal is null or if it is the top-goal.
+	 */
     public void simpleAddBefore(GoalStructure G) {
-        if (currentGoal == null || currentGoal.isTopGoal())
+    	var currentGoal = goalstack.currentPrimitiveGoal() ;
+        if (currentGoal == null || currentGoal.isRootGoal())
             throw new IllegalArgumentException();
 
         var parent = currentGoal.parent;
@@ -489,13 +522,15 @@ public class BasicAgent {
     	simpleAddBefore(G) ;
     }
 
-    /**
-     * Remove the goal-structure G from this agent root goal-structure. Fail if the
-     * agent has no goal or if G is an ancestor of the current goal.
-     */
+	/**
+	 * Remove the goal-structure G from this agent top goal-structure (the
+	 * goal-structure at the top of the agent's goal stack). Fail if the agent has
+	 * no root goal or if G is an ancestor of the current goal.
+	 */
     public void remove(GoalStructure G) {
-        if (goal == null || currentGoal.isDescendantOf(G))
-            throw new IllegalArgumentException();
+    	var goal = goalstack.currentRootGoal() ;
+        if (goalstack.currentPrimitiveGoal().isDescendantOf(G))
+            throw new IllegalArgumentException("Trying to remove a goal-structure that contains the current primitive-goal.");
         removeGoalWorker(goal, G);
         logger.info("Agent " + id + " removes a sub-goal-structure.");
     }
@@ -504,10 +539,10 @@ public class BasicAgent {
         if (H.subgoals.contains(tobeRemoved)) {
             H.subgoals.remove(tobeRemoved);
             if (H.subgoals.isEmpty()) {
-                if (H.isTopGoal()) {
+                if (H.isRootGoal()) {
                     throw new AplibError("Removal of a goal structure causes the topgoal to become childless.");
                 } else {
-                    removeGoalWorker(goal, H);
+                    removeGoalWorker(goalstack.currentRootGoal(), H);
                 }
             }
             return true;
@@ -547,33 +582,40 @@ public class BasicAgent {
      * to just choose randomly). The chosen {@link Action} will then be executed for
      * a single tick. If the Action returns a non-null proposal, this method will
      * check is this proposal solves the current subgoal, it will be marked as such,
-     * and the next subgoal will be search. If there is none, then the topgoal is
-     * solved.
+     * and the next subgoal (within the current root goal structure) will be search. 
+     * If there is none, then the current root-goal is solved.
      * 
      * <p>
      * This method also keeps track of the computation time so far used to work on
-     * the topgoal as well as the current subgoal. If this exceeds the allocated
-     * time, the corresponding topgoal/subgoal will be marked as failed.
+     * the current root-goal as well as the current subgoal. If this exceeds the allocated
+     * time, the corresponding root-goal/subgoal will be marked as failed.
      */
     public void update() {
-        if (goal == null) {
-            // System.err.print("x") ;
-            return;
-        }
-        // Note on BUDGET:
-        // We will not check the budget at the start of the update. The first current
-        // goal is guaranteed to have >0 budget. This implies it is safe to check
-        // the budget at the end of every update instead.
-
-        mytime.sample();
-        // We need to lock the environment since there may be multiple agents
-        // sharing the same environment:
-        lockEnvironment();
-        // goal.redistributeRemainingBudget();
         try {
+        	// We need to lock the environment since there may be multiple agents
+            // sharing the same environment:
+            lockEnvironment();
+            
+        	if (goalstack.stack.size() == 0) {
+                // System.err.print("x") ;
+                return;
+            }
+            // Note on BUDGET:
+            // We will not check the budget at the start of the update. The first current
+            // goal is guaranteed to have >0 budget. This implies it is safe to check
+            // the budget at the end of every update instead.
+
+            mytime.sample();
+            
+            // goal.redistributeRemainingBudget();
             updateWorker();
         } finally {
-            unlockEnvironment();
+            // In case there is a pending push to the goal-stack, commit this goal.
+        	// This would mean that the agent would then (in the next update) switch to the pushed goal.
+            var pushed = goalstack.commitPendingPush() ;
+        	if (pushed)
+        		logger.info("Agent " + id + " switches to a newly pushed goal.");
+        	unlockEnvironment();
         }
     }
 
@@ -581,8 +623,11 @@ public class BasicAgent {
 
         // update the agent's state:
         state.updateState(id);
-
-        var candidates = currentTactic.getFirstEnabledActions(state);
+        
+        var currentRootGoalStructure = goalstack.currentRootGoal() ;
+        var currentPrimitiveGoal   = goalstack.currentPrimitiveGoal() ;
+        
+        var candidates = goalstack.currentTactic().getFirstEnabledActions(state);
         if (candidates.isEmpty()) {
             // if no action is enabled, we wait until the next update, to see
             // if the environment changes its state.
@@ -596,17 +641,17 @@ public class BasicAgent {
 
         if (chosenAction.action instanceof Abort) {
             // if the action is ABORT:
-            logger.info("Agent " + id + " ABORTs the goal " + currentGoal.goal.name + ".");
-            currentGoal.setStatusToFail("Abort was invoked.");
+            logger.info("Agent " + id + " ABORTs the goal " + currentPrimitiveGoal.goal.name + ".");
+            currentPrimitiveGoal.setStatusToFail("Abort was invoked.");
         } else {
             // else execute the action:
             Object proposal = costFunction.executeAction_andInstrumentCost(state, chosenAction.action);
-            currentGoal.goal.propose_(proposal);
-            if (currentGoal.goal.getStatus().success()) {
-                logger.info("Agent " + id + " SOLVEs the goal " + currentGoal.goal.name + ".");
-                currentGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
+            currentPrimitiveGoal.goal.propose_(proposal);
+            if (currentPrimitiveGoal.goal.getStatus().success()) {
+                logger.info("Agent " + id + " SOLVEs the goal " + currentPrimitiveGoal.goal.name + ".");
+                currentPrimitiveGoal.setStatusToSuccess("Solved by " + chosenAction.action.name);
             }
-            currentGoal.registerConsumedBudget(costFunction.getCost());
+            currentPrimitiveGoal.registerConsumedBudget(costFunction.getCost());
         }
 
         // registering some statistics:
@@ -614,37 +659,40 @@ public class BasicAgent {
         var elapsed = mytime.elapsedTimeSinceLastSample();
         // System.out.println("### elapsed: " + elapsed) ;
         chosenAction.action.totalRuntime += elapsed;
-        currentGoal.registerUsedTime(elapsed);
+        currentPrimitiveGoal.registerUsedTime(elapsed);
 
         // if the current goal is not decided (still in progress), check if its budget is
         // not exhausted:
-        if (currentGoal.getStatus().inProgress() && currentGoal.budget <= 0d) {
-            logger.info("Agent " + id + " FAILs the goal " + currentGoal.goal.name + "; its budget is exhausted.");
-            currentGoal.setStatusToFailBecauseBudgetExhausted();
+        if (currentPrimitiveGoal.getStatus().inProgress() && currentPrimitiveGoal.budget <= 0d) {
+            logger.info("Agent " + id + " FAILs the goal " + currentPrimitiveGoal.goal.name + "; its budget is exhausted.");
+            currentPrimitiveGoal.setStatusToFailBecauseBudgetExhausted();
         }
 
-        // check the status of top-level goal; if it is resolved, the agent is done:
-        if (goal.getStatus().success() || goal.getStatus().failed()) {
+        // check the status of root goal; if it is resolved, the agent is done:
+        if (currentRootGoalStructure.getStatus().success() || currentRootGoalStructure.getStatus().failed()) {
             detachgoal();
             // we don't bother to clean up auto-remove goals since the top-goal
             // in concluded anyway:
             return;
         }
-        // otherwise the top goal is still in-progress...
+        // otherwise the root goal is still in-progress...
 
-        if (currentGoal.getStatus().success() || currentGoal.getStatus().failed()) {
-            // so... if the current goal is closed (but the topgoal is not closed yet),
+        if (currentPrimitiveGoal.getStatus().success() || currentPrimitiveGoal.getStatus().failed()) {
+            // so... if the current goal is closed (but the root goal is not closed yet),
         	// check first if we have an auto-remove goal that needs to be removed:
-        	GoalStructure autoRemovedGoal_tobeRemoved = goal.get_Concluded_AutoRemove_Subgoal() ;
+        	GoalStructure autoRemovedGoal_tobeRemoved = currentRootGoalStructure.get_Concluded_AutoRemove_Subgoal() ;
         	
         	// Next, we need to find another goal to solve:
-            currentGoal = currentGoal.getNextPrimitiveGoal_andAllocateBudget();
-            if (currentGoal != null) {
-                logger.info("Agent " + id + " switches to goal " + currentGoal.goal.name + ".");
-                currentTactic = currentGoal.goal.getTactic();
-                if (currentTactic == null)
+        	
+        	var nextGoalToDo = currentPrimitiveGoal.getNextPrimitiveGoal_andAllocateBudget();
+        	goalstack.setCurrentPrimitiveGoal(nextGoalToDo);
+            
+            if (nextGoalToDo != null) {
+                logger.info("Agent " + id + " switches to goal " + nextGoalToDo.goal.name + ".");
+                goalstack.setCurrentTactic(nextGoalToDo.goal.getTactic());
+                if (goalstack.currentTactic() == null)
                     // should not happen...
-                    throw new AplibError("Goal " + currentGoal.goal.name + " has no tactic.");
+                    throw new AplibError("Goal " + nextGoalToDo.goal.name + " has no tactic.");
               
                 // Apply removal of auto-remove subgoals that become achieved or failed.
                 // Actually, we will only remove at most one such subgoal G because there 
@@ -657,14 +705,14 @@ public class BasicAgent {
                 // decendants of G. But since G is concluded, g cannot possibly be a new 
                 // current goal.
                 if (autoRemovedGoal_tobeRemoved != null) {
-                	if (autoRemovedGoal_tobeRemoved == currentGoal) {
+                	if (autoRemovedGoal_tobeRemoved == goalstack.currentPrimitiveGoal()) {
                 		throw new AplibError("Something is wrong: agent " 
                 				+ this.id
-                				+ " tries to auto-remove the current goal: " + currentGoal.getName()) ;
+                				+ " tries to auto-remove the current goal: " + goalstack.currentPrimitiveGoal().getName()) ;
                 	}
                 	this.remove(autoRemovedGoal_tobeRemoved);
-                	logger.info("Agent " + id + " AUTO-remove a goal ("
-       		             + autoRemovedGoal_tobeRemoved.getName() + ")") ;
+                	logger.info("Agent " + id + " AUTO-remove a goal: "
+                			+ showGoalStructShortDesc(autoRemovedGoal_tobeRemoved)) ;
                 }
                 
                 
@@ -675,14 +723,17 @@ public class BasicAgent {
             }
 
         } else {
-            // else the currentgoal is still in-progress
+            // else the current primitive goal is still in-progress; 
+        	// We determine the next tactic to try; this depends on the tactic-structure of
+        	// the current prim-goal.
             if (chosenAction.action.isCompleted()) {
-                currentTactic = chosenAction.calcNextTactic();
-                // if no tactic can be found, reset it to the root tactic of the goal:
-                if (currentTactic == null)
-                    currentTactic = currentGoal.goal.getTactic();
+                var nextTactic = chosenAction.calcNextTactic() ;
+                if (nextTactic == null)
+                	// if no tactic can be found, reset it to the root tactic of the current goal:
+                	nextTactic = currentPrimitiveGoal.goal.getTactic();
+            	goalstack.setCurrentTactic(nextTactic);
             } else {
-                currentTactic = chosenAction;
+            	goalstack.setCurrentTactic(chosenAction) ;
             }
         }
     }

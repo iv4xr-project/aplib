@@ -58,8 +58,7 @@ public class Test_BasicAgent_budgeting {
         // the next update will exhaust the budget:
         agent.update();
         assertTrue(topgoal.getStatus().failed());
-        assertTrue(agent.goal == null);
-        assertTrue(agent.currentGoal == null);
+        assertTrue(agent.goalstack.isEmpty());
 
         // exactly at budget scenario:
         state.counter = 0;
@@ -79,8 +78,7 @@ public class Test_BasicAgent_budgeting {
         assertTrue(topgoal.getStatus().inProgress());
         agent.update();
         assertTrue(topgoal.getStatus().success());
-        assertTrue(agent.goal == null);
-        assertTrue(agent.currentGoal == null);
+        assertTrue(agent.goalstack.isEmpty()) ;
     }
 
     @Test
@@ -112,14 +110,14 @@ public class Test_BasicAgent_budgeting {
 
         topgoal.printGoalStructureStatus();
 
-        assertTrue(agent.currentGoal == g1);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g1);
 
         agent.update();
-        assertTrue(agent.currentGoal == g1);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g1);
         assertTrue(g1.getStatus().inProgress());
 
         agent.update();
-        assertTrue(agent.currentGoal == g2);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g2);
         assertTrue(g1.getStatus().failed());
         assertTrue(g2.getStatus().inProgress());
 
@@ -128,8 +126,7 @@ public class Test_BasicAgent_budgeting {
 
         agent.update();
         assertTrue(g2.getStatus().success());
-        assertTrue(agent.goal == null);
-        assertTrue(agent.currentGoal == null);
+        assertTrue(agent.goalstack.isEmpty());
 
         topgoal.printGoalStructureStatus();
     }

@@ -35,8 +35,7 @@ public class Test_BasicAgent {
 
         // testing update with no goal:
         agent.update();
-        assertTrue(agent.goal == null);
-        assertTrue(agent.currentGoal == null);
+        assertTrue(agent.goalstack.isEmpty());
 
         // ok let's now give a goal:
         var a0 = action("a0").do1((MyState S) -> {
@@ -53,8 +52,7 @@ public class Test_BasicAgent {
         agent.update();
         assertTrue(state.counter == 2);
         assertTrue(topgoal.getStatus().success());
-        assertTrue(agent.goal == null);
-        assertTrue(agent.currentGoal == null);
+        assertTrue(agent.goalstack.isEmpty());
     }
 
     @Test
@@ -77,8 +75,8 @@ public class Test_BasicAgent {
 
         agent.update();
         assertTrue(topgoal.getStatus().failed());
-        assertTrue(agent.goal == null);
-        assertTrue(agent.currentGoal == null);
+        assertTrue(agent.goalstack.isEmpty());
+  
 
         // a scenario FIRSTof(g1,g2) ... g1 is aborted
         state.counter = 0;
@@ -86,6 +84,7 @@ public class Test_BasicAgent {
         var g2 = goal("g2").toSolve((Integer k) -> k == 1).withTactic(a0).lift();
         var topgoal2 = FIRSTof(g1, g2);
 
+        agent.dropAll(); 
         agent.setGoal(topgoal2);
 
         agent.update();
@@ -93,7 +92,7 @@ public class Test_BasicAgent {
         assertTrue(g1.getStatus().failed());
         assertTrue(topgoal2.getStatus().inProgress());
 
-        assertTrue(agent.currentGoal.goal.name.equals("g2"));
+        assertTrue(agent.goalstack.currentPrimitiveGoal().goal.name.equals("g2"));
 
         agent.update();
         topgoal2.printGoalStructureStatus();
@@ -134,6 +133,7 @@ public class Test_BasicAgent {
 
         state.counter = 1;
         topgoal = goal("g").toSolve((Integer k) -> k == 2).withTactic(SEQ(a0, a1)).lift();
+        agent.dropAll(); 
         agent.setGoal(topgoal);
         agent.update();
         assertTrue(state.counter == 1);
@@ -231,7 +231,7 @@ public class Test_BasicAgent {
         // exception:
         var agent = new BasicAgent().attachState(new MyState()).setGoal(g);
 
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
 
         try {
             agent.addAfter(gnew);
@@ -242,11 +242,12 @@ public class Test_BasicAgent {
 
         // Scenario 2: the current goal is the child of a REPEAT node
         var grepeat = REPEAT(g);
+        agent.dropAll(); 
         agent.setGoal(grepeat);
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
 
         agent.addAfter(gnew);
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
         assertTrue(contains(grepeat, gnew));
         assertTrue(contains(grepeat, g));
         assertTrue(grepeat.subgoals.size() == 1);
@@ -259,11 +260,12 @@ public class Test_BasicAgent {
         // Scenario 3: the current goal is NOT the last child of some parent combinator
         // (and not REPEAT):
         gseq = SEQ(g0);
+        agent.dropAll(); 
         agent.setGoal(gseq);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal()  == g0);
 
         agent.addAfter(gnew);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
         assertTrue(contains(gseq, gnew));
         assertTrue(gseq.subgoals.indexOf(g0) == 0);
         assertTrue(gseq.subgoals.indexOf(gnew) == 1);
@@ -271,11 +273,12 @@ public class Test_BasicAgent {
         // Scenario 4: the current goal is NOT the last child of some parent combinator
         // (and not REPEAT):
         gseq = SEQ(g0, g);
+        agent.dropAll(); 
         agent.setGoal(gseq);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         agent.addAfter(gnew);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
         assertTrue(contains(gseq, gnew));
         assertTrue(gseq.subgoals.indexOf(g0) == 0);
         assertTrue(gseq.subgoals.indexOf(gnew) == 1);
@@ -285,23 +288,24 @@ public class Test_BasicAgent {
         // addAfter. We check simulated execution would indeed progress to the newly
         // added goal, and when it is solved, the status is correctly propagated:
         var gtop = SEQ(g, g0);
+        agent.dropAll(); 
         agent.setGoal(gtop);
         agent.attachEnvironment(new Environment());
         MyState state = (MyState) agent.state;
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
 
         // simulating solving g0; the current goal should advance to g:
         agent.update();
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         // simulating adding gnew after g; the current goal should remain g:
         agent.addAfter(gnew);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         // simulating solving g0; the current goal should advance to gnew
         state.counter = 1;
         agent.update();
-        assertTrue(agent.currentGoal == gnew);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == gnew);
 
         // simulating solving gnew; the whole top-goal should now be solved as well:
         state.counter = 2;
@@ -317,25 +321,26 @@ public class Test_BasicAgent {
                 .lift();
 
         gtop = REPEAT(g0);
+        agent.dropAll(); 
         agent.setGoal(gtop);
         state.counter = 0;
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
         gtop.printGoalStructureStatus();
 
         // simulate trying to solve g0, and fail. Because of the REPEAT
         // the current goal should still be g0:
         agent.update();
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
         assertTrue(g0.getStatus().inProgress());
 
         // simulating adding gnew:
         agent.addAfter(gnew);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         // simulating solving g0, current goal should advance to gnew
         state.counter = 1;
         agent.update();
-        assertTrue(agent.currentGoal == gnew);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == gnew);
 
         // simulating solving gnew; this should now solve the top-goal:
         state.counter = 2;
@@ -368,7 +373,7 @@ public class Test_BasicAgent {
         // Scenario 1: trying to add a goal on a singleton goal; should throw an
         // exception:
         var agent = new BasicAgent().attachState(new MyState()).setGoal(g);
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
         try {
             agent.addBefore(gnew);
             assertTrue(false);
@@ -379,13 +384,14 @@ public class Test_BasicAgent {
         // Scenario 2: trying to add a goal before the current goal:
         var gtop = SEQ(g, g0);
         gtop.budget = 10;
+        agent.dropAll();
         agent.setGoal(gtop);
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
         assertTrue(g.parent == gtop);
         var gnew2 = FIRSTof(gnew);
         agent.addBefore(gnew2);
         // gtop.printGoalStructureStatus();
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
         assertTrue(gtop.subgoals.get(0).combinator == GoalsCombinator.REPEAT);
         assertTrue(contains(gtop, g));
         assertTrue(contains(gtop, gnew2));
@@ -402,7 +408,7 @@ public class Test_BasicAgent {
         // Scenario 3: trying to add a goal that was already added:
         agent.addBefore(gnew2);
         // gtop.printGoalStructureStatus();
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
         assertTrue(g.parent.subgoals.size() == 2);
         assertTrue(g.parent.subgoals.get(0) == gnew2);
         assertTrue(g.parent.subgoals.get(1) == g);
@@ -412,31 +418,32 @@ public class Test_BasicAgent {
         // added goal, and when the added REPEAT body is solved, this is properly
         // propagated:
         gtop = SEQ(g, g0);
+        agent.dropAll();
         agent.setGoal(gtop);
         agent.attachEnvironment(new Environment());
-        assertTrue(agent.currentGoal == g);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g);
         MyState state = (MyState) agent.state;
 
         // simulating solving subgoal g, advancing the current goal to g0
         agent.update();
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         // simulating adding a new goal before g0; g0 should remain current:
         agent.addBefore(gnew);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         // simulating 2x step; since state.counter==0, g0 will abort on it on the 2nd
         // step.
         // the new goal should now become the current goal:
         agent.update();
         agent.update();
-        assertTrue(agent.currentGoal == gnew);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == gnew);
 
         // simulating solving the new goal, the current goal should advance to g0
         state.counter = 2;
         agent.update();
         assertTrue(gnew.getStatus().success());
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         // simulating solving g0, this should solve the top-goal:
         state.counter = 1;
@@ -460,7 +467,7 @@ public class Test_BasicAgent {
         var gRoot = REPEAT(FIRSTof(g2, g3));
         var agent = new BasicAgent().attachState(new MyState()).setGoal(g);
         agent.setGoal(gRoot);
-        assertTrue(agent.currentGoal == g0);
+        assertTrue(agent.goalstack.currentPrimitiveGoal() == g0);
 
         try {
             agent.remove(g0);

@@ -46,8 +46,8 @@ public class MinimalAutonomousAgent {
         new Thread(() -> agent.loop()).start();
 
         // while this main thread waits until the goal is concluded:
-        var gt = agent.waitUntilTheGoalIsConcluded();
-        gt.printGoalStructureStatus();
+        agent.waitUntilTheGoalIsConcluded();
+        topgoal.printGoalStructureStatus();
         agent.stop();
 
     }

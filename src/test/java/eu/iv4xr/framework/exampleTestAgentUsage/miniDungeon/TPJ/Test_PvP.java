@@ -41,7 +41,7 @@ class Test_PvP {
 	
 	@BeforeEach
 	void testConfig() {
-		MDTestRunner.withGraphics = true ;
+		MDTestRunner.withGraphics = false ;
 		MDTestRunner.supressLogging = true ;
 		MDTestRunner.stopAfterAllAgentsDie = true ;
 		MDTestRunner.verbosePrint = false ;

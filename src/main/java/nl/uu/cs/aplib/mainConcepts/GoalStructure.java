@@ -29,6 +29,11 @@ import nl.uu.cs.aplib.exception.AplibError;
  *
  */
 public class GoalStructure {
+	
+	/**
+	 * Sometimes useful to attach a short-desc, e.g. for debugging.
+	 */
+	String shortdesc = null ;
 
     /**
      * Represent the available types of {@link GoalStructure}. There are three
@@ -114,7 +119,7 @@ public class GoalStructure {
     /**
      * True is this goal has no parent.
      */
-    public boolean isTopGoal() {
+    public boolean isRootGoal() {
         return parent == null;
     }
     public boolean checkIfWellformed() {
@@ -180,7 +185,7 @@ public class GoalStructure {
     @SuppressWarnings("incomplete-switch")
 	void setStatusToSuccess(String info) {
         status.setToSuccess(info);
-        if (!isTopGoal()) {
+        if (!isRootGoal()) {
             switch (parent.combinator) {
             case FIRSTOF:
                 parent.setStatusToSuccess(info);
@@ -204,7 +209,7 @@ public class GoalStructure {
     @SuppressWarnings("incomplete-switch")
 	void setStatusToFail(String reason) {
         status.setToFail(reason);
-        if (!isTopGoal()) {
+        if (!isRootGoal()) {
             if (parent.budget <= 0d) {
                 parent.setStatusToFailBecauseBudgetExhausted();
                 return;
@@ -239,13 +244,16 @@ public class GoalStructure {
     
     /**
      * If this is a primitive-goal, returns its name. Else return the name of
-     * the combinator of this goal structure.
+     * the combinator of this goal structure and its shortdesc, if the latter
+     * is provided.
      */
     public String getName() {
     	if (this instanceof PrimitiveGoal) {
     		return ((PrimitiveGoal) this).goal.name ;
     	}
-    	return "" + combinator ;
+    	if (shortdesc == null)
+    		return "" + combinator ;
+    	else return "" + combinator + " (" + shortdesc + ")" ;
     }
 
     /**
@@ -267,7 +275,7 @@ public class GoalStructure {
             // progress
             throw new IllegalArgumentException();
 
-        if (isTopGoal())
+        if (isRootGoal())
             return null;
 
         // So... this goal structure is either solved or failed, and is not the top-goal
@@ -340,7 +348,7 @@ public class GoalStructure {
 
     PrimitiveGoal getDeepestFirstPrimGoal_andAllocateBudget() {
         // allocate budget:
-        if (isTopGoal()) {
+        if (isRootGoal()) {
             budget = Math.min(bmax, budget);
         } else {
             budget = Math.min(bmax, parent.budget);
@@ -414,13 +422,13 @@ public class GoalStructure {
     void registerConsumedBudget(double delta) {
         consumedBudget += delta;
         budget -= delta;
-        if (!isTopGoal())
+        if (!isRootGoal())
             parent.registerConsumedBudget(delta);
     }
 
     void registerUsedTime(long duration) {
         consumedTime += duration;
-        if (!isTopGoal())
+        if (!isRootGoal())
             parent.registerUsedTime(duration);
     }
 
@@ -450,8 +458,9 @@ public class GoalStructure {
         String s = "";
         if (this instanceof PrimitiveGoal) {
             s += indent + "(" + status + ") Goal " + ((PrimitiveGoal) this).goal.getName() ;
-        } else
-            s += indent + combinator + ": " + status + ", #children=" + subgoals.size();
+        } else {
+            s += indent + this.getName() + ": " + status + ", #children=" + subgoals.size();
+        }
         s += "\n" + indent + "  Budget=" + budget;
         if (bmax < Double.POSITIVE_INFINITY)
             s += "(max=" + bmax + ")";

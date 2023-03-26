@@ -88,20 +88,27 @@ public class AutonomousBasicAgent extends BasicAgent {
         return this;
     }
 
-    GoalStructure shadowg_;
-
     @Override
-    public AutonomousBasicAgent setGoal(GoalStructure g) {
+    public AutonomousBasicAgent setGoal(GoalStructure G) {
         if (thisAgentThread != null) {
             // awaken the agent, if it is sleeping
             thisAgentThread.interrupt();
         }
         lock.lock();
         try {
-            super.setGoal(g);
-            shadowg_ = g;
+            super.setGoal(G);
             triggerArrived.signal();
             return this;
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    @Override
+    public void dropAll() {
+    	lock.lock();
+        try {
+            super.dropAll();
         } finally {
             lock.unlock();
         }
@@ -200,58 +207,64 @@ public class AutonomousBasicAgent extends BasicAgent {
     }
 
     /**
-     * When this is called, the calling thread will be paused until the current
-     * goal-tree is concluded (which can be either with success or as fail). The
-     * method will return the goal-tree.
+     * When this is called, the calling thread will be paused until this agent's
+     * goalstack is empty (so, all goals there have been concluded, success or fail).
      */
-    public GoalStructure waitUntilTheGoalIsConcluded() {
+    public void waitUntilTheGoalIsConcluded() {
 
-        if (shadowg_ == null)
-            return null;
+        if (goalstack.isEmpty())
+            return ;
 
         log(Level.INFO, "Thread " + Thread.currentThread().getId() + " is waiting for agent " + id
-                + " to close its current goal.");
+                + " to finish all its goals.");
 
         lock.lock();
         try {
-            while (shadowg_ == null || shadowg_.getStatus().inProgress()) {
+            while (! goalstack.isEmpty()) {
                 try {
                     goalConcluded.await();
                 } catch (InterruptedException e) {
                 }
             }
-            return shadowg_;
         } finally {
-            log(Level.INFO, "Thread " + Thread.currentThread().getId() + " acquires a closed goal from agent " + id);
+            log(Level.INFO, "Thread " + Thread.currentThread().getId() + " resumes, as agent " 
+            			+ id + " that it waited has completed all its goals.");
             lock.unlock();
         }
     }
 
-    /**
-     * This will run the agent in an infinite loop. The idea is to run this in a new
-     * thread, e.g. as in:
-     * 
-     * <pre>
-     * new Thread(() -> agent.loop()).start();
-     * </pre>
-     * 
-     * The above code essentially cause the agent to run autonomously.
-     * 
-     * If there is no goal however, this method will pause, until there is one.
-     * Then, it will proceed by invoking update() periodically. The time between
-     * update is specified by the field samplingInterval. The agent will strive to
-     * keep the sampling interval around that specified time, but it does not commit
-     * to keep it accurately.
-     * 
-     * If given a goal, and if after sometime the goal is solved (or failed), the
-     * agent will detach the goal. If there are other threads that called
-     * waitUntilTheGoalIsConcluded(), these will first be awaken. Then this method
-     * launch() will sleep again, waiting for a new goal, and the above cycle
-     * repeats again.
-     * 
-     * There are methods in this class to command the agent to pause, to resume
-     * again, and to stop all together.
-     */
+	/**
+	 * This will run the agent in an infinite loop. The idea is to run this in a new
+	 * thread, e.g. as in:
+	 * 
+	 * <pre>
+	 * new Thread(() -> agent.loop()).start();
+	 * </pre>
+	 * 
+	 * The above code essentially cause the agent to run autonomously.
+	 * 
+	 * <p>
+	 * If there is no goal however, this method will pause, until one is given to it
+	 * (pushed to its' goal-stack). Then, it will proceed by invoking update()
+	 * periodically. The time between update is specified by the field
+	 * samplingInterval. The agent will strive to keep the sampling interval around
+	 * that specified time, but it does not commit to keep it accurately.
+	 * 
+	 * <p>
+	 * If given a goal, and if after sometime the goal is solved (or failed), the
+	 * agent will detach the goal. More precisely, the goal is popped from the
+	 * agent's goal-stack. In typical cases this should be the last goal in the
+	 * stack, so after popping it the stack becomes empty. When the stack becomes
+	 * empty, the agent will set the synchronization condition
+	 * {@link #goalConcluded} to true, and if there are other threads that called
+	 * waitUntilTheGoalIsConcluded(), these will first be awaken. Then this method
+	 * loop() will sleep again, waiting for a new goal, and the above cycle repeats
+	 * again.
+	 * 
+	 * <p>
+	 * There are methods in this class to command the agent to pause, to resume
+	 * again, and to stop all together.
+	 */
     public void loop() {
         try {
             loopWorker();
@@ -273,17 +286,20 @@ public class AutonomousBasicAgent extends BasicAgent {
             lock.lock();
             try {
                 // wait until the goal is not null:
-                while (goal == null && cmd != Command.STOP) {
+                while (goalstack.isEmpty() && cmd != Command.STOP) {
                     log(Level.INFO, "Agent " + id + " is blocking, waiting for a goal.");
                     try {
                         triggerArrived.await();
                     } catch (InterruptedException e) {
                     }
                 }
-                if (goal != null)
+                if (!goalstack.isEmpty())
                     log(Level.INFO,
-                            "Agent " + id + " identifies a goal and starts working on it. Budget: " + goal.getBudget());
-                while (goal != null && cmd != Command.STOP) {
+                            "Agent " + id + " identifies a goal and starts working on it. Budget: " 
+                            		 + goalstack.currentRootGoal().getBudget());
+                
+                // run update-cycles until the goalstack is empty again:
+                while (!goalstack.isEmpty() && cmd != Command.STOP) {
                     while (cmd == Command.PAUSE) {
                         log(Level.INFO, "Agent " + id + " is paused.");
                         try {
@@ -294,8 +310,8 @@ public class AutonomousBasicAgent extends BasicAgent {
                     }
                     time.sample();
                     update();
-                    if (goal == null) {
-                        log(Level.INFO, "Agent " + id + " closed the current goal: " + shadowg_.getStatus() + ".");
+                    if (goalstack.isEmpty()) {
+                        log(Level.INFO, "Agent " + id + " has no more goals in its goalstack.");
                         // the goal is solved then
                         goalConcluded.signalAll();
                         break;
