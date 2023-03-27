@@ -136,6 +136,38 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	 * potion along the way, if the bag is empty. 
 	 */
 	public GoalStructure smartEntityInCloseRange(
+			TestAgent agent, 
+		 	String targetId) { 
+		
+		 var G1 = ((PrimitiveGoal) entityInCloseRange(targetId)) ;
+		 var originalTactic = G1.getGoal().getTactic() ;
+		 
+		 var grabHealPot = action("Push goal grab healpot")
+				 .do1((MyAgentState S) -> { 
+					 agent.pushGoal(grabPot(agent, EntityType.HEALPOT));
+					 return null ; })
+				 .on_(whenToGoAfterHealPot)
+				 .lift() ;
+		 
+		 var grabRagePot = action("Push goal grab ragepot")
+				 .do1((MyAgentState S) -> { 
+					 agent.pushGoal(grabPot(agent, EntityType.RAGEPOT));
+					 return null ; })
+				 .on_(whenToGoAfterRagePot)
+				 .lift() ;
+		 
+		 return G1
+		   .getGoal()
+		   .withTactic(
+			   FIRSTof(
+				 grabHealPot,
+				 //grabRagePot,
+				 originalTactic
+				 ))
+		   .lift() ;
+	}
+
+	public GoalStructure smartEntityInCloseRangeOLD(
 				TestAgent agent, 
 			 	String targetId) { 
 		
@@ -234,6 +266,37 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 	}
 	
 	public GoalStructure smartExploring(TestAgent agent, 
+			Pair<Integer, Tile> heuristicLocation, 
+			int budget) {
+		
+		Goal exploreG = ((PrimitiveGoal) exploring(heuristicLocation,budget)).getGoal();
+		
+		Tactic originalExploreTac = exploreG.getTactic() ;
+		
+		var grabHealPot = action("Push goal grab healpot")
+				 .do1((MyAgentState S) -> { 
+					 agent.pushGoal(grabPot(agent, EntityType.HEALPOT));
+					 return null ; })
+				 .on_(whenToGoAfterHealPot)
+				 .lift() ;
+		 
+		 var grabRagePot = action("Push goal grab ragepot")
+				 .do1((MyAgentState S) -> { 
+					 agent.pushGoal(grabPot(agent, EntityType.RAGEPOT));
+					 return null ; })
+				 .on_(whenToGoAfterRagePot)
+				 .lift() ;
+
+		Tactic newExploreTac = FIRSTof(
+				  grabHealPot, 
+				  grabRagePot,
+				  originalExploreTac
+				) ;
+
+		return exploreG.withTactic(newExploreTac).lift() ;
+	}
+	
+	public GoalStructure smartExploringOLD(TestAgent agent, 
 			Pair<Integer, Tile> heuristicLocation, 
 			int budget) {
 		
