@@ -85,23 +85,41 @@ public class BasicAgent {
 
     protected SimpleState state;
     
-    /**
-     * The agent maintains a stack of goal-structures. Typically there is only
-     * one goal-structure there, which is the goal-structure that the agent will
-     * be working on. Having a stack allows the agent to push a new goal-structure H
-     * to the stack (or rather, allowing an action to push a new goal-structure).
-     * The agent will then switch to this new goal-structure and work on it until
-     * it either succeeds or fails, after which the agent will pop the H from the
-     * stack and returns to the goal-structure that it was working before H was pushed.
-     * 
-     * <p>Suppose the agent was working on a goal structure G when it pushes H.
-     * The pushing of H to the stack will happen inside the agent's update cycle. H
-     * will not be immediately pushed. The agent will first finish the update cycle,
-     * and then H is pushed (which means the agent will switch to H at the next cycle).
-     * The agent does memorize what were the current primitive goal and the current tactic
-     * within G. So, when it returns to G (after popping H), it would continue with the
-     * same prim-goal and current-tactic as they were at the moment H was pushed.
-     */
+	/**
+	 * The agent maintains a stack of goal-structures. Typically there is only one
+	 * goal-structure there, which is the goal-structure that the agent will be
+	 * working on. Having a stack allows the agent to push a new goal-structure H to
+	 * the stack (or rather, allowing an action to push a new goal-structure). The
+	 * agent will then switch to this new goal-structure and work on it until it
+	 * either succeeds or fails, after which the agent will pop the H from the stack
+	 * and returns to the goal-structure that it was working before H was pushed.
+	 * 
+	 * <p>
+	 * Suppose the agent was working on a root goal structure G when it pushes H.
+	 * And suppose at that time the current primitive goal that the agent is working
+	 * is g. The pushing of H to the stack will happen inside the agent's update
+	 * cycle. H will not be immediately pushed; the mechanic is as follows:
+	 * 
+	 * <ul>
+	 * <li>The agent will first finish the current update cycle on G.
+	 * <li>If that cycle actually concludes G (with either success or fail), H will
+	 * be discarded (and G is popped out of the stack).
+	 * 
+	 * <li>If the cycle does not conclude G (so still in progress), H is pushed to
+	 * the stack, which means the agent will switch to H at the next cycle. It will
+	 * get the budget as much as what g has.
+	 * 
+	 * <li>When H is concluded (with either success or fail) the agent pops it from
+	 * the stack and "returns" to G. In the stack we also memorize what the current
+	 * primitive goal (g) within G was, and the current tactic was before we pushed
+	 * H. So, when the agent returns to G to it would continue with the same
+	 * prim-goal and current-tactic as they were at the moment H was pushed.
+	 * 
+	 * <li>As the agent returns to G, its remaining budget will be adjusted with what 
+	 * H consumed.
+	 * 
+	 * </ul>
+	 */
     protected GoalStructureStack goalstack = new GoalStructureStack() ;
 
     /**
@@ -317,14 +335,26 @@ public class BasicAgent {
      * agent is currently working on). If that was the only goal-structure in the stack,
      * the stack will then become empty and the agent has no further goal to work on.
      * Else the next goal-structure in the stack becomes the top goal-structure.
+     * 
+     * <p>Popping a goal from the goalstack also drops a currently uncommited push 
+     * to the goalstack. The rationale is that the goal that pushed the uncommited
+     * goal has concluded, so the uncommitted goal should be retracted as well.
      */
     protected void detachgoal() {
         lastHandledRootGoalStructure = goalstack.currentRootGoal() ;
+        // pop the goal:
         goalstack.pop() ;
         int N = goalstack.stack.size() ;
         if (N > 0) {
-        	prepareGoalStructureAtTheTopOfStack() ;
+        	// deduct the budget that the popped-goal used from the remaining budget
+        	// of the new root goal-structure, and add statistics about time
+        	// consumed by that popped-goal:
+        	goalstack.currentPrimitiveGoal().registerConsumedBudget(lastHandledRootGoalStructure.consumedBudget);
+        	goalstack.currentPrimitiveGoal().registerUsedTime(lastHandledRootGoalStructure.consumedTime);
         }
+        // popping a goal also cancel uncommitted push to the goal-stack:
+        goalstack.pendingPush = null ;
+        
         String status = "" ;
         if (lastHandledRootGoalStructure.getStatus().success()) status = "(success)" ;
         else if(lastHandledRootGoalStructure.getStatus().failed()) status = "(fail)" ;
@@ -521,6 +551,10 @@ public class BasicAgent {
     	G.autoRemove = true ;
     	simpleAddBefore(G) ;
     }
+    
+    public void pushGoal(GoalStructure G) {
+    	//goalstack.pendingPush(G) ;
+    }
 
 	/**
 	 * Remove the goal-structure G from this agent top goal-structure (the
@@ -613,8 +647,20 @@ public class BasicAgent {
             // In case there is a pending push to the goal-stack, commit this goal.
         	// This would mean that the agent would then (in the next update) switch to the pushed goal.
             var pushed = goalstack.commitPendingPush() ;
-        	if (pushed)
-        		logger.info("Agent " + id + " switches to a newly pushed goal.");
+        	if (pushed) {
+        		prepareGoalStructureAtTheTopOfStack() ;
+        		// a goal-structure H is pushed; this does imply that we must have
+        		// one root goal structure still in the stack.
+        		// We will use H's currentPrim-goal budget as H's budget as the max of H's budget:
+        		var H = goalstack.currentRootGoal() ;
+        		int N = goalstack.stack.size() ;
+            	var inheritedBudget = goalstack.stack.get(N-2).currentPrimitiveGoal.budget ;
+            	if (H.budget > inheritedBudget) 
+            		H.budget = inheritedBudget ;
+
+        		logger.info("Agent " + id + " switches to a newly pushed goal " + showGoalStructShortDesc(H) + ".");
+        	}
+        	// unlock the env:	
         	unlockEnvironment();
         }
     }
