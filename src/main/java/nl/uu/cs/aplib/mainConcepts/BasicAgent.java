@@ -353,7 +353,14 @@ public class BasicAgent {
         	goalstack.currentPrimitiveGoal().registerUsedTime(lastHandledRootGoalStructure.consumedTime);
         }
         // popping a goal also cancel uncommitted push to the goal-stack:
-        goalstack.pendingPush = null ;
+        if (goalstack.pendingPush != null) {
+        	var H = goalstack.pendingPush ;
+        	goalstack.pendingPush = null ;
+        	logger.info("Agent " + id + " RETRACTs a tentatively pushed goal " 
+        			+ showGoalStructShortDesc(H.rootGoal)
+        			+ ", because the root goal-structure that pushed it has concluded.") ;
+        }
+        
         
         String status = "" ;
         if (lastHandledRootGoalStructure.getStatus().success()) status = "(success)" ;
@@ -366,7 +373,7 @@ public class BasicAgent {
         	logger.info("Agent " + id + " pops a goal-structure from the stack " 
         			+ showGoalStructShortDesc(lastHandledRootGoalStructure)
         			+ "(status:" + status 
-        			+ "), and switches to the next root goal-structure in the stack"
+        			+ "), and switches to the next root goal-structure in the stack "
         			+ showGoalStructShortDesc(goalstack.currentRootGoal())
         			+ ".") ;
     }
@@ -552,8 +559,16 @@ public class BasicAgent {
     	simpleAddBefore(G) ;
     }
     
+    /**
+     * Push the given goal-structure G to the goalstack. The goal is not immediately pushed.
+     * The agent will wait until the end of the current update cycle, and then commit
+     * the push to the stack. Note that if the current root goal-structure is closed/concluded,
+     * either in success or fail, G will be retracted (it will not be pushed onto the stack).
+     * 
+     * <p>See also {@link #goalstack}.
+     */
     public void pushGoal(GoalStructure G) {
-    	//goalstack.pendingPush(G) ;
+    	goalstack.pendingPush(new StackItem(G)) ;
     }
 
 	/**

@@ -6,19 +6,15 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import nl.uu.cs.aplib.environments.ConsoleEnvironment;
-import nl.uu.cs.aplib.mainConcepts.BasicAgent;
-import nl.uu.cs.aplib.mainConcepts.GoalStructure;
-import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.*;
-import nl.uu.cs.aplib.utils.Time;
 
 public class Test_BasicAgent {
 
-    static class MyState extends SimpleState {
-        int counter = 0;
-        String last = null;
+    public static class MyState extends SimpleState {
+        public int counter = 0;
+        public String last = null;
 
-        MyState() {
+        public MyState() {
             super();
         }
         
@@ -29,7 +25,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_with_oneaction() {
+    void test_with_oneaction() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
 
@@ -56,7 +52,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_abort() {
+    void test_abort() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
 
@@ -104,7 +100,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_with_multipleActions() {
+    void test_with_multipleActions() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
         var a0 = action("a0").do1((MyState S) -> {
@@ -141,7 +137,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_with_multipleGoals() {
+    void test_with_multipleGoals() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
         var a0 = action("a0").do1((MyState S) -> {
@@ -172,7 +168,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_persistentAction() {
+    void test_persistentAction() {
         // testing of action that insist on multiple ticks to execute
 
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
@@ -216,7 +212,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_addingAGoal_withAddAfter() {
+    void test_addingAGoal_withAddAfter() {
 
         var g = goal("g").toSolve((Integer i) -> i == 0).withTactic(action("a").do1((MyState S) -> S.counter).lift())
                 .lift();
@@ -353,7 +349,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_addingAGoal_withAddBefore() {
+    void test_addingAGoal_withAddBefore() {
         var g = goal("g").toSolve((Integer i) -> i == 0)
                 .withTactic(action("return counter").do1((MyState S) -> S.counter).lift()).lift();
 
@@ -454,7 +450,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    public void test_removingAGoal() {
+    void test_removingAGoal() {
         var g = goal("g").withTactic(action("a").do1((MyState S) -> 0).lift()).lift();
 
         var g0 = goal("g0").withTactic(action("a").do1((MyState S) -> 0).lift()).lift();
