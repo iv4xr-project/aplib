@@ -106,5 +106,52 @@ public class Test_Goalstack {
         
         topgoal.printGoalStructureStatus();   
 	}
+	
+	@Test
+	void test_budgeting() {
+		
+		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
+        var agent = new BasicAgent().attachState(state);
+
+        // ok let's now give a goal:
+        var a0 = action("incr-x").do1((MyState S) -> {
+            S.x++;
+            return S;
+        }).lift();
+        
+        var b = action("kick-y").do1((MyState S) -> {
+        	        var G = lift("<copy x to y>", action("copy")
+        	        		     .do1((MyState T) -> { T.y = T.x ; return true ;})) ;
+            		agent.pushGoal(G) ;
+            		return null ;
+        		})
+        		.on_((MyState S) -> S.y < S.x && S.x % 5 == 0)
+        		.lift();
+        
+        var topgoal = goal("<main goal>").toSolve((MyState S) -> S.x == 6 && S.y==5)
+        		.withTactic(FIRSTof(b,a0))
+        		.lift() 
+        		.maxbudget(100);
+        
+        agent.setGoal(topgoal) ;
+        
+        int k = 0 ;
+        while (topgoal.getStatus().inProgress()) {
+        	System.out.println(">>> k=" + k + "  x,y=" + state.x + "," + state.y) ;
+        	agent.update();
+        	k++ ;
+        }
+        System.out.println(">>> x=" + state.x + ", y=" + state.y) ;
+        System.out.println(">>> goal's remaining budget:" + topgoal.getBudget() 
+          + ", used budget:" + topgoal.consumedBudget
+          + ", used time:" + topgoal.consumedTime) ;
+        assertTrue(topgoal.getStatus().success()) ;
+        
+        
+        assertTrue(topgoal.consumedBudget == 8) ;
+        assertTrue(topgoal.budget == 92) ;
+        
+        topgoal.printGoalStructureStatus();   
+	}
 
 }
