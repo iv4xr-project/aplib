@@ -68,6 +68,7 @@ public class GWState implements IExplorableState {
 	@Override
 	public IExplorableState clone() {
 		GWState copy = new GWState() ;
+		copy.currentAgentLocation = this.currentAgentLocation ;
 		for (var e : objects.values()) {
 			try {
 				copy.objects.put(e.id, (GWObject) e.clone()) ;
@@ -75,7 +76,6 @@ public class GWState implements IExplorableState {
 			catch (Exception excp) {
 				throw new Error(excp) ;
 			}
-			copy.currentAgentLocation = this.currentAgentLocation ;
 		}
 		return copy ;
 	}	

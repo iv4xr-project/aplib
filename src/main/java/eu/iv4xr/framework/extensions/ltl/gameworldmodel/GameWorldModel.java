@@ -190,6 +190,7 @@ public class GameWorldModel implements ITargetModel {
 			// forbid travel to the current-position ... pointless
 			return false ;
 		}
+		//System.out.println(">>> t=" + destinationId) ;
 		GWObject t = state.objects.get(destinationId) ;
 		if (t.destroyed) {
 			// the destination has been destroyed; travel is not possible:
@@ -223,8 +224,7 @@ public class GameWorldModel implements ITargetModel {
 		
 		if (previousLocation != null
 			&& ! inTheSameZone(previousLocation,destinationId)) {
-			// travel to cross two zones; this is not possible since the current location 
-			// is a closed blocker:
+			// travel to cross two zones; this is not allowed; must first go through a blocker:
 			return false ;
 		}
 		if (previousLocation != null
@@ -327,15 +327,15 @@ public class GameWorldModel implements ITargetModel {
 
 	@Override
 	public GWState getCurrentState() {
-		return history.get(0).fst ;
+		return (GWState) history.get(0).fst ;
 	}
 
 	@Override
 	public boolean backTrackToPreviousState() {
-		//System.out.println(">>> backtrack") ;
 		if (history.size() == 1) 
 			return false ;
 		history.remove(0) ;
+		//System.out.println(">>> backtrack to: " + history.get(0).fst.currentAgentLocation) ;
 		return true ;
 	}
 
@@ -364,12 +364,19 @@ public class GameWorldModel implements ITargetModel {
 			choices.add(tr) ;
 		}
 		
+		//System.out.print(">>> state: " + state.currentAgentLocation + ", available trans:") ;
+		//for (var tr : choices) {
+		//	var tr_ = (GWTransition) tr ;
+		//	System.out.print(", " + tr_.getId() + " -> " + tr_.target);
+		//}
+		//System.out.println("") ;
+		
 		return choices ;
 	}
 
 	@Override
 	public void execute(ITransition tr) {
-		//System.out.println(">>> " + tr.getId()) ;
+		//System.out.println(">>> executing " + tr.getId()) ;
 		//count++ ;
 		GWTransition tr_ = (GWTransition) tr ;
 		switch(tr_.type) {

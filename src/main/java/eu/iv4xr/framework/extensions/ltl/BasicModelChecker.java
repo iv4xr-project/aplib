@@ -204,7 +204,7 @@ public class BasicModelChecker {
 			int remainingDepth			
 			) {
 		
-		
+		//System.out.println(">>> depth " + remainingDepth) ;
 		if(remainingDepth==0) return null ;
 
 		stats.numberOfTransitionsExplored++ ;
@@ -228,6 +228,7 @@ public class BasicModelChecker {
 		
 		var nextTransitions = model.availableTransitions() ;
 		for(var tr: nextTransitions) {
+			//String st0 = model.getCurrentState().toString() ;
 			model.execute(tr);
 			var nextState = (IExplorableState) model.getCurrentState().clone() ;
 			pathSoFar.addTransition(tr, nextState);
@@ -239,6 +240,8 @@ public class BasicModelChecker {
 			}	
 			pathSoFar.removeLastTransition();
 			model.backTrackToPreviousState() ;
+			//String st1 = model.getCurrentState().toString() ;
+			//System.out.println(">>> backtracking : " + st1 + " vs " + st0 + " : " + (st1.equals(st0))) ;
 		}
 		return null ;		
 	}

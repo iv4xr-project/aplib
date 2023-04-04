@@ -96,6 +96,31 @@ public class GWObject {
 		
 	}
 	
+	private Object mkCopy2(Object v) {
+		if (v instanceof Boolean) {
+			return (boolean) v ;
+		}
+		if (v instanceof Integer) {
+			return (int) v ;
+		}
+		if (v instanceof String) {
+			return "" + (String) v ;
+		}
+		if (v instanceof Long) {
+			return (long) v ;
+		}
+		if (v instanceof Short) {
+			return (short) v ;
+		}
+		if (v instanceof Float) {
+			return (float) v ;
+		}
+		if (v instanceof Double) {
+			return (double) v ;
+		}
+		throw new IllegalArgumentException("Don't know how to clone") ;
+	}
+	
 	/**
 	 * Clone this object. Do note that values of the properties of the object (in {@link #properties})
 	 * are not deep-cloned. This is fine if those values are primitive values. But if they are e.g. 
@@ -106,8 +131,11 @@ public class GWObject {
 		var o = new GWObject(this.id, this.type, this.position, this.extent, this.velocity) ;
 		o.destroyed = this.destroyed ;
 		for (var e : this.properties.entrySet()) {
+			// cloning via serialization is too expensive!
 			//Object val2 = mkCopy((Serializable) e.getValue()) ;
-			o.properties.put(e.getKey(),e.getValue()) ;
+			// using a faster copy: 
+			Object val2 = mkCopy2(e.getValue()) ;
+			o.properties.put(e.getKey(),val2) ;
 		}
 		return o ;
 	}

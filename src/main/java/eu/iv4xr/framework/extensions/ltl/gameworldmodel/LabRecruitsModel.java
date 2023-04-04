@@ -19,8 +19,8 @@ import eu.iv4xr.framework.mainConcepts.WorldEntity;
  */
 public class LabRecruitsModel {
 	
-	static String SWITCH = "switch" ;
-	static String DOOR = "door" ;
+	static String SWITCH = "Switch" ;
+	static String DOOR = "Door" ;
 	
 	public static GWObject mkButton(String id) {
 		GWObject button = new GWObject(id,SWITCH) ;
@@ -44,6 +44,7 @@ public class LabRecruitsModel {
 		GWObject B = S.objects.get(button) ;
 		Set<GWObject> doors = affectedDoors.stream().map(id -> S.objects.get(id)).collect(Collectors.toSet()) ;
  		for (var door : doors) {
+ 			//System.out.println(">>> door " + door.id) ;
 			boolean doorState = (Boolean) door.properties.get(GameWorldModel.IS_OPEN_NAME) ;
 			door.properties.put(GameWorldModel.IS_OPEN_NAME, !doorState) ; 
 		}
