@@ -149,9 +149,10 @@ public class BasicModelChecker {
 		stats.clear(); 
 		Path<IExplorableState> path = new Path<>() ;
 		Collection<IExplorableState> visitedStates = new HashSet<>() ;
+		Map<IExplorableState,Integer> depthInfo = new HashMap<>() ;
 		IExplorableState state = model.getCurrentState().clone() ;
 		path.addInitialState(state);	
-		return dfs(q,path,visitedStates,state,maxDepth+1) ;	
+		return dfs(q,path,visitedStates,depthInfo,state,maxDepth+1) ;	
 	}
 	
 	/**
@@ -184,6 +185,8 @@ public class BasicModelChecker {
 		return bestpath ;	
 	}
 	
+	public boolean findShortestMode = false ;
+	
 	/**
 	 * Implement the 'lazy model checking' algorithm similar to what is used by the
 	 * SPIN model checker. It is actually a Depth First Search (DFS) algorithm. We
@@ -200,6 +203,7 @@ public class BasicModelChecker {
 	Path<IExplorableState> dfs(Predicate<IExplorableState> whatToFind, 
 			 Path<IExplorableState> pathSoFar, 
 			Collection<IExplorableState> visitedStates,
+			Map<IExplorableState,Integer> depthInfo,
 			IExplorableState state,
 			int remainingDepth			
 			) {
@@ -215,11 +219,26 @@ public class BasicModelChecker {
 		//}
 		
 		if(visitedStates.contains(state)) {
-			return null ;
+			if (findShortestMode) {
+				var remainingDeptOfPreviousVisit = depthInfo.get(state) ;
+				if (remainingDepth > remainingDeptOfPreviousVisit) {
+					// re-try the state if have more remaining depth:
+					depthInfo.put(state, remainingDepth) ;
+				}
+				else {
+					return null ;
+				}
+			}
+			else return null ;
 		}
-		// else the state is new
-		stats.numberOfStatesExplored++ ;
-		visitedStates.add(state) ;
+		else {
+			// else the state is new
+			stats.numberOfStatesExplored++ ;
+			visitedStates.add(state) ;
+			if (findShortestMode) {
+				depthInfo.put(state, remainingDepth) ;
+			}
+		}
 		
 		if(whatToFind.test(state)) {
 			// we find a state satisfying the search criterion!
@@ -233,7 +252,10 @@ public class BasicModelChecker {
 			var nextState = (IExplorableState) model.getCurrentState().clone() ;
 			pathSoFar.addTransition(tr, nextState);
 			// recurse to the next state:
-			Path<IExplorableState> result = dfs(whatToFind,pathSoFar,visitedStates,nextState,remainingDepth-1) ;
+			Path<IExplorableState> result = dfs(whatToFind,pathSoFar,
+					visitedStates,
+					depthInfo,
+					nextState,remainingDepth-1) ;
 			if(result != null) {
 				// a solving path is found! Return the path:
 				return result ;

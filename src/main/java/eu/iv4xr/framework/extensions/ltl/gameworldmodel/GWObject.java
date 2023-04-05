@@ -134,7 +134,12 @@ public class GWObject {
 			// cloning via serialization is too expensive!
 			//Object val2 = mkCopy((Serializable) e.getValue()) ;
 			// using a faster copy: 
-			Object val2 = mkCopy2(e.getValue()) ;
+			// Object val2 = mkCopy2(e.getValue()) ;
+			
+			// RISKY optimization, not cloning the value at all! Will save
+			// some CPU time, but make sure that the alpha-function does cloning
+			// when it performs updates! 
+			var val2 = e.getValue() ;
 			o.properties.put(e.getKey(),val2) ;
 		}
 		return o ;
