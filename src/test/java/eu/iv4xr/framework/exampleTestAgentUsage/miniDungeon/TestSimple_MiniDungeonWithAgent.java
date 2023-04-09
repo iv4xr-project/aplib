@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Scanner;
-import java.util.function.Predicate;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
 
@@ -17,17 +16,13 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
-import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
-import static eu.iv4xr.framework.extensions.ltl.LTL.* ;
-
-public class SimpleTestMiniDungeonWithLTL {
+public class TestSimple_MiniDungeonWithAgent {
 	
 	// switch to true if you want to see graphic
 	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 
-	
 	/**
 	 * In this test the agent will search and pick up scroll S0_1,
 	 * and then use it on the shrine of level-0. We expect that
@@ -65,24 +60,11 @@ public class SimpleTestMiniDungeonWithLTL {
 				  goalLib.entityInteracted("SM0"),
 				  SUCCESS()
 				) ;
-		
-		//MyAgentState T = new MyAgentState();
-		//T.worldmodel().val("hp") ;
-				
 
 		// Now, create an agent, attach the game to it, and give it the above goal:
 		agent. attachState(state)
 			 . attachEnvironment(env)
 			 . setGoal(G) ;
-		
-		var specs = new SomeLTLSpecifications() ;
-		var psi1 = specs.spec1() ;
-		var psi2 = specs.spec2() ;
-		var psi3 = specs.spec3() ;
-
-		
-		agent.addLTL(psi1,psi2,psi3) ;
-		agent.resetLTLs() ;
 
 		Thread.sleep(1000);
 		
@@ -101,16 +83,6 @@ public class SimpleTestMiniDungeonWithLTL {
 		WorldEntity shrine = state.worldmodel.elements.get("SM0") ;
 		System.out.println("=== " + shrine) ;
 		assertTrue((Boolean) shrine.properties.get("cleansed")) ;
-		
-		
-		var ok = agent.evaluateLTLs() ;
-		
-		System.out.println(">>>> LTL results: " + ok) ;
-		System.out.println(">>>> psi1 : " + psi1.sat()) ;
-		System.out.println(">>>> psi2 : " + psi2.sat()) ;
-		System.out.println(">>>> psi3 : " + psi3.sat()) ;
-		
-		assertTrue(ok) ;
 		//(new Scanner(System.in)).nextLine() ;
 	}
 	

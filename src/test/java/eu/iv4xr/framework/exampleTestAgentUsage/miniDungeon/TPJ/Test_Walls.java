@@ -22,12 +22,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-class Test_Walls {
+public class Test_Walls {
 	
 	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
 	@BeforeEach
-	void testConfig() {
+	public void testConfig() {
 		MDTestRunner.withGraphics = false ;
 		MDTestRunner.supressLogging = true ;
 		MDTestRunner.stopAfterAllAgentsDie = true ;

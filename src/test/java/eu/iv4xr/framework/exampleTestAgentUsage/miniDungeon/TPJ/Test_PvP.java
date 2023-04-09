@@ -35,12 +35,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-class Test_PvP {
+public class Test_PvP {
 	
 	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
 	@BeforeEach
-	void testConfig() {
+	public void testConfig() {
 		MDTestRunner.withGraphics = false ;
 		MDTestRunner.supressLogging = true ;
 		MDTestRunner.stopAfterAllAgentsDie = true ;
@@ -48,7 +48,7 @@ class Test_PvP {
 	}
 	
 	@Test
-	void testPVP1() throws Exception {
+	public void testPVP1() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		
@@ -77,7 +77,7 @@ class Test_PvP {
 	
 
 	@Test
-	void testPVP2() throws Exception {
+	public void testPVP2() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		

@@ -25,7 +25,7 @@ public class Test_Goalstack {
     }
 	
 	@Test
-	void test_goalIsPushedExecuted() {
+	public void test_goalIsPushedExecuted() {
 		
 		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent = new BasicAgent().attachState(state);
@@ -73,7 +73,7 @@ public class Test_Goalstack {
 	}
 	
 	@Test
-	void test_uncommittedGoalRetraction() {
+	public void test_uncommittedGoalRetraction() {
 		
 		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent = new BasicAgent().attachState(state);
@@ -108,7 +108,7 @@ public class Test_Goalstack {
 	}
 	
 	@Test
-	void test_budgeting() {
+	public void test_budgeting() {
 		
 		var state = (MyState) (new MyState().setEnvironment(new NullEnvironment()));
         var agent = new BasicAgent().attachState(state);

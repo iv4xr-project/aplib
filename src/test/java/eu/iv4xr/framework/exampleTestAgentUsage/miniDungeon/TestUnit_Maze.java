@@ -12,10 +12,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.Wall;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Maze;
 import nl.uu.cs.aplib.utils.Pair;
 
-class UnitTestMaze {
+public class TestUnit_Maze {
 
 	@Test
-	void testMaze1() {
+	public void testMaze1() {
 		
 		var maze = new Maze(2,4) ;
 		assertTrue(maze.id == 2 && maze.world.length == 4) ;
@@ -44,7 +44,7 @@ class UnitTestMaze {
 	}
 	
 	@Test
-	void testBuildSimpleMaze() {
+	public void testBuildSimpleMaze() {
 		
 		var maze = Maze.buildSimpleMaze(1, new Random(171),4,1) ;
 		assertTrue(maze.id == 1 && maze.world.length == 4) ;
@@ -61,7 +61,7 @@ class UnitTestMaze {
 	}
 	
 	@Test
-	void testBrokenWalls() {
+	public void testBrokenWalls() {
 		var org = Maze.probabilityBuggyWall ;
 		Maze.probabilityBuggyWall = 0f ;
 		var maze = Maze.buildSimpleMaze(1, new Random(171),20,3) ;

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.uu.cs.aplib.utils.Pair;
 
-class TestAStar {
+public class TestAStar {
 	
 	float dist(Pair<Float,Float> p,Pair<Float,Float> q) {
 		float dx = p.fst - q.fst ;
@@ -62,7 +62,7 @@ class TestAStar {
 	}
 	
 	@Test
-	void test1() {
+	public void test1() {
 		var G1 = G1() ;
 		var astar = new AStar<Pair<Float,Float>>() ;
 		var p = node(0,0) ;
@@ -101,7 +101,7 @@ class TestAStar {
 	}
 	
 	@Test
-	void test2() {
+	public void test2() {
 		// as in G1, but we add an edge (0,0) -- (3,1) with high cost:
 		var G1 = G1() ;
 		G1.addBidirectionalEdge(node(0,0), node(3,1));

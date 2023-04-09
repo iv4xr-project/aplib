@@ -35,12 +35,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-class Test_Random {
+public class Test_Random {
 	
 	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
 	@BeforeEach
-	void testConfig() {
+	public void testConfig() {
 		MDTestRunner.withGraphics = false ;
 		MDTestRunner.supressLogging = true ;
 		MDTestRunner.stopAfterAllAgentsDie = true ;
@@ -48,7 +48,7 @@ class Test_Random {
 	}
 	
 	@Test
-	void testRandom1() throws Exception {
+	public void testRandom1() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig0();
 		config = new MiniDungeonConfig() ;	
@@ -68,7 +68,7 @@ class Test_Random {
 	
 
 	@Test
-	void testRandom2() throws Exception {
+	public void testRandom2() throws Exception {
 
 		MiniDungeonConfig config = TPJconfigs.MDconfig1();
 		String agentId = "Frodo";
@@ -87,7 +87,7 @@ class Test_Random {
 	}
 	
 	@Test
-	void smarterTestRandom1() throws Exception {
+	public void smarterTestRandom1() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig0() ;	
 		String agentId = "Frodo" ;		
@@ -103,7 +103,7 @@ class Test_Random {
 	}
 	
 	@Test
-	void smarterTestRandom2() throws Exception {
+	public void smarterTestRandom2() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;		
 		String agentId = "Frodo" ;		

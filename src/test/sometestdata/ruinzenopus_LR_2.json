@@ -1,0 +1,1639 @@
+{
+  "name": "ruinzenopus_LR_2",
+  "initialAgentLocation": "START",
+  "objects": [
+    {
+      "id": "RStart",
+      "type": "Switch",
+      "position": {
+        "x": 129.0,
+        "y": 2.9299998,
+        "z": 138.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "bAC",
+      "type": "Switch",
+      "position": {
+        "x": 111.0,
+        "y": 2.9299998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "bAE",
+      "type": "Switch",
+      "position": {
+        "x": 137.0,
+        "y": 2.9299998,
+        "z": 54.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "CPS",
+      "type": "Switch",
+      "position": {
+        "x": 197.0,
+        "y": 2.9299998,
+        "z": 87.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "dAE",
+      "type": "Door",
+      "position": {
+        "x": 138.0,
+        "y": 2.9999998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "CPW",
+      "type": "Switch",
+      "position": {
+        "x": 173.0,
+        "y": 2.9299998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "b0",
+      "type": "Switch",
+      "position": {
+        "x": 127.0,
+        "y": 2.9299998,
+        "z": 133.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "b1",
+      "type": "Switch",
+      "position": {
+        "x": 127.0,
+        "y": 2.9299998,
+        "z": 121.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "b2",
+      "type": "Switch",
+      "position": {
+        "x": 131.0,
+        "y": 2.9299998,
+        "z": 115.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "b3",
+      "type": "Switch",
+      "position": {
+        "x": 127.0,
+        "y": 2.9299998,
+        "z": 119.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.4392157/0.4392157/0.4392157"
+      }
+    },
+    {
+      "id": "CStartE",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "b4",
+      "type": "Switch",
+      "position": {
+        "x": 111.0,
+        "y": 2.9299998,
+        "z": 117.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "bHN",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { "isOpen": false }
+    },
+    {
+      "id": "dHN",
+      "type": "Door",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { "isOpen": false }
+    },
+    {
+      "id": "BridgeW",
+      "type": "Switch",
+      "position": {
+        "x": 93.0,
+        "y": 2.9299998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "CFinalN",
+      "type": "Switch",
+      "position": {
+        "x": 159.0,
+        "y": 0.93000007,
+        "z": 134.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "XStart",
+      "type": "Switch",
+      "position": {
+        "x": 129.0,
+        "y": 2.9299998,
+        "z": 117.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "bAW",
+      "type": "Switch",
+      "position": {
+        "x": 107.0,
+        "y": 2.9299998,
+        "z": 56.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "dAW",
+      "type": "Door",
+      "position": {
+        "x": 108.0,
+        "y": 2.9999998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.15,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bJE",
+      "type": "Switch",
+      "position": {
+        "x": 87.0,
+        "y": 2.9299998,
+        "z": 55.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "dJC",
+      "type": "Door",
+      "position": {
+        "x": 84.0,
+        "y": 2.9999998,
+        "z": 60.0
+      },
+      "extent": {
+        "x": 0.75,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dJE",
+      "type": "Door",
+      "position": {
+        "x": 90.0,
+        "y": 2.9999998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bFC",
+      "type": "Switch",
+      "position": {
+        "x": 156.0,
+        "y": 2.9299998,
+        "z": 117.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "1.0/1.0/1.0"
+      }
+    },
+    {
+      "id": "dFC",
+      "type": "Door",
+      "position": {
+        "x": 154.0,
+        "y": 2.9999998,
+        "z": 110.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "shrine2",
+      "type": "Goal",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "used": false
+      }
+    },
+    {
+      "id": "START",
+      "type": "START",
+      "position": {
+        "x": 133.0,
+        "y": 0.0011000037,
+        "z": 137.0
+      },
+      "extent": null,
+      "velocity": null,
+      "destroyed": true,
+      "properties": { }
+    },
+    {
+      "id": "bJN",
+      "type": "Switch",
+      "position": {
+        "x": 82.0,
+        "y": 2.9299998,
+        "z": 55.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "b2JN",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "dFN2",
+      "type": "Door",
+      "position": {
+        "x": 159.0,
+        "y": 2.9999998,
+        "z": 102.0
+      },
+      "extent": {
+        "x": 0.14999987,
+        "y": 1.0000002,
+        "z": 0.7500001
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dJN",
+      "type": "Door",
+      "position": {
+        "x": 81.0,
+        "y": 2.9999998,
+        "z": 54.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bJS",
+      "type": "Switch",
+      "position": {
+        "x": 77.0,
+        "y": 2.9299998,
+        "z": 67.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "dFN0",
+      "type": "Door",
+      "position": {
+        "x": 159.0,
+        "y": 2.9999998,
+        "z": 108.0
+      },
+      "extent": {
+        "x": 0.14999987,
+        "y": 1.0000002,
+        "z": 0.7500001
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dFN1",
+      "type": "Door",
+      "position": {
+        "x": 159.0,
+        "y": 2.9999998,
+        "z": 105.0
+      },
+      "extent": {
+        "x": 0.14999987,
+        "y": 1.0000002,
+        "z": 0.7500001
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dJS",
+      "type": "Door",
+      "position": {
+        "x": 75.0,
+        "y": 2.9999998,
+        "z": 66.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "RA",
+      "type": "Switch",
+      "position": {
+        "x": 118.0,
+        "y": 2.9299998,
+        "z": 53.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "CAfterTrap2",
+      "type": "Switch",
+      "position": {
+        "x": 74.0,
+        "y": 2.9299998,
+        "z": 79.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "sdoorTrapCor",
+      "type": "Door",
+      "position": {
+        "x": 90.0,
+        "y": 2.9999998,
+        "z": 101.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "CAfterTrap1",
+      "type": "Switch",
+      "position": {
+        "x": 91.0,
+        "y": 2.9299998,
+        "z": 80.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "dFW",
+      "type": "Door",
+      "position": {
+        "x": 150.0,
+        "y": 2.9999998,
+        "z": 117.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "RG",
+      "type": "Switch",
+      "position": {
+        "x": 182.0,
+        "y": -0.07000001,
+        "z": 89.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "RJ",
+      "type": "Switch",
+      "position": {
+        "x": 81.0,
+        "y": 2.9299998,
+        "z": 63.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "RFinal",
+      "type": "Switch",
+      "position": {
+        "x": 162.0,
+        "y": -0.07000001,
+        "z": 142.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "Agrro",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "Finish",
+      "type": "Goal",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "used": false
+      }
+    },
+    {
+      "id": "RP",
+      "type": "Switch",
+      "position": {
+        "x": 198.0,
+        "y": 2.9299998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "dAC2",
+      "type": "Door",
+      "position": {
+        "x": 133.0,
+        "y": 2.9999998,
+        "z": 60.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "CStart",
+      "type": "Switch",
+      "position": {
+        "x": 129.0,
+        "y": 2.9299998,
+        "z": 125.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "dAC0",
+      "type": "Door",
+      "position": {
+        "x": 113.0,
+        "y": 2.9999998,
+        "z": 60.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dAC1",
+      "type": "Door",
+      "position": {
+        "x": 123.0,
+        "y": 2.9999998,
+        "z": 60.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "CTrap",
+      "type": "Switch",
+      "position": {
+        "x": 93.0,
+        "y": -0.07000001,
+        "z": 100.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "CFN",
+      "type": "Switch",
+      "position": {
+        "x": 159.0,
+        "y": 2.9299998,
+        "z": 96.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "d0",
+      "type": "Door",
+      "position": {
+        "x": 129.0,
+        "y": 2.9999998,
+        "z": 132.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "d1",
+      "type": "Door",
+      "position": {
+        "x": 129.0,
+        "y": 2.9999998,
+        "z": 120.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.15000015
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "d2",
+      "type": "Door",
+      "position": {
+        "x": 132.0,
+        "y": 2.9999998,
+        "z": 117.0
+      },
+      "extent": {
+        "x": 0.15,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "d3",
+      "type": "Door",
+      "position": {
+        "x": 126.0,
+        "y": 2.9999998,
+        "z": 117.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "d4",
+      "type": "Door",
+      "position": {
+        "x": 111.0,
+        "y": 2.9999998,
+        "z": 120.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.15000015
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dstart",
+      "type": "Door",
+      "position": {
+        "x": 135.0,
+        "y": 0.0,
+        "z": 138.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.15000015
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bPN",
+      "type": "Switch",
+      "position": {
+        "x": 202.0,
+        "y": 2.9299998,
+        "z": 49.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "b2PN",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "bshrine1",
+      "type": "Switch",
+      "position": {
+        "x": 157.0,
+        "y": 2.9299998,
+        "z": 55.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "1.0/1.0/1.0"
+      }
+    },
+    {
+      "id": "shrine1",
+      "type": "Goal",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "used": false
+      }
+    },
+    {
+      "id": "dPN",
+      "type": "Door",
+      "position": {
+        "x": 201.0,
+        "y": 2.9999998,
+        "z": 48.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.14999992
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bPS",
+      "type": "Switch",
+      "position": {
+        "x": 203.0,
+        "y": 2.9299998,
+        "z": 65.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "healP",
+      "type": "Goal",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "used": false
+      }
+    },
+    {
+      "id": "bFN2",
+      "type": "Switch",
+      "position": {
+        "x": 159.0,
+        "y": 2.9299998,
+        "z": 62.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "BridgeE",
+      "type": "Switch",
+      "position": {
+        "x": 141.0,
+        "y": 2.9299998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.84705883/0.84705883/0.84705883"
+      }
+    },
+    {
+      "id": "dPS",
+      "type": "Door",
+      "position": {
+        "x": 201.0,
+        "y": 2.9999998,
+        "z": 66.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.15000015
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bPW",
+      "type": "Switch",
+      "position": {
+        "x": 191.0,
+        "y": 2.9299998,
+        "z": 55.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.5647059/0.5647059/0.5647059"
+      }
+    },
+    {
+      "id": "bFN1",
+      "type": "Switch",
+      "position": {
+        "x": 129.0,
+        "y": 2.9299998,
+        "z": 68.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "dPW",
+      "type": "Door",
+      "position": {
+        "x": 192.0,
+        "y": 2.9999998,
+        "z": 57.0
+      },
+      "extent": {
+        "x": 0.14999995,
+        "y": 1.0000002,
+        "z": 0.75000024
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "bFN0",
+      "type": "Switch",
+      "position": {
+        "x": 84.0,
+        "y": 2.9299998,
+        "z": 62.0
+      },
+      "extent": {
+        "x": 0.5,
+        "y": 0.15,
+        "z": 0.5
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "color": "0.0/0.0/0.0"
+      }
+    },
+    {
+      "id": "dshrine1",
+      "type": "Door",
+      "position": {
+        "x": 159.0,
+        "y": 2.0,
+        "z": 49.0
+      },
+      "extent": {
+        "x": 0.75000036,
+        "y": 1.0000002,
+        "z": 0.15000015
+      },
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "mazeW",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "mazeE",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "bN",
+      "type": "Switch",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": { }
+    },
+    {
+      "id": "dNW",
+      "type": "Door",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dNE",
+      "type": "Door",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    },
+    {
+      "id": "dNN",
+      "type": "Door",
+      "position": null,
+      "extent": null,
+      "velocity": null,
+      "destroyed": false,
+      "properties": {
+        "isOpen": false
+      }
+    }
+  ],
+  "blockers": [
+    "dAC2",
+    "dAC0",
+    "dAC1",
+    "dAE",
+    "d0",
+    "d1",
+    "d2",
+    "d3",
+    "d4",
+    "dstart",
+    "dAW",
+    "dJC",
+    "dJE",
+    "dFC",
+    "dPN",
+    "dPS",
+    "dFN2",
+    "dJN",
+    "dPW",
+    "dFN0",
+    "dFN1",
+    "dJS",
+    "sdoorTrapCor",
+    "dFW",
+    "dshrine1",
+    "dNW",
+    "dNE",
+    "dNN"
+  ],
+  "zones": [
+    {
+      "id": "Z0",
+      "members": [
+        "dstart",
+        "START",
+        "RStart",
+        "d0",
+        "b0"
+      ]
+    },
+    {
+      "id": "Z1",
+      "members": [
+        "CStart",
+        "d0",
+        "d1",
+        "b1"
+      ]
+    },
+    {
+      "id": "Zintersection",
+      "members": [
+        "b2",
+        "b3",
+        "XStart",
+        "d1",
+        "d2",
+        "d3"
+      ]
+    },
+    {
+      "id": "ZBrokenHall",
+      "members": [
+        "d2",
+        "CStartE"
+      ]
+    },
+    {
+      "id": "ZCtrap",
+      "members": [
+        "d4",
+        "b4",
+        "CAfterTrap2",
+        "CAfterTrap1",
+        "sdoorTrapCor",
+        "CTrap",
+        "bJS",
+        "dJS",
+        "d3"
+      ]
+    },
+    {
+      "id": "ZCNorthH",
+      "members": [
+        "d4",
+        "bHN",
+        "dHN"
+      ]
+    },
+    {
+      "id": "ZJ",
+      "members": [
+        "bJN",
+        "RJ",
+        "bFN0",
+        "bJE",
+        "dJC",
+        "dJS",
+        "dJE",
+        "dJN"
+      ]
+    },
+    {
+      "id": "ZBridgeW",
+      "members": [
+        "BridgeW",
+        "bAW",
+        "dAW",
+        "dJE"
+      ]
+    },
+    {
+      "id": "ZA",
+      "members": [
+        "dAC0",
+        "dAC1",
+        "dAC2",
+        "bAC",
+        "bAE",
+        "dAE",
+        "dAW",
+        "bFN1",
+        "RA"
+      ]
+    },
+    {
+      "id": "ZBridgeE",
+      "members": [
+        "bshrine1",
+        "bFN2",
+        "BridgeE",
+        "bPW",
+        "dshrine1",
+        "dAE",
+        "dPW",
+        "CPW"
+      ]
+    },
+    {
+      "id": "Zshrine1",
+      "members": [
+        "dshrine1",
+        "shrine1"
+      ]
+    },
+    {
+      "id": "ZN",
+      "members": [
+        "bN",
+        "dNN",
+        "dNW",
+        "dNE",
+        "b2JN",
+        "dJN",
+        "b2PN",
+        "dPN",
+        "mazeW",
+        "mazeE"
+      ]
+    },
+    {
+      "id": "ZNzombies",
+      "members": [
+        "dNN",
+        "dNE",
+        "dNW"
+      ]
+    },
+    {
+      "id": "ZP",
+      "members": [
+        "bPN",
+        "dPN",
+        "bPS",
+        "dPS",
+        "dPW",
+        "RP",
+        "healP"
+      ]
+    },
+    {
+      "id": "ZG",
+      "members": [
+        "RG",
+        "dPS",
+        "CPS",
+        "dFN2",
+        "CFN"
+      ]
+    },
+    {
+      "id": "Zshrine2",
+      "members": [
+        "dFC",
+        "shrine2"
+      ]
+    },
+    {
+      "id": "ZFN01",
+      "members": [
+        "dFN0",
+        "dFN1"
+      ]
+    },
+    {
+      "id": "ZFN12",
+      "members": [
+        "dFN1",
+        "dFN2"
+      ]
+    },
+    {
+      "id": "ZF",
+      "members": [
+        "dFC",
+        "CFinalN",
+        "dFW",
+        "dFN0",
+        "RFinal",
+        "bFC",
+        "Finish",
+        "Agrro"
+      ]
+    }
+  ],
+  "objectlinks": {
+    "b0": [
+      "d0"
+    ],
+    "b1": [
+      "d1"
+    ],
+    "b2": [
+      "d2"
+    ],
+    "b3": [
+      "d3"
+    ],
+    "b4": [
+      "d4"
+    ],
+    "bHN": [
+      "dHN"
+    ],
+    "bJS": [
+      "dJS"
+    ],
+    "bFN0": [
+      "dFN0",
+      "dJC"
+    ],
+    "bJE": [
+      "dJE"
+    ],
+    "bJN": [
+      "dJN"
+    ],
+    "b2JN": [
+      "dJN"
+    ],
+    "bAW": [
+      "dAW"
+    ],
+    "bAE": [
+      "dAE"
+    ],
+    "bAC": [
+      "dAC0",
+      "dAC1",
+      "dAC2"
+    ],
+    "bFN1": [
+      "dFN1"
+    ],
+    "bshrine1": [
+      "dshrine1"
+    ],
+    "bFN2": [
+      "dFN2"
+    ],
+    "bPW": [
+      "dPW"
+    ],
+    "bPS": [
+      "dPS"
+    ],
+    "bPN": [
+      "dPN"
+    ],
+    "b2PN": [
+      "dPN"
+    ],
+    "bFC": [
+      "dFC",
+      "dFW"
+    ],
+    "bN": [
+      "dNW",
+      "dNE",
+      "dNN"
+    ]
+  }
+}

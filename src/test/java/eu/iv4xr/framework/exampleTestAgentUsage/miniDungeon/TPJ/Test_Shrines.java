@@ -35,12 +35,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils; 
 
-class Test_Shrines {
+public class Test_Shrines {
 	
 	MDTestRunner MDTestRunner = new MDTestRunner() ;
 	
 	@BeforeEach
-	void testConfig() {
+	public void testConfig() {
 		MDTestRunner.withGraphics = false ;
 		MDTestRunner.supressLogging = true ;
 		MDTestRunner.stopAfterAllAgentsDie = true ;
@@ -48,7 +48,7 @@ class Test_Shrines {
 	}
 	
 	@Test
-	void testScrolls1() throws Exception {
+	public void testScrolls1() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		String agentId = "Frodo" ;		
@@ -64,7 +64,7 @@ class Test_Shrines {
 	}
 	
 	@Test
-	void testScrolls2() throws Exception {
+	public void testScrolls2() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig1() ;
 		String agentId = "Frodo" ;		
@@ -79,7 +79,7 @@ class Test_Shrines {
 	}
 	
 	@Test
-	void testScrolls2b() throws Exception {
+	public void testScrolls2b() throws Exception {
 		
 		MiniDungeonConfig config = TPJconfigs.MDconfig2() ;
 		String agentId = "Smeagol" ;		

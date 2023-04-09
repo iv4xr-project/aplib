@@ -13,10 +13,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.utils.Pair; 
 
-class UnitTestMiniDungeon {
+public class TestUnit_MiniDungeon {
 	
 	@Test
-	void testConstructorTwoPlayers() {
+	public void testConstructorTwoPlayers() {
 		
 		var config = new MiniDungeonConfig() ;
 		var dungeon = new MiniDungeon(config) ;
@@ -36,7 +36,7 @@ class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	void testConstructorOnePlayers() {
+	public void testConstructorOnePlayers() {
 		var config = new MiniDungeonConfig() ;
 		config.enableSmeagol = false ;
 		var dungeon = new MiniDungeon(config) ;
@@ -49,7 +49,7 @@ class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	void testInvalidConfigs() {
+	public void testInvalidConfigs() {
 		var config = new MiniDungeonConfig() ;
 		config.worldSize = 7 ;
 		assertThrows(IllegalArgumentException.class,() -> new MiniDungeon(config)) ;
@@ -70,7 +70,7 @@ class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	void testSeeding() {
+	public void testSeeding() {
 		
 		var config = new MiniDungeonConfig() ;
 		
@@ -123,7 +123,7 @@ class UnitTestMiniDungeon {
 	}
 	
 	@Test
-	void testVisibility() {
+	public void testVisibility() {
 
 		var config = new MiniDungeonConfig();
 		config.viewDistance = 4 ;

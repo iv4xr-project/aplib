@@ -25,7 +25,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_with_oneaction() {
+    public void test_with_oneaction() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
 
@@ -52,7 +52,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_abort() {
+    public void test_abort() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
 
@@ -100,7 +100,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_with_multipleActions() {
+    public void test_with_multipleActions() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
         var a0 = action("a0").do1((MyState S) -> {
@@ -137,7 +137,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_with_multipleGoals() {
+    public void test_with_multipleGoals() {
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
         var agent = new BasicAgent().attachState(state);
         var a0 = action("a0").do1((MyState S) -> {
@@ -168,7 +168,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_persistentAction() {
+    public void test_persistentAction() {
         // testing of action that insist on multiple ticks to execute
 
         var state = (MyState) (new MyState().setEnvironment(new ConsoleEnvironment()));
@@ -212,7 +212,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_addingAGoal_withAddAfter() {
+    public void test_addingAGoal_withAddAfter() {
 
         var g = goal("g").toSolve((Integer i) -> i == 0).withTactic(action("a").do1((MyState S) -> S.counter).lift())
                 .lift();
@@ -349,7 +349,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_addingAGoal_withAddBefore() {
+    public void test_addingAGoal_withAddBefore() {
         var g = goal("g").toSolve((Integer i) -> i == 0)
                 .withTactic(action("return counter").do1((MyState S) -> S.counter).lift()).lift();
 
@@ -450,7 +450,7 @@ public class Test_BasicAgent {
     }
 
     @Test
-    void test_removingAGoal() {
+    public void test_removingAGoal() {
         var g = goal("g").withTactic(action("a").do1((MyState S) -> 0).lift()).lift();
 
         var g0 = goal("g0").withTactic(action("a").do1((MyState S) -> 0).lift()).lift();
