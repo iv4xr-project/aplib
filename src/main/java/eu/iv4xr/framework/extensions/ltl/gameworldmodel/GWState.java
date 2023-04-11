@@ -28,6 +28,8 @@ public class GWState implements IExplorableState {
 	 * object)
 	 */
 	public String currentAgentLocation ;
+
+	private Integer hash = null ;
 	
 	public GWState() { }
 	
@@ -82,7 +84,10 @@ public class GWState implements IExplorableState {
 	
 	@Override
     public int hashCode() {
-        return Objects.hash(currentAgentLocation, objects);
+		if (hash == null) {
+			hash = Objects.hash(currentAgentLocation, objects);
+		}
+		return hash;
     }
 	
 	@Override

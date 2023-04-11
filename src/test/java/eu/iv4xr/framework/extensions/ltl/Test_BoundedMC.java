@@ -8,16 +8,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
 
-import org.junit.jupiter.api.Test;
-
-import eu.iv4xr.framework.extensions.ltl.BasicModelChecker;
-import eu.iv4xr.framework.extensions.ltl.BasicModelChecker.Path;
-import eu.iv4xr.framework.extensions.ltl.BuchiModelChecker;
-import eu.iv4xr.framework.extensions.ltl.IExplorableState;
-import eu.iv4xr.framework.extensions.ltl.LTL;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition;
-import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition.GWTransitionType;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.LabRecruitsModel;
 
@@ -78,7 +70,7 @@ public class Test_BoundedMC {
 		model = LabRecruitsModel.attachLabRecruitsAlpha(model) ;
 		model = simplify(model) ;
 		
-		System.out.println(">>> model: " + model) ;
+		//System.out.println(">>> model: " + model) ;
 		
 		/*
 		// manually debugging the model:
@@ -182,7 +174,7 @@ public class Test_BoundedMC {
 			 
 		//var mc = new BuchiModelChecker(model) ;
 		var mc = new BasicModelChecker(model) ;
-		mc.findShortestMode = true ;
+		mc.completeBoundedDSFMode = true ;
 		LTL<IExplorableState> solved = eventually(S -> {
 			GWState st = (GWState) S ;
 			//boolean dFN0isOpen = (Boolean) st.objects.get("dFN0").properties.get(GameWorldModel.IS_OPEN_NAME) ;
@@ -192,6 +184,7 @@ public class Test_BoundedMC {
 		Predicate<IExplorableState> g  = S -> {
 			GWState st = (GWState) S ;
 			return st.currentAgentLocation.equals("Finish") ;
+			//return st.currentAgentLocation.equals("dFC") ;
 		} ;
 		
 		
@@ -206,7 +199,8 @@ public class Test_BoundedMC {
 		Path<IExplorableState> sequence = outs[0] ;
 		*/
 		
-		var sequence = mc.find(g,55) ;
+		var sequence = mc.find(g,40) ;
+		//var sequence = mc.iterativeFind(S -> g.test(S),60) ;
 		
 		time = System.currentTimeMillis() - time ;
 		System.out.println(">>> time = " + time + " ms") ;

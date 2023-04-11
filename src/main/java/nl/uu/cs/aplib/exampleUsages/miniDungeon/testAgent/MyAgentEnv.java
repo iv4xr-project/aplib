@@ -166,6 +166,12 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				we.properties.put("scrollsInBag",player.itemsInBag(EntityType.SCROLL).size()) ;
 				we.properties.put("healpotsInBag",player.itemsInBag(EntityType.HEALPOT).size()) ;
 				we.properties.put("ragepotsInBag",player.itemsInBag(EntityType.RAGEPOT).size()) ;
+				// calculating the ids of items in the bag:
+				LinkedList<String> itemsInBag = new LinkedList<>() ;
+				for(var item : player.bag) {
+					itemsInBag.add(item.id) ;
+				}
+				we.properties.put("itemsInBag",itemsInBag) ;
 				we.properties.put("rageTimer",player.rageTimer) ;
 				return we ;
 			case MONSTER:

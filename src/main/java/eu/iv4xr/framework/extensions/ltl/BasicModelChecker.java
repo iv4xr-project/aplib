@@ -5,6 +5,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition;
 import nl.uu.cs.aplib.utils.Pair;
 
 /**
@@ -26,26 +28,46 @@ import nl.uu.cs.aplib.utils.Pair;
  *
  */
 public class BasicModelChecker {
-	
+
 	/**
 	 * The 'program' or 'model of a program' that we want to target in model-checking.
 	 */
 	public ITargetModel model ;
-	
+
 	/**
 	 * Hold some basic statistics over the last model-checking run.
 	 */
     public MCStatistics stats = new MCStatistics() ;
-	
+
+	/**
+	 * If true, the model checker will re-visit a state if it finds a shorter path to it.
+	 * This makes the bounded state exploration complete (within the given max-depth bound),
+	 * but it is also more expensive (takes more time and memory). If false, exploration
+	 * will never visit the same state twice.
+	 *
+	 * <p>The first mode is complete within the given max-depth. The second mode can find any state,
+	 * if given enough max-depth.
+	 *
+	 * <p>Default: true.
+	 */
+	public boolean completeBoundedDSFMode = true ;
+
+	/**
+	 * If not null, each run of model checking will be limited to exploring at most this many transitions.
+	 * Default: null.
+	 */
+	public Integer maxBudget = null ;
+
+
 	public static class MCStatistics {
 		public int numberOfStatesExplored = 0 ;
 		public int numberOfTransitionsExplored = 0 ;
-		
+
 		public void clear() {
 			numberOfStatesExplored = 0 ;
 			numberOfTransitionsExplored = 0 ;
 		}
-		
+
 		@Override
 		public String toString() {
 			return "Number of states explored: " + numberOfStatesExplored
@@ -53,16 +75,16 @@ public class BasicModelChecker {
 		}
 
 	}
-	
+
 	/**
 	 * Create an instance of a model checker.
-	 * 
+	 *
 	 * @param model The 'program' to be model-checked.
 	 */
 	public BasicModelChecker(ITargetModel model) {
 		this.model = model ;
 	}
-	
+
 	/**
 	 * Representing a witness execution. It is represented as a sequence of pairs
 	 * (tr,s) where s is a state passed by the execution, and tr is a representation
@@ -70,21 +92,21 @@ public class BasicModelChecker {
 	 * s is the starting state.
 	 */
 	public static class Path<State> {
-		
+
 		public List<Pair<ITransition,State>> path = new LinkedList<>() ;
-		
+
 		void addInitialState(State state) {
-		    path.add(new Pair<ITransition,State>(null,state)) ;	
+			path.add(new Pair<ITransition,State>(null,state)) ;
 		}
-		
+
 		void addTransition(ITransition tr, State state) {
 			path.add(new Pair<ITransition,State>(tr,state)) ;
 		}
-		
+
 		void removeLastTransition() {
 			path.remove(path.size() - 1) ;
 		}
-		
+
 		Path<State> copy() {
 			Path<State> z = new Path<>() ;
 			for(var step : this.path) {
@@ -92,16 +114,16 @@ public class BasicModelChecker {
 			}
 			return z ;
 		}
-		
+
 		public List<State> getStateSequence() {
 			return path.stream().map(step -> step.snd).collect(Collectors.toList()) ;
 		}
-		
+
 		public State getLastState() {
 			var seq = getStateSequence() ;
 			return seq.get(seq.size() - 1) ;
 		}
-		
+
 		@Override
 		public String toString() {
 			int k = 0;
@@ -115,7 +137,7 @@ public class BasicModelChecker {
             return s;
 		}
 	}
-	
+
 	/**
 	 * Check if the target program has an finite execution that ends in a state
 	 * satisfying the predicate q. If so, it returns SAT, and else UNSAT. <b>Be
@@ -127,7 +149,7 @@ public class BasicModelChecker {
 		if(path == null) return SATVerdict.UNSAT ;
 		return SATVerdict.SAT ;
 	}
-	
+
 	/**
 	 * Check if the target program has an finite execution of the specified maximum
 	 * length, that ends in a state satisfying the predicate q. If so, it returns
@@ -138,7 +160,7 @@ public class BasicModelChecker {
 		if(path == null) return SATVerdict.UNSAT ;
 		return SATVerdict.SAT ;
 	}
-	
+
 	/**
 	 * Do model-checking to find a finite execution (of the given max-length) of the
 	 * target program that ends in a state satisfying the predicate q. If so, it
@@ -146,25 +168,188 @@ public class BasicModelChecker {
 	 */
 	public Path<IExplorableState> find(Predicate<IExplorableState> q, int maxDepth) {
 		model.reset();
-		stats.clear(); 
+		stats.clear();
 		Path<IExplorableState> path = new Path<>() ;
 		Collection<IExplorableState> visitedStates = new HashSet<>() ;
 		Map<IExplorableState,Integer> depthInfo = new HashMap<>() ;
 		IExplorableState state = model.getCurrentState().clone() ;
-		path.addInitialState(state);	
-		return dfs(q,path,visitedStates,depthInfo,state,maxDepth+1) ;	
+		path.addInitialState(state);
+		return dfs(q,path,visitedStates,depthInfo,state,maxDepth+1) ;
 	}
-	
+
+	// for the iterative DFS
+	static class StackItem {
+		ITransition tr ;
+		IExplorableState state ;
+		int remainingDepth ;
+
+		StackItem(ITransition tr, IExplorableState state, int remainingDepth) {
+			this.tr = tr ;
+			this.state = state ;
+			this.remainingDepth = remainingDepth ;
+		}
+	}
+
+	void debugprintPath(Path path) {
+		System.out.println("  Path: ");
+		for (var tr : path.path) {
+			var tr_ = (Pair<ITransition,Object>) tr;
+			System.out.print(" <" + debugShowTransition(tr_.fst) + " --> " + debugShowState(tr_.snd) + ">");
+		}
+		System.out.println("");
+	}
+
+	String debugShowState(Object S) {
+		var state_ = (GWState) S;
+		return "" + state_.currentAgentLocation ;
+	}
+
+	String debugMoreShowState(Object S, String ... doors) {
+		var state_ = (GWState) S;
+		String z = "" + state_.currentAgentLocation  + " doors: " ;
+		for (var d : doors) {
+			z += " " + d + ":" + state_.objects.get(d).properties.get("isOpen") ;
+		}
+		return z ;
+	}
+
+	String debugShowTransition(Object T) {
+		if (T == null)
+			return "null";
+		var tr_ = (GWTransition) T;
+		return "" + tr_.type + " " + tr_.target ;
+	}
+
+	/**
+	 * An iterative version of the algorithm. It runs a DFS, but iterative. This may perform worse
+	 * than the recursive version. The reason is that at each iteration it considers all successors (even
+	 * if not all of them will not be explored). These sucessors need to be computed. and since each state
+	 * is essentially cloned, in a setup where we often have many successors, this can multiply
+	 * the used memory to hold them in the dfs-stack. In contrast, the recurive version only follows
+	 * one successor at a time.
+	 */
+	public Path<IExplorableState> iterativeFind(Predicate<IExplorableState> q, int maxDepth) {
+		model.reset();
+		stats.clear();
+		Path<IExplorableState> path = new Path<>() ;
+		Collection<IExplorableState> visitedStates = new HashSet<>() ;
+		Map<IExplorableState,Integer> depthInfo = new HashMap<>() ;
+		IExplorableState state = model.getCurrentState().clone() ;
+		//path.addInitialState(state);
+
+		Stack<StackItem> dfsstack = new Stack<>() ;
+		// running iterative DFS over defstack
+		maxDepth++ ;
+		dfsstack.push(new StackItem(null,state,maxDepth)) ;
+
+		int j = 1 ;
+		while (!dfsstack.isEmpty()) {
+
+			var top = dfsstack.pop() ;
+			// the next state to explore:
+			state = top.state ;
+			int remainingDepth = top.remainingDepth ;
+			int stateDepth = maxDepth - top.remainingDepth ;
+
+			if (remainingDepth == 0) {
+				continue ;
+			}
+
+			//System.out.print("##### " + j++);
+			//System.out.println(", POPPING " + debugShowTransition(top.tr) + " -->" + debugShowState(state));
+			//debugprintPath(path) ;
+			//System.out.println("      #path=" + path.path.size()
+			//		+ " #dfsstack=" + dfsstack.size()
+			//		+ " stateDepth=" + stateDepth
+			//		+ " remainingDepth=" + remainingDepth ) ;
+
+
+			// Let u be the state before the current state. Due to previous exploration,
+			// it could be that the current path extends beyond u. In this case we need
+			// to backtrack to u. Also, we need to roll-back the model state to u:
+			int k = path.path.size() - stateDepth  ;
+			boolean backtracking = k>0 ;
+			while (0<k) {
+				model.backTrackToPreviousState() ;
+				path.removeLastTransition() ;
+				//System.out.println("--- backtracking") ;
+				k-- ;
+			}
+			if (backtracking) {
+				//debugprintPath(path) ;
+			}
+
+			stats.numberOfStatesExplored++ ;
+			visitedStates.add(state) ;
+			if(completeBoundedDSFMode) {
+				depthInfo.put(state,remainingDepth);
+			}
+
+			// move the model to the current state:
+			if (top.tr != null) { // null means we are at the initial state
+				model.execute(top.tr) ;
+			}
+			//System.out.println(">>> ACTUAL model state:"
+			//		+ debugMoreShowState(model.getCurrentState(), "d0", "d1", "d2", "d3", "dJS")) ;
+
+			//stats.numberOfTransitionsExplored++ ;
+			path.addTransition(top.tr, state) ;
+			//System.out.print("+++ Extending path to "); debugprintPath(path) ;
+
+			// else, we still have depth to explore
+
+			if (q.test(state)) {
+				// FOUND a path to q:
+				// System.out.print(">>> FOUND a path to q") ;
+				//debugprintPath(path) ;
+				return path.copy() ;
+			}
+
+			if (maxBudget != null && stats.numberOfTransitionsExplored > maxBudget) {
+				return null ;
+			}
+
+			// expand to the next state:
+			for(ITransition tr : model.availableTransitions()) {
+
+				stats.numberOfTransitionsExplored++ ;
+				model.execute(tr);
+				//IExplorableState nextState = model.getCurrentState().clone() ;
+				IExplorableState nextState = model.getCurrentState() ;
+				model.backTrackToPreviousState() ;
+				int nextStateRemainingDepth = remainingDepth - 1 ;
+
+				if(visitedStates.contains(nextState)) {
+					if (completeBoundedDSFMode) {
+						var remainingDeptOfPreviousVisit = depthInfo.get(nextState) ;
+						if (nextStateRemainingDepth > remainingDeptOfPreviousVisit) {
+							// re-try the state if we have more remaining depth:
+							depthInfo.put(nextState, nextStateRemainingDepth) ;
+						} else {
+							continue;
+						}
+					} else continue ;
+				}
+
+				dfsstack.push(new StackItem(tr,nextState,nextStateRemainingDepth)) ;
+				//System.out.println(">>> pushing " + debugShowTransition(tr)
+				//		+ " --> " + debugShowState(nextState)) ;
+			}
+		}
+		// if we come here, then we did not find a path to q:
+		return null ;
+	}
+
 	/**
 	 * Similar to {@link #find(Predicate, int)}, but it will return the shortest execution
 	 * (of the specified max-length) that ends in q.
 	 */
 	public Path<IExplorableState> findShortest(Predicate<IExplorableState> q, int maxDepth) {
-		if (maxDepth < 0) 
+		if (maxDepth < 0)
 			throw new IllegalArgumentException() ;
 		int lowbound = 0 ;
 		int upbound = maxDepth+1 ;
-		
+
 		Path<IExplorableState> bestpath = null ;
 		while (upbound > lowbound) {
 			int mid = lowbound + (upbound - lowbound)/2 ;
@@ -172,26 +357,23 @@ public class BasicModelChecker {
 			if (path != null) {
 				upbound = mid ;
 				bestpath = path ;
-			}
-			else {
+			} else {
 				if(mid==lowbound) {
-				   upbound = mid ;
-				}
-				else {
+					upbound = mid ;
+				} else {
 					lowbound = mid ;
 				}
 			}
 		}
-		return bestpath ;	
+		return bestpath ;
 	}
-	
-	public boolean findShortestMode = false ;
-	
+
+
 	/**
 	 * Implement the 'lazy model checking' algorithm similar to what is used by the
 	 * SPIN model checker. It is actually a Depth First Search (DFS) algorithm. We
 	 * don't do double DSF because we only want to check state reachability.
-	 * 
+	 *
 	 * @param whatToFind     predicate characterizing the state whose reachability
 	 *                       is to be checked.
 	 * @param pathSoFar      the path that leads to the parameter state given below.
@@ -200,56 +382,58 @@ public class BasicModelChecker {
 	 * @param remainingDepth speaks for itself :)
 	 * @return
 	 */
-	Path<IExplorableState> dfs(Predicate<IExplorableState> whatToFind, 
-			 Path<IExplorableState> pathSoFar, 
-			Collection<IExplorableState> visitedStates,
-			Map<IExplorableState,Integer> depthInfo,
-			IExplorableState state,
-			int remainingDepth			
-			) {
-		
+	Path<IExplorableState> dfs(Predicate<IExplorableState> whatToFind,
+							   Path<IExplorableState> pathSoFar,
+							   Collection<IExplorableState> visitedStates,
+							   Map<IExplorableState,Integer> depthInfo,
+							   IExplorableState state,
+							   int remainingDepth
+	) {
+
 		//System.out.println(">>> depth " + remainingDepth) ;
 		if(remainingDepth==0) return null ;
 
 		stats.numberOfTransitionsExplored++ ;
-		
+
 		//System.out.println(">>> #visited states: " + visitedStates.size()) ;
 		//for(var st : visitedStates) {
 		//	System.out.println("     " + st) ;
 		//}
-		
+
 		if(visitedStates.contains(state)) {
-			if (findShortestMode) {
+			if (completeBoundedDSFMode) {
 				var remainingDeptOfPreviousVisit = depthInfo.get(state) ;
 				if (remainingDepth > remainingDeptOfPreviousVisit) {
 					// re-try the state if have more remaining depth:
 					depthInfo.put(state, remainingDepth) ;
-				}
-				else {
+				} else {
 					return null ;
 				}
-			}
-			else return null ;
-		}
-		else {
+			} else return null ;
+		} else {
 			// else the state is new
 			stats.numberOfStatesExplored++ ;
 			visitedStates.add(state) ;
-			if (findShortestMode) {
+			if (completeBoundedDSFMode) {
 				depthInfo.put(state, remainingDepth) ;
 			}
 		}
-		
+
 		if(whatToFind.test(state)) {
 			// we find a state satisfying the search criterion!
-			return pathSoFar.copy() ;	
+			return pathSoFar.copy() ;
 		}
-		
+
+		if(maxBudget != null && stats.numberOfTransitionsExplored > maxBudget) {
+			return null ;
+		}
+
 		var nextTransitions = model.availableTransitions() ;
 		for(var tr: nextTransitions) {
 			//String st0 = model.getCurrentState().toString() ;
 			model.execute(tr);
-			var nextState = (IExplorableState) model.getCurrentState().clone() ;
+			//var nextState = (IExplorableState) model.getCurrentState().clone() ;
+			var nextState = (IExplorableState) model.getCurrentState() ;
 			pathSoFar.addTransition(tr, nextState);
 			// recurse to the next state:
 			Path<IExplorableState> result = dfs(whatToFind,pathSoFar,
@@ -259,71 +443,71 @@ public class BasicModelChecker {
 			if(result != null) {
 				// a solving path is found! Return the path:
 				return result ;
-			}	
+			}
 			pathSoFar.removeLastTransition();
 			model.backTrackToPreviousState() ;
 			//String st1 = model.getCurrentState().toString() ;
 			//System.out.println(">>> backtracking : " + st1 + " vs " + st0 + " : " + (st1.equals(st0))) ;
 		}
-		return null ;		
+		return null ;
 	}
-	
+
 	/**
 	 * Representing a test suite produced by
 	 * {@link BasicModelChecker#testSuite(List, Function, int, boolean)}.
-	 * 
+	 *
 	 * @param <CoverageItem> The type of 'items' that we want to cover.
 	 */
 	public static class TestSuite<CoverageItem> {
-		
+
 		/**
 		 * All the 'targets' that are to be covered.
 		 */
 		public List<CoverageItem> targets = new LinkedList<>() ;
-		
+
 		/**
 		 * The test-cases that constitute this test suite. It is a list of pairs (tc,o) where
 		 * tc is a test-case and o that coverage-target that the last state of tc covers.
 		 * Note that a test-case would typically covers more targets than just this o;
-		 * we just mention this o for convenience. 
+		 * we just mention this o for convenience.
 		 */
 		@SuppressWarnings("rawtypes")
 		public List<Pair<Path,CoverageItem>> tests = new LinkedList<>() ;
-		
+
 		/**
 		 * All coverage 'targets' that are covered by this test-suite. It will also include
 		 * targets that were not specified in {@link #targets} but happen to be covered by
 		 * the test-suite.
 		 */
 		public List<CoverageItem> covered = new LinkedList<>() ;
-		
+
 		/**
 		 * Give all targets specified by {@link #targets} that are still left uncovered.
 		 */
 		public List<CoverageItem> notCovered() {
 			return targets.stream().filter(st -> ! covered.contains(st)).collect(Collectors.toList()) ;
 		}
-		
+
 		/**
 		 * Return the coverage degree, which is a number in [0..1]; it is 1 if all
 		 * targets from {@link #targets} are covered.
 		 */
 		public float coverage() {
-			
+
 			// the number of actual targets that are covered:
 			long net_covered = this.targets.stream().filter(t -> covered.contains(t)).count() ;
-					
+
 			return ((float) net_covered ) / (float) targets.size() ;
 		}
 	}
-	
+
 	/**
 	 * Return a test suite that tries to cover the specified coverage targets.
 	 * Although the model-checking procedure is exhaustive up to the given maximum
 	 * depth/length, note that it may not be possible to cover all the given
 	 * targets. The returned test suite give a suite that would cover as much as
 	 * possible.
-	 * 
+	 *
 	 * @param <CoverageItem>   The type of coverage-targets.
 	 * @param itemsToCover     A list of targets to cover.
 	 * @param coverageFunction A function that maps the state of the target
@@ -343,66 +527,64 @@ public class BasicModelChecker {
 	 *                         that the resulting test-suite would be minimal in the
 	 *                         total number of steps. Minimizing the whole
 	 *                         test-suite would be very expensive.
-	 * 
+	 *
 	 * @return The resulting test-suite.
 	 */
 	@SuppressWarnings("rawtypes")
 	public <CoverageItem> TestSuite<CoverageItem> testSuite(
-			List<CoverageItem> itemsToCover, 
+			List<CoverageItem> itemsToCover,
 			Function<IExplorableState,CoverageItem> coverageFunction,
-			int maxLength, 
+			int maxLength,
 			boolean minimizeLength) {
-		
-		
+
+
 		Set<CoverageItem> covered = new HashSet<>() ;
-		
+
 		TestSuite<CoverageItem> suite = new TestSuite<>() ;
 		suite.targets.addAll(itemsToCover) ;
-	
+
 		List<CoverageItem> worklist = new LinkedList<>() ;
 		worklist.addAll(itemsToCover) ;
-		
+
 		while (! worklist.isEmpty()) {
 			var target = worklist.remove(0) ;
-			
+
 			if(covered.contains(target)) {
 				// the state is already covered
 				continue ;
 			}
-			
+
 			// else it is still uncovered
-			
+
 			System.out.print("=== targeting: " + target) ;
 			Path<IExplorableState> path ;
 			if(minimizeLength) {
 				path = findShortest(st -> coverageFunction.apply(st).equals(target), maxLength) ;
-			}
-			else {
+			} else {
 				path = find(st -> coverageFunction.apply(st).equals(target), maxLength) ;
 			}
 			if (path == null) {
 				System.out.println(" NO") ;
 				continue ;
-			}
-			else {
+			} else {
 				System.out.println(" YES") ;
 			}
-			
+
 			suite.tests.add(new Pair<Path,CoverageItem>(path,target)) ;
-			
+
 			covered.addAll(path.path.stream()
 					.map(step -> coverageFunction.apply(step.snd))
-					.collect(Collectors.toList())) ;				
-			
+					.collect(Collectors.toList())) ;
+
 		}
-				
+
 		suite.covered.addAll(covered) ;
-		
+
 		//System.out.println(">>> #covered =" + covered.size()) ;
 		//System.out.println(">>> #covered2 =" + suite.covered.size()) ;
-		
+
 		return suite ;
 	}
-	
+
 
 }

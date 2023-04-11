@@ -64,7 +64,8 @@ public class Test_SimpleModelChecker {
 
 		@Override
 		public IExplorableState getCurrentState() {
-			return this ;
+			return history.get(history.size() - 1) ;
+			//return this ;
 		}
 
 		@Override
@@ -226,7 +227,11 @@ public class Test_SimpleModelChecker {
 
 		Integer[] targets2 = { 5, 0, 1, 2, 3, 4 };
 
+		System.out.println(">>> ") ;
+
 		tsuite = mc.testSuite(Arrays.asList(targets2), coverageFunction, 9, false);
+
+		System.out.println(">>> " + tsuite.tests.size());
 
 		assertTrue(tsuite.targets.size() == 6);
 		assertTrue(tsuite.tests.size() == 1);
