@@ -12,9 +12,12 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.LabRecruitsModel;
+import nl.uu.cs.aplib.utils.Pair;
+import org.junit.jupiter.api.Test;
 
 /**
- * For testing bounded MC performance.
+ * For testing bounded MC, in particular for cases where it needs to re-visit the same
+ * state multiple cases to find a solution within the given max-depth..
  */
 public class Test_BoundedMC {
 	
@@ -56,150 +59,107 @@ public class Test_BoundedMC {
 		return s ;
 	}
 
-	
-	//@Test
-	public void test1() throws IOException, InterruptedException {
-		
+	GameWorldModel loadZenopus() throws IOException {
 		var fname = Paths.get(System.getProperty("user.dir"),
 				"src","test","sometestdata",
 				"ruinzenopus_LR_2.json")
 				.toString() ;
-		
 		GameWorldModel model = GameWorldModel.loadGameWorldModelFromFile(fname) ;
 		model.reset();
 		model = LabRecruitsModel.attachLabRecruitsAlpha(model) ;
 		model = simplify(model) ;
-		
-		//System.out.println(">>> model: " + model) ;
-		
-		/*
-		// manually debugging the model:
-		
-		int k = 0;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		
-		GWTransition tr = new GWTransition(GWTransitionType.TRAVEL,"b0") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
+		return model ;
+	}
 
-		tr = new GWTransition(GWTransitionType.INTERACT,"b0") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canInteract(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
+	void printSolutionPath(List path) {
+		System.out.println(">>> solution path:") ;
+		int k = 0 ;
+		for (var step : path) {
+			var step_ = (Pair) step ;
+			System.out.print(">> step " + k + ":") ;
+			GWTransition tr = (GWTransition) step_.fst ;
+			if (tr!=null) System.out.print("" + tr.getId()) ;
+			System.out.println("") ;
+			k++ ;
+		}
+	}
 
-		tr = new GWTransition(GWTransitionType.TRAVEL,"d0") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
+	@Test
+	public void test_boundedSimpleMC() throws IOException {
 
-		
-		tr = new GWTransition(GWTransitionType.TRAVEL,"b1") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		tr = new GWTransition(GWTransitionType.INTERACT,"b1") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canInteract(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
+		GameWorldModel model = loadZenopus() ;
 
-		tr = new GWTransition(GWTransitionType.TRAVEL,"d1") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		tr = new GWTransition(GWTransitionType.TRAVEL,"b3") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		tr = new GWTransition(GWTransitionType.INTERACT,"b3") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canInteract(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-
-		tr = new GWTransition(GWTransitionType.TRAVEL,"d3") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		tr = new GWTransition(GWTransitionType.TRAVEL,"bJS") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		tr = new GWTransition(GWTransitionType.INTERACT,"bJS") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canInteract(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-
-		tr = new GWTransition(GWTransitionType.TRAVEL,"dJS") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-
-		tr = new GWTransition(GWTransitionType.TRAVEL,"bJE") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		tr = new GWTransition(GWTransitionType.INTERACT,"bJE") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canInteract(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-
-		tr = new GWTransition(GWTransitionType.TRAVEL,"dJE") ;
-		System.out.println("  TR:" + tr.type + "-->" + tr.target + ", allowed:" + model.canTravelTo(tr.target)) ;
-		model.execute(tr); k++ ;
-		System.out.println(">>> k=" + k + ", state:" + printState((GWState) model.history.get(0).fst)) ;
-		System.out.println(">>> available trans:" + printAvailableTransitions(model) + "\n") ;
-		
-		*/
-
-			 
-		//var mc = new BuchiModelChecker(model) ;
 		var mc = new BasicModelChecker(model) ;
-		mc.completeBoundedDSFMode = true ;
-		LTL<IExplorableState> solved = eventually(S -> {
+		//mc.completeBoundedDSFMode = true ;
+		Predicate<IExplorableState> g  = S -> {
+			GWState st = (GWState) S ;
+			return st.currentAgentLocation.equals("dFN1") ;
+		} ;
+
+		var time = System.currentTimeMillis() ;
+		var sequence = mc.find(g,40) ;
+		time = System.currentTimeMillis() - time ;
+		System.out.println(">>> time = " + time + " ms") ;
+		System.out.println(">>> " + mc.stats) ;
+		assertTrue(sequence != null) ;
+		assertTrue(sequence.path.size() > 0) ;
+		System.out.println(">>> solution: " + sequence.path.size()) ;
+		printSolutionPath(sequence.path) ;
+	}
+
+	@Test
+	public void test_boundedBuchiMC() throws IOException, InterruptedException {
+
+		GameWorldModel model = loadZenopus() ;
+
+		//System.out.println(">>> model: " + model) ;
+
+		var mc = new BuchiModelChecker(model) ;
+		//mc.completeBoundedDSFMode = true ;
+		LTL<IExplorableState> goal = eventually(S -> {
 			GWState st = (GWState) S ;
 			//boolean dFN0isOpen = (Boolean) st.objects.get("dFN0").properties.get(GameWorldModel.IS_OPEN_NAME) ;
 			//return dFN0isOpen && st.currentAgentLocation.equals("dFN0")  ;
-			return st.currentAgentLocation.equals("dJE")  ;
+			return st.currentAgentLocation.equals("dFN1")  ;
+		});
+
+		var time = System.currentTimeMillis() ;
+		var sequence = mc.find(goal,40) ;
+		time = System.currentTimeMillis() - time ;
+		System.out.println(">>> time = " + time + " ms") ;
+		System.out.println(">>> " + mc.stats) ;
+		assertTrue(sequence != null) ;
+		assertTrue(sequence.path.size() > 0) ;
+		printSolutionPath(sequence.path) ;
+	}
+
+	//@Test
+	public void test1() throws IOException, InterruptedException {
+		
+		GameWorldModel model = loadZenopus() ;
+
+		//System.out.println(">>> model: " + model) ;
+
+		var mc = new BuchiModelChecker(model) ;
+		//var mc = new BasicModelChecker(model) ;
+		mc.completeBoundedDSFMode = true ;
+		LTL<IExplorableState> goal = eventually(S -> {
+			GWState st = (GWState) S ;
+			//boolean dFN0isOpen = (Boolean) st.objects.get("dFN0").properties.get(GameWorldModel.IS_OPEN_NAME) ;
+			//return dFN0isOpen && st.currentAgentLocation.equals("dFN0")  ;
+			return st.currentAgentLocation.equals("dFC")  ;
 		});
 		Predicate<IExplorableState> g  = S -> {
 			GWState st = (GWState) S ;
 			return st.currentAgentLocation.equals("Finish") ;
 			//return st.currentAgentLocation.equals("dFC") ;
 		} ;
-		
-		
+
 		var time = System.currentTimeMillis() ;
-		
-		/*
-		Path<IExplorableState>[] outs = new Path[1] ;
-		Thread th = new Thread(() -> { outs[0] = mc.find(g,60) ;} ) ;
-		th.start();
-		Thread.sleep(1800000);
-		th.stop();
-		Path<IExplorableState> sequence = outs[0] ;
-		*/
-		
-		var sequence = mc.find(g,40) ;
+
+		var sequence = mc.find(goal,40) ;
+
+		//var sequence = mc.find(g,40) ;
 		//var sequence = mc.iterativeFind(S -> g.test(S),60) ;
 		
 		time = System.currentTimeMillis() - time ;
@@ -208,32 +168,7 @@ public class Test_BoundedMC {
 		assertTrue(sequence != null) ;
 		assertTrue(sequence.path.size() > 0) ;
 		System.out.println(">>> solution: " + sequence.path.size()) ;
-		int k = 0 ;
-		for (var step : sequence.path) {
-			System.out.print(">> step " + k + ":") ;
-			GWTransition tr = (GWTransition) step.fst ;
-			if (tr!=null) System.out.print("" + tr.getId()) ;
-			System.out.println("") ;
-			k++ ;	
-		}
-		/*
-		
-		for (k = model.history.size()-1; 0<=k; k--) {
-			int i = model.history.size() - (k + 1) ;
-			var tr = model.history.get(k).snd  ;
-			if (tr != null) {
-				var tr_ = (GWTransition) model.history.get(k).snd ;
-				System.out.println("     TR: "  + tr.type + " --> " + tr_.target) ;
-			}
-			var S = (GWState) model.history.get(k).fst ;
-			System.out.println(">>> i="+ i+ ": " + printState(S)) ;
-			var T = S.clone() ;
-			//System.out.println(">>> S = T: " + S.equals(T)) ;
-			//System.out.println(">>> hashes: " + S.hashCode() + " vs " + T.hashCode()) ;
-			
-			
-		}
-		*/
+		printSolutionPath(sequence.path) ;
 
 	}
 

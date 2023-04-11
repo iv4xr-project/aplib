@@ -373,11 +373,22 @@ public class BasicModelChecker {
 	 * Implement the 'lazy model checking' algorithm similar to what is used by the
 	 * SPIN model checker. It is actually a Depth First Search (DFS) algorithm. We
 	 * don't do double DSF because we only want to check state reachability.
+	 * Whereas in a normal DFS we never visit the same state twice, for BOUNDED model
+	 * checking we may need to visit the same state multiple times, to make sure that
+	 * the goal state can be found within the specified depth. Revisiting the state
+	 * is only allowed if we have more remaining depth than the previous visit (so, we
+	 * found a shorter path to the state).
 	 *
 	 * @param whatToFind     predicate characterizing the state whose reachability
 	 *                       is to be checked.
 	 * @param pathSoFar      the path that leads to the parameter state given below.
 	 * @param visitedStates  the set of all states visited so far by this DFS.
+	 *                       This is used to avoid visiting the same state twice.
+	 * @param depthInfo      if we are in 'completeBoundedDSFMode', then this maps every visited
+	 *                       state to the remaining depth (towards max-depth) at which it was
+	 *                       visited. If the state was visited multiple times, this keeps
+	 *                       tracks of the maximum remaining depth.
+	 *
 	 * @param state          the next state to explore.
 	 * @param remainingDepth speaks for itself :)
 	 * @return
