@@ -10,7 +10,7 @@ import eu.iv4xr.framework.extensions.ltl.ITransition;
  */
 public class GWTransition implements ITransition {
 	
-	public enum GWTransitionType { TRAVEL, INTERACT }
+	public enum GWTransitionType { TRAVEL, INTERACT, USE }
 	
 	public GWTransitionType type ;		
 	public String target ;
@@ -26,6 +26,7 @@ public class GWTransition implements ITransition {
 		switch(type) {
 		   case TRAVEL :   return "TVL:" + target ;
 		   case INTERACT : return "INT:" + target ;
+			case USE:	   return "USE:" + target ;
 		}
 		throw new IllegalArgumentException() ;
 	}

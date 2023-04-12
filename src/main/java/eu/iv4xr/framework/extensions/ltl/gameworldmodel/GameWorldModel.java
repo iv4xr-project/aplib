@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
@@ -65,6 +66,13 @@ public class GameWorldModel implements ITargetModel {
 	public GWState initialState ;
 	
 	public String name = "" ;
+
+	/**
+	 * If true, then the model supports the transition type "USE". If false, then
+	 * the model does not support the transition type "USE".
+	 * Default is false.
+	 */
+	public boolean supportUSE = false ;
 	
 	//public int count = 0 ;
 	
@@ -260,6 +268,9 @@ public class GameWorldModel implements ITargetModel {
 	 * state S to S', which would then yield the next state of the model.
 	 */
 	public BiFunction<String,Set<String>,Function<GWState,Void>> alpha ;
+
+	public Predicate<GWState> useCondition	 ;
+	public Function<GWState,Void> use_alpha ;
 	
 	public boolean StressingMode = false ;
 	
@@ -305,6 +316,22 @@ public class GameWorldModel implements ITargetModel {
 			return ;
 		}
 		throw new IllegalArgumentException("Interact with " +  targetId + " is not allowed.") ;
+	}
+
+	public boolean canUse(String targetId) {
+		if (useCondition == null) {
+			return false ;
+		}
+		return useCondition.test(getCurrentState()) ;
+	}
+
+	public void use(String targetId) {
+		if(canUse(targetId)) {
+			GWState newState = (GWState) getCurrentState().clone() ;
+			use_alpha.apply(newState) ;
+			GWTransition tr = new GWTransition(GWTransitionType.USE, targetId) ;
+			history.add(0,new Pair<GWState,GWTransition>(newState,tr)) ;
+		}
 	}
 
 	/**
@@ -363,7 +390,16 @@ public class GameWorldModel implements ITargetModel {
 			GWTransition tr = new GWTransition(GWTransitionType.INTERACT,state.currentAgentLocation) ;
 			choices.add(tr) ;
 		}
-		
+
+		if (supportUSE) {
+			for(var o : state.objects.values()) {
+				if (canUse(o.id)) {
+					GWTransition tr = new GWTransition(GWTransitionType.USE,o.id) ;
+					choices.add(tr) ;
+				}
+			}
+		}
+
 		//System.out.print(">>> state: " + state.currentAgentLocation + ", available trans:") ;
 		//for (var tr : choices) {
 		//	var tr_ = (GWTransition) tr ;
@@ -382,6 +418,7 @@ public class GameWorldModel implements ITargetModel {
 		switch(tr_.type) {
 			case TRAVEL   : travelTo(tr_.target) ; break ;
 			case INTERACT : interact(tr_.target) ; break ;
+			case USE      : use(tr_.target) ; break ;
 		}
 		
 	}
