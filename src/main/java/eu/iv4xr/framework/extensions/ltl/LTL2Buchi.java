@@ -3,6 +3,7 @@ package eu.iv4xr.framework.extensions.ltl;
 import static eu.iv4xr.framework.extensions.ltl.LTL.* ;
 
 import java.util.Arrays;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -110,13 +111,18 @@ public class LTL2Buchi {
 	public static <State> boolean isNotAtom(LTL<State> phi) {
 		return !(phi instanceof Now) ;
 	}
-	
+
+
+	static <State> Predicate<State> toPredicate(Function<State,Boolean> p) {
+		return S -> { var v = p.apply(S) ; return v != null && v ; } ;
+	}
+
 	/**
 	 * To recognize and destruct "now p". Returns p.
 	 */
 	public static <State> Predicate<State> isNow(LTL<State> phi) {
 		if(isNotAtom(phi)) return null ;
-		return ((Now<State>) phi).p ;
+		return S -> true == ((Now<State>) phi).p.apply(S) ;
 	}
 
 	/**
@@ -245,7 +251,7 @@ public class LTL2Buchi {
 		Now<State> phi_case1 = isNotNow(f) ;
 		if(phi_case1 != null) {
 			Now<State> f2 = new Now<>() ;
-			f2.p = S -> ! phi_case1.p.test(S) ;
+			f2.p = S -> true != phi_case1.p.apply(S) ;
 			if(phi_case1.name != null) {
 				f2.name = "~" + phi_case1.name ;
 			}
@@ -393,7 +399,7 @@ public class LTL2Buchi {
 			throw new IllegalArgumentException() ;
 		}
 		var ltl_ = (Now<State>) ltl ;
-		return ltl_.p ;
+		return S -> true == ltl_.p.apply(S) ;
 	}
 	
 	
@@ -408,7 +414,7 @@ public class LTL2Buchi {
 		.withInitialState(S)
 		.withNonOmegaAcceptance(A) ;
 		String tid = "t_" + S + "_" + A ;
-		B.withTransition(S,A, tid, atomName(phi), phi.p) ;
+		B.withTransition(S,A, tid, atomName(phi), T -> true == phi.p.apply(T)) ;
 		return new Pair<> (B, buchiNr+1) ;
 	}
 	
@@ -590,7 +596,7 @@ public class LTL2Buchi {
 		BF.initialState = BF.states.get(S) ;
 		Now<IExplorableState> p = (Now<IExplorableState>) phi.conjuncts[0] ;
 		var tId = "t_" + S + "_" +  oldInitialStateName ;
-		BF.withTransition(S,oldInitialStateName, tId, "" + p , p.p) ;
+		BF.withTransition(S,oldInitialStateName, tId, "" + p , T -> true == p.p.apply(T)) ;
 		return new Pair<>(BF,nextbuchiNr) ;
 	}
 	
@@ -806,7 +812,7 @@ public class LTL2Buchi {
 	
 	private static <State> LTL<State> andRewrite(Now<State> f1, Now<State> f2) {
 		String name = "(" + f1.name + ") && (" + f2.name + ")" ;
-		return now(name, S -> f1.p.test(S) && f2.p.test(S)) ;
+		return now(name, S -> (true == f1.p.apply(S)) && (true == f2.p.apply(S))) ;
 	}
 	
 	/**
