@@ -5,6 +5,7 @@ import static eu.iv4xr.framework.extensions.ltl.LTL.ltlNot;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -160,7 +161,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
     
     public static class Now<State> extends LTL<State> {
     	
-        public Predicate<State> p;
+        public Function<State,Boolean> p;
         public String name = null ;
         
         Now() { super() ; }
@@ -172,7 +173,10 @@ public abstract class LTL<State> extends SequencePredicate<State> {
 
         @Override
         void evalAtomSat(State state) {
-            if (p.test(state))
+            var v = p.apply(state);
+            if (v==null)
+                evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNKNOWN));
+            if (v)
                 evals.add(new LTL.LTLVerdictInfo(SATVerdict.SAT));
             else
                 evals.add(new LTL.LTLVerdictInfo(SATVerdict.UNSAT));
@@ -223,6 +227,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                     break;
                 case UNSAT:
                     psi.verdict = SATVerdict.SAT;
+                    break;
+                case UNKNOWN:
+                    psi.verdict = SATVerdict.UNKNOWN;
                     break;
                 }
             }
@@ -623,8 +630,7 @@ public abstract class LTL<State> extends SequencePredicate<State> {
             var psi = iterator.next();
             psi.verdict = SATVerdict.UNSAT; // always unsat at the last state
 
-            // calculate phi1 until phi2 holds on every sigma(k); we calculate this
-            // backwards for every state in the interval:
+            // we calculate this backwards :
             while (iterator.hasNext()) {
                 psi = iterator.next();
                 var q = iteratorPhi.next().verdict;
@@ -634,6 +640,9 @@ public abstract class LTL<State> extends SequencePredicate<State> {
                     break;
                 case UNSAT:
                     psi.verdict = SATVerdict.UNSAT;
+                    break;
+                case UNKNOWN:
+                    psi.verdict = SATVerdict.UNKNOWN;
                 }
             }
 
@@ -659,11 +668,17 @@ public abstract class LTL<State> extends SequencePredicate<State> {
         }
     }
 
-   
+
     /**
      * If p is a state-predicate, this construct the LTL formula "now(p)".
      */
 	public static <State>  Now<State> now(Predicate<State> p) {
+        var a = new Now<State>();
+        a.p = S -> p.test(S) ;
+        return a;
+    }
+
+    public static <State>  Now<State> now_(Function<State,Boolean> p) {
         var a = new Now<State>();
         a.p = p ;
         return a;
@@ -671,6 +686,12 @@ public abstract class LTL<State> extends SequencePredicate<State> {
 	
 	public static <State>  Now<State> now(String name, Predicate<State> p) {
         var a = now(p) ;
+        a.name = name ;
+        return a ;
+    }
+
+    public static <State>  Now<State> now_(String name, Function<State,Boolean> p) {
+        var a = now_(p) ;
         a.name = name ;
         return a ;
     }
