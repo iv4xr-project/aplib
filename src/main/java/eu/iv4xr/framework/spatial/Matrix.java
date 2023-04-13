@@ -1,6 +1,7 @@
 package eu.iv4xr.framework.spatial;
 
 
+
 public class Matrix implements Cloneable {
 
 	public float[][] matrix ; 
@@ -38,7 +39,10 @@ public class Matrix implements Cloneable {
 		}
 		return buf.toString() ;	
 	}
-	
+
+	/**
+	 * Add two matrices. The two matrices must have the same dimensions.
+	 */
 	public Matrix add(Matrix M2) {
 		Matrix M1 = (Matrix) clone() ;
 		for (int r=0; r<numOfRows; r++) {
@@ -48,7 +52,9 @@ public class Matrix implements Cloneable {
 		}
 		return M1 ;
 	}
-	
+	/**
+	 * Multiply this matrix with a 3D vector. This matrix must be a 3x3 matrix.
+	 */
 	public Vec3 apply(Vec3 p) {
 		Vec3 row0 = new Vec3(matrix[0][0],matrix[0][1],matrix[0][2]) ;
 		Vec3 row1 = new Vec3(matrix[1][0],matrix[1][1],matrix[1][2]) ;
