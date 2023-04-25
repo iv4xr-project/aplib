@@ -539,5 +539,13 @@ public class AplibEDSL {
 //        return FIRSTof(SEQ(lift(p), g1), g2);
 //    }
     
-
+    /**
+     * If this goal becomes current, it will evaluate the current state. If p holds,
+     * it will continue with the goal g1 as the goal to solve, and else g2 has to be
+     * solved.
+     */
+    public static <State> GoalStructure IFELSE2(GoalStructure p, GoalStructure g1, GoalStructure g2) {
+       // GoalStructure not_g = lift((State state) -> p.test(state));
+        return FIRSTof(SEQ(p, g1), g2);
+    }
 }

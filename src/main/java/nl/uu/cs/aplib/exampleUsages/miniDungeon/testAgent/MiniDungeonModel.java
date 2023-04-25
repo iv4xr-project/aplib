@@ -114,6 +114,25 @@ public class MiniDungeonModel {
 		}
 	}
 	
+	
+	public static void alphaUseFunction(String mainplayer, String i, GWState S) {
+		GWObject interacted = S.objects.get(i) ;
+		if (interacted.type.equals("HEALPOT") || interacted.type.equals("RAGEPOT")) {
+			GWObject P = S.objects.get(mainplayer) ;
+			int N = bagContent(P).size() ;
+			//System.out.println(">>> alpla interact scroll " + i) ;
+			// conservatively reject if the player already has an item:
+			if (N>=1) return ;
+			// else the scroll will be picked:
+			interacted.destroyed = true ;
+			putInBag(P,interacted.id) ;
+			var bag = bagContent(P) ;
+			//System.out.println(">>> alpla interact scroll " + i) ;
+			//System.out.println(">>> frodo bag: " + P.properties.get("bagslot1") + ", # in bags:" + bag.size()) ;
+			return ;
+		}
+	}
+	
 	static boolean isShrineId(String id) {
 		return id.startsWith("SM") || id.startsWith("SS") || id.startsWith("SI") ;
 	}

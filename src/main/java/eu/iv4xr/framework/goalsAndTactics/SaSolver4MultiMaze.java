@@ -11,6 +11,7 @@ import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
+import eu.iv4xr.framework.spatial.meshes.Face;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLibExtended;
@@ -70,7 +71,7 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
  *
  * @param <NavgraphNode>
  */
-public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
+public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	// some internal variables:
 	
@@ -142,7 +143,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	
 	
-	public Sa3Solver3() { super() ; }
+	public SaSolver4MultiMaze() { super() ; }
 	
 	/**
 	 * A constructor for SA2.
@@ -155,7 +156,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 * @param explorationExhausted
 	 * @param gExploring
 	 */
-	public Sa3Solver3(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
+	public SaSolver4MultiMaze(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
 			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
 			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
 			Function<String, GoalStructure> gCandidateIsInteracted, 
@@ -267,7 +268,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 * the final-target entity is).
 	 */
 	WorldEntity selectBlocker(Iv4xrAgentState S) {
-		//System.out.println(">>> invoking selectNode()") ;
+		System.out.println(">>> invoking selectBlocker()") ;
 		
 		List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
 				.filter(e -> blockersSelector.test(e)
@@ -301,14 +302,14 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 */	
 	WorldEntity selectEnabler(Iv4xrAgentState S, WorldEntity target) {
 		
-		//System.out.println("### invoking selectEnabler " + target.id) ;
+		System.out.println("### invoking selectEnabler " + target.id) ;
 		
 		// check first if the model has a solution:
 		List<WorldEntity> candidates = getConnectedEnablersFromBelief.apply(target.id,S).stream()
 		   . map(id -> S.worldmodel.elements.get(id)) 
 		   . filter(e -> reachabilityChecker.apply(S,e))
 		   .collect(Collectors.toList());
-		
+		System.out.println("### invoking selectEnabler inja "  + candidates.isEmpty() );
 		if (candidates.isEmpty()) {
 			// if it is empty get candidates from untried enablers:
 			candidates = untriedEnablers(S,target.id).stream()
@@ -329,23 +330,43 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		if (policy == Policy.NEAREST_TO_AGENT || myHeuristicLocation == null) {
 			myHeuristicLocation = S.worldmodel.position ;
 		}
+		System.out.println("### invoking selectEnabler inja2 " );
 		//System.out.println(">>>    heuristic loc: " + myHeuristicLocation) ;
 		return getClosestsElement(candidates,myHeuristicLocation) ;
 	}
 	
 	// dynamic goal 
-	GoalStructure lowerleverSolver(String targetEntity,
-			Vec3 heuristicLocation,
-			Predicate<Iv4xrAgentState> psi) {
-				
-		  System.out.println("=== invoking low level search, target: " + targetEntity) ;
+	GoalStructure lowerleverSolver(MyAgentStateExtended state) {
+		System.out.println("=== invoking low level search, target: lowerleverSolver");
+	//	String targetedEntity =  state.worldmodel != null ? state.worldmodel.elements.values().stream().filter( s ->
+		//  	s.type.contains(EntityType.SHRINE.toString()) &&  !(boolean) s.properties.get("cleansed")).collect(Collectors.toList()).get(0).id : "empty"; 
+		
+		
+		var  targetedEntityS = state.worldmodel.elements.values().stream().filter( s ->
+			  	s.type.contains(EntityType.SHRINE.toString()) &&  !(boolean) s.properties.get("cleansed")).collect(Collectors.toList());
+		
+		String targetedEntity = !targetedEntityS.isEmpty() ? targetedEntityS.get(0).id : "empty";
+		
+		if(!targetedEntityS.isEmpty())System.out.println("propertiy of targeted id +" + targetedEntityS.get(0).properties.toString());
+		
+		Predicate<Iv4xrAgentState> psi  = S -> {
+			WorldEntity blocker = targetedEntityS.get(0) ;
+			WorldEntity blockerId = S.worldmodel.getElement(blocker.id) ;
+			var clean = (boolean) blockerId.properties.get("cleansed") ;
+			System.out.println("### " + blocker.id + " open: " + clean) ;
+			return clean;
+		};
+
+		System.out.println("=== invoking low level search, target: " + targetedEntity) ;
+  
 		  
 		  GoalStructure search = 
 		  // this "search" will be put as the body of an enclosing REPEAT-loop:
 		  DEPLOY(agent, (Iv4xrAgentState S) -> {
-				  WorldEntity target = S.worldmodel.elements.get(targetEntity) ;
-				  WorldEntity enabler = selectEnabler(S,target) ;				  
 				  
+				  WorldEntity target = S.worldmodel.elements.get(targetedEntity) ;
+				//  WorldEntity enabler = selectEnabler(S,target) ;				  
+				  WorldEntity enabler = selectEnabler(S,target) ;				  				  
 				  if (enabler == null) {
 					  System.out.println("    cannot find any candidate enabler!") ;
 					  // should not happen...
@@ -353,32 +374,31 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					  return SUCCESS() ;
 				  }				  
 
-				  System.out.println("    enabler to try: " + enabler.id) ;
+				  System.out.println(" enabler to try: " + enabler.id) ;
 
-				  Set<String> previouslyTriedEnablers = triedEnablers.get(targetEntity) ;
+				  Set<String> previouslyTriedEnablers = triedEnablers.get(targetedEntity) ;
 				  if (previouslyTriedEnablers == null) {
 					  previouslyTriedEnablers = new HashSet<String>() ;
-					  triedEnablers.put(targetEntity,previouslyTriedEnablers) ;
+					  triedEnablers.put(targetedEntity,previouslyTriedEnablers) ;
 				  }
 				  previouslyTriedEnablers.add(enabler.id) ;
 				  
-				  System.out.println("=== low-level search of " + targetEntity
+				  System.out.println("=== low-level search of " + targetedEntity
 						  + " invokes interact " + enabler.id) ;
 				  
 				  return SEQ(gCandidateIsInteracted.apply(enabler.id),
 						     REPEAT(
-						       FIRSTof(gTargetIsRefreshed.apply(targetEntity),
+						       FIRSTof(gTargetIsRefreshed.apply(targetedEntity),
 						    		   // un-lock mechanism if the above get the agent locked:
-						    		   unLock(enabler.id,targetEntity))
+						    		   unLock(enabler.id,targetedEntity))
 						    	   ),
 						     lift(psi) // check psi
 						     ) ; 
 			  }) ;
-		  
-		return SEQ(gTargetIsRefreshed.apply(targetEntity), 
+		  System.out.println("inja miadesh");
+		return SEQ(gTargetIsRefreshed.apply(targetedEntity), 
 				   FIRSTof(lift(psi),
-				           SEQ(REPEAT(search),
-				    	       lift(psi)))) ;
+				           SEQ(REPEAT(search),  lift(psi) , gCandidateIsInteracted.apply(targetedEntity)))) ;
 	}
 	
 	/**
@@ -540,7 +560,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 
 		this.triedEnablers.clear();
 		
-		var MyAgentStateExtended = new MyAgentStateExtended();
+		//var MyAgentStateExtended = new MyAgentStateExtended();
 		System.out.println("///////toye solver " + this.finalTargetId);
 		GoalStructure search = 
 			// this "search" will be put as the body of an enclosing REPEAT-loop:
@@ -550,14 +570,26 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 		 return 	
 				 						SEQ(			
 				 						//explore to find new items	
-				 					 	WHILEDO(
-				 					 			(MyAgentState x) ->  GoalLibExtended.checkExplore(x),
-				 					 			GoalLibExtended.findNodes()
-				 								),				 					 					 					 	
+				 					 	FIRSTof(
+				 					 			IF(
+						 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x),
+						 					 			//GoalLibExtended.test(),
+						 					 			lowerleverSolver((MyAgentStateExtended ) S ),
+						 					 			FAIL()
+						 								),
+				 								WHILEDO(
+					 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkExplore(x),
+					 					 			GoalLibExtended.findNodes()
+				 								)
+				 								
+				 								//IF((MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x), lowerleverSolver(MyAgentStateExtended),FAIL()) )
+				 						
+				 								)	 					 	
+				 					 	,				 					 					 					 	
 				 					 	
 										  IF(
 											  (MyAgentState x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
-											  SEQ (GoalLibExtended.survivalHeuristic(MyAgentStateExtended), //this will include selecting, navigating and use it	  
+											  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S), //this will include selecting, navigating and use it	  
 											  GoalLibExtended.selectItem(tId) ),
 											  GoalLibExtended.selectItem(tId)
 										  ),
@@ -565,14 +597,14 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 					 	
 				 					 	//GoalLibExtended.selectItem(tId), //select item based on the observation, if the target is seen it will be selected
 				 					 	//navigate to the selected item
-				 					 	GoalLibExtended.entityInCloseRange(MyAgentStateExtended),	//If it got stuck use the unblocking strategy			 					 	
+				 					 	GoalLibExtended.entityInCloseRange((MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
 				 					 	//IFELSE2(GoalLibExtended.entityInCloseRange(MyAgentStateExtended),SUCCESS(),GoalLibExtended.unstuck(MyAgentStateExtended)),
 				 					 	
 				 					 	//if the target is selected, then it can be pick up and then decide to use or not.
 				 					 	IF(
 				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId),					 	
-				 					 		SEQ(GoalLibExtended.pickUpItem(MyAgentStateExtended,tId),
-					 					 	GoalLibExtended.useItem(MyAgentStateExtended)),
+				 					 		SEQ(GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
+					 					 	GoalLibExtended.useItem((MyAgentStateExtended) S)),
 				 					 		FAIL()
 				 					 	)
 				 						)

@@ -3,6 +3,7 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 import static nl.uu.cs.aplib.AplibEDSL.action;
 
 import java.util.List;
+import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -114,12 +115,13 @@ public class TacticLibExtended extends TacticLib{
                 	
                 	List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
         					.filter(e ->
-        					! S.triedItems.contains(e)
-        					&& (e.id.contains("H0_")
-        					|| e.id.contains("R0_")
-        					|| e.id.contains("S0_")
-        					|| e.id.contains("SH0_"))// this should be shrine
-        							)
+        					! S.triedItems.contains(e.id)
+        					&& (
+        					e.type.equals(""+EntityType.HEALPOT)
+        					|| e.type.equals("" + EntityType.RAGEPOT)
+        					|| e.type.equals("" + EntityType.SCROLL)
+        					|| e.type.equals("" + EntityType.SHRINE)
+        							))
         					.collect(Collectors.toList()) ;
                 	
                 	//print all observed items
@@ -182,6 +184,7 @@ public class TacticLibExtended extends TacticLib{
                 		System.out.println("there is no entity in the new observation!! "); 
                 	}else {
                 		S.selectedItem = candidates.get(0);
+                		S.triedItems.add(candidates.get(0).id);
                 		}
                 	
                 	
@@ -190,7 +193,7 @@ public class TacticLibExtended extends TacticLib{
 
 	}
 	
-	public static Tactic selectItem( Pair target) {	
+	public static Tactic  selectItem( Pair target) {	
 		return action("select item based on the heuristics")
                 . do1((MyAgentStateExtended S)-> {
 		//select items which is observed and it is not selected before
@@ -199,14 +202,16 @@ public class TacticLibExtended extends TacticLib{
                 	
                 	List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
         					.filter(e ->
-        					! S.triedItems.contains(e)
-        					&& (e.id.contains("H0_")
-        					|| e.id.contains("R0_")
-        					|| e.id.contains("S0_")
-        					|| e.id.contains("SH0_"))// this should be shrine
-        							)
+        					! S.triedItems.contains(e.id)
+        					&& (e.type.equals(""+EntityType.HEALPOT)
+                					|| e.type.equals("" + EntityType.RAGEPOT)
+                					|| e.type.equals("" + EntityType.SCROLL)
+                					|| e.type.equals("" + EntityType.SHRINE)
+        					))
         					.collect(Collectors.toList()) ;
-            //get the player 
+            
+                	
+                	//get the player 
             var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
             //get the max bag size to control the selection
             int maxBagSize = (int) player.properties.get("maxBagSize") ;
@@ -265,6 +270,11 @@ public class TacticLibExtended extends TacticLib{
 				// just choose the closest one
 				System.out.println("The item is not found, select nearest item to the agent position! ");
 				selectedItem = getClosestsElement(candidates, S.worldmodel.position) ;
+				
+				//System.out.println("The item is not found, select an item randomly! ");
+				//selectedItem = getRandomElement(candidates);
+				
+				
 				selectedItemId = selectedItem.id;
 				System.out.println("Add item to the list of tried items! " + selectedItemId );
 				S.selectedItem = selectedItem;
@@ -293,6 +303,16 @@ public class TacticLibExtended extends TacticLib{
 		}
 		System.out.println("Selected closest item: " + closest);
 		return closest ;
+	}
+	
+	
+	
+	private static WorldEntity getRandomElement(List<WorldEntity> candidates) {
+		
+		Random rand = new Random();
+		WorldEntity randomElement = candidates.get(rand.nextInt(candidates.size()));
+		System.out.println("Selected a random item: " + randomElement);
+		return randomElement;
 	}
 	
 	/**
@@ -329,12 +349,13 @@ public class TacticLibExtended extends TacticLib{
 					}
 					
 					Tile target = Utils.toTile(e.position) ;
+					//System.out.println("###### nav-action target id " + targetId + target  + "agent pos: " + agentPos) ;
 					if (Utils.mazeId(a)==Utils.mazeId(e) && Utils.adjacent(agentPos,target)) {
 						Tile[] nextTile = {} ;
 						return nextTile ;
 					}
 					
-					System.out.println("###### nav-action " + S.worldmodel.agentId) ;
+					//System.out.println("###### nav-action " + S.worldmodel.agentId) ;
 					List<Pair<Integer,Tile>> path = null ;
 					if (tacticLib.delayPathReplan) {
 						if (memoryCountdown[0] <= 0) {
@@ -413,10 +434,7 @@ public class TacticLibExtended extends TacticLib{
 						int maxBagSize = (int) player.properties.get("maxBagSize") ;
 			            int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 						int freeSpace = maxBagSize - bagSpaceUsed ;
-			            System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));
-						
-			            //Change the pickedUp property of the item to know this is picked up
-			            e.properties.put("pickedUp", true);
+			            System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));		            
 			            
 			            return target ;
 					}
@@ -471,7 +489,7 @@ public class TacticLibExtended extends TacticLib{
 		boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
 		List<WorldEntity> candidatesHealPot = S.worldmodel.elements.values().stream()
 				.filter(e ->
-				! S.triedItems.contains(e)
+				! S.triedItems.contains(e.id)
 				&& e.id.contains("H0_")
 						)
 				.collect(Collectors.toList()) ;
@@ -481,5 +499,14 @@ public class TacticLibExtended extends TacticLib{
 		
 		return true;
 	} ;
+	
+	
+	public static Tactic test() {
+		return action("test")
+                . do1((MyAgentStateExtended S)-> {
+                    System.out.println("this is just a test!! "); 
+                	return true;
+                }).lift();
+	} 
 	
 }

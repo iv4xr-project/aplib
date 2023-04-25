@@ -19,6 +19,7 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.Sa3Solver3;
+import eu.iv4xr.framework.goalsAndTactics.SaSolver4MultiMaze;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
@@ -44,10 +45,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.Pair;
 
-public class Test_SA3 {
+public class Test_MultiMaze {
 
 	boolean withGraphics = true;
-	boolean supressLogging = true;
+	boolean supressLogging = false;
 	Pair<Integer, Tile> covertToMDLocation(Vec3 p) {
 		int mapNr = Math.round(p.y);
 		Tile t = new Tile(Math.round(p.x), Math.round(p.z));
@@ -81,7 +82,7 @@ public class Test_SA3 {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
-		config.numberOfMaze = 1;
+		config.numberOfMaze = 3;
 		config.randomSeed = 79371;
 		config.enableSmeagol = false;
 		// change the Ferado maxBagSize to 1, it is in the Entity.java should make it
@@ -111,17 +112,18 @@ public class Test_SA3 {
 			Logging.getAPLIBlogger().setLevel(Level.OFF);
 		}
 
-		var sa3Solver = new Sa3Solver3<Void>((S, e) -> Utils.isReachable((MyAgentState) S, e),
+		var sa3Solver = new SaSolver4MultiMaze<Void>((S, e) -> Utils.isReachable((MyAgentState) S, e),
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId),
 						goalLib.entityInteracted(eId)),
-				S -> tacticLib.explorationExhausted(S), dummy -> exhaustiveExplore(agent, goalLib, tacticLib));
+				S -> tacticLib.explorationExhausted(S), 
+				dummy -> exhaustiveExplore(agent, goalLib, tacticLib));
 
 		// Goal: find a shrine and cleanse it:
 		// Pair targetItemOrShrine = new Pair("type","HEALPOT") ;
-		Pair targetItemOrShrine = new Pair("id", "H0_6");
+		Pair targetItemOrShrine = new Pair("id", "H2_3");
 		
 		var G = sa3Solver.solver(agent, targetItemOrShrine, new Vec3(20, 1, 1),
 				e -> e.type.equals("" + EntityType.SHRINE), e -> e.type.equals("" + EntityType.SCROLL),

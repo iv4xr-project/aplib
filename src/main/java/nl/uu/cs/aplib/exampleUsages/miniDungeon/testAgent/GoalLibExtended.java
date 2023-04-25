@@ -1,9 +1,11 @@
 package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.AplibEDSL.ABORT;
+import static nl.uu.cs.aplib.AplibEDSL.DEPLOY;
 import static nl.uu.cs.aplib.AplibEDSL.FAIL;
 import static nl.uu.cs.aplib.AplibEDSL.FIRSTof;
 import static nl.uu.cs.aplib.AplibEDSL.IF;
+import static nl.uu.cs.aplib.AplibEDSL.REPEAT;
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import static nl.uu.cs.aplib.AplibEDSL.SUCCESS;
 import static nl.uu.cs.aplib.AplibEDSL.WHILE;
@@ -17,12 +19,16 @@ import static nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils.toTile;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
+import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
+import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.mainConcepts.Action;
 import nl.uu.cs.aplib.mainConcepts.Goal;
@@ -33,11 +39,13 @@ import nl.uu.cs.aplib.utils.Pair;
 
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 
 public class GoalLibExtended  extends GoalLib{
 
-	
+	public static TacticLib tacticLib = new TacticLib() ;
+
 	/**
 	 * Explore the environment when there is no entity in the agent visibility
 	 * range, until it sees a new entity
@@ -132,7 +140,9 @@ public class GoalLibExtended  extends GoalLib{
 		
 				// Randomly decide to use or not to use
 //				Random random = new Random();
-//			    return  random.nextBoolean();
+//				var x  = random.nextBoolean();
+//				System.out.println("***use heuristic: randomly decide! " + x);
+//			    return  x;
 			    
 			  
 			    
@@ -182,9 +192,7 @@ public class GoalLibExtended  extends GoalLib{
 				
 		var goal = goal("check the entities to find the shrine").toSolve((Boolean e) -> {
 			return e;
-		}
-		)
-		.withTactic(SEQ(checkShrine.lift(),ABORT()));
+		}).withTactic(SEQ(checkShrine.lift(),ABORT()));
 		
 		
 		var g = SEQ( 
@@ -304,7 +312,7 @@ public class GoalLibExtended  extends GoalLib{
 	
 	}
 	
-	public GoalStructure makeBagEmpty(MyAgentStateExtended b) {
+	public static GoalStructure makeBagEmpty(MyAgentStateExtended b) {
 		// when the target is a scroll, and when the bag is full, this action
 				// will use a heal or rage pot to create space. This action
 				// always return a null proposal, as it is not meant to solve
@@ -354,15 +362,43 @@ public class GoalLibExtended  extends GoalLib{
 				return G.lift();
 	}
 	
+	/**
+	 * Check if there is unexplored area
+	 * @param S
+	 * @return
+	 */
 	public static boolean checkExplore(MyAgentState S) {
 		var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 		Tile agentPos = Utils.toTile(S.worldmodel.position) ;
 		var path  = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y));
+		
 		System.out.println("check Explore: " + path);
 		if(path != null) return true;
 		return false;		
 	}
 	
+	
+	/**
+	 * Check if there is unexplored area Or a uncleansed shrine is seen, which means we have multilayer
+	 * @param S
+	 * @return
+	 */
+	public static boolean checkMaze(MyAgentStateExtended S) {
+		System.out.println("Check maze!"); 
+		var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
+		var shrine = S.worldmodel.elements.values().stream().filter( s ->
+	  	s.type.contains(EntityType.SHRINE.toString()) ).collect(Collectors.toList());
+		
+		if(!shrine.isEmpty()) {
+			  System.out.println("Shrine to cleanse is found!"); 
+			  var clean = shrine.stream().filter(e -> !(boolean) e.properties.get("cleansed")).findFirst();
+			  if(!clean.isEmpty()) {
+				  System.out.println("Shrine is cleansed!" + clean); 
+				  return true;
+			  }
+		}	
+		return false;		
+	}
 	
 	
 	/**
@@ -375,6 +411,7 @@ public class GoalLibExtended  extends GoalLib{
 		System.out.println("Check if the target is selected!");
 		WorldEntity selectedItem = S.selectedItem;
 		String targetIDOrType = p.snd.toString();
+		
 		//check if it is currently selected
 		if(p.fst.toString().contains("id")) 
 		{
@@ -388,13 +425,9 @@ public class GoalLibExtended  extends GoalLib{
 				return true;}			
 		}		
 		//check if it is in the bag
-     	List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
-				.filter(e ->	
-				e.id.contains(targetIDOrType)				
-						)
-				.collect(Collectors.toList()) ;
-     	if(candidates.size() > 0) 
-     		{
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId);
+     	var bagItems = player.getPreviousState().properties.get("itemsInBag").toString().contains(targetIDOrType);
+     	if(bagItems) {
      		System.out.println("target is in the bag!");
      		return true;
      		}
@@ -420,9 +453,8 @@ public class GoalLibExtended  extends GoalLib{
 					})
 					.withTactic(
 					   FIRSTof(
-							   //@Todo //targetId that it is sent here is no use// just to keep the structure
 							   TacticLibExtended.navigateToTac(),
-							   //Abort().on_(S -> { System.out.println("### about to abort") ; return false;}).lift(), 
+							   TacticLibExtended.newExplore(),
 					   		   ABORT()) 
 					  )
 					;
@@ -452,4 +484,29 @@ public class GoalLibExtended  extends GoalLib{
 		return SEQ(findItem("HEALPOT"),
 				entityInCloseRange(S),entityInteractedNew(), useHealOrRagePot());
 	}
+	
+	
+	
+	public static GoalStructure test(MyAgentStateExtended state) {
+
+		var G = goal("test") 
+				.toSolve((Boolean proposal) -> {	
+					
+					System.out.println(">>> checking goal test") ;
+					return true; 
+				})
+				.withTactic(
+				   FIRSTof(
+						   
+						   TacticLibExtended.test(),
+				   		   ABORT()) 
+				  )
+				;
+		
+		return G.lift() ;	
+
+	}
+	
+
+
 }

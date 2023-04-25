@@ -6,9 +6,14 @@ tmp/*
 /.settings/
 /.idea/
 /mylog*.txt
+mylog.txt.*
+mylog*.txt.*
+logFile
+logMultiLayer
 .project
 .classpath
 .idea/
+pitresults/
 *.iml
 **/.DS_Store
 __pycache__/

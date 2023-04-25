@@ -41,8 +41,8 @@ public class Specifications {
 		var ps1  = eventually(p1);
 		Predicate<SimpleState> p2 = (S -> (int) ((MyAgentState) S).worldmodel().val("ragepotsInBag") < (int) ((MyAgentState) S).worldmodel().before("ragepotsInBag") ) ;
 		var ps2  = eventually(p2);
-	    return ps1;
-		//return  ps1.implies(ps2);
+	    ///return ps1;
+		return  ps1.implies(ps2);
 	}
 	
 	
@@ -54,9 +54,15 @@ public class Specifications {
 		var ps1  = eventually(p1);
 		Predicate<SimpleState> p2 = (S -> (int) ((MyAgentState) S).worldmodel().val("scrollsInBag") < (int) ((MyAgentState) S).worldmodel().before("scrollsInBag") ) ;
 		var ps2  = eventually(p2);
-	    return ps1;
-		//return  ps1.implies(ps2);
+	    //return ps1;
+		return  ps1.implies(ps2);
 	}
+	
+	
+	
+	
+	
+	
 	
 	/*
 	 * General Specifications
@@ -86,7 +92,13 @@ public class Specifications {
 		return always(p4) ;
 	}
 	
-	
+	public LTL<SimpleState> spec5() {
+		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
+		var ps1  = eventually(p1) ;
+		Predicate<SimpleState> p2 = (S -> (int) ((MyAgentState) S).worldmodel().val("hp") ==  (int) ((MyAgentState) S).worldmodel().before("hp")) ;
+		var ps2 = eventually(p2);
+		return ps1.implies(ps2);
+	}
 	
 	
 	

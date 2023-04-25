@@ -270,7 +270,7 @@ public class GameWorldModel implements ITargetModel {
 	public BiFunction<String,Set<String>,Function<GWState,Void>> alpha ;
 
 	public Predicate<GWState> useCondition	 ;
-	public Function<GWState,Void> use_alpha ;
+	public BiFunction<GWState, String,Void> use_alpha ;
 	
 	public boolean StressingMode = false ;
 	
@@ -328,7 +328,7 @@ public class GameWorldModel implements ITargetModel {
 	public void use(String targetId) {
 		if(canUse(targetId)) {
 			GWState newState = (GWState) getCurrentState().clone() ;
-			use_alpha.apply(newState) ;
+			use_alpha.apply(newState,targetId) ;
 			GWTransition tr = new GWTransition(GWTransitionType.USE, targetId) ;
 			history.add(0,new Pair<GWState,GWTransition>(newState,tr)) ;
 		}
