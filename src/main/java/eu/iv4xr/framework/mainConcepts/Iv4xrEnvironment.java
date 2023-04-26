@@ -20,7 +20,7 @@ import nl.uu.cs.aplib.mainConcepts.Environment;
  * @author Wish
  *
  */
-public class Iv4xrEnvironment extends Environment  {
+public class Iv4xrEnvironment<P extends IPlayer, WE extends IWorldEntity> extends Environment  {
 	
 	
 	/**
@@ -56,7 +56,7 @@ public class Iv4xrEnvironment extends Environment  {
 	 *         observes.
 	 */
     @Override
-    public WorldModel observe(String agentId) {
+    public WorldModel<P, WE> observe(String agentId) {
     	throw new UnsupportedOperationException();
     }
 

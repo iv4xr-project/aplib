@@ -2,6 +2,7 @@ package eu.iv4xr.framework.mainConcepts;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.spatial.Vec3;
 
@@ -10,24 +11,12 @@ import eu.iv4xr.framework.spatial.Vec3;
  * structurally populated by in-world entities. This fragment can represent what
  * an agent currently sees. We can also use the same representation to represent
  * the agent's belief on how the world is structured; this may incorporate its
- * past knowledge which may no longer be up to date.
+ * past knowledge which may no longer be up-to-date.
  */
-public class WorldModel implements Serializable {
-
+public class WorldModel<P extends IPlayer, WE extends IWorldEntity> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	/**
-     * The id of the agent that owns this World Model.
-     */
-    public String agentId;
-
-    /**
-     * The position of the agent that owns this World Model.
-     */
-    public Vec3 position; // agent's position
-    public Vec3 velocity; // agent's velocity
-    public Vec3 extent; // agent's dimension (x,y,z size/2)
-
+    public PlayerRecord player;
     /**
      * Represent the last time this WorldModel is updated with fresh sampling. Note
      * that sampling may only update the state of some of the entities, rather than
@@ -38,11 +27,42 @@ public class WorldModel implements Serializable {
     /**
      * In-world entities that populate this World Model.
      */
-    public Map<String, WorldEntity> elements = new HashMap<>();
+    public class WorldEntityRecord {
+        public WE current = null;
+        public WE previous = null;
 
+        public WorldEntityRecord(WE current, WE previous) {
+            this.current = current;
+            this.previous = previous;
+        }
+
+        public WorldEntityRecord(WE current) {
+            this.current = current;
+        }
+    }
+
+    public class PlayerRecord {
+        public P current = null;
+        public P previous = null;
+
+        public PlayerRecord(P current, P previous) {
+            this.current = current;
+            this.previous = previous;
+        }
+
+        public PlayerRecord(P current) {
+            this.current = current;
+        }
+    }
+
+    public Map<String, WorldEntityRecord> elements = new HashMap<>();
+    
     public WorldModel() {
     }
 
+    public List<WE> getCurrentElements() {
+    	return elements.values().stream().map(e -> e.current).filter(e -> e != null).collect(Collectors.toList());
+    }
     /**
      * Increase the time stamp by one unit.
      */
@@ -54,8 +74,31 @@ public class WorldModel implements Serializable {
      * Search a top-level entity with the given id. Note that this method does NOT
      * search recursively in the set of sub-entities.
      */
-    public WorldEntity getElement(String id) {
-        return elements.get(id);
+    public WE getElement(String id) {
+    	if (!elements.containsKey(id)) {
+    		return null;
+    	}
+        return elements.get(id).current;
+    }
+
+    public WE getBeforeElement(String id) {
+    	if (!elements.containsKey(id)) {
+    		return null;
+    	}
+        return elements.get(id).previous;
+    }
+
+    public void putElement(String id, WorldEntityRecord worldEntityRecord) {
+        elements.put(id, worldEntityRecord);
+    }
+    
+    public void removeElement(String id) {
+    	WE element = getElement(id);
+    	if (element == null) {
+    		return;
+    	}
+    	
+    	putElement(id, new WorldEntityRecord(null, element));
     }
     
     /**
@@ -64,36 +107,14 @@ public class WorldModel implements Serializable {
     public boolean contains(String id) {
     	return elements.get(id) != null ;
     }
-    
-    /**
-     * Return the value of the given property of an entity e with the given
-     * entity id. Return null if the property does not exist in e.
-     * 
-     * <p>The method requires e to exists in this WorldModel. 
-     */
-    public Serializable val(String eId, String propertyName) {
-        return elements.get(eId).getProperty(propertyName) ;
-    }
-    
-    /**
-     * Return the value of the given property of an entity a that represents
-     * the agent that owns this WorldModel. Return null if the property 
-     * does not exist in e.
-     * 
-     * <p>The method requires the agent to have its own WorldEntity representation
-     * in this WorldModel.
-     */
-    public Serializable val(String propertyName) {
-        return elements.get(this.agentId).getProperty(propertyName) ;
-    }
-    
+
     /**
      * Checks if an entity is "recent". The entity is recent if it is just recently
      * observed by the agent. Technically, it is recent if it has the same timestamp 
      * and this WorldModel.
      */
     public boolean recent(String eId) {
-    	return elements.get(eId).timestamp == this.timestamp ;
+    	return recent(getElement(eId)) ;
     }
     
     /**
@@ -101,71 +122,21 @@ public class WorldModel implements Serializable {
      * observed by the agent. Technically, it is recent if it has the same timestamp 
      * and this WorldModel.
      */
-    public boolean recent(WorldEntity e) {
-    	return e.timestamp == this.timestamp ;
+    public boolean recent(WE e) {
+    	return e.getTimestamp() == this.timestamp ;
     }
-    
-    /**
-     * Get the value of a property of a WorldEntity e at the sampling time <b>
-     * before</b> its e.timestamp. Returns null if e does not have the property,
-     * or if has no such "before" state.
-     * 
-     * <p>The method requires e to exist in this WorldModel. 
-     */
-    public Serializable before(WorldEntity e, String propertyName) {
-    	if (e.lastStutterTimestamp >= 0) {
-    		// then the state at the previuous sampling time must be the same
-    		// as the current state:
-    		return e.getProperty(propertyName) ;
-    	}
-    	// else, case-1: e changes when it was sampled at e.timestamp
-    	WorldEntity prev = e.getPreviousState() ;
-    	if (prev != null) {
-    		return prev.properties.get(propertyName) ;
-    	}
-    	// or case-2: e has no previous state
-    	return null ;
-    }
-    
-    /**
-     * Let e be the WorldEntity with the given id. This method
-     * returns the value of a property of a WorldEntity e at the sampling time <b>
-     * before</b> its e.timestamp. It returns null if e does not have the property,
-     * or if has no such "before" state.
-     * 
-     * <p>The method requires e to exist in this WorldModel. 
-     */
-    public Serializable before(String eId, String propertyName) {
-    	return before(elements.get(eId),propertyName) ;
-    }
-    
-    public WorldEntity before(WorldEntity e) {
-    	if (e.lastStutterTimestamp >= 0) {
-    		// then the state at the previuous sampling time must be the same
+
+    public WE before(WE e) {
+    	if (e.getLastStutterTimestamp() >= 0) {
+    		// then the state at the previous sampling time must be the same
     		// as the current state:
     		return e ;
     	}
     	// else, case-1: e changes when it was sampled at e.timestamp
-    	WorldEntity prev = e.getPreviousState() ;
-    	if (prev != null) {
-    		return prev ;
-    	}
+      return getBeforeElement(e.getId());
     	// or case-2: e has no previous state
-    	return null ;
     }
-    
-    /**
-     * Let a be the WorldEntity representing the agent that owns this WorldModel.
-     * This method returns the value of a property of a at the sampling time <b>
-     * before</b> its a.timestamp. It Returns null if a does not have the property,
-     * or if has no such "before" state.
-     * 
-     * <p>The method requires a to exist in this WorldModel. 
-     */
-    public Serializable before(String propertyName) {
-    	return before(elements.get(this.agentId),propertyName) ;
-    }
-    
+
     /**
      * Return the position of the agent at the last sampling time.
      * 
@@ -173,16 +144,16 @@ public class WorldModel implements Serializable {
      * WorldEntity in this WorldModel.
      */
     public Vec3 positionBefore() {
-    	WorldEntity a = elements.get(this.agentId) ;
-    	if (a.lastStutterTimestamp >= 0) {
-    		// then the state at the previuous sampling time must be the same
+    	P a = player.current;
+    	if (a.getLastStutterTimestamp() >= 0) {
+    		// then the state at the previous sampling time must be the same
     		// as the current state:
-    		return a.position ;
+    		return a.getPosition() ;
     	}
     	// else, case-1: e changes when it was sampled at e.timestamp
-    	WorldEntity prev = a.getPreviousState() ;
+      P prev = player.previous;
     	if (prev != null) {
-    		return prev.position ;
+    		return prev.getPosition() ;
     	}
     	// or case-2: e has no previous state
     	return null ;
@@ -215,42 +186,42 @@ public class WorldModel implements Serializable {
      * Note that e reflects some state change in the WorldModel if and only if the
      * returned f = e (pointer equality).
      */
-    public WorldEntity updateEntity(WorldEntity e) {
+    public WE updateEntity(WE e) {
         if (e == null)
             throw new IllegalArgumentException("Cannot update a null entity in a World Model.");
-        var current = elements.get(e.id);
+        String id = e.getId();
+        WE current = getElement(id);
         if (current == null) {
             // e is new:
-            elements.put(e.id, e);
+            elements.put(id, new WorldEntityRecord(e));
             return e;
         } else {
             // case (1) e is at least as recent as "current":
-            if (e.timestamp >= current.timestamp) {
+            if (e.getTimestamp() >= current.getTimestamp()) {
                 // check first if there is a state change
-                if (e.hasSameState(current)) {
-                    var startTimeStutter = current.lastStutterTimestamp;
+                if (e.equals(current)) {
+                    var startTimeStutter = current.getLastStutterTimestamp();
                     if (startTimeStutter < 0)
-                        startTimeStutter = current.timestamp;
+                        startTimeStutter = current.getTimestamp();
                     // keep current; just update its timestamp:
-                    current.assignTimeStamp(e.timestamp);
+                    current.setTimestamp(e.getTimestamp());
                     // update the stutter-timestamp as well:
-                    current.lastStutterTimestamp = startTimeStutter;
+                    current.setLastStutterTimestamp(startTimeStutter);
                     return current;
                 } else {
                     // the entity has changes its state
                     // (its start-stutter-time should already be initialized to -1)
-                    elements.put(e.id, e);
-                    e.linkPreviousState(current);
+                    putElement(id, new WorldEntityRecord(e, current));
                     // System.out.println("%%% updating " + e.id) ;
                     return e;
                 }
             } else { // case (2): e is older than current:
-                var prev = current.getPreviousState();
+                WE prev = getBeforeElement(current.getId());
                 // System.out.println(">>> current: " + current.id + ", e: " + e.id
                 // + ", prev: " + prev) ;
-                if (prev == null || e.timestamp > prev.timestamp) {
-                    if (!e.hasSameState(current))
-                        current.linkPreviousState(e);
+                if (prev == null || e.getTimestamp() > prev.getTimestamp()) {
+                    if (!e.equals(current))
+                        putElement(id, new WorldEntityRecord(current, e));
                 }
                 // System.out.println(">>> prev: " + current.getPreviousState()) ;
                 return current;
@@ -290,7 +261,7 @@ public class WorldModel implements Serializable {
      * it adds entities into the target WorldModel or updates existing ones, but it
      * will NEVER REMOVE an entity. 
      */
-    public List<WorldEntity> mergeNewObservation(WorldModel observation) {
+    public List<WE> mergeNewObservation(WorldModel<P, WE> observation) {
         // check if the observation is not null
         if (observation == null)
             throw new IllegalArgumentException("Null observation received");
@@ -298,16 +269,17 @@ public class WorldModel implements Serializable {
             throw new IllegalArgumentException("Cannot merge an older WorldModel into a newer one.");
 
         // update agent's info:
-        this.position = observation.position;
-        this.velocity = observation.velocity;
-        this.extent = observation.extent;
+        if (!this.player.current.equals(observation.player.current)) {
+        	this.player = new PlayerRecord(observation.player.current, this.player.current);
+        }
 
         // Add the newly seen entities, or incorporate their change. We will also
         // maintain those entities that induce state change in this WorldModel.
-        List<WorldEntity> impactEntities = new LinkedList<>();
-        for (WorldEntity e : observation.elements.values()) {
+        List<WE> impactEntities = new LinkedList<>();
+        for (WorldEntityRecord wer : observation.elements.values()) {
+            WE e = wer.current;
             var f = this.updateEntity(e);
-            if (e == f) {
+            if (e.equals(f)) {
                 // System.out.println("%%% updating " + e.id) ;
                 // if they are equal, then e induces some state change in the WorldModel.
                 impactEntities.add(e);
@@ -326,14 +298,15 @@ public class WorldModel implements Serializable {
      * This is used to merge an older observation into this one. E.g. it can be an
      * observation sent by another agent.
      */
-    public void mergeOldObservation(WorldModel observation) {
+    public void mergeOldObservation(WorldModel<P, WE> observation) {
         // check if the observation is not null
         if (observation == null)
             throw new IllegalArgumentException("Null observation received");
         if (observation.timestamp >= this.timestamp)
             throw new IllegalArgumentException("This method expect an older WorldModel to be merged into a newer one.");
 
-        for (WorldEntity e : observation.elements.values()) {
+        for (WorldEntityRecord wer : observation.elements.values()) {
+            WE e = wer.current;
             this.updateEntity(e);
         }
     }
@@ -346,5 +319,4 @@ public class WorldModel implements Serializable {
     public boolean isBlocking(WorldEntity e) {
         throw new UnsupportedOperationException();
     }
-
 }

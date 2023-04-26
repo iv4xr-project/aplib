@@ -33,12 +33,12 @@ import nl.uu.cs.aplib.mainConcepts.Environment;
  */
 // NOTE: we can't embed emotion here because emotion needs reference to the agent itself
 // to update; and an instance of State does not have that reference.
-public class Iv4xrAgentState<NavgraphNode> extends State {
+public class Iv4xrAgentState<NavgraphNode, P extends IPlayer, WE extends IWorldEntity> extends State {
 
 	/**
 	 * Representing the current state of the target world.
 	 */
-	public WorldModel worldmodel;
+	public WorldModel<P, WE> worldmodel;
 
 	/**
 	 * A navigation graph for navigating the the target world. Every node represent
@@ -108,40 +108,40 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * 
 	 * @return
 	 */
-	public WorldModel worldmodel() {
+	public WorldModel<P, WE> worldmodel() {
 		return worldmodel;
 	}
 	
 	/**
 	 * Return the WorldEntity in {@link #worldmodel} with the given id.
 	 */
-	public WorldEntity get(String eId) {
-		return worldmodel.elements.get(eId) ;
+	public WE get(String eId) {
+		return worldmodel.getElement(eId);
 	}
-	
-    /**
-	 * Return the value of the given property of an entity e (in this state's
-	 * worldmodel) with the given entity id. Return null if the property does not
-	 * exist in e.
-	 * 
-	 * <p>
-	 * The method requires e to exists in {@link #worldmodel}.
-	 */
-	public Serializable val(String eId, String propertyName) {
-		return worldmodel.val(eId, propertyName) ;
-	}
-	
-    /**
-     * Return the value of the given property of an entity a that represents
-     * the agent that owns this WorldModel. Return null if the property 
-     * does not exist in e.
-     * 
-     * <p>The method requires the agent to have its own WorldEntity representation
-     * in {@link #worldmodel}.
-     */
-	public Serializable val(String propertyName) {
-		return worldmodel.val(propertyName) ;
-	}
+//
+//    /**
+//	 * Return the value of the given property of an entity e (in this state's
+//	 * worldmodel) with the given entity id. Return null if the property does not
+//	 * exist in e.
+//	 *
+//	 * <p>
+//	 * The method requires e to exists in {@link #worldmodel}.
+//	 */
+//	public Serializable val(String eId, String propertyName) {
+//		return worldmodel.val(eId, propertyName) ;
+//	}
+//
+//    /**
+//     * Return the value of the given property of an entity a that represents
+//     * the agent that owns this WorldModel. Return null if the property
+//     * does not exist in e.
+//     *
+//     * <p>The method requires the agent to have its own WorldEntity representation
+//     * in {@link #worldmodel}.
+//     */
+//	public Serializable val(String propertyName) {
+//		return worldmodel.val(propertyName) ;
+//	}
 	
     /**
      * Checks if an entity is "recent". The entity is recent if it is just recently
@@ -157,30 +157,30 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
      * observed by the agent. Technically, it is recent if it has the same timestamp 
      * and the WorldModel in {@link #worldmodel}.
      */
-	public boolean recent(WorldEntity e) {
+	public boolean recent(WE e) {
 		return worldmodel.recent(e) ;
 	}
-	
-    /**
-     * Get the value of a property of a WorldEntity e at the sampling time <b>
-     * before</b> its e.timestamp. Return null if e does not have the property,
-     * or if has no such "before" state.
-     */
-	public Serializable before(String eId, String propertyName) {
-		return worldmodel.before(eId, propertyName) ;
-	}
-	
-    /**
-     * Let e be the WorldEntity with the given id. This method
-     * returns the value of a property of a WorldEntity e at the sampling time <b>
-     * before</b> its e.timestamp. Return null if e does not have the property,
-     * or if has no such "before" state.
-     * 
-     * <p>The method requires e to exist in {@link #worldmodel}.
-     */
-	public Serializable before(WorldEntity e, String propertyName) {
-		return worldmodel.before(e,propertyName) ;
-	}
+//
+//    /**
+//     * Get the value of a property of a WorldEntity e at the sampling time <b>
+//     * before</b> its e.timestamp. Return null if e does not have the property,
+//     * or if has no such "before" state.
+//     */
+//	public Serializable before(String eId, String propertyName) {
+//		return worldmodel.before(eId, propertyName) ;
+//	}
+//
+//    /**
+//     * Let e be the WorldEntity with the given id. This method
+//     * returns the value of a property of a WorldEntity e at the sampling time <b>
+//     * before</b> its e.timestamp. Return null if e does not have the property,
+//     * or if has no such "before" state.
+//     *
+//     * <p>The method requires e to exist in {@link #worldmodel}.
+//     */
+//	public Serializable before(WorldEntity e, String propertyName) {
+//		return worldmodel.before(e,propertyName) ;
+//	}
 	
 	/**
      * Return the position of the agent at the last sampling time.
@@ -191,18 +191,18 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
     public Vec3 positionBefore() {
     	return worldmodel.positionBefore() ;
     }
-	
-	/**
-     * Let a be the WorldEntity representing the agent that owns this WorldModel.
-     * This method returns the value of a property of a at the sampling time <b>
-     * before</b> its a.timestamp. It Returns null if a does not have the property,
-     * or if has no such "before" state.
-     * 
-     * <p>The method requires a to exist in {@link #worldmodel}.
-     */
-    public Serializable before(String propertyName) {
-    	return worldmodel.before(propertyName) ;
-    }
+//
+//	/**
+//     * Let a be the WorldEntity representing the agent that owns this WorldModel.
+//     * This method returns the value of a property of a at the sampling time <b>
+//     * before</b> its a.timestamp. It Returns null if a does not have the property,
+//     * or if has no such "before" state.
+//     *
+//     * <p>The method requires a to exist in {@link #worldmodel}.
+//     */
+//    public Serializable before(String propertyName) {
+//    	return worldmodel.before(propertyName) ;
+//    }
 
 	/**
 	 * Return the navigation-graph in {@link Iv4xrAgentState#worldNavigation}.
@@ -211,7 +211,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 		return worldNavigation;
 	}
 	
-	public Iv4xrAgentState<NavgraphNode> setWorldNavigation(Navigatable<NavgraphNode> navgraph) {
+	public Iv4xrAgentState<NavgraphNode, P, WE> setWorldNavigation(Navigatable<NavgraphNode> navgraph) {
 		this.worldNavigation = navgraph ;
 		return this ;
 	}
@@ -221,7 +221,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * {@link Iv4xrEnvironment} is needed as the environment. 
 	 */
 	@Override
-	public Iv4xrAgentState<NavgraphNode> setEnvironment(Environment env) {
+	public Iv4xrAgentState<NavgraphNode, P, WE> setEnvironment(Environment env) {
 		if(env == null) {
 			throw new IllegalArgumentException("Cannot attach a null environment to a state.") ;
 		}
@@ -252,7 +252,7 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 	 * used to register new model elements discovered in the current state.
 	 */
 	@SuppressWarnings("rawtypes")
-	public Iv4xrAgentState<NavgraphNode> attachBehaviorModel(
+	public Iv4xrAgentState<NavgraphNode, P, WE> attachBehaviorModel(
 			GameWorldModel model,
 			BiFunction<Iv4xrAgentState,GameWorldModel,Void> gwmodelLearner) {
 		if (model == null)
@@ -286,64 +286,64 @@ public class Iv4xrAgentState<NavgraphNode> extends State {
 			gwmodelLearner.apply(this,gwmodel) ;
 		}
 	}
-
-	/**
-	 * Covert the given surface-mesh into a navigation graph. More precisely, to an
-	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph}.
-	 * Then the method attaches this navigation graph into the given agent-state.
-	 */
-	public static void loadSimpleNavGraph(Iv4xrAgentState<Integer> state, Mesh mesh) {
-		state.worldNavigation = SimpleNavGraph.fromMeshFaceAverage(mesh);
-	}
-
-	/**
-	 * If the environment attached to the given state has a navigation/surface-mesh,
-	 * this method converts the mesh into a navigation graph. More precisely, to an
-	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph}.
-	 * Then the method attaches this navigation graph into the given agent-state.
-	 */
-	public static void loadSimpleNavGraph(Iv4xrAgentState<Integer> state) {
-		var env = state.env();
-		if (env == null) {
-			throw new IllegalArgumentException("The state has no environment.");
-		}
-		Mesh mesh = env.worldNavigableMesh();
-		if (mesh == null) {
-			throw new IllegalArgumentException("The environment attached to this state has no navigation-mesh.");
-		}
-		loadSimpleNavGraph(state,mesh) ;
-	}
-	
-	/**
-	 * Covert the given surface-mesh into a navigation graph. More precisely, to an
-	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph}.
-	 * Then the method attaches this navigation graph into the given agent-state.
-	 */
-	public static void loadSurfaceNavGraph(
-			Iv4xrAgentState<Integer> state, 
-			Mesh mesh,
-			float faceAreaThresholdToAddCenterNode) {	
-		var navgraph = new SurfaceNavGraph(mesh,faceAreaThresholdToAddCenterNode) ;	
-		state.worldNavigation = navgraph ;
-	}
-	
-	/**
-	 * If the environment attached to the given state has a navigation/surface-mesh,
-	 * this method converts the mesh into a navigation graph. More precisely, to an
-	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph}.
-	 * Then the method attaches this navigation graph into the given agent-state.
-	 */
-	public static void loadSurfaceNavGraph(
-			Iv4xrAgentState<Integer> state, 
-			float faceAreaThresholdToAddCenterNode) {	
-		var env = state.env();
-		if (env == null) {
-			throw new IllegalArgumentException("The state has no environment.");
-		}
-		Mesh mesh = env.worldNavigableMesh();
-		if (mesh == null) {
-			throw new IllegalArgumentException("The environment attached to this state has no navigation-mesh.");
-		}
-		loadSurfaceNavGraph(state,mesh,faceAreaThresholdToAddCenterNode) ;
-	}
+//
+//	/**
+//	 * Covert the given surface-mesh into a navigation graph. More precisely, to an
+//	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph}.
+//	 * Then the method attaches this navigation graph into the given agent-state.
+//	 */
+//	public static void loadSimpleNavGraph(Iv4xrAgentState<Integer, WorldEntity> state, Mesh mesh) {
+//		state.worldNavigation = SimpleNavGraph.fromMeshFaceAverage(mesh);
+//	}
+//
+//	/**
+//	 * If the environment attached to the given state has a navigation/surface-mesh,
+//	 * this method converts the mesh into a navigation graph. More precisely, to an
+//	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SimpleNavGraph}.
+//	 * Then the method attaches this navigation graph into the given agent-state.
+//	 */
+//	public static void loadSimpleNavGraph(Iv4xrAgentState<Integer, WorldEntity> state) {
+//		var env = state.env();
+//		if (env == null) {
+//			throw new IllegalArgumentException("The state has no environment.");
+//		}
+//		Mesh mesh = env.worldNavigableMesh();
+//		if (mesh == null) {
+//			throw new IllegalArgumentException("The environment attached to this state has no navigation-mesh.");
+//		}
+//		loadSimpleNavGraph(state,mesh) ;
+//	}
+//
+//	/**
+//	 * Covert the given surface-mesh into a navigation graph. More precisely, to an
+//	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph}.
+//	 * Then the method attaches this navigation graph into the given agent-state.
+//	 */
+//	public static void loadSurfaceNavGraph(
+//			Iv4xrAgentState<Integer, WorldEntity> state,
+//			Mesh mesh,
+//			float faceAreaThresholdToAddCenterNode) {
+//		var navgraph = new SurfaceNavGraph(mesh,faceAreaThresholdToAddCenterNode) ;
+//		state.worldNavigation = navgraph ;
+//	}
+//
+//	/**
+//	 * If the environment attached to the given state has a navigation/surface-mesh,
+//	 * this method converts the mesh into a navigation graph. More precisely, to an
+//	 * instance of {@link eu.iv4xr.framework.extensions.pathfinding.SurfaceNavGraph}.
+//	 * Then the method attaches this navigation graph into the given agent-state.
+//	 */
+//	public static void loadSurfaceNavGraph(
+//			Iv4xrAgentState<Integer, WorldEntity> state,
+//			float faceAreaThresholdToAddCenterNode) {
+//		var env = state.env();
+//		if (env == null) {
+//			throw new IllegalArgumentException("The state has no environment.");
+//		}
+//		Mesh mesh = env.worldNavigableMesh();
+//		if (mesh == null) {
+//			throw new IllegalArgumentException("The environment attached to this state has no navigation-mesh.");
+//		}
+//		loadSurfaceNavGraph(state,mesh,faceAreaThresholdToAddCenterNode) ;
+//	}
 }
