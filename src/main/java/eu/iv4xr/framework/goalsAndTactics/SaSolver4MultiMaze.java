@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
+import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
 import eu.iv4xr.framework.spatial.meshes.Face;
@@ -87,6 +88,11 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	String finalTargetId ;
 	
 	/**
+	 * The feature of the target game-object 
+	 */
+	Pair additionalFeature;
+	
+	/**
 	 * Approximate location of {@link #finalTargetId}.
 	 */
 	Vec3 heuristicLocation ;
@@ -145,6 +151,10 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	public SaSolver4MultiMaze() { super() ; }
 	
+	
+	public BiFunction< Iv4xrAgentState<NavgraphNode>,String, GoalStructure> gCandidateIsInteractedNew ;
+	public BiFunction< Iv4xrAgentState<NavgraphNode>,String, GoalStructure> gTargetIsRefreshedNew ;
+	
 	/**
 	 * A constructor for SA2.
 	 * 
@@ -159,11 +169,12 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	public SaSolver4MultiMaze(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
 			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
 			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
-			Function<String, GoalStructure> gCandidateIsInteracted, 
-			Function<String, GoalStructure> gTargetIsRefreshed,
+			Function<String, GoalStructure> gCandidateIsInteracted,
+			BiFunction< Iv4xrAgentState<NavgraphNode>,String, GoalStructure> gCandidateIsInteractedNew, 
+			Function<String, GoalStructure> gTargetIsRefreshed,			
 			Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted,
-			Function<Void,GoalStructure> gExploring) {
-		
+			Function<Void,GoalStructure> gExploring) 
+	{
 		super(reachabilityChecker,
 				distanceToAgent,
 				distanceFunction,
@@ -172,6 +183,8 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				explorationExhausted,
 				i -> gExploring.apply(null)
 				) ;
+		this.gCandidateIsInteractedNew = gCandidateIsInteractedNew;
+		this.gTargetIsRefreshedNew = gCandidateIsInteractedNew;
 	}
 			
 	
@@ -249,17 +262,27 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	}
 
 	
-	private WorldEntity getClosestsElement(List<WorldEntity> candidates, Vec3 target) {
+	private WorldEntity getClosestsElement(List<WorldEntity> candidates, Vec3 target, int maze) {
 		WorldEntity closest = candidates.get(0) ;
 		float minDistance = Float.MAX_VALUE ;
-		for (var e : candidates) {
-			float distSq = Vec3.distSq(e.position, target) ;
-			if (distSq < minDistance) {
-				closest = e ;
-				minDistance = distSq ;
-			}
-		}
-		return closest ;
+//		for (var e : candidates) {
+//			float distSq = Vec3.distSq(e.position, target) ;
+//			if (distSq < minDistance) {
+//				closest = e ;
+//				minDistance = distSq ;
+//			}
+//		}
+	
+		candidates.sort(Comparator.comparingDouble(a -> {
+            double distanceSq = a.position.distSq(a.position, target);
+            return distanceSq;
+        }));
+		candidates.sort(Comparator.comparing(a ->{
+			return Math.abs(maze - a.getIntProperty("maze"));
+		}));	
+		
+		
+		return candidates.get(0) ;
 	}
 	
 	/**
@@ -293,7 +316,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			myHeuristicLocation = S.worldmodel.position ;
 		}
 		
-		return getClosestsElement(candidates,myHeuristicLocation) ;
+		return getClosestsElement(candidates,myHeuristicLocation, (int) S.worldmodel.elements.get(S.worldmodel.agentId).getProperty("maze")) ;
 	}
 	
 	
@@ -317,8 +340,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					. filter(e -> reachabilityChecker.apply(S,e)) // for now, only check reachable candidate
 					. collect(Collectors.toList()) ;
 		}
-		
-		//System.out.println("    candidates: " + candidates) ;		
+						
 		if (candidates.isEmpty())
 			return null ;
 		
@@ -330,15 +352,14 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		if (policy == Policy.NEAREST_TO_AGENT || myHeuristicLocation == null) {
 			myHeuristicLocation = S.worldmodel.position ;
 		}
-		System.out.println("### invoking selectEnabler inja2 " );
-		//System.out.println(">>>    heuristic loc: " + myHeuristicLocation) ;
-		return getClosestsElement(candidates,myHeuristicLocation) ;
+		//System.out.println(">>>    heuristic loc: " + myHeuristicLocation +  S.worldmodel.elements.get(S.worldmodel.agentId) ) ;
+		return getClosestsElement(candidates,myHeuristicLocation, target.getIntProperty("maze")) ;
 	}
 	
 	// dynamic goal 
 	GoalStructure lowerleverSolver(MyAgentStateExtended state) {
 		System.out.println("=== invoking low level search, target: lowerleverSolver");
-	//	String targetedEntity =  state.worldmodel != null ? state.worldmodel.elements.values().stream().filter( s ->
+		//   String targetedEntity =  state.worldmodel != null ? state.worldmodel.elements.values().stream().filter( s ->
 		//  	s.type.contains(EntityType.SHRINE.toString()) &&  !(boolean) s.properties.get("cleansed")).collect(Collectors.toList()).get(0).id : "empty"; 
 		
 		
@@ -353,7 +374,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			WorldEntity blocker = targetedEntityS.get(0) ;
 			WorldEntity blockerId = S.worldmodel.getElement(blocker.id) ;
 			var clean = (boolean) blockerId.properties.get("cleansed") ;
-			System.out.println("### " + blocker.id + " open: " + clean) ;
+			System.out.println("###" + blocker.id + " open: " + clean) ;
 			return clean;
 		};
 
@@ -386,19 +407,19 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				  System.out.println("=== low-level search of " + targetedEntity
 						  + " invokes interact " + enabler.id) ;
 				  
-				  return SEQ(gCandidateIsInteracted.apply(enabler.id),
+				  return SEQ(gCandidateIsInteractedNew.apply(S,enabler.id),
 						     REPEAT(
-						       FIRSTof(gTargetIsRefreshed.apply(targetedEntity),
+						       FIRSTof(gTargetIsRefreshedNew.apply((Iv4xrAgentState) state,targetedEntity),
 						    		   // un-lock mechanism if the above get the agent locked:
 						    		   unLock(enabler.id,targetedEntity))
 						    	   ),
 						     lift(psi) // check psi
-						     ) ; 
-			  }) ;
-		  System.out.println("inja miadesh");
-		return SEQ(gTargetIsRefreshed.apply(targetedEntity), 
+						     ); 
+			  });
+
+		return SEQ(gTargetIsRefreshedNew.apply((Iv4xrAgentState) state,targetedEntity), 
 				   FIRSTof(lift(psi),
-				           SEQ(REPEAT(search),  lift(psi) , gCandidateIsInteracted.apply(targetedEntity)))) ;
+				           SEQ(REPEAT(search),  lift(psi) , gCandidateIsInteractedNew.apply((Iv4xrAgentState) state,targetedEntity)))) ;
 	}
 	
 	/**
@@ -449,7 +470,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				WorldEntity selectedOpener = null ;
 				if (! openers.isEmpty()) {
 					// just choose the closest one
-					selectedOpener = getClosestsElement(openers, selected_.position) ;
+					selectedOpener = getClosestsElement(openers, selected_.position, selected_.getIntProperty("maze")) ;
 					tried.add(selectedOpener.id) ;
 				}
 				if (openers.isEmpty())
@@ -457,7 +478,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					selectedOpener = S.worldmodel.elements.get(excludeThisEnabler) ;
 				
 				System.out.println("    trying as an opener: " + selectedOpener.id) ;
-				return SEQ(gCandidateIsInteracted.apply(selectedOpener.id),
+				return SEQ(gCandidateIsInteractedNew.apply(S,selectedOpener.id),
 						   gTargetIsRefreshed.apply(selected),
 						   FAIL() // to force the outer repeat-loop to try again...
 						   ) ;
@@ -502,7 +523,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					// Select nearest to the agent position
 					if (! candidates.isEmpty()) {
 						// just choose the closest one
-						selectedItem = getClosestsElement(candidates, b.worldmodel.position) ;
+						selectedItem = getClosestsElement(candidates, b.worldmodel.position, (int) b.worldmodel.elements.get(b.worldmodel.agentId).getProperty("maze")) ;
 						triedItems.add(selectedItem.id) ;
 					}					
 					
@@ -536,6 +557,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	public GoalStructure solver(BasicAgent agent, 
 			Pair tId, 
+			Pair additionalFeature,
 			Vec3 heuristicLocation,
 			Predicate<WorldEntity> blockersSelector,
 			Predicate<WorldEntity> enablersSelector,
@@ -548,6 +570,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		
 		this.agent = agent ;
 		this.finalTargetId = tId.snd.toString() ;
+		this.additionalFeature = additionalFeature;
 		this.heuristicLocation = heuristicLocation ;
 		this.blockersSelector = blockersSelector ;
 		this.enablersSelector = enablersSelector ;
@@ -561,7 +584,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		this.triedEnablers.clear();
 		
 		//var MyAgentStateExtended = new MyAgentStateExtended();
-		System.out.println("///////toye solver " + this.finalTargetId);
+		System.out.println("///////solver " + this.finalTargetId);
 		GoalStructure search = 
 			// this "search" will be put as the body of an enclosing REPEAT-loop:
 			DEPLOY(agent,
@@ -572,15 +595,16 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 						//explore to find new items	
 				 					 	FIRSTof(
 				 					 			IF(
+						 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkExplore(x),
+						 					 			GoalLibExtended.findNodes((MyAgentStateExtended ) S),
+						 					 			FAIL()
+					 								),
+				 					 			IF(
 						 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x),
-						 					 			//GoalLibExtended.test(),
 						 					 			lowerleverSolver((MyAgentStateExtended ) S ),
 						 					 			FAIL()
-						 								),
-				 								WHILEDO(
-					 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkExplore(x),
-					 					 			GoalLibExtended.findNodes()
-				 								)
+						 								)
+				 								
 				 								
 				 								//IF((MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x), lowerleverSolver(MyAgentStateExtended),FAIL()) )
 				 						
@@ -588,30 +612,61 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 					 	,				 					 					 					 	
 				 					 	
 										  IF(
-											  (MyAgentState x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
-											  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S), //this will include selecting, navigating and use it	  
-											  GoalLibExtended.selectItem(tId) ),
-											  GoalLibExtended.selectItem(tId)
-										  ),
+											  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
+											  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
+											  FIRSTof(GoalLibExtended.selectItemToNavigate(tId), GoalLibExtended.selectTargetedItem(tId,additionalFeature) )),
+											  FIRSTof(GoalLibExtended.selectItemToNavigate(tId), GoalLibExtended.selectTargetedItem(tId,additionalFeature) )	  
+													  ),
 								 
 				 					 	
 				 					 	//GoalLibExtended.selectItem(tId), //select item based on the observation, if the target is seen it will be selected
 				 					 	//navigate to the selected item
-				 					 	GoalLibExtended.entityInCloseRange((MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
+				 					 	GoalLibExtended.smartEntityInCloseRange((MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
 				 					 	//IFELSE2(GoalLibExtended.entityInCloseRange(MyAgentStateExtended),SUCCESS(),GoalLibExtended.unstuck(MyAgentStateExtended)),
 				 					 	
 				 					 	//if the target is selected, then it can be pick up and then decide to use or not.
 				 					 	IF(
-				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId),					 	
-				 					 		SEQ(GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
-					 					 	GoalLibExtended.useItem((MyAgentStateExtended) S)),
+				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId,additionalFeature),					 	
+				 					 		SEQ(
+				 					 				GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
+				 					 				IF(
+															  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
+															  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
+																	  //GoalLibExtended.resetSelectedItem(MyAgentStateExtended),
+																	  lift((MyAgentStateExtended b) -> GoalLibExtended.resetSelectedItem(b)),
+																	  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+																	  ),
+															  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+														  )			 	
+				 					 				),
 				 					 		FAIL()
 				 					 	)
+				 					 	//,
+//				 					 	IF(
+//					 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTargetInTriedItem(x,tId,additionalFeature),					 	
+//					 					 		SEQ(
+//					 					 				GoalLibExtended.selectTargetedItem(tId,additionalFeature),
+//					 					 				GoalLibExtended.entityInCloseRange((MyAgentStateExtended) S),
+//					 					 				GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
+//					 					 				IF(
+//																  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
+//																  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
+//																		  //GoalLibExtended.resetSelectedItem(MyAgentStateExtended),
+//																		  lift((MyAgentStateExtended b) -> GoalLibExtended.resetSelectedItem(b)),
+//																		  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+//																		  ),
+//																  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+//															  )			 	
+//					 					 				),
+//					 					 		FAIL()
+//					 					 	)
+				 					 	
+				 					 	
+				 					 	
 				 						)
 				 				;
 				 		 });
-				  
-		//return SEQ(lift(phi),REPEAT(search)) ; 
+		
 		return WHILEDO(
 				phi , search
 				);

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.RandomPlayTester;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
@@ -54,7 +55,7 @@ import nl.uu.cs.aplib.utils.Pair;
  * @author Shirz002
  *
  */
-public class Test_MultiMaze {
+public class Test_MultiMazeWithRandom {
 
 	boolean withGraphics = true;
 	boolean supressLogging = false;
@@ -66,12 +67,11 @@ public class Test_MultiMaze {
 
 	@Test
 	public void test0() throws Exception {
-		Pair targetItemOrShrine = new Pair("id", "R0_0");
-		Pair additionalFeature = new Pair("maze", 0);
+		Pair targetItemOrShrine = new Pair("id", "H2_3");
+		int maze  = 2;
 		int seed  = 79371;
-		int maze = 2 ; 
-		testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);
-
+		Pair additionalFeature = new Pair("maze", 0);
+		testFullPlay("Frodo", targetItemOrShrine,additionalFeature, seed,maze);
 	}
 
 	GoalStructure exhaustiveExplore(TestAgent agent, GoalLib goalLib, TacticLib tacticLib) {
@@ -90,16 +90,15 @@ public class Test_MultiMaze {
 		}
 		return openers;
 	}
+
 	static boolean isImmortalShrine(WorldEntity e) {		
 		var shTy = (ShrineType) e.properties.get("shrinetype") ;
 		return shTy == ShrineType.ShrineOfImmortals ;
 	}
-	public Pair<Boolean, Long> testFullPlay(String agentId, Pair targetItemOrShrine, Pair additionalFeature, int seed, int maze) throws Exception {
+	public GameWorldModel testFullPlay(String agentId, Pair targetItemOrShrine, Pair additionalFeature, int seed, int maze) throws Exception {
 		// Create an instance of the game, attach an environment to it:
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
-		config.numberOfMonsters = 6;
-		config.numberOfScrolls = 3;
 		config.viewDistance = 4;
 		config.numberOfMaze = maze;
 		config.randomSeed = seed;
@@ -122,7 +121,6 @@ public class Test_MultiMaze {
 		var goalLib = new GoalLib();
 		var tacticLib = new TacticLib();
 		var goalLibExtended = new GoalLibExtended();
-
 		// create an agent:
 		var agent = new TestAgent(agentId, "tester");
 		//Pair targetItemOrShrine = new Pair("id", "H2_3");
@@ -132,8 +130,7 @@ public class Test_MultiMaze {
 			Logging.getAPLIBlogger().setLevel(Level.OFF);
 		}
 
-		var sa3Solver = new SaSolver4MultiMaze<Void>(
-				(S, e) -> Utils.isReachable((MyAgentState) S, e),
+		var sa3Solver = new SaSolver4MultiMaze<Void>((S, e) -> Utils.isReachable((MyAgentState) S, e),
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
@@ -149,7 +146,7 @@ public class Test_MultiMaze {
 		// Pair targetItemOrShrine = new Pair("type","HEALPOT") ;
 		
 		
-		var G = sa3Solver.solver(agent, targetItemOrShrine,additionalFeature , new Vec3(20, 1, 1),
+		var G = sa3Solver.solver(agent, targetItemOrShrine, additionalFeature, new Vec3(20, 1, 1),
 				e -> e.type.equals("" + EntityType.SHRINE), e -> e.type.equals("" + EntityType.SCROLL),
 				e -> e.type.equals("" + EntityType.SHRINE) && (boolean) e.properties.get("cleansed"),
 				(shrine, S) -> getConnectedEnablersFromBelief(shrine, (MyAgentState) S),
@@ -162,9 +159,11 @@ public class Test_MultiMaze {
 					
 					System.out.println("Checking the condition: phi ");
 					List<WorldEntity> e = null;
-					
+
+					// if the agent is dead or win the game
 					var shrine = S.worldmodel.elements.values().stream().filter( s ->
 				  	s.type.contains(EntityType.SHRINE.toString()) ).collect(Collectors.toList());
+					
 					if(!shrine.isEmpty()) {  
 						  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 						  if(!immortalShrine.isEmpty()) {
@@ -174,6 +173,7 @@ public class Test_MultiMaze {
 					}
 					
 					if( !S_.agentIsAlive()) {System.out.println("Player died!"); return false;}
+					
 
 					// if it is true, it does not get the item yet
 					System.out.println("== The type of the item is given:" + targetItemOrShrine.snd);
@@ -181,119 +181,125 @@ public class Test_MultiMaze {
 						var previousProperties = player.getPreviousState().properties;
 
 						if((targetItemOrShrine.fst.equals("type") && targetItemOrShrine.snd.equals(EntityType.HEALPOT) ) || (targetItemOrShrine.fst.equals("id") && targetItemOrShrine.snd.toString().contains("H")) ) {
-						// To check the healing pot is used and health is increased
-	
-						  var hpBefore = (int) previousProperties.get("hp"); 
-						  var healpotsInBagBefore = (int) previousProperties.get("healpotsInBag"); 
-						  var hp = (int)player.properties.get("hp");
-						  var healpotsInBag = (int) player.properties.get("healpotsInBag"); 
-						  				
-						 
-						  //if the id is given 						
-						if(targetItemOrShrine.fst.equals("id")) {
-							var bagItems = previousProperties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString());
-							System.out.println("Lets check the data: " + bagItems + hpBefore + hp + healpotsInBagBefore + healpotsInBag);
-							//the targeted id was used like heal or rage during survival
-							S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
-							var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());
+							// To check the healing pot is used and health is increased
+		
+							  var hpBefore = (int) previousProperties.get("hp"); 
+							  var healpotsInBagBefore = (int) previousProperties.get("healpotsInBag"); 
+							  var hp = (int)player.properties.get("hp");
+							  var healpotsInBag = (int) player.properties.get("healpotsInBag"); 
+							  				
+							 
+							  //if the id is given 						
+								if(targetItemOrShrine.fst.equals("id")) {
+									var bagItems = previousProperties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString());
+									System.out.println("Lets check the data: " + bagItems + hpBefore + hp + healpotsInBagBefore + healpotsInBag);
+									//the targeted id was used like heal or rage during survival
+									var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());
+									//S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
+									if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
+										System.out.println("If it was selected and it is not anymore in the bag, it has used!");
+										return false;
+									}
+									else if(bagItems && (hpBefore < hp) && healpotsInBagBefore > healpotsInBag) 
+										  return false; 
+									else
+										return true;
+								  } 
+								
 							
-							if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
-								System.out.println("If it was selected and it is not anymore in the bag, it has used!");
-								return false;
-							}
-							else if(bagItems && (hpBefore < hp) && healpotsInBagBefore > healpotsInBag) 
-								  return false; 
-							else
-								return true;
-						  } 
-						
-						
-						//it is based on the type: there might be more than one 
-						if(additionalFeature != null) {	
-						    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used") && j.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)).collect(Collectors.toList());				    				    
-						    System.out.println("used items " + usedItems );					    
-							if(!usedItems.isEmpty()) return false;
-							return true;
-						}
-					    
-						if((hpBefore < hp) && healpotsInBagBefore > healpotsInBag) return false;
+								//it is based on the type: there might be more than one 
+							    if(additionalFeature != null) {	
+								    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());				    				    
+								    System.out.println("used items " + usedItems );					        
+								    for(WorldEntity s: usedItems) {			
+							    			if( s.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)) {
+									    		return false;
+								    		}
+								    	}
+								}
+							    
+								if((hpBefore < hp) && healpotsInBagBefore > healpotsInBag) return false;
 						 
 					
 						 
 						}else if((targetItemOrShrine.fst.equals("type") && targetItemOrShrine.snd.equals(EntityType.RAGEPOT) )  || (targetItemOrShrine.fst.equals("id") && targetItemOrShrine.snd.toString().contains("R"))) { 
 
-						// To check if the rage pot is used
+							// To check if the rage pot is used
 
-						  var ragpotsInBagBefore = (int) previousProperties.get("ragepotsInBag");
-						  var ragepotsInBag = (int) player.properties.get("ragepotsInBag");
-						  System.out.println("agent properties:" + ragepotsInBag +"before: "+ ragpotsInBagBefore); 
-						  
-						  if(targetItemOrShrine.fst.equals("id")) { 
-							  var bagItems = previousProperties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString());	  
-							  System.out.println("id is given " + ragepotsInBag +"before: "+
-									  ragpotsInBagBefore + previousProperties.get("itemsInBag").toString());
+							  var ragpotsInBagBefore = (int) previousProperties.get("ragepotsInBag");
+							  var ragepotsInBag = (int) player.properties.get("ragepotsInBag");
+							  System.out.println("agent properties:" + ragepotsInBag +"before: "+ ragpotsInBagBefore); 
 							  
-							//the targeted id was used like heal or rage during survival
-								var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());
-								//S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
-								if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
-									System.out.println("If it was selected and it is not anymore in the bag, it has used!");
-									return false;
+							  if(targetItemOrShrine.fst.equals("id")) { 
+								  var bagItems = previousProperties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString());	  
+								  System.out.println("id is given " + ragepotsInBag +"before: "+
+										  ragpotsInBagBefore + previousProperties.get("itemsInBag").toString());
+								  
+								//the targeted id was used like heal or rage during survival
+									var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());
+									//S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
+									if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
+										System.out.println("If it was selected and it is not anymore in the bag, it has used!");
+										return false;
+									}
+									else if(bagItems &&  ragpotsInBagBefore > ragepotsInBag) 
+										  return false; 
+									else
+										return true;
+								  
+							  } 
+							  
+							//it is based on the type: there might be more than one 
+							    if(additionalFeature != null) {	
+								    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());				    				    
+								    System.out.println("used items " + usedItems );					    
+									    for(WorldEntity s: usedItems) {						    	
+							    			if( s.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)) {
+									    		return false;
+								    		}
+								    	}
 								}
-								else if(bagItems &&  ragpotsInBagBefore > ragepotsInBag) 
-									  return false; 
-								else
-									return true;
-							  
-						  } 
-						  
-						//it is based on the type: there might be more than one 
-						  if(additionalFeature != null) {	
-							    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used") && j.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)).collect(Collectors.toList());				    				    
-							    System.out.println("used items " + usedItems );					    
-								if(!usedItems.isEmpty()) return false;
-								return true;
-							}
-						  
-						  
-						  if( ragpotsInBagBefore > ragepotsInBag) return false;
+							  if( ragpotsInBagBefore > ragepotsInBag) return false;
 
 
 						}else { // To check if the shrine is clean and the scroll is used
 						
-						  var scrollsInBagBefore = previousProperties.get("scrollsInBag").hashCode();
-						  var scrollsInBag = player.properties.get("scrollsInBag").hashCode();
-						  System.out.println("Agent properties:" + scrollsInBag +"before: "+
-						  scrollsInBagBefore );
-						  
-						  if(targetItemOrShrine.fst.equals("id")) { 
-							  var bagItems = previousProperties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString());	  				 
+							var scrollsInBagBefore = previousProperties.get("scrollsInBag").hashCode();
+							  var scrollsInBag = player.properties.get("scrollsInBag").hashCode();
+							  System.out.println("Agent properties:" + scrollsInBag +"before: "+
+							  scrollsInBagBefore );
 							  
-							//the targeted id was used like heal or rage during survival
-								var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());
-								//S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
-								if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
-									System.out.println("If it was selected and it is not anymore in the bag, it has used!");
-									return false;
+							  if(targetItemOrShrine.fst.equals("id")) { 
+								  var bagItems = previousProperties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString());	  				 
+								  
+								//the targeted id was used like heal or rage during survival
+									var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());
+									//S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
+									if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
+										System.out.println("If it was selected and it is not anymore in the bag, it has used!");
+										return false;
+									}
+									else if(scrollsInBagBefore > scrollsInBag) 
+										  return false; 
+									else
+										return true;
+								  
+							  }
+							  
+							//it is based on the type: there might be more than one 
+							    if(additionalFeature != null) {	
+								    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used")).collect(Collectors.toList());				    				    
+								    System.out.println("used items " + usedItems );					    
+									    for(WorldEntity s: usedItems) {						    	
+							    			if( s.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)) {
+									    		return false;
+								    		}
+								    	}
 								}
-								else if(scrollsInBagBefore > scrollsInBag) 
-									  return false; 
-								else
-									return true;
 							  
-						  }
-						  
-						//it is based on the type: there might be more than one 
-						    if(additionalFeature != null) {	
-							    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(targetItemOrShrine.snd.toString())  && (boolean) j.properties.get("used") && j.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)).collect(Collectors.toList());				    				    
-							    System.out.println("used items " + usedItems );					    
-								if(!usedItems.isEmpty()) { System.out.println("Goal Acheived " + usedItems ); return false;}
-								return true;
-							}
-						  
-						  //if we only want to check a scroll is used
-						  
-						  if(scrollsInBagBefore > scrollsInBag) { return false; }
+							  //if we only want to check a scroll is used
+							  
+							  if(scrollsInBagBefore > scrollsInBag) { return false; }
 						  
 //						  var shrine = S.worldmodel.elements.values().stream().filter( s ->
 //						  s.type.contains(EntityType.SHRINE.toString()) ).collect(Collectors.toList());
@@ -310,9 +316,10 @@ public class Test_MultiMaze {
 					return true;
 				}, Policy.NEAREST_TO_TARGET);
 
-		// var G0 = exhaustiveExplore(agent,goalLib,tacticLib) ;
+		RandomPlayTester randomplay = new RandomPlayTester() ;
+		var GWithRandom = SEQ(G, randomplay.randomPlay(agent)) ;
 
-		agent.attachState(state).attachEnvironment(env).setGoal(G);
+		agent.attachState(state).attachEnvironment(env).setGoal(GWithRandom);
 		GameWorldModel model = new GameWorldModel(new GWState());
 		// GameWorldModel model =
 		// GameWorldModel.loadGameWorldModelFromFile("./tmp/modelMD1.json") ;
@@ -341,7 +348,7 @@ public class Test_MultiMaze {
 		// Now we run the agent:
 		int delay = 20;
 		long time0 = System.currentTimeMillis();
-		TestMiniDungeonWithAgent.runAndCheck(agent, G, false, delay, 15000);
+		TestMiniDungeonWithAgent.runAndCheck(agent, GWithRandom, false, delay, 3000);
 
 		System.out.println("=== exploration exhausted: " + tacticLib.explorationExhausted(state));
 
@@ -373,8 +380,7 @@ public class Test_MultiMaze {
 		System.out.println(">>>> psi4 : " + psi4.sat());
 		System.out.println(">>>> psi5 : " + psi5.sat());
 		
-		var totalTime  = (System.currentTimeMillis() - time0) /1000;
-		return new Pair<Boolean, Long>(G.getStatus().success(),totalTime);
+		return model;
 	}
 
 }

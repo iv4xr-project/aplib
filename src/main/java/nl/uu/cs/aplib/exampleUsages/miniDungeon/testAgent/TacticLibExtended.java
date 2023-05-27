@@ -2,7 +2,10 @@ package nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent;
 
 import static nl.uu.cs.aplib.AplibEDSL.action;
 
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -167,6 +170,11 @@ public class TacticLibExtended extends TacticLib{
 							)
 					.collect(Collectors.toList()) ;
                 	
+                	
+                	if(item.contains("SHRINE")) {
+                		 candidates = candidates.stream().filter(e-> !e.getBooleanProperty("cleansed")).collect(Collectors.toList()) ;
+                	}
+                	
                 	//print all observed items
 					/*
 					 * S.worldmodel.elements.forEach ( (s,e) ->
@@ -175,50 +183,62 @@ public class TacticLibExtended extends TacticLib{
 					 * S.worldmodel.timestamp + " id :" + e.id); });
 					 */
                 	
-                	candidates.forEach (	
-                			e -> {System.out.println("Candidates: Seen in the same time stamp " + e.id + " e timestam: " +  e.timestamp + " curenttimestamp : " 
-                                    + S.worldmodel.timestamp + " id :" + e.id); 
-                                	}); 
+               
                 	
                 	if(candidates.isEmpty()) {
                 		System.out.println("there is no entity in the new observation!! "); 
                 	}else {
-                		S.selectedItem = candidates.get(0);
-                		S.triedItems.add(candidates.get(0).id);
-                		}
-                	
+                		//select based on the nearest one to the agent position. 
+                		//this would be helpful when we look for a healing pot
+                	 	candidates.forEach (	
+                    			e -> {System.out.println("Candidates: look For Specific Item " + e.id + " e timestam: " +  e.timestamp + " curenttimestamp : " 
+                                        + S.worldmodel.timestamp + " id :" + e.id); 
+                                    	}); 
+                		var selectedItem = getClosestsElement(candidates, S.worldmodel.position,  (int) S.worldmodel.elements.get(S.worldmodel.agentId).getProperty("maze")) ;
+                		S.selectedItem = selectedItem;
+                		S.triedItems.add(selectedItem);
+                		}  	
                 	
                 	return candidates;
                 }).lift();
 
 	}
 	
-	public static Tactic  selectItem( Pair target) {	
+	/**
+	 * Select a newly observed item from the list of observed entities.
+	 * After selecting, marked them as seen to aviod selecting them again. 
+	 * The purpose is to explore as much as possible
+	 * @param target
+	 * @return
+	 */
+	public static Tactic  selectItemToNavigate( Pair target) {	
 		return action("select item based on the heuristics")
                 . do1((MyAgentStateExtended S)-> {
-		//select items which is observed and it is not selected before
-        //this is repeated as the same as the find item because I do not save them somewhere yet 
+			//select items which is observed and it is not selected before
+		    //this is repeated as the same as the find item because I do not save them somewhere yet 
+				
+		            	
+			List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
+					.filter(e ->
+					(e.type.equals(""+EntityType.HEALPOT)
+							|| e.type.equals("" + EntityType.RAGEPOT)
+							|| e.type.equals("" + EntityType.SCROLL)
+							|| e.type.equals("" + EntityType.SHRINE)
+					))
+					.collect(Collectors.toList()) ;                         
+			if(!S.triedItems.isEmpty()) { 
+				//S.triedItems.forEach(e-> System.out.println("All tried items in select item: " + e.id));
+				candidates = candidates.stream().filter(element -> !S.triedItems.contains(element)).collect(Collectors.toList());}
 			
-                	
-                	List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
-        					.filter(e ->
-        					! S.triedItems.contains(e.id)
-        					&& (e.type.equals(""+EntityType.HEALPOT)
-                					|| e.type.equals("" + EntityType.RAGEPOT)
-                					|| e.type.equals("" + EntityType.SCROLL)
-                					|| e.type.equals("" + EntityType.SHRINE)
-        					))
-        					.collect(Collectors.toList()) ;
-            
-                	
-                	//get the player 
+			
+            //get the player 
             var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
             //get the max bag size to control the selection
             int maxBagSize = (int) player.properties.get("maxBagSize") ;
             int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 			int freeSpace = maxBagSize - bagSpaceUsed ;
-            System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));
-            System.out.println("get the bag property: " + player.properties.get("itemsInBag").toString());
+           // System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));
+           // System.out.println("get the bag property: " + player.properties.get("itemsInBag").toString());
             //if(player.properties.get("bagSize"))
             
             
@@ -260,7 +280,7 @@ public class TacticLibExtended extends TacticLib{
 				
 					if(selectedItem != null) { 
 						S.selectedItem = selectedItem;
-						S.triedItems.add(selectedItemId) ;
+						S.triedItems.add(selectedItem) ;
 						return true;
 					}
 				}
@@ -269,7 +289,7 @@ public class TacticLibExtended extends TacticLib{
 				// Select nearest to the agent position
 				// just choose the closest one
 				System.out.println("The item is not found, select nearest item to the agent position! ");
-				selectedItem = getClosestsElement(candidates, S.worldmodel.position) ;
+				selectedItem = getClosestsElement(candidates, S.worldmodel.position, (int) S.worldmodel.elements.get(S.worldmodel.agentId).getProperty("maze")) ;
 				
 				//System.out.println("The item is not found, select an item randomly! ");
 				//selectedItem = getRandomElement(candidates);
@@ -279,7 +299,7 @@ public class TacticLibExtended extends TacticLib{
 				System.out.println("Add item to the list of tried items! " + selectedItemId );
 				S.selectedItem = selectedItem;
 				System.out.println("added to the seleted item: " + S.selectedItem);
-				S.triedItems.add(selectedItemId) ;
+				S.triedItems.add(selectedItem) ;
 				if(selectedItem != null) 	return true;			
 			}
 			// TODO: Select the nearest based on the type of the item
@@ -289,20 +309,130 @@ public class TacticLibExtended extends TacticLib{
                 
 	}
 	
-	private static WorldEntity getClosestsElement(List<WorldEntity> candidates, Vec3 target) {
+	
+	/**
+	 * If the target item is selected before to the purpose of navigation, it will not select again
+	 * While, in some scenarios, the tried item before is needed to be selected(unused one).
+	 * @param target
+	 * @return
+	 */
+	public static Tactic  selectTargetedItem( Pair target, Pair additionalFeature) {	
+		return action("select item based on the heuristics")
+                . do1((MyAgentStateExtended S)-> {
+			//select items which is observed and it is not selected before
+		    //this is repeated as the same as the find item because I do not save them somewhere yet 
+				
+		            	
+			List<WorldEntity> candidates = S.triedItems.stream()
+					.filter(e ->
+					(e.type.equals(""+EntityType.HEALPOT)
+							|| e.type.equals("" + EntityType.RAGEPOT)
+							|| e.type.equals("" + EntityType.SCROLL)
+					)
+					&& !(boolean) e.getProperty("used")
+							)
+					.collect(Collectors.toList()) ;                         
+						
+			
+            //get the player 
+            var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+            //get the max bag size to control the selection
+            int maxBagSize = (int) player.properties.get("maxBagSize") ;
+            int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+			int freeSpace = maxBagSize - bagSpaceUsed ;
+           
+            //if(player.properties.get("bagSize"))
+            
+            
+            WorldEntity selectedItem = null;
+			String selectedItemId ="";
+			// Select one item from the list of unvisited items using heuristics
+			
+			if(!candidates.isEmpty()) {
+				
+				candidates.forEach(c -> {System.out.println("tried items that are not used: " + c.id);});
+				
+				if(target != null) {
+					//Select based on the Id
+					if(target.fst.equals("id")) {
+						//look for the item with the given id
+						List<WorldEntity> candidateId = candidates.stream()
+								.filter(e -> e.id.contains(target.snd.toString())
+										)
+								.collect(Collectors.toList()) ;
+						if(!candidateId.isEmpty()) {
+							selectedItem =  candidateId.get(0);
+							selectedItemId = selectedItem.id;
+							S.selectedItem = selectedItem;
+							System.out.println("looking item is found by id: " + selectedItem);
+							return true;
+							
+						}
+					}
+					//Select based on the type
+					// If there are more than one item with the same type, select one randomly
+					if(target.fst.equals("type")) {
+						
+						boolean currentItem = false;
+						
+						for( WorldEntity item: candidates ) {
+							if(item.type.contains(target.snd.toString())) {  //look for the items with the given type
+								System.out.println("item : " + item.id + item.getStringProperty(additionalFeature.fst.toString()) + item.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd));
+								//it is based on the type: there might be more than one 
+								if(additionalFeature != null) {	
+									var additional = item.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd);
+									var used = (boolean) item.properties.get("used");
+								    if(additional && !used) {	
+								    	selectedItem  = item;
+									    System.out.println("selected item matches the additional feature!" );					    
+										currentItem = true; 
+									}
+								}
+							}
+
+							if(currentItem) {			
+								selectedItemId = selectedItem.id;
+								System.out.println("looking item is found by type: " + selectedItemId);	
+								S.selectedItem = selectedItem;
+								return true;
+							}	
+					   }	
+					}
+				
+				}			
+			}
+			// TODO: Select the nearest based on the type of the item
+			
+			return selectedItem;
+                }).lift();
+                
+	}
+	
+	
+	
+	private static WorldEntity getClosestsElement(List<WorldEntity> candidates, Vec3 target, int maze) {
 		WorldEntity closest = candidates.get(0) ;
 		float minDistance = Float.MAX_VALUE ;
-		System.out.println("get Closests Element: " + "target: " +  target );
-		for (var e : candidates) {
-			System.out.println("get Closests Element: " + "e: " +  e.position + " id: " + e.id + e.type);
-			float distSq = Vec3.distSq(e.position, target) ;
-			if (distSq < minDistance) {
-				closest = e ;
-				minDistance = distSq ;
-			}
-		}
+//		for (var e : candidates) {
+//			System.out.println("get Closests Element: " + "e: " +  e.position + " id: " + e.id + e.type);
+//			float distSq = Vec3.distSq(e.position, target) ;
+//			if (distSq < minDistance) {
+//				closest = e ;
+//				minDistance = distSq ;
+//			}
+//		}
 		System.out.println("Selected closest item: " + closest);
-		return closest ;
+		candidates.sort(
+				Comparator.comparingDouble(a -> {
+            double distanceSq = a.position.distSq(a.position, target);           
+            return distanceSq;
+        }));
+				
+		candidates.sort(Comparator.comparing(a ->{
+				return Math.abs(maze - a.getIntProperty("maze"));
+			}));	
+	
+		return candidates.get(0) ;		
 	}
 	
 	
@@ -343,7 +473,8 @@ public class TacticLibExtended extends TacticLib{
 					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
 					String targetId = S.selectedItem.id;
-					WorldEntity e = S.worldmodel.elements.get(targetId) ;					
+					System.out.print("target id to navigate: " + targetId);
+					WorldEntity e = S.worldmodel.elements.get(targetId) ;							
 					if (e == null) {
 						return null ;
 					}
@@ -364,7 +495,6 @@ public class TacticLibExtended extends TacticLib{
 						else {
 							path = memorized[0] ;
 							if (path.size()<=1) {
-								//System.out.println("### clear memorized path case 1") ;
 								path = null ;
 								memoryCountdown[0] = memoryDuration ;
 							}
@@ -372,18 +502,17 @@ public class TacticLibExtended extends TacticLib{
 								path.remove(0) ;
 								memoryCountdown[0] -- ;
 								Tile next = path.get(0).snd ;
-								if(!Utils.adjacent(agentPos,next)) {
-									//System.out.println("### clear memorized path case 2") ;
+								if(!Utils.adjacent(agentPos,next)) {		
 									path = null ;
 									memoryCountdown[0] = memoryDuration ;
 								}
 							}
-							//if (path!=null) System.out.println("### using memorized path") ;
+							if (path!=null) System.out.println("### using memorized path") ;
 						}
 					}			
 					if (path == null) {
 						//System.out.println("### calculating new path") ;
-						path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;
+						path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;						
 						if (path == null || path.isEmpty()) {
 							return null ;
 						}
@@ -393,8 +522,7 @@ public class TacticLibExtended extends TacticLib{
 					}
 					Tile[] nextTile = {path.get(0).snd} ;
 					return nextTile ;
-				}) 
-				;
+				}) ;
 	}
 	
 	
@@ -434,7 +562,7 @@ public class TacticLibExtended extends TacticLib{
 						int maxBagSize = (int) player.properties.get("maxBagSize") ;
 			            int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 						int freeSpace = maxBagSize - bagSpaceUsed ;
-			            System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));		            
+			            //System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));		            
 			            
 			            return target ;
 					}
@@ -461,23 +589,62 @@ public class TacticLibExtended extends TacticLib{
 					  var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 					  boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
 					  boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;					  
-					  if(hasRagePot)	
-						   tacticLib.useRagePotAction().exec1(S) ;
+					  if(hasRagePot) {	
+						  System.out.print("has rage pot to use: " + hasRagePot);
+						   tacticLib.useRagePotAction().exec1(S) ;}
 					  else 
-					  tacticLib.useHealingPotAction().exec1(S) ;					  
-					  S.selectedItem.properties.put("used", true);
+					  tacticLib.useHealingPotAction().exec1(S) ;					  					  
+					 
 					  return player ; 
 				  })
-				.on_((MyAgentState S) -> { 					
+				.on_((MyAgentStateExtended S) -> { 					
 					var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 					boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
 					boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;
 					int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
 					int maxBagSize = (int) player.properties.get("maxBagSize") ;
 					int freeSpace = maxBagSize - bagSpaceUsed ;
+					//add used item to the list
+					//S.selectedItem.id
+					WorldEntity markAsUsed = S.triedItems.stream().filter(j -> j.id.equals(S.selectedItem.id)).findAny().get();					
+					markAsUsed.properties.put("used", true);
+					
 					return (hasHealPot || hasRagePot)  ;	
 				}) ;
 		return useHealOrRagePot.lift();
+	}
+	
+	/**
+	 * use only heal pot
+	 * @return
+	 */
+	public static Tactic useHeal() {
+		
+		Action useHeal = action("use heal- or ragepot").do1(
+				  (MyAgentStateExtended S) -> {
+					  var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+					  boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
+					  					  
+					  if(hasHealPot)	
+						  tacticLib.useHealingPotAction().exec1(S) ;	
+					  
+					  return player ; 
+				  })
+				.on_((MyAgentStateExtended S) -> { 					
+					var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+					boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
+					int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+					int maxBagSize = (int) player.properties.get("maxBagSize") ;
+					int freeSpace = maxBagSize - bagSpaceUsed ;
+					
+					//mark used item 
+					
+					WorldEntity markAsUsed =  S.triedItems.stream().filter(j -> j.id.equals(S.selectedItem.id)).findAny().get();
+					markAsUsed.properties.put("used", true);	
+					
+					return (hasHealPot )  ;	
+				}) ;
+		return useHeal.lift();
 	}
 	
 	/**
@@ -500,13 +667,5 @@ public class TacticLibExtended extends TacticLib{
 		return true;
 	} ;
 	
-	
-	public static Tactic test() {
-		return action("test")
-                . do1((MyAgentStateExtended S)-> {
-                    System.out.println("this is just a test!! "); 
-                	return true;
-                }).lift();
-	} 
 	
 }

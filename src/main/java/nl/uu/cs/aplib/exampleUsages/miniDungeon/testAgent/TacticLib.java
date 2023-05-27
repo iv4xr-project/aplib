@@ -299,7 +299,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	
 	public Predicate<MyAgentState> inCombat_and_hpNotCritical = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
-		int hp = (int) player.properties.get("hp") ;
+		int hp = (int) player.properties.get("hp") ;	
 		return hp>5 && S.adajcentMonsters().size()>0 ;
 	} ;
 	

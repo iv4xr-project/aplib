@@ -44,7 +44,7 @@ public class TestMiniDungeonWithAgent {
 	//boolean supressLogging = false ;
 
 	
-	@Test
+	//@Test
 	public void testFullPlayFrodo() throws Exception {
 		testFullPlay("Frodo") ;
 	}

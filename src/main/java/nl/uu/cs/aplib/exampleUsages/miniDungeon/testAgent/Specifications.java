@@ -23,15 +23,61 @@ public class Specifications {
 	public LTL<SimpleState> scenarioSpec1() {
 		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
 		var ps1  = eventually(p1);
-		Predicate<SimpleState> p2 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
+		Predicate<SimpleState> p2  =  (S -> (int) ((MyAgentState) S).worldmodel().val("hp") > (int) ((MyAgentState) S).worldmodel().before("hp") ) ;
 		var ps2  = eventually(p2);
-		Predicate<SimpleState> p3  =  (S -> (int) ((MyAgentState) S).worldmodel().val("hp") > (int) ((MyAgentState) S).worldmodel().before("hp") ) ;
-		var ps3  = eventually(p3);
-		var ps4 = ltlAnd(ps2,ps3);
-		return  ps1.implies(ps4);
+		var ps3 = ltlAnd(ps1,ps2);
+		return ps1.implies(ps3);
 	}
 	
 	
+	/*
+	 * Whenever There is a heal pot which is used, this will be checked
+	 * */
+	public LTL<SimpleState> scenarioSpec4() {
+		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
+		var ps1  = eventually(p1);
+		Predicate<SimpleState> p2  =  (S -> (int) ((MyAgentState) S).worldmodel().val("hp") ==  (int) ((MyAgentState) S).worldmodel().before("hp") +3 ) ;
+		var ps2 = now(p2);
+		return always(ps1.implies( ps2));
+	}
+	
+	/*
+	 * Whenever There is a heal pot which is used, this will be checked
+	 * if the hp before is more than -3 of maxhp then hp now should be +3
+	 * */
+	public LTL<SimpleState> scenarioSpec5() {
+		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
+		var ps1  = eventually(p1);
+		//if hp is more than -3 point maxhp, then the hp next should be +3
+		Predicate<SimpleState> p2  =  (S -> (int) ((MyAgentState) S).worldmodel().before("hp") <=   (int) ((MyAgentState) S).worldmodel().val("hpmax") - 3 ) ;
+		var ps2 = now(p2);
+		
+		Predicate<SimpleState> p3  =  (S -> (int) ((MyAgentState) S).worldmodel().val("hp") ==  (int) ((MyAgentState) S).worldmodel().before("hp") +3 ) ;
+		var ps3 = next(p3);
+		
+		
+		return always(ps1.implies( ps2.implies(ps3)));
+	}
+	
+	
+	
+	/*
+	 * Whenever There is a heal pot which is used, this will be checked
+	 * if the hp before is less than hpmax, then hp now should be more than hp before
+	 * */
+	public LTL<SimpleState> scenarioSpec6() {
+		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
+		var ps1  = eventually(p1);
+		//if hp is more than -3 point maxhp, then the hp next should be +3
+		Predicate<SimpleState> p2  =  (S -> (int) ((MyAgentState) S).worldmodel().before("hp") <=   (int) ((MyAgentState) S).worldmodel().val("hpmax")  ) ;
+		var ps2 = now(p2);
+		
+		Predicate<SimpleState> p3  =  (S -> (int) ((MyAgentState) S).worldmodel().val("hp") >=  (int) ((MyAgentState) S).worldmodel().before("hp")  ) ;
+		var ps3 = next(p3);
+		
+		
+		return always(ps1.implies( ps2.implies(ps3)));
+	}
 	
 	/*
 	 * There is a rage pot which is used ???
@@ -92,13 +138,15 @@ public class Specifications {
 		return always(p4) ;
 	}
 	
+	/*hp increases +3*/
 	public LTL<SimpleState> spec5() {
 		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
 		var ps1  = eventually(p1) ;
-		Predicate<SimpleState> p2 = (S -> (int) ((MyAgentState) S).worldmodel().val("hp") ==  (int) ((MyAgentState) S).worldmodel().before("hp")) ;
+		Predicate<SimpleState> p2 = (S -> (int) ((MyAgentState) S).worldmodel().val("hp") ==  (int) ((MyAgentState) S).worldmodel().before("hp") + 3) ;
 		var ps2 = eventually(p2);
 		return ps1.implies(ps2);
 	}
+	
 	
 	
 	

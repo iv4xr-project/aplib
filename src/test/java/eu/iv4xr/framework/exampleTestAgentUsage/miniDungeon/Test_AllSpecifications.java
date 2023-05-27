@@ -21,6 +21,7 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.Sa3Solver3;
+import eu.iv4xr.framework.goalsAndTactics.SaSolver4MultiMaze;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
@@ -35,6 +36,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLibExtended;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MiniDungeonModel;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.ModelLearner;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.ModelLearnerExtended;
@@ -65,26 +67,32 @@ public class Test_AllSpecifications {
 		}
 		return openers;
 	}
-	public void testFullPlay(String agentId, TestAgent agent, Pair<String,String> targetItemOrShrine, Predicate<Iv4xrAgentState> sp,
-			Sa3Solver3 sa4Solver, MyAgentState state,MyAgentEnv env) throws Exception {
+	public Pair<Boolean, Long> testFullPlay(String agentId, TestAgent agent, Pair<String,String> targetItemOrShrine,Pair additionalFeature, Predicate<Iv4xrAgentState> sp,
+			 MyAgentState state,MyAgentEnv env) throws Exception {
 		
 		// Goal: find a shrine and cleanse it:
 		// Pair targetItemOrShrine = new Pair("type","HEALPOT") ;
 		var goalLib = new GoalLib();
 		var tacticLib = new TacticLib();
-		var sa3Solver = new Sa3Solver3<Void>((S, e) -> Utils.isReachable((MyAgentState) S, e),
+		var goalLibExtended = new GoalLibExtended();
+		var SaSolver4MultiMaze = new SaSolver4MultiMaze<Void>(
+				(S, e) -> Utils.isReachable((MyAgentState) S, e),
 				(S, e) -> Utils.distanceToAgent((MyAgentState) S, e),
 				S -> (e1, e2) -> Utils.distanceBetweenEntities((MyAgentState) S, e1, e2),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId)),
+				(S, eId) -> SEQ(
+						goalLibExtended.smartEntityInCloseRange((MyAgentStateExtended) S,agent, eId), goalLib.entityInteracted(eId)
+						),
 				eId -> SEQ(goalLib.smartEntityInCloseRange(agent, eId), goalLib.entityInteracted(eId),
 						goalLib.entityInteracted(eId)),
-				S -> tacticLib.explorationExhausted(S), dummy -> exhaustiveExplore(agent, goalLib, tacticLib));
-			
+				S -> tacticLib.explorationExhausted(S), 
+				dummy -> exhaustiveExplore(agent, goalLib, tacticLib));
+		
+		
 			System.out.println("******invoking solver for specification: " + targetItemOrShrine.toString());
 			
-			 var G = sa3Solver.solver(agent, targetItemOrShrine, new Vec3(20, 1, 1),
-					e -> e.type.equals("" + EntityType.SHRINE),
-					e -> e.type.equals("" + EntityType.SCROLL),
+			var G = SaSolver4MultiMaze.solver(agent, targetItemOrShrine, additionalFeature, new Vec3(20, 1, 1),
+					e -> e.type.equals("" + EntityType.SHRINE), e -> e.type.equals("" + EntityType.SCROLL),
 					e -> e.type.equals("" + EntityType.SHRINE) && (boolean) e.properties.get("cleansed"),
 					(shrine, S) -> getConnectedEnablersFromBelief(shrine, (MyAgentState) S),
 					// we can't close a shrine again once it is cleaned, so this is not needed:
@@ -104,7 +112,7 @@ public class Test_AllSpecifications {
 			modelLearner.learn((MyAgentState) S, (GameWorldModel) m);
 			return null;
 		});
-
+		
 		var specs = new Specifications();
 		var psi1 = specs.spec1();
 		var psi2 = specs.spec2();
@@ -118,17 +126,16 @@ public class Test_AllSpecifications {
 
 		agent.addLTL(psi1, psi2, psi3, psi4, psi5,psi6,psi7,psi8);
 		agent.resetLTLs();
-
 		Thread.sleep(1000);
-
 		// why do we need this starting update?
+		if(state.worldmodel != null) {System.out.println(">>>> agent maze " +  state.worldmodel.elements.get(agentId).getIntProperty("maze"));}
 		state.updateState(agentId);
 		// Utils.printEntities(state);
-
 		// Now we run the agent:
 		int delay = 20;
 		long time0 = System.currentTimeMillis();
-		TestMiniDungeonWithAgent.runAndCheck(agent, G, false, delay, 3000);
+		System.out.println(">>> G status befor start = " + G.getStatus() );
+		TestMiniDungeonWithAgent.runAndCheck(agent, G, true, delay, 3000);
 
 		System.out.println(">>> G status = " + G.getStatus());
 
@@ -163,7 +170,8 @@ public class Test_AllSpecifications {
 		System.out.println(">>>> psi7 : " + psi7.sat());
 		System.out.println(">>>> psi8 : " + psi8.sat());
 		
-
+		var totalTime  = (System.currentTimeMillis() - time0) /1000;
+		return new Pair<Boolean, Long>(G.getStatus().success(),totalTime);
 	}
 
 }

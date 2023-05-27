@@ -91,6 +91,11 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	Vec3 heuristicLocation ;
 	
 	/**
+	 * The feature of the target game-object 
+	 */
+	Pair additionalFeature;
+	
+	/**
 	 * A filter specifying which game-objects are zones' blockers.
 	 */
 	Predicate<WorldEntity> blockersSelector ;
@@ -516,6 +521,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	public GoalStructure solver(BasicAgent agent, 
 			Pair tId, 
+			Pair additionalFeature,
 			Vec3 heuristicLocation,
 			Predicate<WorldEntity> blockersSelector,
 			Predicate<WorldEntity> enablersSelector,
@@ -528,6 +534,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		
 		this.agent = agent ;
 		this.finalTargetId = tId.snd.toString() ;
+		this.additionalFeature = additionalFeature;
 		this.heuristicLocation = heuristicLocation ;
 		this.blockersSelector = blockersSelector ;
 		this.enablersSelector = enablersSelector ;
@@ -540,39 +547,64 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 
 		this.triedEnablers.clear();
 		
-		var MyAgentStateExtended = new MyAgentStateExtended();
-		System.out.println("///////toye solver " + this.finalTargetId);
+		//var MyAgentStateExtended = new MyAgentStateExtended();
+		System.out.println("///////solver " + this.finalTargetId);
 		GoalStructure search = 
 			// this "search" will be put as the body of an enclosing REPEAT-loop:
 			DEPLOY(agent,
 				 	(Iv4xrAgentState S) -> {			
 				 		System.out.println("=== invoking top-level search") ;
+					 	
+				 		
+				 		if (explorationExhausted.test(S)) {
+					 		System.out.println("=== top-level search invokes explore: Exploration is exhausted, and the goal is not achived" ) ;
+							return 
+									SEQ(
+									// the budget "0" is ignored; this will explore exhaustively		
+									//exploring.apply(0),
+									SUCCESS() // to make the enclosing repeat-loop to continue iterating
+									) ;
+					 	}
+
 				 		 return 	
 				 						SEQ(			
 				 						//explore to find new items	
 				 					 	WHILEDO(
 				 					 			(MyAgentState x) ->  GoalLibExtended.checkExplore(x),
-				 					 			GoalLibExtended.findNodes()
+				 					 			GoalLibExtended.findNodes((MyAgentStateExtended ) S)
 				 								),				 					 					 					 	
 				 					 	
 										  IF(
-											  (MyAgentState x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
-											  SEQ (GoalLibExtended.survivalHeuristic(MyAgentStateExtended), //this will include selecting, navigating and use it	  
-											  GoalLibExtended.selectItem(tId) ),
-											  GoalLibExtended.selectItem(tId)
+											  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
+											  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
+											  
+												//Firstly, select an item from the observed entities, if the target was seen but 
+												//has not pick up, we will check it again, this happens when we have a sequence of goals
+											  FIRSTof(GoalLibExtended.selectItemToNavigate(tId), GoalLibExtended.selectTargetedItem(tId,additionalFeature) )),
+											  FIRSTof(GoalLibExtended.selectItemToNavigate(tId), GoalLibExtended.selectTargetedItem(tId,additionalFeature) )	  
 										  ),
 								 
 				 					 	
 				 					 	//GoalLibExtended.selectItem(tId), //select item based on the observation, if the target is seen it will be selected
 				 					 	//navigate to the selected item
-				 					 	GoalLibExtended.entityInCloseRange(MyAgentStateExtended),	//If it got stuck use the unblocking strategy			 					 	
+				 					 	GoalLibExtended.entityInCloseRange((MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
 				 					 	//IFELSE2(GoalLibExtended.entityInCloseRange(MyAgentStateExtended),SUCCESS(),GoalLibExtended.unstuck(MyAgentStateExtended)),
 				 					 	
-				 					 	//if the target is selected, then it can be pick up and then decide to use or not.
+				 					 	//if the target is selected, then it can be picked up and then decide to use or not.
 				 					 	IF(
-				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId),					 	
-				 					 		SEQ(GoalLibExtended.pickUpItem(MyAgentStateExtended,tId),
-					 					 	GoalLibExtended.useItem(MyAgentStateExtended)),
+				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId, additionalFeature),					 	
+				 					 		SEQ(
+				 					 				GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
+				 					 				IF(
+															  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
+															  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
+																	  //GoalLibExtended.resetSelectedItem(MyAgentStateExtended),
+																	  lift((MyAgentStateExtended b) -> GoalLibExtended.resetSelectedItem(b)),
+																	  GoalLibExtended.useItem((MyAgentStateExtended) S) ),
+															  GoalLibExtended.useItem((MyAgentStateExtended) S)
+														  )
+				 					 				//GoalLibExtended.useItem(MyAgentStateExtended)
+					 					 	),
 				 					 		FAIL()
 				 					 	)
 				 						)

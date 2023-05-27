@@ -142,6 +142,7 @@ public class MyAgentEnv extends Iv4xrEnvironment{
 				WorldEntity we = new WorldEntity(e.id,"" + e.type,false) ;
 				we.position = new Vec3(e.x,0,e.y) ;
 				we.properties.put("maze",e.mazeId) ;
+				we.properties.put("used", false) ;
 				return we ;
 			case SHRINE:
 				we = new WorldEntity(e.id,"" + e.type,true) ;

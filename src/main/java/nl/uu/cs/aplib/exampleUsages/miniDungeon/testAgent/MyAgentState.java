@@ -87,27 +87,34 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 		// System.out.println(">>> updateState") ;
 		WorldEntity aux = auxState();
 		var seenTiles = (Serializable[]) aux.properties.get("visibleTiles");
+	//	System.out.println(">>> seenTiles " +  seenTiles.length);
 		for (var entry_ : seenTiles) {
 			var entry = (Serializable[]) entry_;
+		//	System.out.println(">>> entry " + entry[0] +"::"+ entry.length);
 			int mazeId = (int) entry[0];
 			var tile = (IntVec2D) entry[1];
 			var type = (String) entry[2];
-			//System.out.println(">>> registering maze " + mazeId + ", tile " + tile + ": " + type) ;
+			//System.out.println(">>> registering maze " + mazeId + ", tile " + tile + ": " + type + multiLayerNav.areas.size()) ;
 			if (mazeId >= multiLayerNav.areas.size()) {
 				// detecting a new maze, need to allocate a nav-graph for this maze:
 				Sparse2DTiledSurface_NavGraph newNav = new Sparse2DTiledSurface_NavGraph();
 				newNav.sizeX = env().app.dungeon.config.worldSize ;
 				newNav.sizeY = newNav.sizeX ;
 				int N = env().app.dungeon.config.worldSize;
+			//	System.out.println(">>> registering maze N " + N);
 				Tile lowPortal = new Tile(N - 2, 1);
 				Tile highPortal = new Tile(1, 1);
 				multiLayerNav.addNextArea(newNav, lowPortal, highPortal, true);
+				//System.out.println(">>> registering maze addNextArea " + N);
 			}
 
 			multiLayerNav.markAsSeen(new Pair<>(mazeId, new Tile(tile.x, tile.y)));
+			//System.out.println(">>> after mark as seen " );
 			switch (type) {
 			case "WALL":
+			//	System.out.println(">>>  walll");
 				multiLayerNav.addObstacle(new Pair<>(mazeId, new Wall(tile.x, tile.y)));
+			//	System.out.println(">>>  walll 222");
 				break;
 			case "":
 				multiLayerNav.removeObstacle(new Pair<>(mazeId, new Tile(tile.x, tile.y)));
@@ -131,8 +138,8 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 				continue;
 			}
 			this.worldmodel.elements.remove(id);
-			//System.out.println(">>>> " + this.worldmodel.agentId 
-			//		+ " removing " + id + ", in wom: " + this.worldmodel.elements.get(id)) ; ;
+		//	System.out.println(">>>> " + this.worldmodel.agentId 
+		//			+ " removing " + id + ", in wom: " + this.worldmodel.elements.get(id)) ; ;
 		}
 		//System.out.println(">>>> " + this.worldmodel.agentId
 		//		+ " check M0_5: "+ this.worldmodel.elements.get("M0_5")) ; ;
@@ -157,7 +164,6 @@ public class MyAgentState extends Iv4xrAgentState<Void> {
 				
 			}
 		}
-
 	}
 	
 	/**

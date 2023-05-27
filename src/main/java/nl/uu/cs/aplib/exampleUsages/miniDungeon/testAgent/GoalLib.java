@@ -71,8 +71,7 @@ public class GoalLib implements IInteractiveWorldGoalLib<Pair<Integer,Tile>>{
 						   tacticLib.explore(null),
 						   //Abort().on_(S -> { System.out.println("### about to abort") ; return false;}).lift(), 
 				   		   ABORT()) 
-				  )
-				;
+				  );
 		
 		return G.lift() ;		
 	}
