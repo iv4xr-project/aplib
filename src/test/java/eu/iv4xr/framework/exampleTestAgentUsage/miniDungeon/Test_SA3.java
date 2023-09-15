@@ -17,6 +17,9 @@ import javax.swing.text.html.parser.Entity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.MD_invs;
+import eu.iv4xr.framework.extensions.ltl.LTL;
+import eu.iv4xr.framework.extensions.ltl.SATVerdict;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
@@ -46,6 +49,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Specifications;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.utils.Pair;
 
 public class Test_SA3 {
@@ -60,8 +64,8 @@ public class Test_SA3 {
 
 	@Test
 	public void test0() throws Exception {
-		Pair targetItemOrShrine = new Pair("id", "H0_0");
-		Pair additionalFeature = new Pair("maze", 0);
+		Pair targetItemOrShrine = new Pair("id", "H1_0");
+		Pair additionalFeature = new Pair("maze", 2);
 		int seed  = 79371;
 		testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed);
 	}
@@ -197,7 +201,7 @@ public class Test_SA3 {
 								System.out.println("Lets check the data: " + bagItems + hpBefore + hp + healpotsInBagBefore + healpotsInBag);
 								//the targeted id was used like heal or rage during survival
 								var usedItems =  S_.triedItems.stream().filter(j-> j.id.equals(targetItemOrShrine.snd.toString())  &&   (boolean) j.properties.get("used")).collect(Collectors.toList());
-								//S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
+								S_.triedItems.forEach(es -> System.out.println("tried Items" + es.id));
 								if(!usedItems.isEmpty() && !player.properties.get("itemsInBag").toString().contains(targetItemOrShrine.snd.toString())) {
 									System.out.println("If it was selected and it is not anymore in the bag, it has used!");
 									return false;
@@ -320,11 +324,25 @@ public class Test_SA3 {
 		var specs = new Specifications();
 		var psi1 = specs.spec1();
 		var psi2 = specs.spec2();
-		var psi3 = specs.scenarioSpec1();
-		var psi4 = specs.scenarioSpec2();
-		var psi5 = specs.scenarioSpec3();
-		agent.addLTL(psi1, psi2, psi3, psi4, psi5);
+		var psi3 = specs.spec3();
+		var psi4 = specs.spec4();
+		var psi5 = specs.spec5();
+		var psiSp1 = specs.scenarioSpec1();
+		var psiSp2 = specs.scenarioSpec2();
+		var psiSp3 = specs.scenarioSpec3();
+		var psiSp4 = specs.scenarioSpec4();
+		var psiSp5 = specs.scenarioSpec5();
+		var psiSp6 = specs.scenarioSpec6();
+		agent.addLTL(psi1, psi2, psi3, psi4, psi5, psiSp1, psiSp2, psiSp3, psiSp4, psiSp5, psiSp6);
 		agent.resetLTLs();
+		
+		var invs = new MD_invs() ;
+		List<LTL<SimpleState>> invs2 = new LinkedList<>() ;
+		for (var i : invs.allInvs) {
+			var ltl = LTL.always(i) ;
+			invs2.add(ltl) ;
+			agent.addLTL(ltl) ;
+		}
 		
 		
 		Thread.sleep(1000);
@@ -362,13 +380,32 @@ public class Test_SA3 {
 
 		/* Check the specifications */
 		var ok = agent.evaluateLTLs();
-		//assertTrue(ok) ;
+
 		System.out.println(">>>> LTL results: " + ok);
 		System.out.println(">>>> psi1 : " + psi1.sat());
 		System.out.println(">>>> psi2 : " + psi2.sat());
 		System.out.println(">>>> psi3 : " + psi3.sat());
 		System.out.println(">>>> psi4 : " + psi4.sat());
 		System.out.println(">>>> psi5 : " + psi5.sat());
+		System.out.println(">>>> psi6 : " + psiSp1.sat());
+		System.out.println(">>>> psi7 : " + psiSp2.sat());
+		System.out.println(">>>> psi8 : " + psiSp3.sat());
+		System.out.println(">>>> psi10 : " + psiSp4.sat());
+		System.out.println(">>>> psi11 : " + psiSp5.sat());
+		System.out.println(">>>> psi12 : " + psiSp6.sat());
+		assertTrue(psi1.sat() == SATVerdict.SAT	
+				&& psi2.sat() == SATVerdict.SAT
+				&& psi3.sat() == SATVerdict.SAT
+				&& psi4.sat() == SATVerdict.SAT
+				&& psiSp1.sat() == SATVerdict.SAT
+				&& psiSp2.sat() == SATVerdict.SAT
+				&& psiSp3.sat() == SATVerdict.SAT
+				) ;
+		
+		for(var inv: invs2) {
+			System.out.println(">>>> Inv : " + inv.sat());
+			assertTrue(inv.sat() == SATVerdict.SAT	);
+		}
 		
 		var totalTime  = (System.currentTimeMillis() - time0) /1000;
 		return new Pair<Boolean, Long>(G.getStatus().success(),totalTime);

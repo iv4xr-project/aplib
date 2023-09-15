@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.extensions.ltl.SATVerdict;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
@@ -101,7 +102,15 @@ public class Test_AllSpecifications {
 				, Policy.NEAREST_TO_TARGET);			
 		
 		
-		agent.attachState(state).attachEnvironment(env).setGoal(G);
+		
+		if (agent.state() == null) {
+			agent.attachState(state).attachEnvironment(env).setGoal(G);
+		}
+		else {
+			agent.setGoal(G);
+		}
+			
+		
 		
 		GameWorldModel model = new GameWorldModel(new GWState());
 		// GameWorldModel model =
@@ -113,19 +122,7 @@ public class Test_AllSpecifications {
 			return null;
 		});
 		
-		var specs = new Specifications();
-		var psi1 = specs.spec1();
-		var psi2 = specs.spec2();
-		var psi6 = specs.spec3();
-		var psi7 = specs.spec4();
-		var psi8 = specs.spec5();
 		
-		var psi3 = specs.scenarioSpec1();
-		var psi4 = specs.scenarioSpec2();
-		var psi5 = specs.scenarioSpec3();
-
-		agent.addLTL(psi1, psi2, psi3, psi4, psi5,psi6,psi7,psi8);
-		agent.resetLTLs();
 		Thread.sleep(1000);
 		// why do we need this starting update?
 		if(state.worldmodel != null) {System.out.println(">>>> agent maze " +  state.worldmodel.elements.get(agentId).getIntProperty("maze"));}
@@ -135,13 +132,13 @@ public class Test_AllSpecifications {
 		int delay = 20;
 		long time0 = System.currentTimeMillis();
 		System.out.println(">>> G status befor start = " + G.getStatus() );
-		TestMiniDungeonWithAgent.runAndCheck(agent, G, true, delay, 3000);
+		TestMiniDungeonWithAgent.runAndCheck(agent, G, true, delay, 12000);
 
 		System.out.println(">>> G status = " + G.getStatus());
 
 		Scanner scanner = new Scanner(System.in);
 		// scanner.nextLine() ;
-		// assertTrue(G.getStatus().success()) ;
+		assertTrue(G.getStatus().success()) ;
 
 		System.out.println(">>> exec-time = " + (System.currentTimeMillis() - time0));
 
@@ -157,18 +154,48 @@ public class Test_AllSpecifications {
 		model.save(fileName1);
 		CoverterDot.saveAs(fileName2, model, true, true) ;
 
-		/* Check the specifications */
-		var ok = agent.evaluateLTLs();
-
-		System.out.println(">>>> LTL results: " + ok);
-		System.out.println(">>>> psi1 : " + psi1.sat());
-		System.out.println(">>>> psi2 : " + psi2.sat());
-		System.out.println(">>>> psi3 : " + psi3.sat());
-		System.out.println(">>>> psi4 : " + psi4.sat());
-		System.out.println(">>>> psi5 : " + psi5.sat());
-		System.out.println(">>>> psi6 : " + psi6.sat());
-		System.out.println(">>>> psi7 : " + psi7.sat());
-		System.out.println(">>>> psi8 : " + psi8.sat());
+		
+		System.out.println(">>>> LTL results: inside ");
+		//
+//		var specs = new Specifications();
+//		var psi1 = specs.spec1();
+//		var psi2 = specs.spec2();
+//		var psi3 = specs.spec3();
+//		var psi4 = specs.spec4();
+//		var psi5 = specs.spec5();
+//		var psiSp1 = specs.scenarioSpec1();
+//		var psiSp2 = specs.scenarioSpec2();
+//		var psiSp3 = specs.scenarioSpec3();
+//		var psiSp4 = specs.scenarioSpec4();
+//		var psiSp5 = specs.scenarioSpec5();
+//		var psiSp6 = specs.scenarioSpec6();
+//		agent.addLTL(psi2);
+//		agent.resetLTLs();
+//
+//		
+//		/* Check the specifications */
+//	//	var ok = agent.evaluateLTLs();
+//
+//	//	System.out.println(">>>> LTL results: " + ok);
+//		System.out.println(">>>> psi1 : " + psi1.sat());
+//		System.out.println(">>>> psi2 : " + psi2.sat());
+//		System.out.println(">>>> psi3 : " + psi3.sat());
+//		System.out.println(">>>> psi4 : " + psi4.sat());
+//		System.out.println(">>>> psi5 : " + psi5.sat());
+//		System.out.println(">>>> psi6 : " + psiSp1.sat());
+//		System.out.println(">>>> psi7 : " + psiSp2.sat());
+//		System.out.println(">>>> psi8 : " + psiSp3.sat());
+//		System.out.println(">>>> psi9 : " + psiSp4.sat());
+//		System.out.println(">>>> psi9 : " + psiSp5.sat());
+//		System.out.println(">>>> psi9 : " + psiSp6.sat());
+//		assertTrue(psi1.sat() == SATVerdict.SAT	
+//				&& psi2.sat() == SATVerdict.SAT
+//				&& psi3.sat() == SATVerdict.SAT
+//				&& psi4.sat() == SATVerdict.SAT
+//				&& psiSp1.sat() == SATVerdict.SAT
+//				&& psiSp2.sat() == SATVerdict.SAT
+//				&& psiSp3.sat() == SATVerdict.SAT
+//				) ;
 		
 		var totalTime  = (System.currentTimeMillis() - time0) /1000;
 		return new Pair<Boolean, Long>(G.getStatus().success(),totalTime);

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
+import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
@@ -587,7 +588,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 					 	
 				 					 	//GoalLibExtended.selectItem(tId), //select item based on the observation, if the target is seen it will be selected
 				 					 	//navigate to the selected item
-				 					 	GoalLibExtended.entityInCloseRange((MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
+										  GoalLibExtended.smartEntityInCloseRange((TestAgent) agent,(MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
 				 					 	//IFELSE2(GoalLibExtended.entityInCloseRange(MyAgentStateExtended),SUCCESS(),GoalLibExtended.unstuck(MyAgentStateExtended)),
 				 					 	
 				 					 	//if the target is selected, then it can be picked up and then decide to use or not.

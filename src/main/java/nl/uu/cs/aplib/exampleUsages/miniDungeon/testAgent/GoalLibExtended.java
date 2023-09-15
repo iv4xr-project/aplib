@@ -23,6 +23,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.junit.internal.runners.statements.Fail;
+
+
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
@@ -38,6 +41,7 @@ import nl.uu.cs.aplib.mainConcepts.Goal;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.mainConcepts.Action.Abort;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.utils.Pair;
 
 import java.io.Serializable;
@@ -52,7 +56,7 @@ public class GoalLibExtended  extends GoalLib{
 	private static final TestAgent TestAgent = null;
 	private static final boolean WorldEntity = false;
 	public static TacticLib tacticLib = new TacticLib() ;
-
+	public static GoalLib goalLib = new GoalLib() ;
 	/**
 	 * Explore the environment when there is no entity in the agent visibility
 	 * range, until it sees a new entity
@@ -91,12 +95,17 @@ public class GoalLibExtended  extends GoalLib{
 	
 	
 	public static boolean resetSelectedItem(MyAgentStateExtended S) {
-		System.out.println("reset things" + S.selectedItemTempt);
-		if(!S.selectedItem.getBooleanProperty("used")) {
+		System.out.println("reset things" + S.selectedItemTempt 
+				 + S.selectedItem + S.selectedItem.getBooleanProperty("used"));
+	
+		if(S.selectedItemTempt.equals(S.selectedItem)  && S.selectedItemTempt.getBooleanProperty("used")) {
+			return false;
+		}else {
 			S.selectedItem = S.selectedItemTempt;
+			System.out.println("reset the item!!");
 			return true;
 		}
-		return false;
+		
 	}
 	
 	/**
@@ -224,8 +233,10 @@ public class GoalLibExtended  extends GoalLib{
 				if(candidates.size() > 0) {
 					candidates = candidates.stream().filter(e-> !(boolean) e.getProperty("cleansed")).collect(Collectors.toList());
 					candidates.forEach(e -> System.out.print("shrine candidiates which are not cleansed! " + e.id));
-					if(!candidates.isEmpty()) {A.selectedItem = candidates.get(0); System.out.println("uncleansed shrine!!" + candidates.get(0).id);}
-					return true;	
+					if(!candidates.isEmpty()) {
+						A.selectedItem = candidates.get(0); System.out.println("uncleansed shrine!!" + candidates.get(0).id);
+						return true;	
+						}
 				}		
 			}			
 			return false;
@@ -492,12 +503,13 @@ GoalStructure checkIfEntityIsInCloseRange2(String targetId) {
 		
 		if(!shrine.isEmpty()) {
 			  System.out.println("Shrine to cleanse is found!"); 
-			  var clean = shrine.stream().filter(e -> !(boolean) e.properties.get("cleansed") ).findFirst();
-			  
+			  var clean = shrine.stream().filter(e -> !(boolean) e.properties.get("cleansed") ).findAny();
+			  System.out.println("cleanss" + clean);
 			  if(!clean.isEmpty()) {
 				  System.out.println("Shrine is cleansed!" + clean); 
 				  return true;
 			  }
+			  
 		}	
 		return false;		
 	}
@@ -613,13 +625,6 @@ GoalStructure checkIfEntityIsInCloseRange2(String targetId) {
 							   	  .on_(tacticLib.hasHealPot_and_HpLow)
 							   	  .lift()
 							   ,
-							   tacticLib.useRagePotAction()
-							   	  .on_(tacticLib.hasRagePot_and_inCombat)
-							   	  .lift()
-							   ,
-							   tacticLib.attackMonsterAction()
-							      .on_(tacticLib.inCombat_and_hpNotCritical)
-							      .lift(),
 							   TacticLibExtended.navigateToTac(),
 							   TacticLibExtended.newExplore(),
 					   		   ABORT()) 
@@ -690,7 +695,7 @@ GoalStructure checkIfEntityIsInCloseRange2(String targetId) {
 				.toSolve((Pair<MyAgentStateExtended,WorldModel> proposal) -> {	
 					var S = proposal.fst ;
 					String targetId = S.selectedItem.id;
-					//System.out.println(">>> checking goal :: "  + targetId) ;
+					System.out.println(">>> checking goal :: "  + targetId) ;
 					WorldModel previouswom = S.worldmodel ;
 					WorldModel newObs = proposal.snd ;
 					WorldEntity e = previouswom.getElement(targetId) ;						
@@ -725,6 +730,78 @@ GoalStructure checkIfEntityIsInCloseRange2(String targetId) {
 				)
 				;		
 	}
+	
+	
+	
+	/**
+	 * A smarter version of entityInCloseRange(e) goal, that will also pick up a nearby
+	 * potion along the way, if the bag is empty. 
+	 */
+	public static GoalStructure smartEntityInCloseRange(
+			TestAgent agent,MyAgentStateExtended A) {
+		
+		String targetId = A.selectedItem != null ? A.selectedItem.id : "empty"; 
+		System.out.print("smart entityt new neew : " + targetId);
+		 var G1 = ((PrimitiveGoal) entityInCloseRange(A)) ;
+		 var originalTactic = G1.getGoal().getTactic();
+		 
+		 var grabHealPot = action("Push goal grab healpot")
+				 .do1((MyAgentState S) -> { 
+					 agent.pushGoal(grabPotNew(agent, EntityType.HEALPOT));
+					 return null ; })
+				 .on_(whenToGoAfterHealPotNew)
+				 .lift() ;
+		 
+
+		 
+		 return G1
+		   .getGoal()
+		   .withTactic(
+			   FIRSTof(
+				 grabHealPot,
+				 originalTactic
+				 ))
+		   .lift() ;
+	}
+	
+	
+	
+	/**
+	 * A goal to send the agent to pick up a heal or rage pot nearby. It is a dynamic goal,
+	 * as it will pick any such pot (rather than a specific one decided upfront).
+	 */
+	public static GoalStructure grabPotNew(TestAgent agent, EntityType potionType) { 
+		return DEPLOY(agent,
+		  (MyAgentStateExtended S) -> {
+			  var potsInVicinity = TacticLib.nearItems(S,potionType,5) ;
+			  if (potsInVicinity.size() == 0) {
+			      return FAIL() ;
+			  }
+			  		 
+			  var candidates = potsInVicinity.stream().filter(element -> !S.triedItems.contains(element) && element != S.selectedItem).collect(Collectors.toList());	  
+			  var pot = candidates.get(0) ;	
+			  System.out.println("===== deploy grab " + pot.id) ;
+			  pot.properties.put("used", true);
+			  S.triedItems.add(pot);
+			  System.out.println("===== deploy grab " + pot.id + pot.properties.get("used")) ;
+			  return SEQ(goalLib.entityInCloseRange(pot.id),
+					  goalLib.entityInteracted(pot.id)) ;
+		   }
+	    ) ;
+	}
+	
+	
+	
+	public static Predicate<MyAgentStateExtended> whenToGoAfterHealPotNew = S -> {
+		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+		int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+		int maxBagSize = (int) player.properties.get("maxBagSize") ;
+		var healPotsInVicinity = TacticLib.nearItems(S,EntityType.HEALPOT,4) ;
+		healPotsInVicinity = healPotsInVicinity.stream().filter(element -> !S.triedItems.contains(element) && element != S.selectedItem).collect(Collectors.toList());	  
+		return S.agentIsAlive() 
+				&& maxBagSize-bagSpaceUsed >= 1 
+				&& healPotsInVicinity.size() > 0 ;
+	} ;
 	
 	
 	
@@ -771,7 +848,7 @@ GoalStructure checkIfEntityIsInCloseRange2(String targetId) {
 					FIRSTof(
 					//firstly check if there exist a heal or rage pot in the bag to use
 					IF((MyAgentStateExtended b) ->checkBag(S,entity.toString()),
-							useHealOrRagePot(S),
+							useHeal(S),
 							FAIL()
 							),
 					IF(
@@ -783,9 +860,10 @@ GoalStructure checkIfEntityIsInCloseRange2(String targetId) {
 									SEQ(
 										findItem(EntityType.HEALPOT.toString()),entityInCloseRange(S),entityInteractedNew(),useHealOrRagePot(S)
 									),
-									SEQ(
-										findItem(EntityType.RAGEPOT.toString()),entityInCloseRange(S),entityInteractedNew(),useHealOrRagePot(S)
-									)		
+									SUCCESS()
+//									SEQ(
+//										findItem(EntityType.RAGEPOT.toString()),entityInCloseRange(S),entityInteractedNew(),useHealOrRagePot(S)
+//									)		
 							)
 					)
 				)

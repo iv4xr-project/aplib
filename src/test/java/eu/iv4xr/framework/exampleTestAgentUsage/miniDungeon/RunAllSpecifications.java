@@ -7,7 +7,10 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.MD_invs;
 import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.RandomPlayTester;
+import eu.iv4xr.framework.extensions.ltl.LTL;
+import eu.iv4xr.framework.extensions.ltl.SATVerdict;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.Sa3Solver3;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
@@ -29,10 +32,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Specifications;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.utils.Pair;
 
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import static nl.uu.cs.aplib.AplibEDSL.WHILE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.*;
@@ -40,7 +45,7 @@ import java.util.*;
 public class RunAllSpecifications {
 
 
-	static boolean withGraphics = true;
+	static boolean withGraphics = false;
 	static boolean supressLogging = false;
 	Pair<Integer, Tile> covertToMDLocation(Vec3 p) {
 		int mapNr = Math.round(p.y);
@@ -69,7 +74,7 @@ public class RunAllSpecifications {
 		// Create an instance of the game, attach an environment to it:
 				MiniDungeonConfig config = new MiniDungeonConfig();
 				config.numberOfHealPots = 4;
-				config.viewDistance = 4;
+				config.viewDistance = 5;
 				config.numberOfMaze = maze;
 				config.randomSeed = seed;
 				config.enableSmeagol = false;
@@ -107,18 +112,41 @@ public class RunAllSpecifications {
 		
 				
 		//scenario where a heal pot, a rage pot, a scroll is used and the shrine is check to be cleansed	
-		ScenarioSpecifications.put(AHealPot(additionalFeature).fst,AHealPot(additionalFeature).snd);	
-		ScenarioSpecifications.put(ARagePot(additionalFeature).fst,ARagePot(additionalFeature).snd);	
-		//ScenarioSpecifications.put(AScroll(additionalFeature).fst,AScroll(additionalFeature).snd);	
-		//ScenarioSpecifications.put(cleansShrin().fst,cleansShrin().snd);
-		
-		//scenario where a rage pot, a scroll is used and shrine is cleansed
-//		ScenarioSpecifications.put(ARagePot().fst,ARagePot().snd);	
-//		ScenarioSpecifications.put(AScroll().fst,AScroll().snd);	
+//		ScenarioSpecifications.put(AHealPot(additionalFeature).fst,AHealPot(additionalFeature).snd);	
+//		ScenarioSpecifications.put(ARagePot(additionalFeature).fst,ARagePot(additionalFeature).snd);	
+//		ScenarioSpecifications.put(AScroll(additionalFeature).fst,AScroll(additionalFeature).snd);	
 //		ScenarioSpecifications.put(cleansShrin().fst,cleansShrin().snd);
 		
+		//scenario where a rage pot, a scroll is used and shrine is cleansed
+//		ScenarioSpecifications.put(AHealPot(additionalFeature).fst,AHealPot(additionalFeature).snd);	
+		ScenarioSpecifications.put(ARagePot(additionalFeature).fst,ARagePot(additionalFeature).snd);	
+		ScenarioSpecifications.put(AScroll(additionalFeature).fst,AScroll(additionalFeature).snd);	
+		ScenarioSpecifications.put(cleansShrin().fst,cleansShrin().snd);
 		
 		
+		var specs = new Specifications();
+		var psi1 = specs.spec1();
+		var psi2 = specs.spec2();
+		var psi3 = specs.spec3();
+		var psi4 = specs.spec4();
+		var psi5 = specs.spec5();
+		var psiSp1 = specs.scenarioSpec1();
+		var psiSp2 = specs.scenarioSpec2();
+		var psiSp3 = specs.scenarioSpec3();
+		var psiSp4 = specs.scenarioSpec4();
+		var psiSp5 = specs.scenarioSpec5();
+		var psiSp6 = specs.scenarioSpec6();
+		agent.addLTL(psi1, psi2, psi3, psi4, psi5, psiSp1, psiSp2, psiSp3, psiSp4, psiSp5, psiSp6);
+		
+		var invs = new MD_invs() ;
+		List<LTL<SimpleState>> invs2 = new LinkedList<>() ;
+		for (var i : invs.allInvs) {
+			var ltl = LTL.always(i) ;
+			invs2.add(ltl) ;
+			agent.addLTL(ltl) ;
+		}
+		
+		agent.resetLTLs();
 		//call specifications 
 		Test_AllSpecifications runAll = new Test_AllSpecifications();
 	    //runAll.testFullPlay(agentId,agent,ScenarioSpecifications,sa3Solver,state,env);
@@ -130,12 +158,45 @@ public class RunAllSpecifications {
 			System.out.println("which goal to call :: " + targetItemOrShrine1);
 			result  = runAll.testFullPlay(agentId,agent,targetItemOrShrine1,additionalFeature, sp,state,env);	
 		}
-
+		
 		// Run random algorithm after finishing the sequence of specification
 		if(random) runRandom(agentId, agent, state, env);
 		
 		var totalTime  = (System.currentTimeMillis() - time0) /1000;
 		System.out.println("total time :: " + totalTime);
+		
+
+//
+//		
+		/* Check the specifications */
+		var ok = agent.evaluateLTLs();
+		System.out.println(">>>> LTL results: ttttttt ");
+		System.out.println(">>>> LTL results: " + ok);
+		System.out.println(">>>> psi1 : " + psi1.sat());
+		System.out.println(">>>> psi2 : " + psi2.sat());
+		System.out.println(">>>> psi3 : " + psi3.sat());
+		System.out.println(">>>> psi4 : " + psi4.sat());
+		System.out.println(">>>> psi5 : " + psi5.sat());
+		System.out.println(">>>> psi6 : " + psiSp1.sat());
+		System.out.println(">>>> psi7 : " + psiSp2.sat());
+		System.out.println(">>>> psi8 : " + psiSp3.sat());
+		System.out.println(">>>> psi9 : " + psiSp4.sat());
+		System.out.println(">>>> psi9 : " + psiSp5.sat());
+		System.out.println(">>>> psi9 : " + psiSp6.sat());
+		assertTrue(psi1.sat() == SATVerdict.SAT	
+				&& psi2.sat() == SATVerdict.SAT
+				&& psi3.sat() == SATVerdict.SAT
+				&& psi4.sat() == SATVerdict.SAT
+				&& psiSp1.sat() == SATVerdict.SAT
+				&& psiSp2.sat() == SATVerdict.SAT
+				&& psiSp3.sat() == SATVerdict.SAT
+				) ;
+		
+		for(var inv: invs2) {
+			System.out.println(">>>> Inv : " + inv.sat());
+			assertTrue(inv.sat() == SATVerdict.SAT	);
+		}
+		
 		return result;
 		
 		}
@@ -191,6 +252,7 @@ public class RunAllSpecifications {
 						  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 						  if(!immortalShrine.isEmpty()) {
 							  System.out.println("Immortal Shrine is cleansed!"); 
+							  S_.triedItems.clear();					  
 							  return false;
 						  }
 					}
@@ -208,7 +270,7 @@ public class RunAllSpecifications {
 							  } 
 						  if(scrollsInBagBefore > scrollsInBag && clean) {
 							  System.out.println("Shrine is cleansed! and the bag is empty"); 
-							  System.out.println("*******the goal is successfully acheived!!***** Shine is cleansed" );
+							  System.out.println("*******the goal is successfully acheived!!***** Shine is cleansed" );												
 							  return false;
 						  }
 					}
@@ -231,13 +293,14 @@ public class RunAllSpecifications {
 		var S_ = (MyAgentStateExtended) S;
 		var player = S_.worldmodel.elements.get(S_.worldmodel.agentId);
 		System.out.println("Checking the condition: phi ");
-		System.out.println("== The type of the item is given:" + phi.snd);
+		System.out.println("== The type of the item is given:" + phi.snd + "this is a scroll");
 		var shrine = S.worldmodel.elements.values().stream().filter( s ->
 	  	s.type.contains(EntityType.SHRINE.toString()) ).collect(Collectors.toList());
 		if(!shrine.isEmpty()) {  
 			  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 			  if(!immortalShrine.isEmpty()) {
-				  System.out.println("Immortal Shrine is cleansed!"); 
+				  System.out.println("Immortal Shrine is cleansed!");
+				  S_.triedItems.clear();
 				  return false;
 			  }
 		}
@@ -254,12 +317,12 @@ public class RunAllSpecifications {
 			  if(additionalFeature != null) {	
 				    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(phi.snd)  && (boolean) j.properties.get("used") && j.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)).collect(Collectors.toList());				    				    
 				    if(!usedItems.isEmpty() && scrollsInBagBefore > scrollsInBag) {
-						System.out.println("*******the goal is successfully acheived!!*****" + phi.snd);
+						System.out.println("*******the goal is successfully acheived!!*****" + phi.snd);						
 						return false;  					
 					}
 				}
 			  else if(scrollsInBagBefore > scrollsInBag) { 
-					  System.out.println("*******the goal is successfully acheived!!*****" + EntityType.SCROLL);
+					  System.out.println("*******the goal is successfully acheived!!*****" + EntityType.SCROLL);					  
 					  return false; 
 				  }
 			  								  
@@ -294,7 +357,7 @@ public class RunAllSpecifications {
 						if(additionalFeature != null) {	
 						    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(phi.snd)  && (boolean) j.properties.get("used") && j.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)).collect(Collectors.toList());				    				    
 						    if(!usedItems.isEmpty() && ragpotsInBagBefore > ragepotsInBag) {
-								System.out.println("*******the goal is successfully acheived!!*****" + phi.snd);
+								System.out.println("*******the goal is successfully acheived!!*****" + phi.snd);								
 								return false;  					
 							}
 						}
@@ -330,6 +393,7 @@ public class RunAllSpecifications {
 					  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 					  if(!immortalShrine.isEmpty()) {
 						  System.out.println("Immortal Shrine is cleansed!"); 
+						  S_.triedItems.clear();
 						  return false;
 					  }
 				}
@@ -344,7 +408,7 @@ public class RunAllSpecifications {
 					  var ragepotsInBag = (int) player.properties.get("ragepotsInBag");
 					  System.out.println("agent properties:" + ragepotsInBag +"before: "+ragpotsInBagBefore + "bagItems " + bagItems); 
 					  if( bagItems && ragpotsInBagBefore > ragepotsInBag) {
-						  System.out.println("*******the goal is successfully acheived!!*****" + phi.snd.toString());
+						  System.out.println("*******the goal is successfully acheived!!*****" + phi.snd.toString());						 
 						  return false; 
 					  }
 					 
@@ -379,6 +443,7 @@ public class RunAllSpecifications {
 				  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 				  if(!immortalShrine.isEmpty()) {
 					  System.out.println("Immortal Shrine is cleansed!"); 
+					  S_.triedItems.clear();
 					  return false;
 				  }
 			}
@@ -392,18 +457,18 @@ public class RunAllSpecifications {
 				var hp = (int) player.properties.get("hp"); 
 				var healpotsInBag = (int) player.properties.get("healpotsInBag");
 				//the target HP might be selected and used before because of the survival heuristic
-				System.out.println("== The type of the item is given:bbbbb" + phi.snd );
+				System.out.println("== The type of the item is given:" + phi.snd  + "heal bag" + healpotsInBagBefore + "after "+ healpotsInBag);
 				if(additionalFeature != null) {	
 				    var usedItems =  S_.triedItems.stream().filter(j-> j.type.equals(phi.snd)  && (boolean) j.properties.get("used") && j.properties.get(additionalFeature.fst.toString()).equals(additionalFeature.snd)).collect(Collectors.toList());				    				    
 				    System.out.println("== The type of the item is given:!!!!" + phi.snd +  usedItems.isEmpty() + usedItems.size() + usedItems );
-				    
+				    S_.triedItems.forEach(es->{System.out.println("tried items:: " + es.id + "used:: " + es.properties.get("used"));});
 				    if(!usedItems.isEmpty() && hpBefore < hp && healpotsInBagBefore >healpotsInBag) {
-						System.out.println("*******the goal is successfully acheived!!*****" + phi.snd);
+						System.out.println("*******the goal is successfully acheived!!*****" + phi.snd);						
 						return false;  					
 					} 
 				}
 				else if((hpBefore < hp) && healpotsInBagBefore >healpotsInBag) {
-					System.out.println("*******the goal is successfully acheived!!*****" + EntityType.HEALPOT);
+					System.out.println("*******the goal is successfully acheived!!*****" + EntityType.HEALPOT);					
 					return false;  					
 				}
 				
@@ -433,6 +498,7 @@ public class RunAllSpecifications {
 					  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 					  if(!immortalShrine.isEmpty()) {
 						  System.out.println("Immortal Shrine is cleansed!"); 
+						  S_.triedItems.clear();
 						  return false;
 					  }
 				}
@@ -455,11 +521,11 @@ public class RunAllSpecifications {
 					//the target HP might be selected and used before because of the survival heuristic
 					if(S_.triedItems.contains(phi.snd) &&  S_.worldmodel.getElement(phi.snd) == null) {
 						System.out.println("If it was selected and it is not anymore in the bag, it has used!");
-						System.out.println("*******the goal is successfully acheived!!*****");
+						System.out.println("*******the goal is successfully acheived!!*****");						
 						return false;
 					}
 					if(bagItems && (hpBefore < hp) && healpotsInBagBefore >healpotsInBag) {
-						System.out.println("*******the goal is successfully acheived!!*****" + phi.snd.toString());
+						System.out.println("*******the goal is successfully acheived!!*****" + phi.snd.toString());					
 						return false;  						
 					}
 				}

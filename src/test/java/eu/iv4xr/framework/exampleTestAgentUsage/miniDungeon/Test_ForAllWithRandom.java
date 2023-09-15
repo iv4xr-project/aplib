@@ -62,7 +62,9 @@ public class Test_ForAllWithRandom {
 	public void test0() throws Exception {
 		Pair targetItemOrShrine = new Pair("type", EntityType.SCROLL);
 		Pair additionalFeature = null;
-		testFullPlay("Frodo", targetItemOrShrine, additionalFeature);
+		int seed  = 43210;
+		int maze = 1 ; 
+		testFullPlay("Frodo", targetItemOrShrine, additionalFeature, seed , maze);
 	}
 
 	GoalStructure exhaustiveExplore(TestAgent agent, GoalLib goalLib, TacticLib tacticLib) {
@@ -87,13 +89,13 @@ public class Test_ForAllWithRandom {
 		return shTy == ShrineType.ShrineOfImmortals ;
 	}
 	
-	public void testFullPlay(String agentId, Pair targetItemOrShrine, Pair additionalFeature ) throws Exception {
+	public void testFullPlay(String agentId, Pair targetItemOrShrine, Pair additionalFeature,int seed, int maze  ) throws Exception {
 		// Create an instance of the game, attach an environment to it:
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
-		config.numberOfMaze = 2;
-		config.randomSeed = 79371;
+		config.numberOfMaze = maze;
+		config.randomSeed = seed;
 		config.enableSmeagol = false;
 		// change the Ferado maxBagSize to 1, it is in the Entity.java should make it
 		// here

@@ -340,7 +340,7 @@ public class MD_invs {
 	}
 
 	@SuppressWarnings("unchecked")
-	Predicate<SimpleState>[] allInvs = wrap_(
+	public Predicate<SimpleState>[] allInvs = wrap_(
 			S -> hpInv((MyAgentState) S),
 			S -> scoreInv((MyAgentState) S),
 			S -> positionInv((MyAgentState) S),

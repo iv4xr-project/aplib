@@ -331,8 +331,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		List<WorldEntity> candidates = getConnectedEnablersFromBelief.apply(target.id,S).stream()
 		   . map(id -> S.worldmodel.elements.get(id)) 
 		   . filter(e -> reachabilityChecker.apply(S,e))
-		   .collect(Collectors.toList());
-		System.out.println("### invoking selectEnabler inja "  + candidates.isEmpty() );
+		   .collect(Collectors.toList());		
 		if (candidates.isEmpty()) {
 			// if it is empty get candidates from untried enablers:
 			candidates = untriedEnablers(S,target.id).stream()
@@ -374,7 +373,14 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			WorldEntity blocker = targetedEntityS.get(0) ;
 			WorldEntity blockerId = S.worldmodel.getElement(blocker.id) ;
 			var clean = (boolean) blockerId.properties.get("cleansed") ;
-			System.out.println("###" + blocker.id + " open: " + clean) ;
+			System.out.println("###" + blocker.id + " open: " + clean + blockerId + "type" + blocker.properties.get("shrinetype")) ;
+			if(clean)  state.triedItems.add(blockerId);
+			//if the imortal shrine is cleansed it should abort the whole goal, but I can not do it
+//			if(blocker.properties.get("shrinetype").toString().contains("ShrineOfImmortals") && clean) {
+//				System.out.println("imortal is cleansed");
+//				return false;
+//			}
+					 
 			return clean;
 		};
 
@@ -477,7 +483,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					// if no candidate can be found we will just try the excluded enabler:
 					selectedOpener = S.worldmodel.elements.get(excludeThisEnabler) ;
 				
-				System.out.println("    trying as an opener: " + selectedOpener.id) ;
+				System.out.println("trying as an opener: " + selectedOpener.id) ;
 				return SEQ(gCandidateIsInteractedNew.apply(S,selectedOpener.id),
 						   gTargetIsRefreshed.apply(selected),
 						   FAIL() // to force the outer repeat-loop to try again...
@@ -605,11 +611,14 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 						 					 			FAIL()
 						 								)
 				 								
-				 								
+				 								                                             
 				 								//IF((MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x), lowerleverSolver(MyAgentStateExtended),FAIL()) )
 				 						
 				 								)	 					 	
 				 					 	,				 					 					 					 	
+				 					 	
+				 					 	lift(phi)
+				 					 	,
 				 					 	
 										  IF(
 											  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
@@ -621,7 +630,7 @@ public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				 					 	
 				 					 	//GoalLibExtended.selectItem(tId), //select item based on the observation, if the target is seen it will be selected
 				 					 	//navigate to the selected item
-				 					 	GoalLibExtended.smartEntityInCloseRange((MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
+				 					 	GoalLibExtended.smartEntityInCloseRange((TestAgent) agent,(MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
 				 					 	//IFELSE2(GoalLibExtended.entityInCloseRange(MyAgentStateExtended),SUCCESS(),GoalLibExtended.unstuck(MyAgentStateExtended)),
 				 					 	
 				 					 	//if the target is selected, then it can be pick up and then decide to use or not.

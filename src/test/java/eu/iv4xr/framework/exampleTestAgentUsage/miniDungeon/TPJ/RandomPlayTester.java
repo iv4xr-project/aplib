@@ -3,7 +3,7 @@ package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 import nl.uu.cs.aplib.mainConcepts.Action;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
-
+import nl.uu.cs.aplib.utils.Pair;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
@@ -91,7 +91,7 @@ public class RandomPlayTester {
 		    	rewards[k] += 3f ;
 		    }
 		    else rewards[k] = 1f ;
-		    return null ;
+			return new Pair<>(S,obs) ;
 		    })
 		.lift()
 		;
@@ -124,7 +124,9 @@ public class RandomPlayTester {
 	
 	Action action_(Command cmd) {
 		return action("" + cmd)
-		.do1((MyAgentState S) -> S.env().action(S.worldmodel.agentId,cmd)) ;
+		.do1((MyAgentState S) -> {
+			var obs = S.env().action(S.worldmodel.agentId,cmd) ; 
+			return new Pair<>(S,obs) ; }) ;
 	}
 	
 	/**

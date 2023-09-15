@@ -36,7 +36,11 @@ public class Specifications {
 	public LTL<SimpleState> scenarioSpec4() {
 		Predicate<SimpleState> p1 = (S -> (int) ((MyAgentState) S).worldmodel().val("healpotsInBag") < (int) ((MyAgentState) S).worldmodel().before("healpotsInBag") ) ;
 		var ps1  = eventually(p1);
-		Predicate<SimpleState> p2  =  (S -> (int) ((MyAgentState) S).worldmodel().val("hp") ==  (int) ((MyAgentState) S).worldmodel().before("hp") +3 ) ;
+		Predicate<SimpleState> p2  =  (
+				S -> (int) ((MyAgentState) S).worldmodel().val("hp")
+				==
+				(int) ((MyAgentState) S).worldmodel().before("hp") +3 
+				) ;
 		var ps2 = now(p2);
 		return always(ps1.implies( ps2));
 	}
@@ -128,7 +132,7 @@ public class Specifications {
 	
 	/*hp value not bigger than hpmax*/	
 	public LTL<SimpleState> spec3() {
-		Predicate<SimpleState> p3 = (S -> (int) cast(S).worldmodel().val("Frodo","hp") < (int) cast(S).worldmodel().val("Frodo","hpmax") ) ;
+		Predicate<SimpleState> p3 = (S -> (int) cast(S).worldmodel().val("Frodo","hp") <= (int) cast(S).worldmodel().val("Frodo","hpmax") ) ;
 		return always(p3) ;
 	}
 

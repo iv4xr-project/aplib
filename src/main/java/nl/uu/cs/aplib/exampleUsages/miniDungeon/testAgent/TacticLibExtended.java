@@ -10,6 +10,8 @@ import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+//import org.evosuite.symbolic.vm.string.Concat;
+
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
@@ -31,9 +33,9 @@ public class TacticLibExtended extends TacticLib{
 		List[] memorized = { null } ;
 		final int memoryDuration = 10 ;
 		int[] memoryCountdown = {0} ;
-		
+		Pair<Integer,Tile> heuristicLocation = null;
 		Action alpha = action("explore")
-				.do2((MyAgentStateExtended S) ->  (Tile nextTile) -> {
+				.do2((MyAgentStateExtended S) ->  (Tile nextTile) -> {					
 					WorldModel newwom = tacticLib.moveTo(S,nextTile) ;
 					return new Pair<>(S,newwom) ;
 				})
@@ -73,9 +75,12 @@ public class TacticLibExtended extends TacticLib{
 						}
 					}
 					if (path == null) {
-													//System.out.println(">>> @maze " + Utils.mazeId(a) + ", tile: " + agentPos) ;
+						if (heuristicLocation == null) {
+							//System.out.println(">>> @maze " + Utils.mazeId(a) + ", tile: " + agentPos) ;
 						    path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y)) ;
-						
+						}
+						else
+							path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y), heuristicLocation) ;
 						
 						if (path == null || path.isEmpty()) {
 							//System.out.println(">>>> can't find an explore path!") ;
@@ -90,7 +95,7 @@ public class TacticLibExtended extends TacticLib{
 						return path.get(0).snd ;
 					}
 					catch(Exception e) {
-						System.out.println(">>> agent @" + agentPos + ", path: " + path) ;
+						//System.out.println(">>> agent @" + agentPos + ", path: " + path) ;
 						throw e ;
 					}
 					//return path.get(1).snd ;
@@ -217,29 +222,35 @@ public class TacticLibExtended extends TacticLib{
 			//select items which is observed and it is not selected before
 		    //this is repeated as the same as the find item because I do not save them somewhere yet 
 				
-		            	
+            var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;       
+          
 			List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
 					.filter(e ->
 					(e.type.equals(""+EntityType.HEALPOT)
 							|| e.type.equals("" + EntityType.RAGEPOT)
 							|| e.type.equals("" + EntityType.SCROLL)
-							|| e.type.equals("" + EntityType.SHRINE)
+							|| e.type.equals("" + EntityType.SHRINE)				
+						 
 					))
-					.collect(Collectors.toList()) ;                         
+					.collect(Collectors.toList()) ;    
+			
+			 candidates = candidates.stream().filter(e -> e.getProperty("maze").equals(player.properties.get("maze"))).collect(Collectors.toList()) ;
+			candidates.forEach(e -> { System.out.println("test " + e.id);});
 			if(!S.triedItems.isEmpty()) { 
 				//S.triedItems.forEach(e-> System.out.println("All tried items in select item: " + e.id));
 				candidates = candidates.stream().filter(element -> !S.triedItems.contains(element)).collect(Collectors.toList());}
 			
-			
+			candidates.forEach(e -> { System.out.println("should not have the tried items " + e.id);});
             //get the player 
-            var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+            
             //get the max bag size to control the selection
             int maxBagSize = (int) player.properties.get("maxBagSize") ;
             int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+            int maze = (int) player.properties.get("maze") ;
 			int freeSpace = maxBagSize - bagSpaceUsed ;
-           // System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));
+            System.out.println("Player maze " + maze + "Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));
            // System.out.println("get the bag property: " + player.properties.get("itemsInBag").toString());
-            //if(player.properties.get("bagSize"))
+           //if(player.properties.get("bagSize"))
             
             
             WorldEntity selectedItem = null;
@@ -272,7 +283,7 @@ public class TacticLibExtended extends TacticLib{
 						if(!selectedItems.isEmpty()) {
 							//always returns the first item if there are more than one, this can
 							// improve by selecting the nearest to the agent
-							selectedItem  = selectedItems.get(0);
+							selectedItem  = getClosestsElement(selectedItems, S.worldmodel.position, (int) S.worldmodel.elements.get(S.worldmodel.agentId).getProperty("maze")) ;;
 							selectedItemId = selectedItem.id;
 							System.out.println("looking item is found by type: " + selectedItemId);						
 						}
@@ -473,13 +484,16 @@ public class TacticLibExtended extends TacticLib{
 					var a = S.worldmodel.elements.get(S.worldmodel().agentId) ;
 					Tile agentPos = Utils.toTile(S.worldmodel.position) ;
 					String targetId = S.selectedItem.id;
-					System.out.print("target id to navigate: " + targetId);
+					//System.out.print("target id to navigate: " + targetId);
 					WorldEntity e = S.worldmodel.elements.get(targetId) ;							
 					if (e == null) {
 						return null ;
 					}
-					
 					Tile target = Utils.toTile(e.position) ;
+					System.out.print("target id to navigate: " + targetId + ", @" + target);
+					System.out.print("agent maze: " + Utils.mazeId(a) 
+					   + ", target maze " + Utils.mazeId(e));
+					
 					//System.out.println("###### nav-action target id " + targetId + target  + "agent pos: " + agentPos) ;
 					if (Utils.mazeId(a)==Utils.mazeId(e) && Utils.adjacent(agentPos,target)) {
 						Tile[] nextTile = {} ;
@@ -514,6 +528,7 @@ public class TacticLibExtended extends TacticLib{
 						//System.out.println("### calculating new path") ;
 						path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;						
 						if (path == null || path.isEmpty()) {
+							System.out.println("### path=" + path) ;
 							return null ;
 						}
 						path.remove(0) ;
@@ -521,6 +536,7 @@ public class TacticLibExtended extends TacticLib{
 						memorized[0] = path ;
 					}
 					Tile[] nextTile = {path.get(0).snd} ;
+					//System.out.println("### tile to go" + nextTile[0]) ;
 					return nextTile ;
 				}) ;
 	}
@@ -541,7 +557,23 @@ public class TacticLibExtended extends TacticLib{
 	public static Tactic interactTacNew() {
 		var alpha = action("interact")
 				.do2((MyAgentStateExtended S) ->  (Tile nextTile) -> {
+					// if the bag is full, probably it graps some healpot to use later, we make'
+					//the bag empty first
+					var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
+					int maxBagSize = (int) player.properties.get("maxBagSize") ;
+		            int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
+					int freeSpace = maxBagSize - bagSpaceUsed ;
+		            System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize")
+		            + "items in the bag: " +player.properties.get("itemsInBag")
+		            		
+		            		);	
+		            if(freeSpace == 0) {
+		            	tacticLib.useHealingPotAction().exec1(S) ;  
+		            }
+		            
+		            //then move to the item
 					WorldModel newwom = tacticLib.moveTo(S,nextTile) ;
+					
 					return new Pair<>(S,newwom) ;
 				})
 				.on((MyAgentStateExtended S) -> {
@@ -557,13 +589,6 @@ public class TacticLibExtended extends TacticLib{
 					}
 					Tile target = Utils.toTile(e.position) ;
 					if (Utils.adjacent(agentPos,target)) {
-						
-						var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
-						int maxBagSize = (int) player.properties.get("maxBagSize") ;
-			            int bagSpaceUsed = (int) player.properties.get("bagUsed") ;
-						int freeSpace = maxBagSize - bagSpaceUsed ;
-			            //System.out.println("Player max bag size: " + maxBagSize + "bag space used: " + bagSpaceUsed + "freeSpace: " + freeSpace + "bag size" + player.properties.get("bagSize"));		            
-			            
 			            return target ;
 					}
 					return null ;
@@ -591,7 +616,8 @@ public class TacticLibExtended extends TacticLib{
 					  boolean hasRagePot = (int) player.properties.get("ragepotsInBag") > 0 ;					  
 					  if(hasRagePot) {	
 						  System.out.print("has rage pot to use: " + hasRagePot);
-						   tacticLib.useRagePotAction().exec1(S) ;}
+						   tacticLib.useRagePotAction().exec1(S) ;
+						   }
 					  else 
 					  tacticLib.useHealingPotAction().exec1(S) ;					  					  
 					 
@@ -606,8 +632,13 @@ public class TacticLibExtended extends TacticLib{
 					int freeSpace = maxBagSize - bagSpaceUsed ;
 					//add used item to the list
 					//S.selectedItem.id
-					WorldEntity markAsUsed = S.triedItems.stream().filter(j -> j.id.equals(S.selectedItem.id)).findAny().get();					
-					markAsUsed.properties.put("used", true);
+					WorldEntity lookItemInBag = S.triedItems.stream().filter(j -> j.id.equals(S.selectedItem.id)).findAny().get();					
+					
+					System.out.println(">>>>>>>mark as used " + lookItemInBag.id);
+					System.out.println(">>>>>>>healpot" + lookItemInBag.id);
+					
+					lookItemInBag.properties.put("used", true);
+					
 					
 					return (hasHealPot || hasRagePot)  ;	
 				}) ;
@@ -639,7 +670,7 @@ public class TacticLibExtended extends TacticLib{
 					
 					//mark used item 
 					
-					WorldEntity markAsUsed =  S.triedItems.stream().filter(j -> j.id.equals(S.selectedItem.id)).findAny().get();
+					WorldEntity markAsUsed =  S.triedItems.stream().filter(j -> j.type.equals(EntityType.HEALPOT.toString())).findAny().get();
 					markAsUsed.properties.put("used", true);	
 					
 					return (hasHealPot )  ;	
@@ -647,25 +678,13 @@ public class TacticLibExtended extends TacticLib{
 		return useHeal.lift();
 	}
 	
-	/**
-	 * Use heal pot if the hp is low and the agent has seen a hp before
-	 */
-	public Predicate<MyAgentStateExtended> hasHealPot_and_HpLow = S -> {
+	public static Predicate<MyAgentState> hasHealPot_and_HpLow = S -> {
 		var player = S.worldmodel.elements.get(S.worldmodel.agentId) ;
 		int hp = (int) player.properties.get("hp") ;
 		boolean hasHealPot = (int) player.properties.get("healpotsInBag") > 0 ;
-		List<WorldEntity> candidatesHealPot = S.worldmodel.elements.values().stream()
-				.filter(e ->
-				! S.triedItems.contains(e.id)
-				&& e.id.contains("H0_")
-						)
-				.collect(Collectors.toList()) ;
-		if(hp>0 && hp<=10 && !candidatesHealPot.isEmpty() ) {
-			//put the hp in the bag, means navigate to it!! I have it somewhere else
-		}
-		
-		return true;
+		return hp>0 && hp<=10 && hasHealPot ;
 	} ;
+		
 	
 	
 }

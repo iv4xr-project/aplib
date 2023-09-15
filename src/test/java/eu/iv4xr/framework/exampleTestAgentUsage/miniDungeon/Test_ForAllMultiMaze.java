@@ -14,6 +14,9 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.MD_invs;
+import eu.iv4xr.framework.extensions.ltl.LTL;
+import eu.iv4xr.framework.extensions.ltl.SATVerdict;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
@@ -45,11 +48,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Specifications;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.utils.Pair;
 
 public class Test_ForAllMultiMaze {
 
-	boolean withGraphics = true;
+	boolean withGraphics = false;
 	boolean supressLogging = false;
 	Pair<Integer, Tile> covertToMDLocation(Vec3 p) {
 		int mapNr = Math.round(p.y);
@@ -250,6 +254,7 @@ public class Test_ForAllMultiMaze {
 						  var immortalShrine = shrine.stream().filter(s -> isImmortalShrine(s) && (boolean) s.properties.get("cleansed")).findFirst();
 						  if(!immortalShrine.isEmpty()) {
 							  System.out.println("Immortal Shrine is cleansed!"); 
+							  S_.triedItems.clear();
 							  return false;
 						  }
 					}
@@ -273,16 +278,26 @@ public class Test_ForAllMultiMaze {
 		var specs = new Specifications();
 		var psi1 = specs.spec1();
 		var psi2 = specs.spec2();
-		var psi6 = specs.spec5();
-		var psi3 = specs.scenarioSpec1();
-		var psi4 = specs.scenarioSpec2();
-		var psi5 = specs.scenarioSpec3();
-		var psi7 = specs.scenarioSpec4();
-		var psi8 = specs.scenarioSpec5();
-		var psi9 = specs.scenarioSpec6();
-		agent.addLTL(psi1, psi2, psi3, psi4, psi5, psi6, psi7, psi8, psi9);
+		var psi3 = specs.spec3();
+		var psi4 = specs.spec4();
+		var psi5 = specs.spec5();
+		var psiSp1 = specs.scenarioSpec1();
+		var psiSp2 = specs.scenarioSpec2();
+		var psiSp3 = specs.scenarioSpec3();
+		var psiSp4 = specs.scenarioSpec4();
+		var psiSp5 = specs.scenarioSpec5();
+		var psiSp6 = specs.scenarioSpec6();
+		agent.addLTL(psi1, psi2, psi3, psi4, psi5, psiSp1, psiSp2, psiSp3, psiSp4, psiSp5, psiSp6);
 		agent.resetLTLs();
 
+		var invs = new MD_invs() ;
+		List<LTL<SimpleState>> invs2 = new LinkedList<>() ;
+		for (var i : invs.allInvs) {
+			var ltl = LTL.always(i) ;
+			invs2.add(ltl) ;
+			agent.addLTL(ltl) ;
+		}
+		
 		Thread.sleep(1000);
 
 		// why do we need this starting update?
@@ -298,7 +313,7 @@ public class Test_ForAllMultiMaze {
 
 		Scanner scanner = new Scanner(System.in);
 		// scanner.nextLine() ;
-		// assertTrue(G.getStatus().success()) ;
+		 assertTrue(G.getStatus().success()) ;
 
 		System.out.println(">>> exec-time = " + (System.currentTimeMillis() - time0));
 
@@ -315,20 +330,33 @@ public class Test_ForAllMultiMaze {
 		CoverterDot.saveAs(fileName2, model, true, true) ;
 
 		/* Check the specifications */
-		var ok = agent.evaluateLTLs();
+		//var ok = agent.evaluateLTLs();
 
-		System.out.println(">>>> LTL results: " + ok);
+		//System.out.println(">>>> LTL results: " + ok);
 		System.out.println(">>>> psi1 : " + psi1.sat());
 		System.out.println(">>>> psi2 : " + psi2.sat());
 		System.out.println(">>>> psi3 : " + psi3.sat());
 		System.out.println(">>>> psi4 : " + psi4.sat());
 		System.out.println(">>>> psi5 : " + psi5.sat());
-		System.out.println(">>>> psi6 : " + psi6.sat());
-		System.out.println(">>>> psi7 : " + psi7.sat());
-		System.out.println(">>>> psi8 : " + psi8.sat());
-		System.out.println(">>>> psi9 : " + psi9.sat());
-		
-		//return model;
+		System.out.println(">>>> psi6 : " + psiSp1.sat());
+		System.out.println(">>>> psi7 : " + psiSp2.sat());
+		System.out.println(">>>> psi8 : " + psiSp3.sat());
+		System.out.println(">>>> psi10 : " + psiSp4.sat());
+		System.out.println(">>>> psi11 : " + psiSp5.sat());
+		System.out.println(">>>> psi12 : " + psiSp6.sat());
+		assertTrue(psi1.sat() == SATVerdict.SAT	
+				&& psi2.sat() == SATVerdict.SAT
+				&& psi3.sat() == SATVerdict.SAT
+				&& psi4.sat() == SATVerdict.SAT
+				&& psiSp1.sat() == SATVerdict.SAT
+				&& psiSp2.sat() == SATVerdict.SAT
+				&& psiSp3.sat() == SATVerdict.SAT
+				) ;
+
+		for(var inv: invs2) {
+			System.out.println(">>>> Inv : " + inv.sat());
+			assertTrue(inv.sat() == SATVerdict.SAT	);
+		}
 	}
 
 }

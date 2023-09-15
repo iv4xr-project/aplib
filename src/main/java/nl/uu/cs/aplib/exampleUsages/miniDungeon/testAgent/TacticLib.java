@@ -421,7 +421,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 						return path.get(0).snd ;
 					}
 					catch(Exception e) {
-						System.out.println(">>> agent @" + agentPos + ", path: " + path) ;
+						//System.out.println(">>> agent @" + agentPos + ", path: " + path) ;
 						throw e ;
 					}
 					//return path.get(1).snd ;

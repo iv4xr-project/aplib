@@ -57,7 +57,7 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class Test_MultiMazeWithRandom {
 
-	boolean withGraphics = true;
+	boolean withGraphics = false;
 	boolean supressLogging = false;
 	Pair<Integer, Tile> covertToMDLocation(Vec3 p) {
 		int mapNr = Math.round(p.y);
