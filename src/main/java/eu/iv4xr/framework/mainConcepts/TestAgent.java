@@ -165,6 +165,25 @@ public class TestAgent extends AutonomousBasicAgent {
         return this;
     }
     
+	/**
+	 * Attach behavior model of the game-under-test. Such a model is an instance of
+	 * {@link GameWorldModel}. As a model, it may describe the system under test at
+	 * a certain level of abstraction. If such a model is given, the agent (that
+	 * owns this state) can then exploit it, e.g. to help it solves goals. The model
+	 * can for example implements an extended Finite State Machine (EFSM).
+	 * Importantly, note that the model, as an instance of {@link GameWorldModel},
+	 * implements the interface
+	 * {@link eu.iv4xr.framework.extensions.ltl.ITargetModel} and hence it can be
+	 * queried using e.g. {@link eu.iv4xr.framework.extensions.BasicModelChecker}.
+	 * 
+	 * <p>
+	 * Alternatively, the model that is given may also be empty initially, and the
+	 * agent may be equipped with instrumentation to incrementally build the model.
+	 * If not null, the parameter gwmodelLearner specifies this instrumentation
+	 * function mentioned above. This function will be called by
+	 * {@link #updateState(String)}. The function inspects this state, and can be
+	 * used to register new model elements discovered in the current state.
+	 */
     @SuppressWarnings({ "unchecked", "rawtypes" })
 	public TestAgent attachBehaviorModel(
     		GameWorldModel model,

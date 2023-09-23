@@ -51,6 +51,15 @@ public class BasicModelChecker {
 	 * <p>Default: true.
 	 */
 	public boolean completeBoundedDSFMode = true ;
+	
+	/**
+	 * When set to true, the model checker does not explicitly keep track of the set of
+	 * visited states. Rather, it only keeps track of their hashes. This could be unsound,
+	 * but more memory efficient.
+	 * 
+	 * <p>The default is false.
+	 */
+	public boolean useHashInsteadOfExplicitState = false ;
 
 	/**
 	 * If not null, each run of model checking will be limited to exploring at most this many transitions.
@@ -95,15 +104,15 @@ public class BasicModelChecker {
 
 		public List<Pair<ITransition,State>> path = new LinkedList<>() ;
 
-		void addInitialState(State state) {
+		public void addInitialState(State state) {
 			path.add(new Pair<ITransition,State>(null,state)) ;
 		}
 
-		void addTransition(ITransition tr, State state) {
+		public void addTransition(ITransition tr, State state) {
 			path.add(new Pair<ITransition,State>(tr,state)) ;
 		}
 
-		void removeLastTransition() {
+		public void removeLastTransition() {
 			path.remove(path.size() - 1) ;
 		}
 
@@ -170,11 +179,13 @@ public class BasicModelChecker {
 		model.reset();
 		stats.clear();
 		Path<IExplorableState> path = new Path<>() ;
-		Collection<IExplorableState> visitedStates = new HashSet<>() ;
+		StateSet<IExplorableState> visitedStates = new StateSet<>() ;
+		visitedStates.useHashInsteadOfExplicitState = useHashInsteadOfExplicitState ;
+		
 		Map<IExplorableState,Integer> depthInfo = new HashMap<>() ;
 		IExplorableState state = model.getCurrentState().clone() ;
 		path.addInitialState(state);
-		return dfs(q,path,visitedStates,depthInfo,state,maxDepth+1) ;
+		return dfs(q,path,visitedStates,state,maxDepth+1) ;
 	}
 
 	// for the iterative DFS
@@ -395,14 +406,19 @@ public class BasicModelChecker {
 	 */
 	Path<IExplorableState> dfs(Predicate<IExplorableState> whatToFind,
 							   Path<IExplorableState> pathSoFar,
-							   Collection<IExplorableState> visitedStates,
-							   Map<IExplorableState,Integer> depthInfo,
+							   //Collection<IExplorableState> visitedStates,
+							   StateSet<IExplorableState> visitedStates,
+							   //Map<IExplorableState,Integer> depthInfo,
 							   IExplorableState state,
 							   int remainingDepth
 	) {
 
 		//System.out.println(">>> depth " + remainingDepth) ;
 		if(remainingDepth==0) return null ;
+		
+		if (visitedStates.size()>0 && visitedStates.size() % 10000 == 0) {
+			System.out.println(">>> " + stats) ;
+		}
 
 		stats.numberOfTransitionsExplored++ ;
 
@@ -413,10 +429,10 @@ public class BasicModelChecker {
 
 		if(visitedStates.contains(state)) {
 			if (completeBoundedDSFMode) {
-				var remainingDeptOfPreviousVisit = depthInfo.get(state) ;
+				var remainingDeptOfPreviousVisit = visitedStates.getDepth(state) ;
 				if (remainingDepth > remainingDeptOfPreviousVisit) {
 					// re-try the state if have more remaining depth:
-					depthInfo.put(state, remainingDepth) ;
+					visitedStates.put(state, remainingDepth) ;
 				} else {
 					return null ;
 				}
@@ -424,9 +440,11 @@ public class BasicModelChecker {
 		} else {
 			// else the state is new
 			stats.numberOfStatesExplored++ ;
-			visitedStates.add(state) ;
 			if (completeBoundedDSFMode) {
-				depthInfo.put(state, remainingDepth) ;
+				visitedStates.put(state, remainingDepth) ;
+			}
+			else {
+				visitedStates.put(state,0) ;
 			}
 		}
 
@@ -449,7 +467,7 @@ public class BasicModelChecker {
 			// recurse to the next state:
 			Path<IExplorableState> result = dfs(whatToFind,pathSoFar,
 					visitedStates,
-					depthInfo,
+					//depthInfo,
 					nextState,remainingDepth-1) ;
 			if(result != null) {
 				// a solving path is found! Return the path:
@@ -469,7 +487,7 @@ public class BasicModelChecker {
 	 *
 	 * @param <CoverageItem> The type of 'items' that we want to cover.
 	 */
-	public static class TestSuite<CoverageItem> {
+	public static class TestSuite<CoverageItem> {  // don't remove this.. for Saba's experiment.
 
 		/**
 		 * All the 'targets' that are to be covered.

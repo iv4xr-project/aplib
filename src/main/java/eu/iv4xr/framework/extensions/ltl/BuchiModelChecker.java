@@ -62,6 +62,15 @@ public class BuchiModelChecker {
      * <p>Default: true.
      */
     public boolean completeBoundedDSFMode = true;
+    
+    /**
+	 * When set to true, the model checker does not explicitly keep track of the set of
+	 * visited states. Rather, it only keeps track of their hashes. This could be unsound,
+	 * but more memory efficient.
+	 * 
+	 * <p>The default is false.
+	 */
+	public boolean useHashInsteadOfExplicitState = false ;
 
     /**
      * If not null, each run of model checking will be limited to exploring at most this many transitions.
@@ -174,8 +183,9 @@ public class BuchiModelChecker {
         buchi.reset();
 
         IExplorableState targetInitialState = model.getCurrentState().clone();
-        Set<Pair<IExplorableState, Integer>> visitedStates = new HashSet<>();
-        Map<Pair<IExplorableState, Integer>, Integer> depthInfo = new HashMap<>();
+        StateSet<Pair<IExplorableState, Integer>> visitedStates = new StateSet<>();
+        visitedStates.useHashInsteadOfExplicitState = useHashInsteadOfExplicitState ;
+        //Map<Pair<IExplorableState, Integer>, Integer> depthInfo = new HashMap<>();
 
         // although the model only has one initial state, its lock-step execution
         // with the buchi may have multiple starting states. We will first
@@ -202,7 +212,7 @@ public class BuchiModelChecker {
                     pathSoFar,
                     statesInPathToStartOfPossibleCycle,
                     visitedStates,
-                    depthInfo,
+                    //depthInfo,
                     state,
                     maxDepth);
 
@@ -273,8 +283,8 @@ public class BuchiModelChecker {
             Buchi buchi,
             Path<Pair<IExplorableState, Integer>> pathSoFar,
             Set<Pair<IExplorableState, Integer>> statesInPathToStartOfPossibleCycle,
-            Set<Pair<IExplorableState, Integer>> visitedStates,
-            Map<Pair<IExplorableState, Integer>, Integer> depthInfo,
+            StateSet<Pair<IExplorableState, Integer>> visitedStates,
+            //Map<Pair<IExplorableState, Integer>, Integer> depthInfo,
             Pair<IExplorableState, Integer> state,
             int remainingDepth
     ) {
@@ -298,10 +308,10 @@ public class BuchiModelChecker {
 
         if (visitedStates.contains(state)) {
             if (completeBoundedDSFMode) {
-                var remainingDeptOfPreviousVisit = depthInfo.get(state);
+                var remainingDeptOfPreviousVisit = visitedStates.getDepth(state);
                 if (remainingDepth > remainingDeptOfPreviousVisit) {
                     // re-try the state if have more remaining depth:
-                    depthInfo.put(state, remainingDepth);
+                	visitedStates.put(state, remainingDepth);
                 } else {
                     return null;
                 }
@@ -309,9 +319,11 @@ public class BuchiModelChecker {
         } else {
             // else the state is new
             stats.numberOfStatesExplored++;
-            visitedStates.add(state);
             if (completeBoundedDSFMode) {
-                depthInfo.put(state, remainingDepth);
+            	visitedStates.put(state, remainingDepth);
+            }
+            else {
+            	visitedStates.put(state,0);
             }
         }
 
@@ -374,8 +386,9 @@ public class BuchiModelChecker {
                     //System.out.println(">>> next state to check " + combinedNextState) ;
 
                     // we will do a fresh DFS run with its own tacking of visited states:
-                    Set<Pair<IExplorableState, Integer>> freshVisitedStates = new HashSet<>();
-                    Map<Pair<IExplorableState, Integer>, Integer> freshDepthInfo = new HashMap<>();
+                    StateSet<Pair<IExplorableState, Integer>> freshVisitedStates = new StateSet<>();
+                    freshVisitedStates.useHashInsteadOfExplicitState = useHashInsteadOfExplicitState ;
+                    //Map<Pair<IExplorableState, Integer>, Integer> freshDepthInfo = new HashMap<>();
                     Set<Pair<IExplorableState, Integer>> statesInPathSoFar = new HashSet<>();
                     // We need to add all states in the pathSoFar, except the last one we just
                     // added above :(
@@ -388,7 +401,7 @@ public class BuchiModelChecker {
                             pathSoFar,
                             statesInPathSoFar,
                             freshVisitedStates,
-                            freshDepthInfo,
+                            //freshDepthInfo,
                             combinedNextState,
                             remainingDepth - 1);
 
@@ -405,7 +418,7 @@ public class BuchiModelChecker {
                         pathSoFar,
                         statesInPathToStartOfPossibleCycle,
                         visitedStates,
-                        depthInfo,
+                        //depthInfo,
                         combinedNextState,
                         remainingDepth - 1);
                 if (path != null) {

@@ -12,15 +12,19 @@ import eu.iv4xr.framework.extensions.ltl.LTL;
 import static eu.iv4xr.framework.extensions.ltl.LTL.* ;
 
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
  * Provides the semantic-function (alpha) for interactions, to be used to construct a model
  * for the Lab Recruits game using {@link GameWorldModel}.
+ * 
+ * <p>See <a href="https://github.com/iv4xr-project/labrecruits">the Lab Recruits</a> game,
+ * and <a href="https://github.com/iv4xr-project/iv4xrDemo">its Java-interface</a>.
  */
 public class LabRecruitsModel {
 	
-	static String SWITCH = "Switch" ;
-	static String DOOR = "Door" ;
+	static public final String SWITCH = "Switch" ;
+	static public final String DOOR = "Door" ;
 	
 	public static GWObject mkButton(String id) {
 		GWObject button = new GWObject(id,SWITCH) ;
@@ -58,6 +62,9 @@ public class LabRecruitsModel {
 		return model ;
 	}
 	
+	/**
+	 * Construct a model of the Lab Recruits' ButtonDoor1 level.
+	 */
 	public static GameWorldModel mk_ButtonDoor1Level() {
 		// create the objects:
 		GWObject button1 = mkButton("button1") ;
@@ -97,7 +104,65 @@ public class LabRecruitsModel {
 		// set alpha-function:
 		buttondoor1 = attachLabRecruitsAlpha(buttondoor1) ;
 		buttondoor1.name = "ButtonDoors_1" ;
+		
 		return buttondoor1 ;
+	}
+	
+	/**
+	 * Construct a model of a prison-like LabRecruits level.
+	 */
+	public static GameWorldModel mk_PrisonLevel(int numberOfPrisonGroups, int numberOfCellsPerGroup) {
+		
+		GameWorldModel model = new GameWorldModel() ;
+		GWState initialstate = new GWState() ;
+		model.initialState = initialstate ;
+		Pair<GWState,GWTransition> st0 = new Pair<>(initialstate, null) ;
+		model.history.add(st0) ;
+		
+		GWObject connectingDoor = null ;
+		// create the prison-groups:
+		for (int g=0; g<numberOfPrisonGroups; g++) {
+			GWZone zone = new GWZone("Prison_" + g) ;
+			model.addZones(zone) ;
+			// connect to previous group:
+			if (g>0) {
+				GWObject openerSouth = mkButton("bS_" + g) ;
+				initialstate.addObjects(openerSouth);
+				zone.addMembers(connectingDoor.id,openerSouth.id);
+				model.registerObjectLinks(openerSouth.id, connectingDoor.id) ;
+			}
+			// connection to next group:
+			if (g < numberOfPrisonGroups-1) {
+				GWObject openerNorth = mkButton("bN_" + g) ;
+				connectingDoor = mkClosedDoor("D_" + g) ;
+				initialstate.addObjects(openerNorth,connectingDoor);
+				zone.addMembers(openerNorth.id,connectingDoor.id);
+				model.markAsBlockers(connectingDoor.id) ;
+				model.registerObjectLinks(openerNorth.id, connectingDoor.id) ;
+			}
+			// create the cells:
+			for (int c=0; c<numberOfCellsPerGroup; c++) {
+				GWZone cell = new GWZone("C_" + g + "_" + c) ;
+				model.addZones(cell) ;
+				GWObject button = mkButton("bc_" + g + "_" + c) ;
+				GWObject door   = mkClosedDoor("dc_" + g + "_" + c) ;
+				initialstate.addObjects(button,door);
+				zone.addMembers(button.id,door.id);
+				cell.addMembers(door.id);
+				model.markAsBlockers(door.id) ;
+				model.registerObjectLinks(button.id, door.id) ;
+				if (g==0 && c==0)
+					initialstate.setAsCurrentLocation(button);
+			}
+			
+		}
+		
+		model.defaultInitialState = initialstate ;
+		model.setInitialState(initialstate);
+		
+		attachLabRecruitsAlpha(model) ;
+		model.name = "Prison" + numberOfPrisonGroups + "_" + numberOfCellsPerGroup ;
+		return model ;
 	}
 	
 	// just for test:

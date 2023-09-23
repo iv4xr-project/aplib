@@ -10,6 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Provide a model learner for the MiniDungeon game.
+ */
 public class ModelLearner {
 	
 	String SCROLL = "" + EntityType.SCROLL ;

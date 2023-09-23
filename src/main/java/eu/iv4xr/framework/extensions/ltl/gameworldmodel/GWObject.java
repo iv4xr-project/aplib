@@ -77,7 +77,27 @@ public class GWObject {
 	
 	@Override
     public int hashCode() {
-        return Objects.hash(id, type, position, extent, velocity, destroyed, properties);
+		if (properties.size()==0) {
+			if (position == null) {
+				return Objects.hash(id,destroyed);
+			}
+			return Objects.hash(id, position, extent, velocity, destroyed);
+		}
+		if (properties.size()==1) {
+			Object v = null ;
+			for (var w : properties.values()) {
+				v = w ;
+				break ;
+			}
+			if (position == null) {
+				return Objects.hash(id,destroyed,v);
+			}
+			return Objects.hash(id, position, extent, velocity, destroyed,v);
+		}
+		if (position == null) {
+			return Objects.hash(id, destroyed, properties);
+		}
+        return Objects.hash(id, position, extent, velocity, destroyed, properties);
     }
 	
 	private Object mkCopy(Serializable o) {

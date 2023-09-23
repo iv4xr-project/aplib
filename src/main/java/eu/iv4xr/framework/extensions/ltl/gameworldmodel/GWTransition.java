@@ -30,4 +30,9 @@ public class GWTransition implements ITransition {
 		}
 		throw new IllegalArgumentException() ;
 	}
+	
+	@Override
+	public String toString() {
+		return "-" + type + "->" + target ;		
+	}
 }

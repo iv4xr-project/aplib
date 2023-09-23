@@ -106,12 +106,31 @@ public class MiniDungeonModel {
 				if (isMoonShrine(interacted)) {
 					interacted.properties.put(GameWorldModel.IS_OPEN_NAME,true) ;
 				}
+				if (isImmortalShrine(interacted)) {
+					S.gameOver = true ;
+				}
 			}
 			else {
 				//System.out.println(">>> shrine " + i + " attempted! with scroll " + bag.size() + ", " + bag.get(0)) ;
 			}
 			removeFromBag(P,openingScroll) ;	
 		}
+	}
+	
+	public static boolean interactionGuard(String mainplayer, String i, GWState S) {
+		GWObject interacted = S.objects.get(i) ;
+		if (! interacted.type.equals("SCROLL") &&  ! interacted.type.equals("SHRINE"))
+			return false ;
+		if (interacted.type.equals("SCROLL")) {
+			GWObject P = S.objects.get(mainplayer) ;
+			int N = bagContent(P).size() ;
+			// conservatively reject if the player already has an item:
+			return N==0 ;
+		}
+		if (isMoonShrine(interacted) || isImmortalShrine(interacted)) {
+			return (Boolean) interacted.properties.get("cleansed") == false ;
+		}
+		return true ;
 	}
 	
 	static boolean isShrineId(String id) {
@@ -147,7 +166,10 @@ public class MiniDungeonModel {
 			}
 			else {
 				// else it is a travel
-				
+				// ignore travel to dummy and start states:
+				if (tr.target.startsWith("SOMEWHERE") || tr.target.startsWith("START")) {
+					continue ;
+				}
 				// special case when the travel is a teleport-step:
 				if (previousState != null
 					&& isShrineId(tr.target)
