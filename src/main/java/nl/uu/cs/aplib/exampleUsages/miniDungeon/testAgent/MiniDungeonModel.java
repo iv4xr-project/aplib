@@ -18,7 +18,8 @@ import nl.uu.cs.aplib.utils.Pair;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 /**
- * Provides the semantic-function (alpha) for interactions, to be used to construct a model
+ * Provides the semantic-function (alpha) for interactions, and 
+ * interaction-guard function, to be used to construct a model
  * for the MiniDungeon game using {@link GameWorldModel}.
  */
 public class MiniDungeonModel {
