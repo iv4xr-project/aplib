@@ -136,14 +136,23 @@ public class BasicModelChecker {
 		@Override
 		public String toString() {
 			int k = 0;
-            String s = "";
+            StringBuffer s = new StringBuffer() ;
             for (var tr : path) {
                 if (k > 0)
-                    s += "\n";
-                s += k + ": action:" + tr.fst + " --> state:" + tr.snd ;
+                    s.append("\n") ;
+                s.append("" + k + ": action:" + tr.fst + " --> state:" + tr.snd) ;
                 k++;
             }
-            return s;
+            return s.toString();
+		}
+		
+		public String transitionsOnlytoString() {
+			StringBuffer z = new StringBuffer() ;
+			for (var tr : path) {
+				if (tr.fst == null) continue ;
+				z.append(tr.fst.toString()) ;
+			}
+			return z.toString() ;
 		}
 	}
 
