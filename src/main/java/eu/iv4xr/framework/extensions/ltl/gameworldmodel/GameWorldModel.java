@@ -18,6 +18,7 @@ import com.google.gson.JsonIOException;
 import eu.iv4xr.framework.extensions.ltl.IExplorableState;
 import eu.iv4xr.framework.extensions.ltl.ITargetModel;
 import eu.iv4xr.framework.extensions.ltl.ITransition;
+import eu.iv4xr.framework.extensions.ltl.BasicModelChecker.Path;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition.GWTransitionType;
 import nl.uu.cs.aplib.utils.Pair;
 
@@ -468,6 +469,41 @@ public class GameWorldModel implements ITargetModel {
 		}
 		
 	}
+	
+	/**
+	 * Execute this sequence of transitions. The result is the
+	 * same sequence, but accompanied by the resulting states.
+	 */
+	public Path<IExplorableState> execute(List<GWTransition> transitions) {
+		this.reset() ;
+		Path<IExplorableState> sigma = new Path<>() ;
+		sigma.addInitialState(getCurrentState()) ;
+		for (GWTransition step : transitions) {
+			//System.out.println(">>>" + step) ;
+			execute(step);
+			sigma.addTransition(step,getCurrentState());
+		}
+		return sigma ;
+	}
+	
+	/**
+	 * Execute this sequence of transitions. However, this will not
+	 * check the transitions guards. Only use this when sure that
+	 * the transitions are valid/can be taken.
+	 * 
+	 * <p> The result is the
+	 * same sequence, but accompanied by the resulting states.
+	 */
+	public Path<IExplorableState> unsafeExecute(List<GWTransition> transitions) {
+		try {
+			unsafelyIgnoreTransitionCondition = true ;
+			return execute(transitions) ;
+		}
+		finally {
+			unsafelyIgnoreTransitionCondition = false ;
+		}
+	}
+	
 	
 	@Override
 	public String toString() {
