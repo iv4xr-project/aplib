@@ -27,7 +27,6 @@ import org.junit.internal.runners.statements.Fail;
 
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
@@ -43,6 +42,7 @@ import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.mainConcepts.Action.Abort;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure.PrimitiveGoal;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 import java.io.Serializable;
 import java.security.PublicKey;

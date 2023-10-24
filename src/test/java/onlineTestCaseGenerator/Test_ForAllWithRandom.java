@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon;
+package onlineTestCaseGenerator;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,13 +16,12 @@ import javax.crypto.BadPaddingException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TestMiniDungeonWithAgent;
 import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.RandomPlayTester;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Sa3Solver3;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
@@ -47,6 +46,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.Sa3Solver3;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 public class Test_ForAllWithRandom {
 

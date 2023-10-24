@@ -11,12 +11,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
 import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import onlineTestCaseGenerator.Sa1Solver;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
+
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 /**
@@ -62,7 +64,6 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
  *   <li> An enabler that can open a door is called an "opener" of the door.  
  * </ul>
  * 
- * @author Samira, Wish. Based on Samira's algorithm in ATEST 2022.
  *
  * @param <NavgraphNode>
  */

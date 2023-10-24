@@ -8,9 +8,18 @@ import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import eu.iv4xr.framework.goalsAndTactics.Sa3Solver3;
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.Test_Random;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.RunAllSpecifications;
+import onlineTestCaseGenerator.Sa3Solver3;
+import onlineTestCaseGenerator.Test_ForAll;
+import onlineTestCaseGenerator.Test_ForAllMultiMaze;
+import onlineTestCaseGenerator.Test_ForAllWithRandom;
+import onlineTestCaseGenerator.Test_IdOrType;
+import onlineTestCaseGenerator.Test_IdOrTypeWithRandom;
+import onlineTestCaseGenerator.Test_MultiMaze;
+import onlineTestCaseGenerator.Test_MultiMazeWithRandom;
 
 public class MutationForAllSpecificationsTest {
 
@@ -25,13 +34,12 @@ public class MutationForAllSpecificationsTest {
 	@Disabled
 	@Test
 	public void test1() throws Exception {
-		var testId = new Test_SA3();
+		var testId = new Test_IdOrType();
 		Pair targetItemOrShrine = new Pair("id", "H0_0");
 		Pair additionalFeature = null;//new Pair("maze", 0);
 		int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
 		int successed = 0 ;
-		List<Long> totalTime = new ArrayList<Long>();
-	//	var result  = testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature,179371);
+		List<Long> totalTime = new ArrayList<Long>();	
 		for(int seed: seeds) {
 			System.out.println("seed number: " + seed);
 			var result  = testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature,seed);
@@ -49,7 +57,7 @@ public class MutationForAllSpecificationsTest {
     @Disabled
 	@Test
 	public void test2() throws Exception {
-		var testId = new Test_SA3();
+		var testId = new Test_IdOrType();
 		Pair targetItemOrShrine = new Pair("id", "H0_0");
 		Pair additionalFeature = new Pair("maze", 0);
 		int seed  = 79371;
@@ -146,7 +154,7 @@ public class MutationForAllSpecificationsTest {
     @Disabled
 	@Test
 	public void test3() throws Exception {
-		var testId = new Test_SA3();
+		var testId = new Test_IdOrType();
 		Pair targetItemOrShrine = new Pair("type", EntityType.RAGEPOT);
 		Pair additionalFeature = new Pair("maze", 0);
 		int seed  = 79371;
@@ -211,7 +219,7 @@ public class MutationForAllSpecificationsTest {
     @Disabled
 	@Test
 	public void test15() throws Exception {
-		var testId = new Test_SA3();
+		var testId = new Test_IdOrType();
 		Pair targetItemOrShrine = new Pair("type", EntityType.SCROLL);
 		Pair additionalFeature = null;//new Pair("maze", 0);
 		int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
@@ -437,71 +445,71 @@ public class MutationForAllSpecificationsTest {
 
 	//==================Random==========================
 	
-	/**
-     * Multi-maze
-	 * Random algorithm
-	 */
-	@Disabled
-	@Test
-	public void test21() throws Exception {
-		var testId = new Test_Random();
-		Pair targetItemOrShrine = new Pair("id", "H0_0");
-		Pair additionalFeature = new Pair("maze", 0);
-		//int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
-		int seed = 179371 ;
-		int successed = 0 ;
-		int maze = 1;
-		testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);
-	}
-	
-    /**
-     * Multi-seeds
-     * Multi-maze
-	 * Random algorithm
-	 */
-	@Disabled
-	@Test
-	public void test22() throws Exception {
-		var testId = new Test_Random();
-		Pair targetItemOrShrine = new Pair("type", EntityType.SCROLL);
-		Pair additionalFeature = new Pair("maze", 0);
-		int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
-		int successed = 0 ;
-		int maze = 1;
-	
-		for(int seed: seeds) {			
-			System.out.println("seed number: " + seed);
-			testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);			
-		}
-		System.out.println("success number: " + successed);
-		
-	}
-	
-	/**
-     * Multi-seeds
-     * Multi-maze
-	 * Random algorithm
-	 * NOTE : if we want to save the data about positions in csv file, we need to comment
-	 * if the agent is alive in the update function because the agent dies most of the times. 
-	 */
-	
-	@Test
-	public void test23() throws Exception {
-		var testId = new Test_Random();
-		Pair targetItemOrShrine = new Pair("type", EntityType.HEALPOT);
-		Pair additionalFeature = new Pair("maze", 1);
-		int seed = 79371;
-		//int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
-		int successed = 0 ;
-		int maze = 2;
-		int terminator = 0;
-		//while(terminator < 30) {			
-			testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);			
-			terminator ++ ;
-		//}
-		System.out.println("success number: " + successed);
-		
-	}
+//	/**
+//     * Multi-maze
+//	 * Random algorithm
+//	 */
+//	@Disabled
+//	@Test
+//	public void test21() throws Exception {
+//		var testId = new Test_Random();
+//		Pair targetItemOrShrine = new Pair("id", "H0_0");
+//		Pair additionalFeature = new Pair("maze", 0);
+//		//int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
+//		int seed = 179371 ;
+//		int successed = 0 ;
+//		int maze = 1;
+//		testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);
+//	}
+//	
+//    /**
+//     * Multi-seeds
+//     * Multi-maze
+//	 * Random algorithm
+//	 */
+//	@Disabled
+//	@Test
+//	public void test22() throws Exception {
+//		var testId = new Test_Random();
+//		Pair targetItemOrShrine = new Pair("type", EntityType.SCROLL);
+//		Pair additionalFeature = new Pair("maze", 0);
+//		int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
+//		int successed = 0 ;
+//		int maze = 1;
+//	
+//		for(int seed: seeds) {			
+//			System.out.println("seed number: " + seed);
+//			testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);			
+//		}
+//		System.out.println("success number: " + successed);
+//		
+//	}
+//	
+//	/**
+//     * Multi-seeds
+//     * Multi-maze
+//	 * Random algorithm
+//	 * NOTE : if we want to save the data about positions in csv file, we need to comment
+//	 * if the agent is alive in the update function because the agent dies most of the times. 
+//	 */
+//	
+//	@Test
+//	public void test23() throws Exception {
+//		var testId = new Test_Random();
+//		Pair targetItemOrShrine = new Pair("type", EntityType.HEALPOT);
+//		Pair additionalFeature = new Pair("maze", 1);
+//		int seed = 79371;
+//		//int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
+//		int successed = 0 ;
+//		int maze = 2;
+//		int terminator = 0;
+//		//while(terminator < 30) {			
+//			testId.testFullPlay("Frodo",targetItemOrShrine, additionalFeature, seed, maze);			
+//			terminator ++ ;
+//		//}
+//		System.out.println("success number: " + successed);
+//		
+//	}
 
 
 }

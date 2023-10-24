@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.goalsAndTactics;
+package onlineTestCaseGenerator;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -36,7 +36,6 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
  * will produce a goal-structure that carries the above mentioned solving
  * algorithm.
  * 
- * @author Samira, Wish. Based on Samira's algorithm in ATEST 2021.
  *
  * @param <NavgraphNode>
  */

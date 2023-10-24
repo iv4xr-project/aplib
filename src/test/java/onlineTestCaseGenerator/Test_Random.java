@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon;
+package onlineTestCaseGenerator;
 
 import static nl.uu.cs.aplib.AplibEDSL.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TestMiniDungeonWithAgent;
 import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.MD_invs;
 import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.RandomPlayTester;
 import eu.iv4xr.framework.extensions.ltl.LTL;
@@ -22,9 +23,6 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.CoverterDot;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWState;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Sa3Solver3;
-import eu.iv4xr.framework.goalsAndTactics.SaSolver4MultiMaze;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
@@ -52,6 +50,9 @@ import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.Sa3Solver3;
+import onlineTestCaseGenerator.SaSolver4MultiMaze;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 
 /**

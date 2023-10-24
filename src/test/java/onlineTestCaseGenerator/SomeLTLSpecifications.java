@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon;
+package onlineTestCaseGenerator;
 
 import eu.iv4xr.framework.extensions.ltl.LTL;
 import static eu.iv4xr.framework.extensions.ltl.LTL.* ;

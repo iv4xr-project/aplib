@@ -79,7 +79,7 @@ def mk3DHeatMap(filename,width,length,depth,game):
     #ax.set_zticklabels(zlabels) 
 
     plt.title("heat map")
-    if saveToFile : plt.savefig("bla.png")
+    if saveToFile : plt.savefig("heatMap.png")
     plt.show()
 
 #def main():

@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.goalsAndTactics;
+package onlineTestCaseGenerator;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -6,12 +6,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import eu.iv4xr.framework.spatial.Vec3;
+import eu.iv4xr.framework.spatial.meshes.Face;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLibExtended;
@@ -21,6 +20,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.mainConcepts.BasicAgent;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
@@ -67,11 +67,10 @@ import static nl.uu.cs.aplib.AplibEDSL.* ;
  *   <li> An enabler that can open a door is called an "opener" of the door.  
  * </ul>
  * 
- * @author Samira, Wish. Based on Samira's algorithm in ATEST 2022.
  *
  * @param <NavgraphNode>
  */
-public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
+public class SaSolver4MultiMaze<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	// some internal variables:
 	
@@ -87,14 +86,14 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	String finalTargetId ;
 	
 	/**
-	 * Approximate location of {@link #finalTargetId}.
-	 */
-	Vec3 heuristicLocation ;
-	
-	/**
 	 * The feature of the target game-object 
 	 */
 	Pair additionalFeature;
+	
+	/**
+	 * Approximate location of {@link #finalTargetId}.
+	 */
+	Vec3 heuristicLocation ;
 	
 	/**
 	 * A filter specifying which game-objects are zones' blockers.
@@ -148,7 +147,11 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	
 	
 	
-	public Sa3Solver3() { super() ; }
+	public SaSolver4MultiMaze() { super() ; }
+	
+	
+	public BiFunction< Iv4xrAgentState<NavgraphNode>,String, GoalStructure> gCandidateIsInteractedNew ;
+	public BiFunction< Iv4xrAgentState<NavgraphNode>,String, GoalStructure> gTargetIsRefreshedNew ;
 	
 	/**
 	 * A constructor for SA2.
@@ -161,14 +164,15 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 * @param explorationExhausted
 	 * @param gExploring
 	 */
-	public Sa3Solver3(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
+	public SaSolver4MultiMaze(BiFunction<Iv4xrAgentState<NavgraphNode> , WorldEntity, Boolean> reachabilityChecker,
 			BiFunction<Iv4xrAgentState<NavgraphNode> ,WorldEntity,Float> distanceToAgent,
 			Function<Iv4xrAgentState<NavgraphNode> ,BiFunction<WorldEntity,WorldEntity,Float>> distanceFunction,
-			Function<String, GoalStructure> gCandidateIsInteracted, 
-			Function<String, GoalStructure> gTargetIsRefreshed,
+			Function<String, GoalStructure> gCandidateIsInteracted,
+			BiFunction< Iv4xrAgentState<NavgraphNode>,String, GoalStructure> gCandidateIsInteractedNew, 
+			Function<String, GoalStructure> gTargetIsRefreshed,			
 			Predicate<Iv4xrAgentState<NavgraphNode>> explorationExhausted,
-			Function<Void,GoalStructure> gExploring) {
-		
+			Function<Void,GoalStructure> gExploring) 
+	{
 		super(reachabilityChecker,
 				distanceToAgent,
 				distanceFunction,
@@ -177,6 +181,8 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				explorationExhausted,
 				i -> gExploring.apply(null)
 				) ;
+		this.gCandidateIsInteractedNew = gCandidateIsInteractedNew;
+		this.gTargetIsRefreshedNew = gCandidateIsInteractedNew;
 	}
 			
 	
@@ -254,17 +260,27 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	}
 
 	
-	private WorldEntity getClosestsElement(List<WorldEntity> candidates, Vec3 target) {
+	private WorldEntity getClosestsElement(List<WorldEntity> candidates, Vec3 target, int maze) {
 		WorldEntity closest = candidates.get(0) ;
 		float minDistance = Float.MAX_VALUE ;
-		for (var e : candidates) {
-			float distSq = Vec3.distSq(e.position, target) ;
-			if (distSq < minDistance) {
-				closest = e ;
-				minDistance = distSq ;
-			}
-		}
-		return closest ;
+//		for (var e : candidates) {
+//			float distSq = Vec3.distSq(e.position, target) ;
+//			if (distSq < minDistance) {
+//				closest = e ;
+//				minDistance = distSq ;
+//			}
+//		}
+	
+		candidates.sort(Comparator.comparingDouble(a -> {
+            double distanceSq = a.position.distSq(a.position, target);
+            return distanceSq;
+        }));
+		candidates.sort(Comparator.comparing(a ->{
+			return Math.abs(maze - a.getIntProperty("maze"));
+		}));	
+		
+		
+		return candidates.get(0) ;
 	}
 	
 	/**
@@ -273,7 +289,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 * the final-target entity is).
 	 */
 	WorldEntity selectBlocker(Iv4xrAgentState S) {
-		//System.out.println(">>> invoking selectNode()") ;
+		System.out.println(">>> invoking selectBlocker()") ;
 		
 		List<WorldEntity> candidates = S.worldmodel.elements.values().stream()
 				.filter(e -> blockersSelector.test(e)
@@ -298,7 +314,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			myHeuristicLocation = S.worldmodel.position ;
 		}
 		
-		return getClosestsElement(candidates,myHeuristicLocation) ;
+		return getClosestsElement(candidates,myHeuristicLocation, (int) S.worldmodel.elements.get(S.worldmodel.agentId).getProperty("maze")) ;
 	}
 	
 	
@@ -307,14 +323,13 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 	 */	
 	WorldEntity selectEnabler(Iv4xrAgentState S, WorldEntity target) {
 		
-		//System.out.println("### invoking selectEnabler " + target.id) ;
+		System.out.println("### invoking selectEnabler " + target.id) ;
 		
 		// check first if the model has a solution:
 		List<WorldEntity> candidates = getConnectedEnablersFromBelief.apply(target.id,S).stream()
 		   . map(id -> S.worldmodel.elements.get(id)) 
 		   . filter(e -> reachabilityChecker.apply(S,e))
-		   .collect(Collectors.toList());
-		
+		   .collect(Collectors.toList());		
 		if (candidates.isEmpty()) {
 			// if it is empty get candidates from untried enablers:
 			candidates = untriedEnablers(S,target.id).stream()
@@ -322,8 +337,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					. filter(e -> reachabilityChecker.apply(S,e)) // for now, only check reachable candidate
 					. collect(Collectors.toList()) ;
 		}
-		
-		//System.out.println("    candidates: " + candidates) ;		
+						
 		if (candidates.isEmpty())
 			return null ;
 		
@@ -335,23 +349,49 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 		if (policy == Policy.NEAREST_TO_AGENT || myHeuristicLocation == null) {
 			myHeuristicLocation = S.worldmodel.position ;
 		}
-		//System.out.println(">>>    heuristic loc: " + myHeuristicLocation) ;
-		return getClosestsElement(candidates,myHeuristicLocation) ;
+		//System.out.println(">>>    heuristic loc: " + myHeuristicLocation +  S.worldmodel.elements.get(S.worldmodel.agentId) ) ;
+		return getClosestsElement(candidates,myHeuristicLocation, target.getIntProperty("maze")) ;
 	}
 	
 	// dynamic goal 
-	GoalStructure lowerleverSolver(String targetEntity,
-			Vec3 heuristicLocation,
-			Predicate<Iv4xrAgentState> psi) {
-				
-		  System.out.println("=== invoking low level search, target: " + targetEntity) ;
+	GoalStructure lowerleverSolver(MyAgentStateExtended state) {
+		System.out.println("=== invoking low level search, target: lowerleverSolver");
+		//   String targetedEntity =  state.worldmodel != null ? state.worldmodel.elements.values().stream().filter( s ->
+		//  	s.type.contains(EntityType.SHRINE.toString()) &&  !(boolean) s.properties.get("cleansed")).collect(Collectors.toList()).get(0).id : "empty"; 
+		
+		
+		var  targetedEntityS = state.worldmodel.elements.values().stream().filter( s ->
+			  	s.type.contains(EntityType.SHRINE.toString()) &&  !(boolean) s.properties.get("cleansed")).collect(Collectors.toList());
+		
+		String targetedEntity = !targetedEntityS.isEmpty() ? targetedEntityS.get(0).id : "empty";
+		
+		if(!targetedEntityS.isEmpty())System.out.println("propertiy of targeted id +" + targetedEntityS.get(0).properties.toString());
+		
+		Predicate<Iv4xrAgentState> psi  = S -> {
+			WorldEntity blocker = targetedEntityS.get(0) ;
+			WorldEntity blockerId = S.worldmodel.getElement(blocker.id) ;
+			var clean = (boolean) blockerId.properties.get("cleansed") ;
+			System.out.println("###" + blocker.id + " open: " + clean + blockerId + "type" + blocker.properties.get("shrinetype")) ;
+			if(clean)  state.triedItems.add(blockerId);
+			//if the imortal shrine is cleansed it should abort the whole goal, but I can not do it
+//			if(blocker.properties.get("shrinetype").toString().contains("ShrineOfImmortals") && clean) {
+//				System.out.println("imortal is cleansed");
+//				return false;
+//			}
+					 
+			return clean;
+		};
+
+		System.out.println("=== invoking low level search, target: " + targetedEntity) ;
+  
 		  
 		  GoalStructure search = 
 		  // this "search" will be put as the body of an enclosing REPEAT-loop:
 		  DEPLOY(agent, (Iv4xrAgentState S) -> {
-				  WorldEntity target = S.worldmodel.elements.get(targetEntity) ;
-				  WorldEntity enabler = selectEnabler(S,target) ;				  
 				  
+				  WorldEntity target = S.worldmodel.elements.get(targetedEntity) ;
+				//  WorldEntity enabler = selectEnabler(S,target) ;				  
+				  WorldEntity enabler = selectEnabler(S,target) ;				  				  
 				  if (enabler == null) {
 					  System.out.println("    cannot find any candidate enabler!") ;
 					  // should not happen...
@@ -359,32 +399,31 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					  return SUCCESS() ;
 				  }				  
 
-				  System.out.println("    enabler to try: " + enabler.id) ;
+				  System.out.println(" enabler to try: " + enabler.id) ;
 
-				  Set<String> previouslyTriedEnablers = triedEnablers.get(targetEntity) ;
+				  Set<String> previouslyTriedEnablers = triedEnablers.get(targetedEntity) ;
 				  if (previouslyTriedEnablers == null) {
 					  previouslyTriedEnablers = new HashSet<String>() ;
-					  triedEnablers.put(targetEntity,previouslyTriedEnablers) ;
+					  triedEnablers.put(targetedEntity,previouslyTriedEnablers) ;
 				  }
 				  previouslyTriedEnablers.add(enabler.id) ;
 				  
-				  System.out.println("=== low-level search of " + targetEntity
+				  System.out.println("=== low-level search of " + targetedEntity
 						  + " invokes interact " + enabler.id) ;
 				  
-				  return SEQ(gCandidateIsInteracted.apply(enabler.id),
+				  return SEQ(gCandidateIsInteractedNew.apply(S,enabler.id),
 						     REPEAT(
-						       FIRSTof(gTargetIsRefreshed.apply(targetEntity),
+						       FIRSTof(gTargetIsRefreshedNew.apply((Iv4xrAgentState) state,targetedEntity),
 						    		   // un-lock mechanism if the above get the agent locked:
-						    		   unLock(enabler.id,targetEntity))
+						    		   unLock(enabler.id,targetedEntity))
 						    	   ),
 						     lift(psi) // check psi
-						     ) ; 
-			  }) ;
-		  
-		return SEQ(gTargetIsRefreshed.apply(targetEntity), 
+						     ); 
+			  });
+
+		return SEQ(gTargetIsRefreshedNew.apply((Iv4xrAgentState) state,targetedEntity), 
 				   FIRSTof(lift(psi),
-				           SEQ(REPEAT(search),
-				    	       lift(psi)))) ;
+				           SEQ(REPEAT(search),  lift(psi) , gCandidateIsInteractedNew.apply((Iv4xrAgentState) state,targetedEntity)))) ;
 	}
 	
 	/**
@@ -435,15 +474,15 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 				WorldEntity selectedOpener = null ;
 				if (! openers.isEmpty()) {
 					// just choose the closest one
-					selectedOpener = getClosestsElement(openers, selected_.position) ;
+					selectedOpener = getClosestsElement(openers, selected_.position, selected_.getIntProperty("maze")) ;
 					tried.add(selectedOpener.id) ;
 				}
 				if (openers.isEmpty())
 					// if no candidate can be found we will just try the excluded enabler:
 					selectedOpener = S.worldmodel.elements.get(excludeThisEnabler) ;
 				
-				System.out.println("    trying as an opener: " + selectedOpener.id) ;
-				return SEQ(gCandidateIsInteracted.apply(selectedOpener.id),
+				System.out.println("trying as an opener: " + selectedOpener.id) ;
+				return SEQ(gCandidateIsInteractedNew.apply(S,selectedOpener.id),
 						   gTargetIsRefreshed.apply(selected),
 						   FAIL() // to force the outer repeat-loop to try again...
 						   ) ;
@@ -488,7 +527,7 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 					// Select nearest to the agent position
 					if (! candidates.isEmpty()) {
 						// just choose the closest one
-						selectedItem = getClosestsElement(candidates, b.worldmodel.position) ;
+						selectedItem = getClosestsElement(candidates, b.worldmodel.position, (int) b.worldmodel.elements.get(b.worldmodel.agentId).getProperty("maze")) ;
 						triedItems.add(selectedItem.id) ;
 					}					
 					
@@ -555,45 +594,46 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 			DEPLOY(agent,
 				 	(Iv4xrAgentState S) -> {			
 				 		System.out.println("=== invoking top-level search") ;
-					 	
-				 		
-				 		if (explorationExhausted.test(S)) {
-					 		System.out.println("=== top-level search invokes explore: Exploration is exhausted, and the goal is not achived" ) ;
-							return 
-									SEQ(
-									// the budget "0" is ignored; this will explore exhaustively		
-									//exploring.apply(0),
-									SUCCESS() // to make the enclosing repeat-loop to continue iterating
-									) ;
-					 	}
-
 				 		 return 	
 				 						SEQ(			
 				 						//explore to find new items	
-				 					 	WHILEDO(
-				 					 			(MyAgentState x) ->  GoalLibExtended.checkExplore(x),
-				 					 			GoalLibExtended.findNodes((MyAgentStateExtended ) S)
-				 								),				 					 					 					 	
+				 					 	FIRSTof(
+				 					 			IF(
+						 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkExplore(x),
+						 					 			GoalLibExtended.findNodes((MyAgentStateExtended ) S),
+						 					 			FAIL()
+					 								),
+				 					 			IF(
+						 					 			(MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x),
+						 					 			lowerleverSolver((MyAgentStateExtended ) S ),
+						 					 			FAIL()
+						 								)
+				 								
+				 								                                             
+				 								//IF((MyAgentStateExtended x) ->  GoalLibExtended.checkMaze(x), lowerleverSolver(MyAgentStateExtended),FAIL()) )
+				 						
+				 								)	 					 	
+				 					 	,				 					 					 					 	
+				 					 	
+				 					 	lift(phi)
+				 					 	,
 				 					 	
 										  IF(
 											  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
 											  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
-											  
-												//Firstly, select an item from the observed entities, if the target was seen but 
-												//has not pick up, we will check it again, this happens when we have a sequence of goals
 											  FIRSTof(GoalLibExtended.selectItemToNavigate(tId), GoalLibExtended.selectTargetedItem(tId,additionalFeature) )),
 											  FIRSTof(GoalLibExtended.selectItemToNavigate(tId), GoalLibExtended.selectTargetedItem(tId,additionalFeature) )	  
-										  ),
+													  ),
 								 
 				 					 	
 				 					 	//GoalLibExtended.selectItem(tId), //select item based on the observation, if the target is seen it will be selected
 				 					 	//navigate to the selected item
-										  GoalLibExtended.smartEntityInCloseRange((TestAgent) agent,(MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
+				 					 	GoalLibExtended.smartEntityInCloseRange((TestAgent) agent,(MyAgentStateExtended) S),	//If it got stuck use the unblocking strategy			 					 	
 				 					 	//IFELSE2(GoalLibExtended.entityInCloseRange(MyAgentStateExtended),SUCCESS(),GoalLibExtended.unstuck(MyAgentStateExtended)),
 				 					 	
-				 					 	//if the target is selected, then it can be picked up and then decide to use or not.
+				 					 	//if the target is selected, then it can be pick up and then decide to use or not.
 				 					 	IF(
-				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId, additionalFeature),					 	
+				 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTarget(x,tId,additionalFeature),					 	
 				 					 		SEQ(
 				 					 				GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
 				 					 				IF(
@@ -601,18 +641,39 @@ public class Sa3Solver3<NavgraphNode> extends Sa1Solver<NavgraphNode> {
 															  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
 																	  //GoalLibExtended.resetSelectedItem(MyAgentStateExtended),
 																	  lift((MyAgentStateExtended b) -> GoalLibExtended.resetSelectedItem(b)),
-																	  GoalLibExtended.useItem((MyAgentStateExtended) S) ),
-															  GoalLibExtended.useItem((MyAgentStateExtended) S)
-														  )
-				 					 				//GoalLibExtended.useItem(MyAgentStateExtended)
-					 					 	),
+																	  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+																	  ),
+															  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+														  )			 	
+				 					 				),
 				 					 		FAIL()
 				 					 	)
+				 					 	//,
+//				 					 	IF(
+//					 					 		(MyAgentStateExtended x) ->  GoalLibExtended.checkTargetInTriedItem(x,tId,additionalFeature),					 	
+//					 					 		SEQ(
+//					 					 				GoalLibExtended.selectTargetedItem(tId,additionalFeature),
+//					 					 				GoalLibExtended.entityInCloseRange((MyAgentStateExtended) S),
+//					 					 				GoalLibExtended.pickUpItem((MyAgentStateExtended) S,tId),
+//					 					 				IF(
+//																  (MyAgentStateExtended x) -> GoalLibExtended.survivalCheck(x), // if we need the pots
+//																  SEQ (GoalLibExtended.survivalHeuristic((MyAgentStateExtended) S, EntityType.HEALPOT), //this will include selecting, navigating and use it	  
+//																		  //GoalLibExtended.resetSelectedItem(MyAgentStateExtended),
+//																		  lift((MyAgentStateExtended b) -> GoalLibExtended.resetSelectedItem(b)),
+//																		  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+//																		  ),
+//																  SEQ(GoalLibExtended.useItem( (MyAgentStateExtended) S   ) ,FAIL())
+//															  )			 	
+//					 					 				),
+//					 					 		FAIL()
+//					 					 	)
+				 					 	
+				 					 	
+				 					 	
 				 						)
 				 				;
 				 		 });
-				  
-		//return SEQ(lift(phi),REPEAT(search)) ; 
+		
 		return WHILEDO(
 				phi , search
 				);

@@ -8,8 +8,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
@@ -24,6 +22,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.mainConcepts.Tactic;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.Sa1Solver;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 /**
  * In this Demo we use a generic algorithm, SA1, to let the agent search

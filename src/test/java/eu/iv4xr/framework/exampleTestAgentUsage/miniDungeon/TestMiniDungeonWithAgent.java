@@ -13,8 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import nl.uu.cs.aplib.Logging;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.ObservationEvent.ScalarTracingEvent;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.TestDataCollector;
@@ -31,6 +29,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.PrintUtils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.Pair;
+import onlineTestCaseGenerator.Sa1Solver;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 
 /**

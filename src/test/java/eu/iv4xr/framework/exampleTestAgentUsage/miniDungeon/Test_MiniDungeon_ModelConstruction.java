@@ -26,8 +26,6 @@ import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.LabRecruitsModel;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
-import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
@@ -44,6 +42,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.PrintUtils;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MiniDungeonModel;
 
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import onlineTestCaseGenerator.Sa1Solver;
+import onlineTestCaseGenerator.Sa1Solver.Policy;
 
 
 /**
