@@ -8,6 +8,8 @@ You may find the algorithm and various combinations of the algorithm with the _R
 
 All of the experiments' are organized as tests, located in `./src/test/java`, in particular in the class named `MutationForAll`. 
 
+To build the project just do `mvn compile` from the project root. You need Java at least version 11.
+
 To produce distinct game layouts for the tests, we changed the seed number in the experiments. 
 In every test method, the game's layout is altered by changing the variable seed.
 At the beginning of the test class (`MutationForAll`), a comment is made on the list of seeds. 
