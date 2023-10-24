@@ -62,7 +62,7 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class Test_Random {
 
-	boolean withGraphics = false;
+	boolean withGraphics = true;
 	boolean supressLogging = false;
 	Pair<Integer, Tile> covertToMDLocation(Vec3 p) {
 		int mapNr = Math.round(p.y);

@@ -42,13 +42,13 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class TestMiniDungeonWithAgent {
 	
-	boolean withGraphics = false ;
+	boolean withGraphics = true ;
 	boolean supressLogging = true ;
 	//boolean withGraphics = true ;
 	//boolean supressLogging = false ;
 
 	
-	//@Test
+	@Test
 	public void testFullPlayFrodo() throws Exception {
 		testFullPlay("Frodo") ;
 	}

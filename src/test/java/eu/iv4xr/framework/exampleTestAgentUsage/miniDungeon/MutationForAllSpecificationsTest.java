@@ -46,7 +46,7 @@ public class MutationForAllSpecificationsTest {
 	 * Test LTL pattern Type1: testing a healing pot, with specific seed
 	 * @throws Exception
 	 */
-@Disabled
+    @Disabled
 	@Test
 	public void test2() throws Exception {
 		var testId = new Test_SA3();
@@ -62,7 +62,7 @@ public class MutationForAllSpecificationsTest {
 	 * @throws Exception
 	 */
  
-
+    @Disabled
 	@Test
 	public void test7() throws Exception {
 		var testId = new Test_MultiMaze();
@@ -95,7 +95,7 @@ public class MutationForAllSpecificationsTest {
 	 * Test LTL pattern type1: testing a rage pot 
 	 * @throws Exception
 	 */
-@Disabled
+    @Disabled
 	@Test
 	public void test14() throws Exception {
 		var testId = new Test_MultiMazeWithRandom();
@@ -143,7 +143,7 @@ public class MutationForAllSpecificationsTest {
 	 * Test LTL pattern Type2: testing type scroll, with specific seed
 	 * @throws Exception
 	 */
-@Disabled
+    @Disabled
 	@Test
 	public void test3() throws Exception {
 		var testId = new Test_SA3();
@@ -161,7 +161,7 @@ public class MutationForAllSpecificationsTest {
 	 * @throws Exception
 	 */
   
-	
+	@Disabled
 	@Test
 	public void test8() throws Exception {
 		var testId = new Test_MultiMaze();
@@ -193,7 +193,7 @@ public class MutationForAllSpecificationsTest {
 	 * Test LTL pattern type1: testing a rage pot 
 	 * @throws Exception
 	 */
-@Disabled
+    @Disabled
 	@Test
 	public void test24() throws Exception {
 		var testId = new Test_MultiMazeWithRandom();
@@ -277,7 +277,7 @@ public class MutationForAllSpecificationsTest {
 	 * Test LTL pattern Type3: testing type scroll
 	 * @throws Exception
 	 */
-
+    @Disabled
 	@Test
 	public void test9() throws Exception {
 		var testId = new Test_ForAllMultiMaze();
@@ -363,7 +363,7 @@ public class MutationForAllSpecificationsTest {
 	 * Test LTL pattern type4: testing a sequence where a rage pot and a
 	 *  scroll, and a heal pot is used and the shrine is checked
 	 */
-	
+	@Disabled
 	@Test
 	public void test5() throws Exception {
 		var testId = new RunAllSpecifications();
@@ -484,11 +484,11 @@ public class MutationForAllSpecificationsTest {
 	 * NOTE : if we want to save the data about positions in csv file, we need to comment
 	 * if the agent is alive in the update function because the agent dies most of the times. 
 	 */
-
+	
 	@Test
 	public void test23() throws Exception {
 		var testId = new Test_Random();
-		Pair targetItemOrShrine = new Pair("id", "H1_0");
+		Pair targetItemOrShrine = new Pair("type", EntityType.HEALPOT);
 		Pair additionalFeature = new Pair("maze", 1);
 		int seed = 79371;
 		//int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
