@@ -19,7 +19,7 @@ All test-methods (except the last one) demonstrate how our algorithm (let's call
 In every test method, the game's instance is altered by changing the variable `seed`.
 At the beginning of the test class (`Test_Experiement`), a comment is made on the list of seeds.
 
-Some of the scenarios specify a specific item id or item type type that the scenario has to visit. You can change them to try out different targets. These ids and types follow some convention. For instance, the item id for testing a healing potion is H_X. The healing potion's id, X, ranges from 0 to 3 in every maze.
+Some of the scenarios specify a specific item id or item type that the scenario has to visit. You can change them to try out different targets. These ids and types follow some convention. For instance, the item id for testing a healing potion is H_X. The healing potion's id, X, ranges from 0 to 3 in every maze.
 The names of rage potions, scrolls, and shrines begin with R_X, S_X, and Sh_X, respectively.
 
 To run a disjunctive or conjunctive scenario, the _type_ of the item needs to be given to the test agent.
@@ -40,17 +40,24 @@ Invoking maven as in the above example simply runs the test method. It does not 
 
 #### Other experiments
 
-To for example run a basic scenario on a multi maze setup (L2,L4,L8 in Table III), you can run the experiment in `test7`:   
+To run a basic scenario on a multi maze setup (L2,L4,L8 in Table III), you can run the experiment in `test7`:   
 
 ```java
 mvn test -Dtest="onlineTestCaseGenerator.Test_Experiement#test7
 ```
 
-`test21` below runs a basic scenario, but using the combination of our **Online** algorithm with _Random_:
+`test14` below runs a basic scenario, but using the combination of our **Online** algorithm with _Random_:
+
+```java
+mvn test -Dtest="onlineTestCaseGenerator.Test_Experiement#test14
+```
+
+`test21` below runs _Random_ algorithm:
 
 ```java
 mvn test -Dtest="onlineTestCaseGenerator.Test_Experiement#test21
 ```
+
 
 Below is an overview of varios test methods in the class `Test_Experiement`, and which experiment/scenario it does.
 
