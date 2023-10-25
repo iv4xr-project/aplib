@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.util.*;
 
-public class RunAllSpecifications {
+public class Test_Chain_Scenario {
 
 
 	static boolean withGraphics = false;

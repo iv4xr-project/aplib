@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
-public class SomeLTLSpecifications {
+public class Some_LTLSpecifications {
 	
 	MyAgentState cast(SimpleState S) {
 		return (MyAgentState) S;

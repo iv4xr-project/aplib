@@ -75,7 +75,7 @@ public class TestSimple_MiniDungeonWithLTL {
 			 . attachEnvironment(env)
 			 . setGoal(G) ;
 		
-		var specs = new SomeLTLSpecifications() ;
+		var specs = new Some_LTLSpecifications() ;
 		var psi1 = specs.spec1() ;
 		var psi2 = specs.spec2() ;
 		var psi3 = specs.spec3() ;

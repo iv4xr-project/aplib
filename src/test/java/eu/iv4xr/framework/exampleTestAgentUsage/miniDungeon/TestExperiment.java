@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.Test_Random;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.utils.Pair;
-import onlineTestCaseGenerator.RunAllSpecifications;
+import onlineTestCaseGenerator.Test_Chain_Scenario;
 import onlineTestCaseGenerator.Sa3Solver3;
 import onlineTestCaseGenerator.Test_ForAll;
 import onlineTestCaseGenerator.Test_ForAllMultiMaze;
@@ -21,7 +21,7 @@ import onlineTestCaseGenerator.Test_IdOrTypeWithRandom;
 import onlineTestCaseGenerator.Test_MultiMaze;
 import onlineTestCaseGenerator.Test_MultiMazeWithRandom;
 
-public class MutationForAllSpecificationsTest {
+public class TestExperiment {
 
 	
 	//=================== type 1 ====================
@@ -374,7 +374,7 @@ public class MutationForAllSpecificationsTest {
 	@Disabled
 	@Test
 	public void test5() throws Exception {
-		var testId = new RunAllSpecifications();
+		var testId = new Test_Chain_Scenario();
 		boolean random = false;
 		//int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
 		int seed =  179371  ;
@@ -391,7 +391,7 @@ public class MutationForAllSpecificationsTest {
  @Disabled
 	@Test
 	public void test6() throws Exception {
-		var testId = new RunAllSpecifications();
+		var testId = new Test_Chain_Scenario();
 		boolean random = false;
 		int seed = 179371;
 		int maze = 1 ;
@@ -408,7 +408,7 @@ public class MutationForAllSpecificationsTest {
 	@Disabled
 	@Test
 	public void test10() throws Exception {
-		var testId = new RunAllSpecifications();
+		var testId = new Test_Chain_Scenario();
 		boolean random = false;
 		int seed = 179371;
 		int maze = 2 ;
@@ -426,7 +426,7 @@ public class MutationForAllSpecificationsTest {
 	@Disabled
 	@Test
 	public void test17() throws Exception {
-		var testId = new RunAllSpecifications();
+		var testId = new Test_Chain_Scenario();
 		boolean random = false;
 		int seeds[] = {179371, 24681  , 98765, 12345, 54321, 71825 , 13579, 86420, 56789, 43210};
 		int successed = 0 ;

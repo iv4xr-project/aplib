@@ -12,7 +12,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.utils.Pair;
 import onlineTestCaseGenerator.Sa3Solver3;
 
-public class MutationForAllSpecificationsTest {
+public class Test_Experiement {
 
 	
 	//=================== basic scenario ====================
@@ -209,7 +209,7 @@ public class MutationForAllSpecificationsTest {
 	@Disabled
 	@Test
 	public void test5() throws Exception {
-		var testId = new RunAllSpecifications();
+		var testId = new Test_Chain_Scenario();
 		boolean random = false;		
 		int seed =  179371  ;
 		int maze = 2 ;
@@ -227,7 +227,7 @@ public class MutationForAllSpecificationsTest {
 	@Disabled
 	@Test
 	public void test10() throws Exception {
-		var testId = new RunAllSpecifications();
+		var testId = new Test_Chain_Scenario();
 		boolean random = false;
 		int seed = 179371;
 		int maze = 2 ;
