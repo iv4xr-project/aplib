@@ -112,6 +112,7 @@ public class Test_TestDataCollector {
 		assertEquals(4, data1.size());
 		assertEquals(2, data2.size());
 		
+		System.out.println(">>> " + Arrays.asList(data1.get(0))) ;
 		assertEquals("[x, y]", "" + Arrays.asList(data1.get(0))) ;
 		assertEquals("[0, 0]", "" + Arrays.asList(data1.get(1))) ;
 		assertEquals("[2, 2]", "" + Arrays.asList(data2.get(1))) ;
