@@ -1,7 +1,6 @@
 # iv4xr-core <a name="top"></a>
 
 * [The build instructions are below](README.md#buildinstr)
-* [APIs Javadoc documentation](http://www.staff.science.uu.nl/~prase101/research/projects/iv4xr/aplib/apidocs/)
 * [Agent programming manuals and tutorials](./docs/agentprogramming.md)
 * [Agent-based testing manuals and tutorials](./docs/agentbasedtesting.md)
 * [Code snippets](README.md#snippets)
