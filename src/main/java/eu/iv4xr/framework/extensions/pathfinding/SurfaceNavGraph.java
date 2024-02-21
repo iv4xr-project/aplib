@@ -85,6 +85,13 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      * been "seen", for the purpose of memory-based navigation.
      */
     public ArrayList<Boolean> seenVertices;
+    
+    /**
+     * If notFrontier.get(i) is true, it means that vertex i has been seen and is NOT
+     * a frontier vertex anymore.
+     * If it is false, then i could be a frontier.
+     */
+    List<Boolean> notFrontier = new ArrayList<>() ;
 
     /**
      * This maps the Faces to their corresponding center-points. The center-point is
@@ -230,9 +237,11 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      */
     public void wipeOutMemory() {
         seenVertices.clear();
+        notFrontier.clear();
         int N = vertices.size();
         for (int k = 0; k < N; k++) {
             seenVertices.add(false);
+            notFrontier.add(false) ;
         }
     }
 
@@ -470,6 +479,9 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         // System.out.println("** goal-node: " + goalNode) ;
         return findPath(startNode, goalNode);
     }
+    
+    
+   
 
     /**
      * This returns the set of frontier-vertices. A vertex is a frontier vertex if
@@ -488,6 +500,8 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         }
         int N = vertices.size();
         for (int v = 0; v < N; v++) {
+        	if (notFrontier.get(v)) // v is certainly not a frontier!
+        		continue ;
             Vec3 vloc = vertices.get(v);
             if (seenVertices.get(v)) {
                 for (Integer z : edges.neighbours(v)) {
@@ -495,7 +509,17 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
                         frontiers.add(new Pair<Integer, Integer>(v, z));
                         break;
                     }
+                    
                 }
+                // add a second check to identify that v definitely is not a frontier anymore:
+                boolean surelyNotFrontier = true ;
+                for (Integer z : edges.neighbours(v)) {
+                    if (!seenVertices.get(z)) {
+                    	surelyNotFrontier = false ;
+                        break;
+                    }
+                }
+                notFrontier.set(v, surelyNotFrontier) ;
             }
         }
         return frontiers;
