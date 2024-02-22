@@ -91,7 +91,7 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      * a frontier vertex anymore.
      * If it is false, then i could be a frontier.
      */
-    public List<Boolean> notFrontier = new ArrayList<>() ;
+    public Boolean[] notFrontier ;
 
     /**
      * This maps the Faces to their corresponding center-points. The center-point is
@@ -237,11 +237,11 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      */
     public void wipeOutMemory() {
         seenVertices.clear();
-        notFrontier.clear();
         int N = vertices.size();
+        notFrontier = new Boolean[N] ;
         for (int k = 0; k < N; k++) {
             seenVertices.add(false);
-            notFrontier.add(false) ;
+            notFrontier[k] = false ;
         }
     }
 
@@ -500,7 +500,7 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         }
         int N = vertices.size();
         for (int v = 0; v < N; v++) {
-        	if (notFrontier.get(v)) // v is certainly not a frontier!
+        	if (notFrontier[v]) // v is certainly not a frontier!
         		continue ;
             if (seenVertices.get(v)) {
                 Vec3 vloc = vertices.get(v);
@@ -518,7 +518,7 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
                         break;
                     }
                 }
-                notFrontier.set(v, surelyNotFrontier) ;
+                notFrontier[v] = surelyNotFrontier ;
             }
         }
         return frontiers;
