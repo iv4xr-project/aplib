@@ -590,10 +590,18 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
             return null;
         // sort the frontiers ascendingly, by their geometric distance to the
         // start-vertex:
-        Vec3 startLocation = vertices.get(startVertex);
+        Vec3 startLocation     = vertices.get(startVertex);
         Vec3 heuristicLocation = vertices.get(heuristicVertex);
-        frontiers.sort((p1, p2) -> Float.compare(Vec3.distSq(vertices.get(p1.fst), startLocation),
-                Vec3.distSq(vertices.get(p2.fst), heuristicLocation)));
+        frontiers.sort((p1, p2) -> {
+            Vec3 p1Loc = vertices.get(p1.fst);
+            Vec3 p2Loc = vertices.get(p2.fst);
+            float delta1 = Math.abs(p1Loc.z - startLocation.z) ;
+            if (delta1 <= 0.1 && Math.abs(p2Loc.z - startLocation.z) > delta1) 
+            	return -1 ;
+            // else just sort by distance to start location
+            return Float.compare(Vec3.distSq(p1Loc, startLocation),
+            		             Vec3.distSq(p2Loc, heuristicLocation)) ;  }
+        );
 
         for (var front : frontiers) {
             var path = findPath(startVertex, front.fst);
