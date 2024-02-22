@@ -598,7 +598,7 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         
         for (var p : frontiers) {
         	 Vec3 pLoc = vertices.get(p.fst);
-        	 float delta = Math.abs(pLoc.z - startLocation.z) ;
+        	 float delta = Math.abs(pLoc.y - startLocation.y) ;
         	 if (delta <= 0.1) {
         		 atTheSameHeight.add(p) ;
         	 }
