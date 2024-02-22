@@ -238,7 +238,8 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
     public void wipeOutMemory() {
         seenVertices.clear();
         int N = vertices.size();
-        notFrontier = new Boolean[N] ;
+        if (notFrontier == null || notFrontier.length != N) 
+        	notFrontier = new Boolean[N] ;
         for (int k = 0; k < N; k++) {
             seenVertices.add(false);
             notFrontier[k] = false ;
