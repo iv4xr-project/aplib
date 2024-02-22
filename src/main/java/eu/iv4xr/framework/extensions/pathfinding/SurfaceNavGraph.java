@@ -585,23 +585,39 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
     public List<Integer> explore(Integer startVertex, Integer heuristicVertex) {
 
         var frontiers = getFrontierVertices();
-        
+                
         if (frontiers.isEmpty())
             return null;
         // sort the frontiers ascendingly, by their geometric distance to the
         // start-vertex:
         Vec3 startLocation     = vertices.get(startVertex);
         Vec3 heuristicLocation = vertices.get(heuristicVertex);
-        frontiers.sort((p1, p2) -> {
-            Vec3 p1Loc = vertices.get(p1.fst);
-            Vec3 p2Loc = vertices.get(p2.fst);
-            float delta1 = Math.abs(p1Loc.z - startLocation.z) ;
-            if (delta1 <= 0.1 && Math.abs(p2Loc.z - startLocation.z) > delta1) 
-            	return -1 ;
-            // else just sort by distance to start location
-            return Float.compare(Vec3.distSq(p1Loc, startLocation),
-            		             Vec3.distSq(p2Loc, heuristicLocation)) ;  }
-        );
+        
+        List<Pair<Integer,Integer>> atTheSameHeight = new LinkedList<>() ;
+        List<Pair<Integer,Integer>> atOtherHeight = new LinkedList<>() ;
+        
+        for (var p : frontiers) {
+        	 Vec3 pLoc = vertices.get(p.fst);
+        	 float delta = Math.abs(pLoc.z - startLocation.z) ;
+        	 if (delta <= 0.1) {
+        		 atTheSameHeight.add(p) ;
+        	 }
+        	 else {
+        		 atOtherHeight.add(p) ;
+        	 }
+        }
+        
+        atTheSameHeight.sort((p1, p2) -> Float.compare(
+            		Vec3.distSq(vertices.get(p1.fst),heuristicLocation),
+            		Vec3.distSq(vertices.get(p2.fst),heuristicLocation))) ;
+        
+        atOtherHeight.sort((p1, p2) -> Float.compare(
+        		Vec3.distSq(vertices.get(p1.fst),heuristicLocation),
+        		Vec3.distSq(vertices.get(p2.fst),heuristicLocation))) ;
+        
+        frontiers.clear();
+        frontiers.addAll(atTheSameHeight) ;
+        frontiers.addAll(atOtherHeight) ;
 
         for (var front : frontiers) {
             var path = findPath(startVertex, front.fst);
