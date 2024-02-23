@@ -127,6 +127,16 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      * threshold will have a center-point added as an extra navigation node.
      */
     float faceAreaThresholdToAddCenterNode;
+    
+    /**
+     * A flag to indicate whether or not the world has "multi-floor". That is, there
+     * are reachable nodes that are at different altitudes. If this is NOT the case,
+     * turning this off might optimize certain parts of pathfinding, e.g. the exploration
+     * part.
+     * 
+     * <p>Default: true.
+     */
+    public boolean multifloor = true ;
 
     Pathfinder<Integer> pathfinder;
 
@@ -603,7 +613,8 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         		 atTheSameHeight.add(p) ;
         	 }
         	 else {
-        		 atOtherHeight.add(p) ;
+        		 if (multifloor)
+        			 atOtherHeight.add(p) ;
         	 }
         }
         
