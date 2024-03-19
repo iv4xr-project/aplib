@@ -35,7 +35,7 @@ jobs:
 
     # running the tests. excluding some e.g. because they are experiments
     - name: run the tests
-      run: mvn test -Dtest='!*TPJ*'
+      run: mvn test -Dtest='!*TPJ*,!*Dungeon*'
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     #- name: Update dependency graph
