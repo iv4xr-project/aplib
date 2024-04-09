@@ -24,6 +24,8 @@ public class BasicSearch {
 	 */
 	public int turn = 0 ;
 	
+	public String algName = "RND" ;
+	
 	/**
 	 * A function that constructs a test agent.
 	 */
@@ -107,6 +109,14 @@ public class BasicSearch {
 	public int totNumberOfRuns = 0 ;
 	
 	/**
+	 * The maximum number of runs for this algorithm. With "runs" being loosely defined.
+	 * E.g. it could mean episodes, where at each episode/run the algorithm performs a
+	 * Search, and different episodes may repeat the search but with different random
+	 * choices.
+	 */
+	public int maxNumberOfRuns = 10 ;
+	
+	/**
 	 * A predicate specifying when the search is considered completed.
 	 * The predicate is evaluated on the agent's state. 
 	 */
@@ -160,7 +170,9 @@ public class BasicSearch {
 	public List<Vec3> visitedLocations = new LinkedList<>() ;
 	
 
-	public BasicSearch() { }
+	public BasicSearch() {
+		remainingSearchBudget = totalSearchBudget;
+	}
 	
 	public void setRndSeed(int seed) {
 		rnd = new Random(seed) ;
@@ -171,6 +183,8 @@ public class BasicSearch {
 	 */
 	@SuppressWarnings("rawtypes")
 	public Iv4xrAgentState agentState() {
+		//System.out.println(">>> agent wom:" 
+		//		+ ((Iv4xrAgentState) agent.state()).worldmodel()) ;
 		return (Iv4xrAgentState) agent.state() ;
 	}
 	
@@ -223,7 +237,9 @@ public class BasicSearch {
 	ProgressStatus solveGoal(String goalDesc, GoalStructure G, int budget) throws Exception {
 		log("*** Deploying a goal: " + goalDesc) ;
 		agent.setGoal(G) ;
-		int i=0 ;
+		agent.update() ;
+		Thread.sleep(delayBetweenAgentUpateCycles);
+		int i=1 ;
 		//WorldEntity lastInteractedButton = null ;
 		while (G.getStatus().inProgress() && !terminationConditionIsReached()) {
 			if (budget>0 && i >= budget) {
@@ -261,6 +277,8 @@ public class BasicSearch {
 			var G = initializedG.apply(null) ;
 			solveGoal("SUT initialized", G, budget_per_task) ;		
 		}
+		// single initial agent-update to initialize wom:
+		agent.update();
 		int depth = 0 ;
 		while (! terminationConditionIsReached()) {
 			solveGoal("Exploration", exploredG.apply(null), explorationBudget) ;
@@ -291,15 +309,18 @@ public class BasicSearch {
 		remainingSearchBudget = totalSearchBudget ;
 
 		long t0 = System.currentTimeMillis() ;
+		log("*** " + algName + " starts") ;
 		runAlgorithmForOneEpisode() ;
 		remainingSearchBudget = remainingSearchBudget - (int) (System.currentTimeMillis() - t0) ;
 		totNumberOfRuns++ ;
-		while (! terminationConditionIsReached()) {
+		while (! terminationConditionIsReached() && totNumberOfRuns < maxNumberOfRuns) {
 			t0 = System.currentTimeMillis() ;
+			log("*** === starting episode " + totNumberOfRuns) ;
 			runAlgorithmForOneEpisode() ;
 			remainingSearchBudget = remainingSearchBudget - (int) (System.currentTimeMillis() - t0) ;
 			totNumberOfRuns++ ;
 		}
+		log("*** " + algName + " ends. #runs:" + totNumberOfRuns) ;
 	}
 	
 
