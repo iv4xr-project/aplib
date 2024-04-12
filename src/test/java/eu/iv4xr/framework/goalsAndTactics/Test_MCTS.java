@@ -23,7 +23,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 
-public class Test_BasicSearch {
+public class Test_MCTS {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = false ;
@@ -71,43 +71,13 @@ public class Test_BasicSearch {
 		return agent ;
 	}
 	
-	//@Test
-	public void test_closingMiniDungeon() throws Exception {
-		DungeonApp app = new DungeonApp(new MiniDungeonConfig());
-		app.soundOn = false;
-		DungeonApp.deploy(app);		
-		
-		System.out.println(">>>> hit RET 1") ;
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine() ;
-		
-		Window win = SwingUtilities.getWindowAncestor(app);
-		win.dispose();
-		
-		System.out.println(">>>> hit RET 2") ;
-		scanner.nextLine() ;
-		
-		app = new DungeonApp(new MiniDungeonConfig());
-		app.soundOn = false;
-		DungeonApp.deploy(app);		
-		
-		System.out.println(">>>> hit RET 3") ;
-		scanner.nextLine() ;
-		
-		win = SwingUtilities.getWindowAncestor(app);
-		win.dispose();
-		
-		System.out.println(">>>> hit RET 4") ;
-		//scanner = new Scanner(System.in);
-		scanner.nextLine() ;
-	}
 	
 	@Test
 	public void test0() throws Exception {
 		
 		var goalLib = new GoalLib();
 		
-		var alg = new BasicSearch() ;
+		var alg = new XMCTS() ;
 		BasicSearch.DEBUG = !supressLogging ;
 
 		
@@ -153,16 +123,33 @@ public class Test_BasicSearch {
 			return frodo != null
 					&& ((Integer) frodo.properties.get("hp")) <= 0 ;
 		} ;
+		alg.rewardFunction = state -> {
+			if (alg.topGoalPredicate.test(state))
+				return alg.maxReward ;
+			if (alg.agentIsDead.test(state))
+				return -10f ;
+			return 0f ;
+		} ;
+		alg.wipeoutMemory = agent -> {
+			var state = (MyAgentState) agent.state() ;
+			state.multiLayerNav.wipeOutMemory(); 
+			return null ;
+		} ;
+		
 		
 		alg.maxDepth = 3 ;
-		alg.maxNumberOfEpisodes = 10 ;
+		alg.maxNumberOfEpisodes = 20 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
+		alg.explorationBudget = 500 ;
+		alg.budget_per_task = 500 ;
 		
-
-		
+				
 		//alg.runAlgorithmForOneEpisode();
 		alg.runAlgorithm();
 		
+		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
+		
+		System.out.println(alg.mctree) ;
 
 		
 		//System.out.println(">>>> hit RET") ;
