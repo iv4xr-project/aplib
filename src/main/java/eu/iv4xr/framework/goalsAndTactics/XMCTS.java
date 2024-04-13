@@ -107,7 +107,9 @@ public class XMCTS extends BasicSearch{
 		}
 		
 		public String toStringWorker(String indent) {
-			String z = "" + indent + this.action + ", fully explored:" + this.fullyExplored ;
+			String z = "" + indent + this.action 
+					+ ", avrgReward=" +  this.averageReward 
+					+ ", fully explored:" + this.fullyExplored ;
 			if (children == null) {
 				z += " X" ;
 				return z ;
