@@ -161,8 +161,9 @@ public class Test_BasicSearch {
 
 		
 		//alg.runAlgorithmForOneEpisode();
-		alg.runAlgorithm();
+		var R = alg.runAlgorithm();
 		
+		System.out.println(">>> winningplay: " + R.winningplay) ;
 
 		
 		//System.out.println(">>>> hit RET") ;

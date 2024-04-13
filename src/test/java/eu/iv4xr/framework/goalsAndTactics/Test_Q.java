@@ -23,7 +23,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 
-public class Test_MCTS {
+public class Test_Q {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = false ;
@@ -77,7 +77,7 @@ public class Test_MCTS {
 		
 		var goalLib = new GoalLib();
 		
-		var alg = new XMCTS() ;
+		var alg = new XQalg() ;
 		BasicSearch.DEBUG = !supressLogging ;
 
 		
@@ -128,8 +128,18 @@ public class Test_MCTS {
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
 				return -10f ;
-			return 0f ;
+			
+			var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
+				.filter(e -> e.type.equals("SCROLL"))
+				.count();
+			
+			var scrollsInBag = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("scrollsInBag") ;
+			
+			return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
+			//return 0f ;
 		} ;
+		
 		alg.wipeoutMemory = agent -> {
 			var state = (MyAgentState) agent.state() ;
 			state.multiLayerNav.wipeOutMemory(); 
@@ -137,7 +147,7 @@ public class Test_MCTS {
 		} ;
 		
 		
-		alg.maxDepth = 2 ;
+		alg.maxDepth = 7 ;
 		alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
 		alg.explorationBudget = 500 ;
@@ -149,7 +159,6 @@ public class Test_MCTS {
 		
 		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
 		
-		System.out.println(alg.mctree) ;
 		System.out.println(">>> winningplay: " + R.winningplay) ;
 
 		

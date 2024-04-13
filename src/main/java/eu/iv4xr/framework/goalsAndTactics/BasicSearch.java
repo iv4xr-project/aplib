@@ -102,11 +102,6 @@ public class BasicSearch {
 		return remainingSearchBudget;
 	}
 
-	public void setTotalSearchBudget(int budget) {
-		totalSearchBudget = budget;
-		remainingSearchBudget = totalSearchBudget;
-	}
-
 	public Random rnd = new Random();
 
 	/**
@@ -150,8 +145,20 @@ public class BasicSearch {
 	 */
 	boolean goalHasBeenAchieved = false ;
 	
+	/**
+	 * Sequence of interactions that was found to lead to a state satisfying {@link #topGoalPredicate}.
+	 */
+	public List<String> winningplay = null ;
+	
 	public boolean goalHasBeenAchieved() {
 		return goalHasBeenAchieved ;
+	}
+	
+	void markThatGoalIsAchieved(List<String> trace) {
+		goalHasBeenAchieved = true ;
+		if (winningplay == null || trace.size() < winningplay.size()) {
+			winningplay = trace ;
+		}		
 	}
 
 	/**
@@ -236,7 +243,7 @@ public class BasicSearch {
 	public List<Vec3> visitedLocations = new LinkedList<>();
 
 	public BasicSearch() {
-		remainingSearchBudget = totalSearchBudget;
+		//remainingSearchBudget = totalSearchBudget;
 	}
 
 	public void setRndSeed(int seed) {
@@ -256,6 +263,28 @@ public class BasicSearch {
 	public WorldModel wom() {
 		return agentState().worldmodel();
 	}
+	
+	/**
+	 * The value of the current game state. It is equal to {@link #maxReward} if
+	 * {@link #topGoalPredicate} holds on that state. Else it is calculated by
+	 * {@link BasicSearch#rewardFunction}, if it is defined.
+	 * Else, if {@link #agentIsDead} is defined, and it says the agent is dead,
+	 * the returned value is -10, and else 0.
+	 */
+	float valueOfCurrentGameState() {
+		var state = agentState() ;
+		if (topGoalPredicate.test(state)) {
+			return maxReward ;
+		}
+		if (rewardFunction != null)
+			return rewardFunction.apply(state) ;
+		
+		if (agentIsDead())
+			return -100 ;
+		else
+			return 0 ;
+	}
+	
 
 	void log(String msg) {
 		if (DEBUG) {
@@ -349,10 +378,12 @@ public class BasicSearch {
 	
 	/**
 	 * Implements one-episode search to move the SUT to a state satisfying {@link #topGoalPredicate}.
+	 * It returns a value/reward obtained by the episode.
 	 */
-	void runAlgorithmForOneEpisode() throws Exception {
+	float runAlgorithmForOneEpisode() throws Exception {
 
 		initializeEpisode();
+		List<String> trace = new LinkedList<>() ;
 
 		int depth = 0;
 		while(true) {
@@ -369,19 +400,20 @@ public class BasicSearch {
 				break;
 			}
 			if (topGoalPredicate.test(agentState())) {
-				goalHasBeenAchieved = true ;
+				markThatGoalIsAchieved(trace) ;
 				log("*** Goal is ACHIEVED");
 				break ;
 			}
 			
 			WorldEntity e = entities.get(rnd.nextInt(entities.size()));
 			var G = SEQ(reachedG.apply(e.id), interactedG.apply(e.id));
+			trace.add(e.id) ;
 			solveGoal("Reached and interacted " + e.id, G, budget_per_task);
 
 			depth++;
 			
 			if (topGoalPredicate.test(agentState())) {
-				goalHasBeenAchieved = true ;
+				markThatGoalIsAchieved(trace) ;
 				log("*** Goal is ACHIEVED");
 				break ;
 			}
@@ -398,8 +430,8 @@ public class BasicSearch {
 
 		}
 		
-		
 		closeEnv_();
+		return valueOfCurrentGameState() ;
 	}
 	
 	/**
@@ -410,6 +442,30 @@ public class BasicSearch {
 				|| remainingSearchBudget <= 0
 				|| (maxNumberOfEpisodes != null && totNumberOfEpisodes > maxNumberOfEpisodes) ;
 	}
+	
+	public static class AlgorithmResult {
+		public String algName ;
+		public boolean goalAchieved ;
+		int usedBudget ;
+		int totEpisodes ;
+		List<String> winningplay ;
+		List<Float> episodesValues ;
+		
+		public String showShort() {
+			String z = "" + algName 
+			    + ", goal:" + (goalAchieved ? "ACHIEVED" : "X")
+				+ ", #episodes:" + totEpisodes 
+				+ ", used-budget: " + usedBudget ;
+			
+			if (goalAchieved)
+				z += ", #winningplay:" + winningplay.size() ;
+			else {
+				var maxVal = episodesValues.stream().max((v1,v2) -> Float.compare(v1,v2)) ;				
+				z += ", max-val:" + maxVal.get() ;
+			}
+			return z ;		
+		}
+	}
 
 	/**
 	 * Perform the multi-episodic search to get to an SUT state where {@link #topGoalPredicate} 
@@ -417,26 +473,35 @@ public class BasicSearch {
 	 * the predicate becomes true. Else, the search continues until the budget is exhausted, or
 	 * the agent is dead, or when the maximum number of episodes is reached.
 	 */
-	public void runAlgorithm() throws Exception {
+	public AlgorithmResult runAlgorithm() throws Exception {
 		var tStart = System.currentTimeMillis() ;
+		remainingSearchBudget = totalSearchBudget ;
 		totNumberOfEpisodes = 0;
+		List<Float> episodesValues = new LinkedList<>() ;
 		log("*** START " + algName);
 		do {
 			totNumberOfEpisodes++;
 			long t0 = System.currentTimeMillis();
 			log("*** === starting episode " + totNumberOfEpisodes);
-			runAlgorithmForOneEpisode();
+			var value = runAlgorithmForOneEpisode();
 			remainingSearchBudget = remainingSearchBudget - (int) (System.currentTimeMillis() - t0);
+			episodesValues.add(value) ;
 		} 
 		while (! terminationCondition());
-		log("*** END " + algName 
-				+ ", goal:" + (goalHasBeenAchieved ? "ACHIEVED" : "X")
-				+ ", #episodes:" + totNumberOfEpisodes 
-				+ ", used-budget: " + (totalSearchBudget - remainingSearchBudget));
 		
-		
+		var R = new AlgorithmResult() ;
+		R.algName = this.algName ;
+		R.goalAchieved = goalHasBeenAchieved() ;
+		R.totEpisodes = totNumberOfEpisodes ;
+		R.usedBudget = totalSearchBudget - remainingSearchBudget ;
+		R.winningplay = this.winningplay ;
+		R.episodesValues = episodesValues ;
+		log("*** END " + R.showShort());
+			
 		log(">>> remaining budget:" + remainingSearchBudget) ;
 		log(">>> exec-time:" + (System.currentTimeMillis() - tStart)) ;
+		
+		return R ;
 		
 	}
 

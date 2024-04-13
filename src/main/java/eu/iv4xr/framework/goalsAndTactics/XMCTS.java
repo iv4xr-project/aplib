@@ -12,7 +12,32 @@ import java.util.stream.Collectors;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 
-
+/**
+ * Implementation of Monte Carlo Search Tree (MCTS). In this implementation we
+ * assume a deterministic target game. That is, playing the same sequence of
+ * actions always give the same reward/value.
+ * 
+ * <p>The algorithm constructs a tree, encoding a winning strategy to play a game.
+ * The game is assumed to be adversarial (e.g. like chess). 
+ * 
+ * However, rather than playing moves in alteration (player move, then opponent move),
+ * a step in the tree represents the player's move, and the corresponding game's
+ * respond to that (e.g. a monster hits the player). Since the game is assumed to
+ * be deterministic, the game's respond is deterministic as well.
+ * 
+ * <p>A winning state is a state satisfying the goal set in BaseSearch's topGoalPredicate.
+ * The first time a rollout finds a winning state, the sequences of steps that reach it
+ * is remembered in {@link #winningplay}. The search can stop, or continued depending on
+ * the value of the field stopAfterGoalsAchieved.
+ * MCTS is actually a learning algorithm. The resulting Monte Carlo tree represents a
+ * strategy to reach a winning state. If the algorithm is set to stop as soon as a winning
+ * state is found, then we use it as a search algorithm. If we let it continue then it behaves
+ * as a learning algorithm.
+ * 
+ * <p>Use the field maxDepth to control the depth of the search.  Also, giving value/reward to a rollout
+ * where the agent survives, but not necessarily reaches a winning state helps in directing
+ * the search towards closing to a winning state.
+ */
 public class XMCTS extends BasicSearch{
 	
 	static class Node {
@@ -140,7 +165,6 @@ public class XMCTS extends BasicSearch{
 	 */
 	public Node mctree ;
 	
-	public List<String> winningplay = null ;
 	
 	/**
 	 * Wipe the agent memory on visited places. Only the navigation nodes need to be wiped;
@@ -169,8 +193,12 @@ public class XMCTS extends BasicSearch{
 		boolean success = true ;
 		
 		if (trace.isEmpty()) {
-			// special case when the trace is still emoty:
+			// special case when the trace is still empty:
 			solveGoal("Exploration", exploredG.apply(null), explorationBudget) ;
+			if (agentIsDead()) {
+				 success = false ;
+			}
+			return success ;
 		}
 		
 		for (var entityToInteract : trace) {
@@ -193,14 +221,6 @@ public class XMCTS extends BasicSearch{
 		return success ;
 	}
 	
-	float rewardOfCurrentGameState() {
-		var state = agentState() ;
-		if (topGoalPredicate.test(state)) {
-			return maxReward ;
-		}
-		return rewardFunction.apply(state) ;
-	}
-	
 	/**
 	 * Play all the actions leading to the given node, then continue to play
 	 * the game from that point either until a terminal state is reached, or
@@ -221,7 +241,7 @@ public class XMCTS extends BasicSearch{
 			// if the trace replay is not successful, we don't continue:
 			PlayResult R = new PlayResult() ;
 			R.trace = trace ;
-			R.reward = rewardOfCurrentGameState() ;
+			R.reward = valueOfCurrentGameState() ;
 			closeEnv_() ;
 			return R ;
 		}
@@ -251,12 +271,10 @@ public class XMCTS extends BasicSearch{
 			}
 			// reset exploration, then do full explore:
 			wipeoutMemory.apply(agent) ;
+			solveGoal("Exploration", exploredG.apply(null), explorationBudget);
 
 			if (topGoalPredicate.test(agentState())) {
-				if (winningplay != null) {
-					goalHasBeenAchieved = true ;
-					winningplay = trace ;
-				}
+				markThatGoalIsAchieved(trace);
 				break ;
 			}
 			if (agentIsDead()) {
@@ -266,7 +284,7 @@ public class XMCTS extends BasicSearch{
 		
 		PlayResult R = new PlayResult() ;
 		R.trace = trace ;
-		R.reward = rewardOfCurrentGameState() ;
+		R.reward = valueOfCurrentGameState() ;
 		closeEnv_();
 		return R ;	
 	}
@@ -311,7 +329,7 @@ public class XMCTS extends BasicSearch{
 	}
 	
 	
-	void evaluateLeaf(Node leaf) throws Exception {
+	float evaluateLeaf(Node leaf) throws Exception {
 		
 		log(">>> EVAL-leaf " + leaf.action) ;
 		
@@ -325,16 +343,15 @@ public class XMCTS extends BasicSearch{
 			initializeEpisode();
 			runPath(leaf,true) ;
 			closeEnv_() ;
-			var R = rewardOfCurrentGameState() ;
+			var R = valueOfCurrentGameState() ;
 			leaf.backPropagate(R);
 			if (leaf.parent != null) 
 				leaf.parent.propagateFullyExploredStatus();
 			// the case when the state after this node is a winning state:
-			if (R >= maxReward && winningplay == null) {
-				goalHasBeenAchieved = true ;
-				winningplay = leaf.getTraceLeadingToThisNode() ;
+			if (R >= maxReward) {
+				markThatGoalIsAchieved(leaf.getTraceLeadingToThisNode());
 			}
-			return ;			
+			return R ;			
 		}
 		
 		// leaf is not at max-depth and has not been sampled/played before:
@@ -342,12 +359,11 @@ public class XMCTS extends BasicSearch{
 			System.out.println(">>> ROLLOUT") ;
 			var R = rollout(leaf) ;
 			leaf.backPropagate(R.reward) ;
-			if (R.reward >= maxReward && winningplay == null) {
+			if (R.reward >= maxReward) {
 				// should not be needed, but just to make sure:
-				goalHasBeenAchieved = true ;
-				winningplay = leaf.getTraceLeadingToThisNode() ;
+				markThatGoalIsAchieved(leaf.getTraceLeadingToThisNode());
 			}
-			return ;
+			return R.reward ;
 		}
 		
 		// last case is that the leaf has been sampled. In this case we expand:
@@ -362,7 +378,7 @@ public class XMCTS extends BasicSearch{
 			//scanner.nextLine() ;
 			if (leaf.parent != null) 
 				leaf.parent.propagateFullyExploredStatus();
-			return ;
+			return leaf.averageReward ;
 		}
 		
 		log(">>> EXPAND") ;
@@ -372,7 +388,7 @@ public class XMCTS extends BasicSearch{
 			ch.parent = leaf ;
 			ch.depth = leaf.depth+1 ;
 		}
-		evaluateLeaf(leaf.children.get(rnd.nextInt(leaf.children.size()))) ;
+		return evaluateLeaf(leaf.children.get(rnd.nextInt(leaf.children.size()))) ;
 	}
 	
 	/**
@@ -383,11 +399,14 @@ public class XMCTS extends BasicSearch{
 	 * <p>We rollout if the leaf has not been sampled/visited before. Else we expand the leaf. 
 	 *  Expanding means that we figure out successors of the leaf, and then we choose one
 	 *  of these successors to rollout.
+	 *  
+	 *  <p>The method {@link #runAlgorithm()} invokes this method, to run a multi-episodic
+	 *  search. Effectively, {@link #runAlgorithm()} implements the MCTS algorithm.
 	 */
 	@Override
-	void runAlgorithmForOneEpisode() throws Exception {
+	float runAlgorithmForOneEpisode() throws Exception {
 		Node leaf = chooseLeaf(mctree) ;
-		evaluateLeaf(leaf) ;
+		return evaluateLeaf(leaf) ;
 	}
 	
 	/**
