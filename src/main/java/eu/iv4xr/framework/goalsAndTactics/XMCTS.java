@@ -34,6 +34,14 @@ import eu.iv4xr.framework.mainConcepts.TestAgent;
  * state is found, then we use it as a search algorithm. If we let it continue then it behaves
  * as a learning algorithm.
  * 
+ * <p>The algorithm is meant to be used with high-level actions. Such an action represents
+ * navigating to some object e, and interacting with it. It is assumed that the implementation
+ * of the action takes care of e.g. how to steer the player agent to reach e's location.
+ * 
+ * <p>Rather than literally representing the states in the Q-table by the actual game or agent
+ * states, we use the history of the actions that the algorithm did as a substitute of 
+ * 'state'.
+ * 
  * <p>Use the field maxDepth to control the depth of the search.  Also, giving value/reward to a rollout
  * where the agent survives, but not necessarily reaches a winning state helps in directing
  * the search towards closing to a winning state.

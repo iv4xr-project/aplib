@@ -57,6 +57,7 @@ public class XQalg extends BasicSearch {
 	
 	public XQalg() {
 		super() ;
+		algName = "Q" ;
 	}
 
 	/**

@@ -102,7 +102,7 @@ public class BasicSearch {
 		return remainingSearchBudget;
 	}
 
-	public Random rnd = new Random();
+	Random rnd = new Random();
 
 	/**
 	 * The max. number of turns that each goal-based task will be allowed. If this
