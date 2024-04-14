@@ -114,9 +114,10 @@ public class Test_MCTS {
 		alg.isInteractable   = e -> e.id.contains("S") ;
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
-			var shrine0 = state.worldmodel.elements.get("SM0") ;
-			return shrine0 != null
-					&& (Boolean) shrine0.properties.get("cleansed") ;
+			//var targetShrine = state.worldmodel.elements.get("SM0") ;
+			var targetShrine = state.worldmodel.elements.get("SM1") ;
+			return targetShrine != null
+					&& (Boolean) targetShrine.properties.get("cleansed") ;
 		} ;
 		alg.agentIsDead = state -> {
 			var frodo = state.worldmodel.elements.get("Frodo") ;
@@ -128,7 +129,9 @@ public class Test_MCTS {
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
 				return -10f ;
-			return 0f ;
+			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("score") ;
+			return (float) frodo_score ;
 		} ;
 		alg.wipeoutMemory = agent -> {
 			var state = (MyAgentState) agent.state() ;
@@ -137,11 +140,12 @@ public class Test_MCTS {
 		} ;
 		
 		
-		alg.maxDepth = 2 ;
-		alg.maxNumberOfEpisodes = 40 ;
+		alg.maxDepth = 9 ;
+		alg.maxNumberOfEpisodes = 100 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
-		alg.explorationBudget = 500 ;
-		alg.budget_per_task = 500 ;
+		alg.explorationBudget = 700 ;
+		alg.budget_per_task = 700 ;
+		alg.totalSearchBudget = 300000 ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();

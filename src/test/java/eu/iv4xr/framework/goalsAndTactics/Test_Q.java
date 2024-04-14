@@ -114,9 +114,10 @@ public class Test_Q {
 		alg.isInteractable   = e -> e.id.contains("S") ;
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
-			var shrine0 = state.worldmodel.elements.get("SM0") ;
-			return shrine0 != null
-					&& (Boolean) shrine0.properties.get("cleansed") ;
+			//var targetShrine = state.worldmodel.elements.get("SM0") ;
+			var targetShrine = state.worldmodel.elements.get("SM1") ;
+			return targetShrine != null
+					&& (Boolean) targetShrine.properties.get("cleansed") ;
 		} ;
 		alg.agentIsDead = state -> {
 			var frodo = state.worldmodel.elements.get("Frodo") ;
@@ -128,16 +129,19 @@ public class Test_Q {
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
 				return -10f ;
-			
+			/*
 			var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
 				.filter(e -> e.type.equals("SCROLL"))
 				.count();
 			
 			var scrollsInBag = (Integer) state.worldmodel.elements.get("Frodo")
 					.properties.get("scrollsInBag") ;
+			*/
+			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("score") ;
 			
-			return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
-			//return 0f ;
+			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
+			return (float) frodo_score ;
 		} ;
 		
 		alg.wipeoutMemory = agent -> {
@@ -147,11 +151,12 @@ public class Test_Q {
 		} ;
 		
 		
-		alg.maxDepth = 7 ;
+		alg.maxDepth = 9 ;
 		alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
-		alg.explorationBudget = 500 ;
-		alg.budget_per_task = 500 ;
+		alg.explorationBudget = 700 ;
+		alg.budget_per_task = 700 ;
+		alg.totalSearchBudget = 300000 ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
