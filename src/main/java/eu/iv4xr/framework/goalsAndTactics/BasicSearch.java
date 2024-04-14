@@ -232,10 +232,16 @@ public class BasicSearch {
 	}
 
 	/**
-	 * If defined, this calculate the reward of being in a given state. Keep in mind
+	 * If specified, this calculates the reward of being in a given state. Keep in mind
 	 * that the maximum reward value should be consistent with {@link #maxReward}.
 	 */
 	public Function<Iv4xrAgentState, Float> rewardFunction;
+	
+	/**
+	 * If specified, this wipes the agent memory on visited places. Only the navigation nodes need to be wiped;
+	 * seen entities can be kept.
+	 */
+	public Function<TestAgent,Void> wipeoutMemory ;
 
 	/**
 	 * Contain the locations visited by the agent during the search.
@@ -447,6 +453,7 @@ public class BasicSearch {
 		public String algName ;
 		public boolean goalAchieved ;
 		int usedBudget ;
+		int usedTurns  ;
 		int totEpisodes ;
 		List<String> winningplay ;
 		List<Float> episodesValues ;
@@ -455,7 +462,8 @@ public class BasicSearch {
 			String z = "" + algName 
 			    + ", goal:" + (goalAchieved ? "ACHIEVED" : "X")
 				+ ", #episodes:" + totEpisodes 
-				+ ", used-budget: " + usedBudget ;
+				+ ", used-budget: " + usedBudget 
+				+ ", used-turns:" + usedTurns ;
 			
 			if (goalAchieved)
 				z += ", #winningplay:" + winningplay.size() ;
@@ -494,6 +502,7 @@ public class BasicSearch {
 		R.goalAchieved = goalHasBeenAchieved() ;
 		R.totEpisodes = totNumberOfEpisodes ;
 		R.usedBudget = totalSearchBudget - remainingSearchBudget ;
+		R.usedTurns = turn ;
 		R.winningplay = this.winningplay ;
 		R.episodesValues = episodesValues ;
 		log("*** END " + R.showShort());

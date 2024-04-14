@@ -45,16 +45,6 @@ public class XQalg extends BasicSearch {
 	 */
 	public float gamma = 0.99f ;
 	
-	/**
-	 * Wipe the agent memory on visited places. Only the navigation nodes need to be wiped;
-	 * seen entities can be kept.
-	 */
-	public Function<TestAgent,Void> wipeoutMemory ;
-	
-	
-	public List<String> winningplay = null ;
-	
-	
 	public XQalg() {
 		super() ;
 		algName = "Q" ;

@@ -173,14 +173,6 @@ public class XMCTS extends BasicSearch{
 	 */
 	public Node mctree ;
 	
-	
-	/**
-	 * Wipe the agent memory on visited places. Only the navigation nodes need to be wiped;
-	 * seen entities can be kept.
-	 */
-	public Function<TestAgent,Void> wipeoutMemory ;
-	
-	
 	public XMCTS() { 
 		super() ;
 		algName = "MCTS" ;

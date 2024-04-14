@@ -297,6 +297,7 @@ public class XEvolutionary extends BasicSearch {
 				break ;
 			
 			if (! topGoalPredicate.test(agentState())) {
+				wipeoutMemory.apply(agent) ;
 				solveGoal("Exploration", exploredG.apply(null), explorationBudget);
 			}
 			if (topGoalPredicate.test(agentState())) {
@@ -549,6 +550,7 @@ public class XEvolutionary extends BasicSearch {
 		R.goalAchieved = goalHasBeenAchieved() ;
 		R.totEpisodes = totNumberOfEpisodes ;
 		R.usedBudget = totalSearchBudget - remainingSearchBudget ;
+		R.usedTurns = turn ;
 		R.winningplay = this.winningplay ;
 		R.episodesValues = myPopulation.population.stream()
 				.map(CI -> CI.fitness) 
