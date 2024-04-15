@@ -149,7 +149,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	Action navigateToAction(String targetId) {
 		// memorize path if instructed to, avoid invoking pathfinder every time 
 		List[] memorized = { null } ;
-		final int memoryDuration = 10 ;
+		final int memoryDuration = 7 ;
 		int[] memoryCountdown = {0} ;
 		return action("move-to")
 				.do2((MyAgentState S) ->  (Tile[] nextTile) -> {
@@ -351,18 +351,58 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 	}
 	
 	/**
+	 * <p>
+	 * Check if the given path goes from the agent position to a destination in the
+	 * same maze, AND the next tile to move in the path is a shrine. If allowed,
+	 * this will cause the agent to go flip-floping in and out the shrine. If the
+	 * path is such a path, the function returns the bumped shrine. Else the
+	 * function returns null.
+	 * 
+	 * <p>
+	 * Note: the path is assumed to be one that we get straight from the pathfinder,
+	 * which means it starts with the agent current location. So, the next tile to
+	 * move is al path(1) rather than path(0).
+	 */
+	WorldEntity is_ShrineFlipFlop_Path(MyAgentState state, List<Pair<Integer,Tile>> path) {
+		if (path==null || path.size() <= 2)
+			return null ;
+		Tile agentPos = Utils.toTile(state.worldmodel.position) ;
+		int mazeNr = Utils.currentMazeNr(state) ;
+		var destination = path.get(path.size() - 1) ;
+		if (mazeNr != destination.fst)
+			return null ;
+		// for destination in the same maze, check if the next-tile to  move is
+		// actually a shrine:
+		var nextTileToMove = path.get(1) ;
+		for (var e : state.worldmodel.elements.values()) {
+			if (! Utils.isShrine(e))
+				continue ;
+			int e_maze = Utils.mazeId(e) ;
+			var e_tile = Utils.toTile(e.position) ;
+			if (e_maze == nextTileToMove.fst 
+				&& e_tile.equals(nextTileToMove.snd)) {
+				// the next tile to move is a shrine !
+				WorldEntity bumpedShrine = e ;
+				return bumpedShrine ;
+			}
+		}
+		return null ;
+	}
+	
+	/**
 	 * Construct an action that would explore the world, in the direction of the given
 	 * location.
 	 */
 	Action exploreAction(Pair<Integer,Tile> heuristicLocation) {
 		
 		List[] memorized = { null } ;
-		final int memoryDuration = 10 ;
+		final int memoryDuration = 7 ;
 		int[] memoryCountdown = {0} ;
 		
 		Action alpha = action("explore")
 				.do2((MyAgentState S) ->  (Tile nextTile) -> {
 					WorldModel newwom = moveTo(S,nextTile) ;
+					//System.out.println(">>> explore") ;
 					return new Pair<>(S,newwom) ;
 				})
 				.on((MyAgentState S) -> {
@@ -404,17 +444,49 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 						if (heuristicLocation == null) {
 							//System.out.println(">>> @maze " + Utils.mazeId(a) + ", tile: " + agentPos) ;
 						    path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y)) ;
+						    // check if it is a shrine flip-flop path :(
+						    var bumpedShrine = is_ShrineFlipFlop_Path(S,path) ;
+						    if (bumpedShrine != null) {
+						    	Integer sh_maze = Utils.mazeId(bumpedShrine) ;
+								Tile sh_tile = Utils.toTile(bumpedShrine.position) ;
+								var blocker = new Pair<Integer,Tile>(sh_maze,sh_tile) ;
+						    	S.multiLayerNav.toggleBlockingOn(blocker);
+						    	// redo path planning:
+						    	path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y)) ;
+							    // restore the blocker state:
+						    	var cleasedState = (Boolean) bumpedShrine.properties.get("cleansed") ;
+						    	if (cleasedState) {
+						    		S.multiLayerNav.toggleBlockingOff(blocker);
+						    	}
+						    }
 						}
-						else
+						else {
 							path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y), heuristicLocation) ;
-						
+							// check if it is a shrine flip-flop path :(
+						    var bumpedShrine = is_ShrineFlipFlop_Path(S,path) ;
+						    if (bumpedShrine != null) {
+						    	Integer sh_maze = Utils.mazeId(bumpedShrine) ;
+								Tile sh_tile = Utils.toTile(bumpedShrine.position) ;
+								var blocker = new Pair<Integer,Tile>(sh_maze,sh_tile) ;
+						    	S.multiLayerNav.toggleBlockingOn(blocker);
+						    	// redo path planning:
+						    	path = S.multiLayerNav.explore(Utils.loc3(Utils.mazeId(a),agentPos.x, agentPos.y), heuristicLocation) ;
+							    // restore the blocker state:
+						    	var cleasedState = (Boolean) bumpedShrine.properties.get("cleansed") ;
+						    	if (cleasedState) {
+						    		S.multiLayerNav.toggleBlockingOff(blocker);
+						    	}
+						    }
+						}
 						if (path == null || path.isEmpty()) {
 							//System.out.println(">>>> can't find an explore path!") ;
 							return null ;
 						}
 						path.remove(0) ;
 						memorized[0] = path ;
-						//System.out.println("### calculated new path-> " + path.get(0)) ;
+						System.out.println("### calculated new path-> " 
+								+ path.get(0)
+								+ ", destination " + path.get(path.size()-1)) ;
 					}
 					
 					try {

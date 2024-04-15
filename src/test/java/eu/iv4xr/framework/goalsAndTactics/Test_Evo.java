@@ -33,7 +33,9 @@ public class Test_Evo {
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
 		config.numberOfMaze = 3 ;
-		//config.numberOfMonsters = 30 ;
+		config.numberOfScrolls = 1 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 1 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -141,12 +143,12 @@ public class Test_Evo {
 		} ;
 		
 		
-		alg.maxDepth = 9 ;
+		alg.maxDepth = 5 ;
 		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
-		alg.explorationBudget = 700 ;
-		alg.budget_per_task = 700 ;
-		alg.totalSearchBudget = 300000 ;
+		alg.explorationBudget = 4000 ;
+		alg.budget_per_task = 2000 ;
+		alg.totalSearchBudget = 600000 ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
@@ -155,7 +157,9 @@ public class Test_Evo {
 		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
 		
 		System.out.println(">>> winningplay: " + R.winningplay) ;
-
+		
+		System.out.println(">>> episodes-values: " + R.episodesValues) ;
+		
 		
 		//System.out.println(">>>> hit RET") ;
 		//Scanner scanner = new Scanner(System.in);

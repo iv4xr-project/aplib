@@ -33,7 +33,9 @@ public class Test_Q {
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
 		config.numberOfMaze = 3 ;
-		//config.numberOfMonsters = 30 ;
+		config.numberOfScrolls = 1 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 1 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -151,7 +153,7 @@ public class Test_Q {
 		} ;
 		
 		
-		alg.maxDepth = 9 ;
+		alg.maxDepth = 5 ;
 		alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
 		alg.explorationBudget = 700 ;

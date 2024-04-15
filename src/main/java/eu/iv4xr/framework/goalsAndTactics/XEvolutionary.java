@@ -349,6 +349,8 @@ public class XEvolutionary extends BasicSearch {
 	 */
 	List<String> mutate(List<String> chromosome) {
 		
+		if (chromosome.size() == 0) return null ;
+		
 		var S = copy(chromosome) ;
 		
 		int mutationPoint = rnd.nextInt(S.size()) ;
@@ -367,8 +369,10 @@ public class XEvolutionary extends BasicSearch {
 	 */
 	List<String> extend(List<String> chromosome) {
 		
-		var seq = copy(chromosome) ;
+		if (chromosome.size() == 0) return null ;
 		
+		var seq = copy(chromosome) ;
+				
 		int insertionPoint = rnd.nextInt(seq.size()) ;
 		
 		// insert an interacttion that is not already in the chromosome:
@@ -391,7 +395,7 @@ public class XEvolutionary extends BasicSearch {
 	 */
 	Pair<List<String>,List<String>> crossOver(List<String> chromosome1, List<String> chromosome2) {
 		
-		if (chromosome1.isEmpty() || chromosome2.isEmpty())
+		if (chromosome1.size() < 2 || chromosome2.size() < 2)
 			return null ;
 		
 		List<String> shorter = new LinkedList<>() ;
@@ -403,10 +407,6 @@ public class XEvolutionary extends BasicSearch {
 		else {
 			longer.addAll(chromosome2) ;
 			shorter.addAll(chromosome1) ;
-		}
-		if (shorter.size() == 1) {
-			shorter.addAll(longer.subList(1, longer.size())) ;
-			return new Pair<>(shorter,longer) ;
 		}
 		
 		int crossPoint = shorter.size()/2 ;
@@ -537,11 +537,13 @@ public class XEvolutionary extends BasicSearch {
 	    if (knownInteractables.isEmpty())
 	    	throw new IllegalArgumentException("The algorithm cannot find any action to activate.") ;
 		this.remainingSearchBudget = this.remainingSearchBudget - (int) (System.currentTimeMillis()  - tstart) ;
+		List<Float> episodesValues = new LinkedList<>() ;
 		while (! terminationCondition()) {
 			long t0 = System.currentTimeMillis() ;
 			evolve() ;
 			log(">>> EVOLUTION gen:" + generationNr) ;
 			log(showStatus()) ;
+			episodesValues.add(myPopulation.getBest().fitness) ;			
 			long duration = System.currentTimeMillis() - t0 ;
 			this.remainingSearchBudget = this.remainingSearchBudget - (int) duration ;
 		}
@@ -552,9 +554,7 @@ public class XEvolutionary extends BasicSearch {
 		R.usedBudget = totalSearchBudget - remainingSearchBudget ;
 		R.usedTurns = turn ;
 		R.winningplay = this.winningplay ;
-		R.episodesValues = myPopulation.population.stream()
-				.map(CI -> CI.fitness) 
-				.collect(Collectors.toList()) ;
+		R.episodesValues = episodesValues ;
 		log("*** END " + R.showShort());
 			
 		log(">>> remaining budget:" + remainingSearchBudget) ;
