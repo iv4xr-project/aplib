@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,7 @@ import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.utils.Pair;
 
-public class XQalg extends BasicSearch {
+public class XQalg<QState> extends BasicSearch {
 
 	
 	public static class ActionInfo {
@@ -24,16 +25,27 @@ public class XQalg extends BasicSearch {
 		public float maxReward ; 
 	}
 	
+	
 	/** 
 	 * A map from states to their visit-counts. 
 	 */
-	public Map<String,Integer> visitCount = new HashMap<>() ;
+	public Map<QState,Integer> visitCount = new HashMap<>() ;
 	
-	public Map<String,Map<String,ActionInfo>> qtable = new HashMap<>() ;
+	public Map<QState,Map<String,ActionInfo>> qtable = new HashMap<>() ;
 		
 	public float exploreProbability = 0.2f ;
 	
 	public float maxReward = 10000 ;
+	
+	/**
+	 * A function that construct a state-representation of a given agent/SUT state. This state representation is
+	 * the one that is used in the Q-table {@link #qtable}. More precisely, the function gets a pair (tr,s)
+	 * as input, where s is the agent/SUT state, and tr is the trace of the actions to get to that state. Using
+	 * the latter information would make the Q-table essentially become non-Markovian. But it is a simpler representation
+	 * of different sequence of actions are less likely to lead to the same state.
+	 */
+	@SuppressWarnings("rawtypes")
+	public BiFunction<List<String>,Iv4xrAgentState,QState> getQstate ;
 		
 	/**
 	 * Learning rate
@@ -60,7 +72,11 @@ public class XQalg extends BasicSearch {
 		List<String> trace = new LinkedList<>() ;
 		// flattened-version of the trace, which we will take as a representation of
 		// the current q-state:
-		String qstate = "" ;
+		QState qstate =  getQstate.apply(trace,agentState()) ;
+		
+		wipeoutMemory.apply(agent) ;
+		solveGoal("Exploration", exploredG.apply(null), explorationBudget);
+		
 		float totalEpisodeReward = 0 ;
 		
 		while (trace.size() < maxDepth) {
@@ -73,8 +89,6 @@ public class XQalg extends BasicSearch {
 				
 				// System.out.println(">>> state not yet visited: " + qstate) ;
 				// reset exploration, then do full explore:
-				wipeoutMemory.apply(agent) ;
-				solveGoal("Exploration", exploredG.apply(null), explorationBudget);
 				var entities = wom().elements.values().stream()
 						.filter(e -> isInteractable.test(e))
 						.collect(Collectors.toList());
@@ -128,7 +142,7 @@ public class XQalg extends BasicSearch {
 		    var value0 = valueOfCurrentGameState() ;
 		    var G = SEQ(reachedG.apply(entityToInteract), interactedG.apply(entityToInteract));
 			trace.add(entityToInteract) ;
-			qstate += "," + entityToInteract ;
+			qstate =  getQstate.apply(trace,agentState()) ;
 			var status = solveGoal("Reached and interacted " + entityToInteract, G, budget_per_task);
 
 			 // break the episode if the interaction failed:
@@ -139,7 +153,8 @@ public class XQalg extends BasicSearch {
 			
 			if (! topGoalPredicate.test(agentState()) && ! agentIsDead() ) {
 				wipeoutMemory.apply(agent) ;
-				solveGoal("Exploration", exploredG.apply(null), explorationBudget);				
+				solveGoal("Exploration", exploredG.apply(null), explorationBudget);		
+				qstate =  getQstate.apply(trace,agentState()) ;
 			}
 			
 			var value1 = valueOfCurrentGameState() ;

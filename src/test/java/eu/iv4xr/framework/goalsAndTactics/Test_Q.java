@@ -1,14 +1,17 @@
 package eu.iv4xr.framework.goalsAndTactics;
 
 import java.awt.Window;
+import java.util.*;
 import java.util.Scanner;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
@@ -28,12 +31,60 @@ public class Test_Q {
 	boolean withGraphics = true ;
 	boolean supressLogging = false ;
 	
+	static class MDQstate {
+		
+		List<String> scrolls = new LinkedList<>() ;
+		List<String> closedShrines = new LinkedList<>() ;
+		int numberOfScrollsInbag = 0 ;
+		boolean alive ;
+		
+		MDQstate() { }
+		
+		MDQstate(Iv4xrAgentState state) {
+			var frodo = state.worldmodel.elements.get("Frodo") ;
+			alive = ((Integer) frodo.properties.get("hp")) > 0 ;
+			numberOfScrollsInbag = (Integer) frodo.properties.get("scrollsInBag") ;
+			scrolls = state.worldmodel.elements.values().stream()
+					.filter(e -> Utils.isScroll(e))
+					.map(e -> e.id) 
+					.collect(Collectors.toList()) ;
+			scrolls.sort((s1,s2) -> s1.compareTo(s2)) ;
+			closedShrines = state.worldmodel.elements.values().stream()
+					.filter(e -> Utils.isShrine(e))
+					.filter(e -> ! (Boolean) e.properties.get("cleansed"))
+					.map(e -> e.id) 
+					.collect(Collectors.toList()) ;
+			closedShrines.sort((s1,s2) -> s1.compareTo(s2)) ;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if (! (o instanceof MDQstate)) return false ;
+			MDQstate o_ = (MDQstate) o ;
+			return this.scrolls.equals(o_.scrolls)
+					&& this.closedShrines.equals(o_.closedShrines)
+					&& this.numberOfScrollsInbag == o_.numberOfScrollsInbag 
+					&& this.alive == o_.alive ;
+		}
+		
+		@Override
+	    public int hashCode() {
+	        return scrolls.hashCode() 
+	        		+ closedShrines.hashCode() 
+	        		+ 31*numberOfScrollsInbag 
+	        		+ (alive?1:0) ;
+	    }
+		
+		
+		
+	}
+	
 	TestAgent constructAgent() throws Exception {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 4;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 1 ;
+		config.numberOfScrolls = 2 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 1 ;
 		config.randomSeed = 79371;
@@ -79,7 +130,7 @@ public class Test_Q {
 		
 		var goalLib = new GoalLib();
 		
-		var alg = new XQalg() ;
+		var alg = new XQalg<MDQstate>() ;
 		BasicSearch.DEBUG = !supressLogging ;
 
 		
@@ -145,6 +196,7 @@ public class Test_Q {
 			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
 			return (float) frodo_score ;
 		} ;
+		alg.getQstate = (trace,state) -> new MDQstate(state) ;
 		
 		alg.wipeoutMemory = agent -> {
 			var state = (MyAgentState) agent.state() ;
@@ -153,16 +205,16 @@ public class Test_Q {
 		} ;
 		
 		
-		alg.maxDepth = 5 ;
-		alg.maxNumberOfEpisodes = 40 ;
+		alg.maxDepth = 6 ;
+		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
-		alg.explorationBudget = 700 ;
-		alg.budget_per_task = 700 ;
-		alg.totalSearchBudget = 300000 ;
+		alg.explorationBudget = 4000 ;
+		alg.budget_per_task = 2000 ;
+		alg.totalSearchBudget = 600000 ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
-		var R = alg.runAlgorithm();
+		var R = alg.runAlgorithm(); 
 		
 		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
 		
