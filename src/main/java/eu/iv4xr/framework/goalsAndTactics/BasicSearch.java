@@ -255,6 +255,10 @@ public class BasicSearch {
 	public void setRndSeed(int seed) {
 		rnd = new Random(seed);
 	}
+	
+	public TestAgent getAgent() {
+		return agent ;
+	}
 
 	/**
 	 * Return the agent's state.

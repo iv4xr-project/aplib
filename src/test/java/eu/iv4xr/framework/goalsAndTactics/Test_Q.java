@@ -86,7 +86,7 @@ public class Test_Q {
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 2 ;
 		config.enableSmeagol = false ;
-		config.numberOfMonsters = 1 ;
+		config.numberOfMonsters = 6 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -161,8 +161,15 @@ public class Test_Q {
 		} ;
 		
 		
-		alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
-		alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
+		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
+		alg.exploredG   = huristicLocation -> { 
+			var A = alg.getAgent() ; 
+			return goalLib.smartExploring(A,null,Integer.MAX_VALUE) ; } ;
+		//alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
+		alg.reachedG    = e -> { 
+					var A = alg.getAgent() ; 
+					return goalLib.smartEntityInCloseRange(A,e) ;
+				} ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
 		alg.isInteractable   = e -> e.id.contains("S") ;
 		alg.topGoalPredicate = state -> {
@@ -210,15 +217,19 @@ public class Test_Q {
 		alg.delayBetweenAgentUpateCycles = 10 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
-		alg.totalSearchBudget = 600000 ;
+		alg.totalSearchBudget = 800000 ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm(); 
 		
-		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
-		
-		System.out.println(">>> winningplay: " + R.winningplay) ;
+		alg.log(">>> #states in qtable: " + alg.qtable.size());
+		int num_entries = 0 ;
+		for (var q : alg.qtable.values()) {
+			num_entries += q.values().size() ;
+		}
+		alg.log(">>> #entries in qtable: " + num_entries);
+		alg.log(">>> winningplay: " + R.winningplay) ;
 
 		
 		//System.out.println(">>>> hit RET") ;
