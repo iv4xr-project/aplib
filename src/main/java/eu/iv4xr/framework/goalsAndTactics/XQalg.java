@@ -52,6 +52,23 @@ public class XQalg<QState> extends BasicSearch {
 	 */
 	public float gamma = 0.99f ;
 	
+	/**
+	 * If the value is bigger than 1, then the reward update on Q(current-state,action) with the reward
+	 * will be propagated further to previous states. To this end, the trace of previous states and the
+	 * action taken on each of those states is kept. The back-propagation will be done up to K states
+	 * in the past, including the current state. This variable enableBackPropagationOfReward specifies
+	 * this K. 
+	 * 
+	 * <p>Keep in mind that making this K too long (e.g. to force the reward to be propagated all the
+	 * way to the initial state) may not be a good choice as it may cause sub-optimal plays to stick
+	 * in the table and the algorithm may find it more difficult to escape these sub-optimal plays.
+	 * There is interplay with {@link #exploreProbability}, as the latter allows the algorithm to 
+	 * escape sub-optimals. However, unlike in MTCS, {@link #exploreProbability} remains constant through
+	 * the entire Q-runs, regardless how many times a certain pair (state,action) has been revisited. 
+	 *
+	 */
+	public int enableBackPropagationOfReward = 0 ;
+	
 	public XQalg() {
 		super() ;
 		algName = "Q" ;
@@ -65,6 +82,7 @@ public class XQalg<QState> extends BasicSearch {
 		initializeEpisode() ;
 		// sequence of interactions so-far
 		List<String> trace = new LinkedList<>() ;
+		List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace = new LinkedList<>() ;
 		// flattened-version of the trace, which we will take as a representation of
 		// the current q-state:
 		QState qstate =  getQstate.apply(trace,agentState()) ;
@@ -135,17 +153,17 @@ public class XQalg<QState> extends BasicSearch {
 				break;
 			}
 			
-			var value1 = valueOfCurrentGameState() ;
+			// the case when newQstate is a terminal state:
 			
 			if (topGoalPredicate.test(agentState())) {
 				markThatGoalIsAchieved(trace) ;
-				info.maxReward = value1 ;
-				totalEpisodeReward = info.maxReward ;
+				info.maxReward = this.maxReward ;
+				totalEpisodeReward = this.maxReward ;
 				log("*** Goal is ACHIEVED");
 				break ;
 			}
 			else if (agentIsDead()) {
-				info.maxReward = value1 ; ;
+				info.maxReward = valueOfCurrentGameState()  ; ;
 				totalEpisodeReward = info.maxReward ;
 				log("*** The agent is DEAD.");
 				break;
@@ -156,49 +174,89 @@ public class XQalg<QState> extends BasicSearch {
 			// We need to explore to assess the value of the state after the interaction:
 			wipeoutMemory.apply(agent) ;
 			solveGoal("Exploration", exploredG.apply(null), explorationBudget);	
-			value1 = valueOfCurrentGameState() ;
+			var value1 = valueOfCurrentGameState() ;
+			totalEpisodeReward = value1 ;
 			
-			// At the newQstate, reached after executing the interaction,
-			// and exploration has been done to evaluate the reward of that state.
+			// the case when the state after exploration is terminal:
+			if (topGoalPredicate.test(agentState())) {
+				markThatGoalIsAchieved(trace) ;
+				info.maxReward = this.maxReward ;
+				totalEpisodeReward = this.maxReward ;
+				log("*** Goal is ACHIEVED");
+				break ;
+			}
+			else if (agentIsDead()) {
+				info.maxReward = value1 ; ;
+				log("*** The agent is DEAD.");
+				break;
+			}
+			
+			// else the state after exploration is non-terminal.
 						 
 		    // define obtained reward as the diff between the value of the new and previous states:
 			var reward = value1 - value0 ;
-			totalEpisodeReward += reward ;
+			
 
 			// calculate the maximum rewards if we continue from that next state T:
 			// note that the trace is already extended with the last action taken
 			var nextnextActions = qtable.get(newQstate) ;
-			float S_maxNextReward = -100 ;
 			if (nextnextActions == null) {
 				 var entities = wom().elements.values().stream()
 							.filter(e -> isInteractable.test(e))
 							.collect(Collectors.toList());
-				 Map<String,ActionInfo> actions = new HashMap<>() ;
+				 nextnextActions = new HashMap<>() ;
 				 for (var e : entities) {
 					 var info2 = new ActionInfo() ;
 					 info2.maxReward = 0 ;
-					 actions.put(e.id, info2) ;
+					 nextnextActions.put(e.id, info2) ;
 				 }
-				 qtable.put(newQstate, actions) ;
-				 nextnextActions = actions ;
-				 S_maxNextReward = 0 ;
+				 qtable.put(newQstate, nextnextActions) ;
 			}
-			else {
-				 for (var v : nextnextActions.values()) {
-						if (v.maxReward > S_maxNextReward) {
-							S_maxNextReward = v.maxReward ;
-						}
-				 }
+			
+			// update the Qtable
+			updateQ(qstate,chosenAction, newQstate,reward) ;
+			if (enableBackPropagationOfReward > 1) {
+				// perform back further back propagation of the reward, if configure to do so:
+				var state2 = qstate ;
+				for(int k = stateActionRewardTrace.size()-1 ; k>=0; k--) {
+					var h = stateActionRewardTrace.get(k) ;
+					var state1 = h.fst ;
+					var action = h.snd.fst ;
+					var directReward = h.snd.snd ;
+					updateQ(state1,action,state2,directReward) ;
+					state2 = state1 ;
+				}
+				stateActionRewardTrace.add(new Pair<>(qstate, new Pair<>(chosenAction,reward))) ;
+				if (stateActionRewardTrace.size() > enableBackPropagationOfReward - 1)
+					stateActionRewardTrace.remove(0) ;
 			}
-			// calculate the new reward (prevstate,a):
-			info.maxReward = (1 - alpha) * info.maxReward
-					           + alpha * (reward + gamma * S_maxNextReward) ;
-			// set qstate to newQstate:
 			qstate = newQstate ;
 			
 		}
 		closeEnv_() ;
 		return totalEpisodeReward ;
+	}
+	
+	void updateQ(QState qstate, String action, QState nextQstate, float directReward) {
+		
+		var nextnextActions = qtable.get(nextQstate) ;
+		float S_maxNextReward = 0 ;
+		if (nextnextActions.isEmpty()) {
+			// then nextQstate is a terminal and not a winning state, we'll set its reward to be 0
+		}
+		else {
+			S_maxNextReward = Float.MIN_VALUE ;
+			for (var v : nextnextActions.values()) {
+				if (v.maxReward > S_maxNextReward) {
+					S_maxNextReward = v.maxReward ;
+				}
+			}
+		}
+		
+		// update the value of Q(qstate,action):
+		var info = qtable.get(qstate).get(action) ;
+		info.maxReward = (1 - alpha) * info.maxReward
+							         + alpha * (directReward + gamma * S_maxNextReward) ;
 	}
 	
 }

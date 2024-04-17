@@ -215,6 +215,8 @@ public class Test_Q {
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 800000 ;
+		//alg.exploreProbability = 0.15f ;
+		//alg.enableBackPropagationOfReward = 3 ; 
 		
 				
 		//alg.runAlgorithmForOneEpisode();
@@ -226,6 +228,7 @@ public class Test_Q {
 			num_entries += q.values().size() ;
 		}
 		alg.log(">>> #entries in qtable: " + num_entries);
+		alg.log(">>> episode-values: " + R.episodesValues) ;
 		alg.log(">>> winningplay: " + R.winningplay) ;
 
 		
