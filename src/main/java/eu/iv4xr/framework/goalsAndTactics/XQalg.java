@@ -71,6 +71,16 @@ public class XQalg<QState> extends BasicSearch {
 		
 		wipeoutMemory.apply(agent) ;
 		solveGoal("Exploration", exploredG.apply(null), explorationBudget);
+		var startingEntities = wom().elements.values().stream()
+				.filter(e -> isInteractable.test(e))
+				.collect(Collectors.toList());
+		Map<String,ActionInfo> firstActions = new HashMap<>() ;
+		for (var e : startingEntities) {
+			 var info = new ActionInfo() ;
+			 info.maxReward = 0 ;
+			 firstActions.put(e.id, info) ;
+		}
+		qtable.put(qstate,firstActions) ;
 		
 		float totalEpisodeReward = 0 ;
 		
@@ -78,24 +88,7 @@ public class XQalg<QState> extends BasicSearch {
 			
 			//System.out.println(">>> TRACE: " + trace) ;
 			var candidateActions = qtable.get(qstate) ;
-			if (candidateActions == null) {
-				// we have not seen this state before. Register it in the qtable,
-				// and also calculate possible actions on this state
-				
-				// System.out.println(">>> state not yet visited: " + qstate) ;
-				// reset exploration, then do full explore:
-				var entities = wom().elements.values().stream()
-						.filter(e -> isInteractable.test(e))
-						.collect(Collectors.toList());
-				candidateActions = new HashMap<>() ;
-				for (var e : entities) {
-					 var info = new ActionInfo() ;
-					 info.maxReward = 0 ;
-					 candidateActions.put(e.id, info) ;
-				}
-				qtable.put(qstate,candidateActions) ;
-			}
-				
+	
 			if (candidateActions.isEmpty()) 
 				// no further actions is possible, so we stop the episode
 				break ;
