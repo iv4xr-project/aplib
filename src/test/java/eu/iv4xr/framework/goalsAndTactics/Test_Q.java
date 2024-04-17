@@ -74,9 +74,6 @@ public class Test_Q {
 	        		+ 31*numberOfScrollsInbag 
 	        		+ (alive?1:0) ;
 	    }
-		
-		
-		
 	}
 	
 	TestAgent constructAgent() throws Exception {

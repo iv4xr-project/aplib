@@ -26,11 +26,6 @@ public class XQalg<QState> extends BasicSearch {
 	}
 	
 	
-	/** 
-	 * A map from states to their visit-counts. 
-	 */
-	public Map<QState,Integer> visitCount = new HashMap<>() ;
-	
 	public Map<QState,Map<String,ActionInfo>> qtable = new HashMap<>() ;
 		
 	public float exploreProbability = 0.2f ;
@@ -82,8 +77,8 @@ public class XQalg<QState> extends BasicSearch {
 		while (trace.size() < maxDepth) {
 			
 			//System.out.println(">>> TRACE: " + trace) ;
-			Integer visited = visitCount.get(qstate) ;
-			if (visited == null) {
+			var candidateActions = qtable.get(qstate) ;
+			if (candidateActions == null) {
 				// we have not seen this state before. Register it in the qtable,
 				// and also calculate possible actions on this state
 				
@@ -92,19 +87,14 @@ public class XQalg<QState> extends BasicSearch {
 				var entities = wom().elements.values().stream()
 						.filter(e -> isInteractable.test(e))
 						.collect(Collectors.toList());
-				 Map<String,ActionInfo> actions = new HashMap<>() ;
-				 for (var e : entities) {
+				candidateActions = new HashMap<>() ;
+				for (var e : entities) {
 					 var info = new ActionInfo() ;
 					 info.maxReward = 0 ;
-					 actions.put(e.id, info) ;
-				 }
-				 qtable.put(qstate, actions) ;
-				 visited = 1 ;
+					 candidateActions.put(e.id, info) ;
+				}
+				qtable.put(qstate,candidateActions) ;
 			}
-			else visited++ ;
-			visitCount.put(qstate, visited) ;
-			
-			var candidateActions = qtable.get(qstate) ;
 				
 			if (candidateActions.isEmpty()) 
 				// no further actions is possible, so we stop the episode
@@ -197,7 +187,6 @@ public class XQalg<QState> extends BasicSearch {
 				 }
 				 qtable.put(qstate, actions) ;
 				 nextnextActions = actions ;
-				 visitCount.put(qstate, 1) ;
 				 S_maxNextReward = 0 ;
 			 }
 			 else {
