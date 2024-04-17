@@ -211,7 +211,7 @@ public class Test_Q {
 		
 		alg.maxDepth = 6 ;
 		//alg.maxNumberOfEpisodes = 40 ;
-		alg.delayBetweenAgentUpateCycles = 10 ;
+		alg.delayBetweenAgentUpateCycles = 5 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 800000 ;
