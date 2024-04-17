@@ -125,19 +125,14 @@ public class XQalg<QState> extends BasicSearch {
 		    var value0 = valueOfCurrentGameState() ;
 		    var G = SEQ(reachedG.apply(entityToInteract), interactedG.apply(entityToInteract));
 			trace.add(entityToInteract) ;
-			qstate =  getQstate.apply(trace,agentState()) ;
 			var status = solveGoal("Reached and interacted " + entityToInteract, G, budget_per_task);
+			// the state after the interaction:
+			qstate =  getQstate.apply(trace,agentState()) ;
 
 			 // break the episode if the interaction failed:
 			if (status.failed()) {
 				log("*** There is no entity left that the agent can intertact. Terminating current search episode.");
 				break;
-			}
-			
-			if (! topGoalPredicate.test(agentState()) && ! agentIsDead() ) {
-				wipeoutMemory.apply(agent) ;
-				solveGoal("Exploration", exploredG.apply(null), explorationBudget);		
-				qstate =  getQstate.apply(trace,agentState()) ;
 			}
 			
 			var value1 = valueOfCurrentGameState() ;
@@ -149,26 +144,35 @@ public class XQalg<QState> extends BasicSearch {
 				log("*** Goal is ACHIEVED");
 				break ;
 			}
-			if (agentIsDead()) {
+			else if (agentIsDead()) {
 				info.maxReward = value1 ; ;
 				totalEpisodeReward = info.maxReward ;
 				log("*** The agent is DEAD.");
 				break;
 			}
+			// else then the top-goal has not been achieved, and the agent is alive. 
+			// The state is thus non-terminal.
 			
-			// The case when the interaction brings us to a non-terminal state.
-		    // We are now at the "next state" T reached after executing the interaction,
+			// We are now at the "next state" T reached after executing the interaction:
+		    var T = qstate ;
+			
+		    // We need to explore to assess the value of the state after the interaction:
+			wipeoutMemory.apply(agent) ;
+			solveGoal("Exploration", exploredG.apply(null), explorationBudget);	
+			value1 = valueOfCurrentGameState() ;
+			
+			// At the "next state" T reached after executing the interaction,
 			// and exploration has been done to evaluate the reward of that state.
-			
+						 
 		    // define obtained reward as the diff between the value of the new and previous states:
 			var reward = value1 - value0 ;
 			totalEpisodeReward += reward ;
 
 			// calculate the maximum rewards if we continue from that next state T:
 			// note that the trace is already extended with the last action taken
-			 var nextnextActions = qtable.get(qstate) ;
-			 float S_maxNextReward = -100 ;
-			 if (nextnextActions == null) {
+			var nextnextActions = qtable.get(T) ;
+			float S_maxNextReward = -100 ;
+			if (nextnextActions == null) {
 				 var entities = wom().elements.values().stream()
 							.filter(e -> isInteractable.test(e))
 							.collect(Collectors.toList());
@@ -178,19 +182,19 @@ public class XQalg<QState> extends BasicSearch {
 					 info2.maxReward = 0 ;
 					 actions.put(e.id, info2) ;
 				 }
-				 qtable.put(qstate, actions) ;
+				 qtable.put(T, actions) ;
 				 nextnextActions = actions ;
 				 S_maxNextReward = 0 ;
-			 }
-			 else {
+			}
+			else {
 				 for (var v : nextnextActions.values()) {
 						if (v.maxReward > S_maxNextReward) {
 							S_maxNextReward = v.maxReward ;
 						}
 				 }
-			 }
-			 // calculate the new reward (prevstate,a):
-			 info.maxReward = (1 - alpha) * info.maxReward
+			}
+			// calculate the new reward (prevstate,a):
+			info.maxReward = (1 - alpha) * info.maxReward
 					           + alpha * (reward + gamma * S_maxNextReward) ;
 			
 		}
