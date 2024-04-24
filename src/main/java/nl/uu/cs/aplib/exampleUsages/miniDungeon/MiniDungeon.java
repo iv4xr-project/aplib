@@ -219,6 +219,7 @@ public class MiniDungeon {
 		   .collect(Collectors.toList());
 		
 		// reserve squares for Frodo:
+		// BUG? the squares should reserved for Frodo regardless whether or not Smeagol is enabled
 		int mid = config.worldSize / 2 ;
 		if (maze.id == 0 && config.enableSmeagol) {
 			freeSquares = freeSquares.stream()
@@ -338,6 +339,9 @@ public class MiniDungeon {
 		List<Monster> monsters = new LinkedList<>();
 		String msg = "";
 		var world = currentMaze(playerThatJustMoved).world ;
+		// BUG, not critical though. The loop may cause a monster to move
+		// several times in a single update turn, by moving a tile that has
+		// not been iterated yet.
 		for (int x = 1; x < config.worldSize - 1; x++) {
 			for (int y = 1; y < config.worldSize - 1; y++) {
 				var e = world[x][y];
@@ -353,6 +357,7 @@ public class MiniDungeon {
 							if (player.mazeId != m.mazeId) continue ;
 							if (player.rageTimer>0) {
 								// the player is enraged:
+								// BUG this should use IntVec2D.distSq!
 					    		var sqDist = IntVec2D.dist(new IntVec2D(player.x,player.y), new IntVec2D(m.x,m.y)) ;
 					    		if (sqDist <= 64f) {
 					    			m.aggrevate();
@@ -391,6 +396,7 @@ public class MiniDungeon {
 									status = GameStatus.MONSTERSWIN;
 								}
 								;
+								// BUG? we should return when all players are dead, rather than here:
 								return msg;
 							}
 						}
@@ -429,6 +435,7 @@ public class MiniDungeon {
 					    for (var c : candidates) {
 					    	float sqDist = Float.MAX_VALUE ;
 					    	if (sm != null && !sm.dead() && m.mazeId == sm.mazeId) {
+					    		// Not incorrect, but we should use the faster IntVec2D.distSq:
 					    		sqDist = IntVec2D.dist(new IntVec2D(c.fst,c.snd), new IntVec2D(sm.x,sm.y)) ;
 					    		if (sqDist < minSqDist) {
 					    			minSq = c ;
@@ -437,6 +444,7 @@ public class MiniDungeon {
 					    		}
 					    	}
 					    	if (fr != null && !fr.dead() && m.mazeId == fr.mazeId) {
+					    		// Not incorrect, but we should use the faster IntVec2D.distSq:
 					    		sqDist = IntVec2D.dist(new IntVec2D(c.fst,c.snd), new IntVec2D(fr.x,fr.y)) ;
 					    		if (sqDist < minSqDist) {
 					    			minSq = c ;
@@ -447,12 +455,6 @@ public class MiniDungeon {
 						sq = minSq ;
 					}
 					else {
-						// the monster is not aggravated
-						// logic to make the monster aggravated here (for now none):
-						// ....
-						//  e.g. when there is an enraged player in radius 6
-						//
-						// Then move
 						candidates.add(null);
 						sq = candidates.get(mainRnd.nextInt(candidates.size()));
 						if (sq == null)
