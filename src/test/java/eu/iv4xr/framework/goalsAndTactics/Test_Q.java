@@ -1,12 +1,9 @@
 package eu.iv4xr.framework.goalsAndTactics;
 
-import java.awt.Window;
 import java.util.*;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.junit.jupiter.api.Test;
@@ -19,7 +16,6 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
