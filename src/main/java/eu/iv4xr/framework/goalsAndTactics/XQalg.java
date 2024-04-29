@@ -16,6 +16,18 @@ import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.utils.Pair;
 
+/**
+ * An implementation of the Q-learning algorithm.
+ * 
+ * <p>The algorithm is meant to be used with high-level actions. Such an action represents
+ * navigating to some object e, and interacting with it. It is assumed that the implementation
+ * of the action takes care of e.g. how to steer the player agent to reach e's location.
+ * The underlying navigation and exploration capabilities need to be provided. See e.g. 
+ * {@link BasicSearch#exploredG} and {@link BasicSearch#reachedG}.
+ * 
+ *
+ * @param <QState>
+ */
 public class XQalg<QState> extends BasicSearch {
 
 	
@@ -73,7 +85,8 @@ public class XQalg<QState> extends BasicSearch {
 		super() ;
 		algName = "Q" ;
 	}
-
+	
+	
 	/**
 	 * Run a single episode of Q-learning.
 	 */
@@ -83,8 +96,7 @@ public class XQalg<QState> extends BasicSearch {
 		// sequence of interactions so-far
 		List<String> trace = new LinkedList<>() ;
 		List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace = new LinkedList<>() ;
-		// flattened-version of the trace, which we will take as a representation of
-		// the current q-state:
+		
 		QState qstate =  getQstate.apply(trace,agentState()) ;
 		
 		wipeoutMemory.apply(agent) ;
@@ -160,12 +172,14 @@ public class XQalg<QState> extends BasicSearch {
 				info.maxReward = this.maxReward ;
 				totalEpisodeReward = this.maxReward ;
 				log("*** Goal is ACHIEVED");
+				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break ;
 			}
 			else if (agentIsDead()) {
 				info.maxReward = valueOfCurrentGameState()  ; ;
 				totalEpisodeReward = info.maxReward ;
 				log("*** The agent is DEAD.");
+				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break;
 			}
 			// else then the top-goal has not been achieved, and the agent is alive. 
@@ -183,11 +197,13 @@ public class XQalg<QState> extends BasicSearch {
 				info.maxReward = this.maxReward ;
 				totalEpisodeReward = this.maxReward ;
 				log("*** Goal is ACHIEVED");
+				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break ;
 			}
 			else if (agentIsDead()) {
 				info.maxReward = value1 ; ;
 				log("*** The agent is DEAD.");
+				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break;
 			}
 			
@@ -200,6 +216,7 @@ public class XQalg<QState> extends BasicSearch {
 			// calculate the maximum rewards if we continue from that next state T:
 			// note that the trace is already extended with the last action taken
 			var nextnextActions = qtable.get(newQstate) ;
+			// first check if newQstate is already in the qtable. If not, add an entry to it.
 			if (nextnextActions == null) {
 				 var entities = wom().elements.values().stream()
 							.filter(e -> isInteractable.test(e))
@@ -215,21 +232,7 @@ public class XQalg<QState> extends BasicSearch {
 			
 			// update the Qtable
 			updateQ(qstate,chosenAction, newQstate,reward) ;
-			if (enableBackPropagationOfReward > 1) {
-				// perform back further back propagation of the reward, if configure to do so:
-				var state2 = qstate ;
-				for(int k = stateActionRewardTrace.size()-1 ; k>=0; k--) {
-					var h = stateActionRewardTrace.get(k) ;
-					var state1 = h.fst ;
-					var action = h.snd.fst ;
-					var directReward = h.snd.snd ;
-					updateQ(state1,action,state2,directReward) ;
-					state2 = state1 ;
-				}
-				stateActionRewardTrace.add(new Pair<>(qstate, new Pair<>(chosenAction,reward))) ;
-				if (stateActionRewardTrace.size() > enableBackPropagationOfReward - 1)
-					stateActionRewardTrace.remove(0) ;
-			}
+			backPropagation(newQstate,chosenAction,reward,stateActionRewardTrace) ;
 			qstate = newQstate ;
 			
 		}
@@ -237,7 +240,36 @@ public class XQalg<QState> extends BasicSearch {
 		return totalEpisodeReward ;
 	}
 	
-	void updateQ(QState qstate, String action, QState nextQstate, float directReward) {
+	void backPropagation(QState newState, 
+			String chosenAction, 
+			float directReward,
+			List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace) {
+		if (enableBackPropagationOfReward <= 1) 
+			return ;
+		var state2 = newState ;
+		for(int k = stateActionRewardTrace.size()-1 ; k>=0; k--) {
+			var h = stateActionRewardTrace.get(k) ;
+			var state1 = h.fst ;
+			var action = h.snd.fst ;
+			var directReward_of_state1_action = h.snd.snd ;
+			var current_value_of_state1_action = qtable.get(state1).get(directReward_of_state1_action).maxReward ;
+			var new_value = updateQ(state1,action,state2,directReward_of_state1_action) ;
+			// if the new value is less than the current value, restore the current value,
+			// and stop the back-propagation as it won't change the values further down
+			// the propagation:
+			if (new_value < current_value_of_state1_action) {
+				 qtable.get(state1).get(action).maxReward = current_value_of_state1_action ;
+				 break ;
+			}
+			state2 = state1 ;
+		}
+		stateActionRewardTrace.add(new Pair<>(newState, new Pair<>(chosenAction,directReward))) ;
+		if (stateActionRewardTrace.size() > enableBackPropagationOfReward - 1)
+			stateActionRewardTrace.remove(0) ;
+		
+	}
+	
+	float updateQ(QState qstate, String action, QState nextQstate, float directReward) {
 		
 		var nextnextActions = qtable.get(nextQstate) ;
 		float S_maxNextReward = 0 ;
@@ -257,6 +289,7 @@ public class XQalg<QState> extends BasicSearch {
 		var info = qtable.get(qstate).get(action) ;
 		info.maxReward = (1 - alpha) * info.maxReward
 							         + alpha * (directReward + gamma * S_maxNextReward) ;
+		return info.maxReward ;
 	}
 	
 }

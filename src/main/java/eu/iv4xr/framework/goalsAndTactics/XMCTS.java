@@ -37,6 +37,9 @@ import eu.iv4xr.framework.mainConcepts.TestAgent;
  * <p>The algorithm is meant to be used with high-level actions. Such an action represents
  * navigating to some object e, and interacting with it. It is assumed that the implementation
  * of the action takes care of e.g. how to steer the player agent to reach e's location.
+ * The underlying navigation and exploration capabilities need to be provided. See e.g. 
+ * {@link BasicSearch#exploredG} and {@link BasicSearch#reachedG}.
+ * 
  * 
  * <p>Rather than literally representing the states in the Q-table by the actual game or agent
  * states, we use the history of the actions that the algorithm did as a substitute of 

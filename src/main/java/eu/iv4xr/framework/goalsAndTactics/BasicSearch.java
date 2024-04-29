@@ -31,7 +31,10 @@ import static nl.uu.cs.aplib.AplibEDSL.*;
  * <p>
  * This class is meant to be a template to be subclassed, but it implements a
  * form of random-search. It alternates between exploring and randomly choosing
- * an entity to go to, and then interacting with that entity.
+ * an entity to go to, and then interacting with that entity. This random algorithm
+ * assumes e.g. "exploring" and "traveling to an entity" to be functionalities
+ * provided through goal structures, to be supplied in e.g. {@link #exploredG}
+ * and {@link #reachedG}.
  * 
  */
 public class BasicSearch {
