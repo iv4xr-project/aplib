@@ -23,7 +23,9 @@ import nl.uu.cs.aplib.utils.Pair;
  * <b>Fitness</b> of a chromosome: the entities in the chromosome are
  * interacted, in the sequence they appear. This is done by aplib agent. If this
  * execution manages to achieve the top-goal, the fitness will be some
- * max-value. Else you can specify this in the rewardFunction.
+ * max-value specified in {@link BasicSearch#maxReward}. Else the fitness value
+ * of the chromosome is the value of the final state at the end of the chromosome
+ * execution. This is specified in {@link BasicSearch#stateValueFunction}.
  * 
  * <p>
  * The algorithm does not know what are available interactables. So it starts by
@@ -329,7 +331,7 @@ public class XEvolutionary extends BasicSearch {
 				.collect(Collectors.toList());
 		knownInteractables.addAll(interactables) ;
 
-		float fitness = valueOfCurrentGameState() ;
+		float fitness = clampedValueOfCurrentGameState() ;
 		log(">>> chromosome: " 
 		   + chromosome
 		   + ", FITNESS-VAL=" + fitness);

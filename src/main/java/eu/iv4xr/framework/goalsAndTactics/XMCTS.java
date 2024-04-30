@@ -244,7 +244,7 @@ public class XMCTS extends BasicSearch{
 			// if the trace replay is not successful, we don't continue:
 			PlayResult R = new PlayResult() ;
 			R.trace = trace ;
-			R.reward = valueOfCurrentGameState() ;
+			R.reward = clampedValueOfCurrentGameState() ;
 			closeEnv_() ;
 			return R ;
 		}
@@ -287,7 +287,7 @@ public class XMCTS extends BasicSearch{
 		
 		PlayResult R = new PlayResult() ;
 		R.trace = trace ;
-		R.reward = valueOfCurrentGameState() ;
+		R.reward = clampedValueOfCurrentGameState() ;
 		closeEnv_();
 		return R ;	
 	}
@@ -346,7 +346,7 @@ public class XMCTS extends BasicSearch{
 			initializeEpisode();
 			runPath(leaf,true) ;
 			closeEnv_() ;
-			var R = valueOfCurrentGameState() ;
+			var R = clampedValueOfCurrentGameState() ;
 			leaf.backPropagate(R);
 			if (leaf.parent != null) 
 				leaf.parent.propagateFullyExploredStatus();

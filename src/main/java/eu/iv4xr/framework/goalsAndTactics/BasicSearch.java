@@ -233,12 +233,18 @@ public class BasicSearch {
 			remainingSearchBudget += (int) duration;
 		}
 	}
+	
+	/**
+	 * The value of a state where the agent is dead. Default is -100.
+	 */
+	public float agentDeadValue = -100 ;
 
 	/**
-	 * If specified, this calculates the reward of being in a given state. Keep in mind
-	 * that the maximum reward value should be consistent with {@link #maxReward}.
+	 * If specified, this calculates the value of a given state. The maximum possible value should be 
+	 * less or equal to {@link #maxReward}, and greater or equal to {@link #agentDeadValue}.
 	 */
-	public Function<Iv4xrAgentState, Float> rewardFunction;
+	@SuppressWarnings("rawtypes")
+	public Function<Iv4xrAgentState, Float> stateValueFunction ;
 	
 	/**
 	 * If specified, this wipes the agent memory on visited places. Only the navigation nodes need to be wiped;
@@ -278,24 +284,25 @@ public class BasicSearch {
 	}
 	
 	/**
-	 * The value of the current game state. It is equal to {@link #maxReward} if
-	 * {@link #topGoalPredicate} holds on that state. Else it is calculated by
-	 * {@link BasicSearch#rewardFunction}, if it is defined.
-	 * Else, if {@link #agentIsDead} is defined, and it says the agent is dead,
-	 * the returned value is -10, and else 0.
+	 * The "clamped" value of the current game state. This mainly calculated by {@link #stateValueFunction}. 
+	 * However, there are a number of additional logic imposed. First the return value will be
+	 * clamped between {@link #agentDeadValue} and {@link #maxReward} (inclusive). Second, the value is equal 
+	 * to {@link #maxReward} if {@link #topGoalPredicate} holds on that state. Third, if {@link #agentIsDead} is defined, 
+	 * and it says the agent is dead, the returned value is as specified in {@link #agentDeadValue}.
 	 */
-	float valueOfCurrentGameState() {
+	float clampedValueOfCurrentGameState() {
 		var state = agentState() ;
 		if (topGoalPredicate.test(state)) {
 			return maxReward ;
 		}
-		if (rewardFunction != null)
-			return rewardFunction.apply(state) ;
-		
 		if (agentIsDead())
-			return -100 ;
-		else
-			return 0 ;
+			return agentDeadValue ;
+		if (stateValueFunction != null) {
+			float rw = Math.min(maxReward, stateValueFunction.apply(state))   ;
+			return Math.max(agentDeadValue,rw) ;
+		}
+		// if stateValFunction is undefined, the agent is not dead etc, just return 0:
+		return 0 ;
 	}
 	
 
@@ -444,7 +451,7 @@ public class BasicSearch {
 		}
 		
 		closeEnv_();
-		return valueOfCurrentGameState() ;
+		return clampedValueOfCurrentGameState() ;
 	}
 	
 	/**
@@ -476,7 +483,7 @@ public class BasicSearch {
 				z += ", #winningplay:" + winningplay.size() ;
 			else {
 				var maxVal = episodesValues.stream().max((v1,v2) -> Float.compare(v1,v2)) ;				
-				z += ", max-val:" + maxVal.get() ;
+				z += ", episode-val:" + maxVal.get() ;
 			}
 			return z ;		
 		}

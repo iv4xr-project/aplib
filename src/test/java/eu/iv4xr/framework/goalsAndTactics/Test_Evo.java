@@ -126,7 +126,7 @@ public class Test_Evo {
 			return frodo != null
 					&& ((Integer) frodo.properties.get("hp")) <= 0 ;
 		} ;
-		alg.rewardFunction = state -> {
+		alg.stateValueFunction = state -> {
 			if (alg.topGoalPredicate.test(state))
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))

@@ -25,7 +25,12 @@ import nl.uu.cs.aplib.utils.Pair;
  * The underlying navigation and exploration capabilities need to be provided. See e.g. 
  * {@link BasicSearch#exploredG} and {@link BasicSearch#reachedG}.
  * 
- *
+ * The algorithm needs a function to calculate the direct reward of executing an action a on
+ * a state S1, and transitioning to state S2. This can be specified by {@link #actionDirectRewardFunction}.
+ * If the function is left unspecified the algorithm will use the function {@link BasicSearch#stateValueFunction}
+ * to calculate the value v1 and v2 of states S1 and S2, and uses v2-v1 as the reward of doing 
+ * the action a on the state S1.
+ * 
  * @param <QState>
  */
 public class XQalg<QState> extends BasicSearch {
@@ -42,7 +47,12 @@ public class XQalg<QState> extends BasicSearch {
 		
 	public float exploreProbability = 0.2f ;
 	
-	public float maxReward = 10000 ;
+	/**
+	 * If specified, this calculates the direct reward of executing an action a on a state S1,
+	 * and transitioning to a state S2. If the function is unspecified, the difference of the
+	 * values of S2 and S1 is used, where the values are calculated through {@link BasicSearch#stateValueFunction}.
+	 */
+	public BiFunction<Pair<Iv4xrAgentState,String>,Iv4xrAgentState,Float> actionDirectRewardFunction ;
 	
 	/**
 	 * A function that construct a state-representation of a given agent/SUT state. This state representation is
@@ -90,14 +100,15 @@ public class XQalg<QState> extends BasicSearch {
 	/**
 	 * Run a single episode of Q-learning.
 	 */
+
 	@Override
 	float runAlgorithmForOneEpisode() throws Exception {
 		initializeEpisode() ;
 		// sequence of interactions so-far
 		List<String> trace = new LinkedList<>() ;
-		List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace = new LinkedList<>() ;
-		
-		QState qstate =  getQstate.apply(trace,agentState()) ;
+		List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace = new LinkedList<>() ;		
+		var state = agentState() ;
+		QState qstate =  getQstate.apply(trace,state) ;
 		
 		wipeoutMemory.apply(agent) ;
 		solveGoal("Exploration", exploredG.apply(null), explorationBudget);
@@ -112,7 +123,7 @@ public class XQalg<QState> extends BasicSearch {
 		}
 		qtable.put(qstate,firstActions) ;
 		
-		float totalEpisodeReward = 0 ;
+		float episodeReward = clampedValueOfCurrentGameState() ;
 		
 		while (trace.size() < maxDepth) {
 			
@@ -152,12 +163,13 @@ public class XQalg<QState> extends BasicSearch {
 			var info = candidateActions.get(entityToInteract) ;
 		    System.out.println(">>> chosen-action : " + chosenAction + ", info:" + info.maxReward) ;
 		    // now, execute the action:
-		    var value0 = valueOfCurrentGameState() ;
+		    var value0 = clampedValueOfCurrentGameState() ;
 		    var G = SEQ(reachedG.apply(entityToInteract), interactedG.apply(entityToInteract));
 			trace.add(entityToInteract) ;
 			var status = solveGoal("Reached and interacted " + entityToInteract, G, budget_per_task);
 			// the state after the interaction:
-			var newQstate =  getQstate.apply(trace,agentState()) ;
+			var newState = agentState() ;
+			var newQstate =  getQstate.apply(trace,newState) ;
 
 			 // break the episode if the interaction failed:
 			if (status.failed()) {
@@ -167,17 +179,17 @@ public class XQalg<QState> extends BasicSearch {
 			
 			// the case when newQstate is a terminal state:
 			
-			if (topGoalPredicate.test(agentState())) {
+			if (topGoalPredicate.test(newState)) {
 				markThatGoalIsAchieved(trace) ;
 				info.maxReward = this.maxReward ;
-				totalEpisodeReward = this.maxReward ;
+				episodeReward = this.maxReward ;
 				log("*** Goal is ACHIEVED");
 				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break ;
 			}
 			else if (agentIsDead()) {
-				info.maxReward = valueOfCurrentGameState()  ; ;
-				totalEpisodeReward = info.maxReward ;
+				info.maxReward = clampedValueOfCurrentGameState()  ; ;
+				episodeReward = info.maxReward ;
 				log("*** The agent is DEAD.");
 				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break;
@@ -188,14 +200,13 @@ public class XQalg<QState> extends BasicSearch {
 			// We need to explore to assess the value of the state after the interaction:
 			wipeoutMemory.apply(agent) ;
 			solveGoal("Exploration", exploredG.apply(null), explorationBudget);	
-			var value1 = valueOfCurrentGameState() ;
-			totalEpisodeReward = value1 ;
+			var value1 = clampedValueOfCurrentGameState() ;
 			
 			// the case when the state after exploration is terminal:
 			if (topGoalPredicate.test(agentState())) {
 				markThatGoalIsAchieved(trace) ;
 				info.maxReward = this.maxReward ;
-				totalEpisodeReward = this.maxReward ;
+				episodeReward = this.maxReward ;
 				log("*** Goal is ACHIEVED");
 				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break ;
@@ -209,10 +220,16 @@ public class XQalg<QState> extends BasicSearch {
 			
 			// else the state after exploration is non-terminal.
 						 
-		    // define obtained reward as the diff between the value of the new and previous states:
-			var reward = value1 - value0 ;
+		    // obtain the direct reward of performing the chosen action. This is calculated either through
+			// actionDirectRewardFunction, if it is defined. And else the direct reward is defined to be
+			// the difference in the value of state and newState.
+			float reward = 0 ;
+			if (actionDirectRewardFunction != null) {
+				reward = actionDirectRewardFunction.apply(new Pair<>(state,chosenAction), newState) ;
+			}
+			else 
+				reward = value1 - value0 ;
 			
-
 			// calculate the maximum rewards if we continue from that next state T:
 			// note that the trace is already extended with the last action taken
 			var nextnextActions = qtable.get(newQstate) ;
@@ -233,11 +250,14 @@ public class XQalg<QState> extends BasicSearch {
 			// update the Qtable
 			updateQ(qstate,chosenAction, newQstate,reward) ;
 			backPropagation(newQstate,chosenAction,reward,stateActionRewardTrace) ;
+			// move the current state to the new state:
+			state = newState ;
 			qstate = newQstate ;
-			
+			// the value of the episode so far is defined simply as the value of the new current state:
+			episodeReward = value1 ;
 		}
 		closeEnv_() ;
-		return totalEpisodeReward ;
+		return episodeReward ;
 	}
 	
 	void backPropagation(QState newState, 
