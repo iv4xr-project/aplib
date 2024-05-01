@@ -26,6 +26,7 @@ public class AQalg<QState> extends XQalg<QState> {
 	 * created. All actions from {@link #availableActions} will be added, and the
 	 * values are all set to 0.
 	 */
+	@Override
 	Map<String,ActionInfo> getActionsInfoOnState(QState qstate) {
 		var q_entry = qtable.get(qstate) ;
 		if (q_entry == null) {

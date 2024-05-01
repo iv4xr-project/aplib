@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.goalsAndTactics.XQalg.ActionInfo;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.utils.Pair;
@@ -25,11 +26,17 @@ import nl.uu.cs.aplib.utils.Pair;
  * The underlying navigation and exploration capabilities need to be provided. See e.g. 
  * {@link BasicSearch#exploredG} and {@link BasicSearch#reachedG}.
  * 
- * The algorithm needs a function to calculate the direct reward of executing an action a on
+ * <p>The algorithm needs a function to calculate the direct reward of executing an action a on
  * a state S1, and transitioning to state S2. This can be specified by {@link #actionDirectRewardFunction}.
  * If the function is left unspecified the algorithm will use the function {@link BasicSearch#stateValueFunction}
  * to calculate the value v1 and v2 of states S1 and S2, and uses v2-v1 as the reward of doing 
  * the action a on the state S1.
+ * 
+ * <p>To determine actions that are possible at every state, the algorithm looks in the
+ * state of the agent, to infer the set of game interactables that the agent knows at
+ * that moment. These are considered as the actions possible on the state.
+ * Use the function {@link BasicSearch#isInteractable} to specify what game objects are
+ * considered as interactables; useful for limiting the learning space.
  * 
  * @param <QState>
  */
@@ -98,9 +105,46 @@ public class XQalg<QState> extends BasicSearch {
 	
 	
 	/**
+	 * Get the set of actions and their values of a given state s from the Q-table.
+	 * If the state is not in the table yet, a new entry for that state will be
+	 * created. This is done by inspecting the agent-state, and obtaining all
+	 * game interactables that the agent knows, according to its state. All these
+	 * interactables a will be considered as possible action for the state s and
+	 * added as as entry in the Q-table. For each new (s,a) added to the Q-table,
+	 * its Q-value is set to 0.
+	 */
+	Map<String,ActionInfo> getActionsInfoOnState(QState qstate) {
+		var q_entry = qtable.get(qstate) ;
+		if (q_entry == null) {
+			// the state has not been registered
+			q_entry = new HashMap<String,ActionInfo>() ;
+			var availableEntities = wom().elements.values().stream()
+					.filter(e -> isInteractable.test(e))
+					.collect(Collectors.toList());
+			for (var e : availableEntities) {
+				 var info = new ActionInfo() ;
+				 info.maxReward = 0 ;
+				 q_entry.put(e.id, info) ;
+			}
+			qtable.put(qstate,q_entry) ;
+		}
+		return q_entry ;
+	}
+	
+	/**
+	 * Add a qstate into the Q-table. If it is already in the table nothing happens.
+	 * If the qstate is not in the table yet, the it as added. Furthermore, the
+	 * set of possible actions on that state is calculated and added into the table.
+	 * For each new pair (s,a) that is added, its Q-value it set to 0. Adding the
+	 * actions uses the function {@link #getActionsInfoOnState(Object)}
+	 */
+	void registerQstate(QState qstate) {
+		getActionsInfoOnState(qstate) ;
+	}
+	
+	/**
 	 * Run a single episode of Q-learning.
 	 */
-
 	@Override
 	float runAlgorithmForOneEpisode() throws Exception {
 		initializeEpisode() ;
@@ -110,18 +154,12 @@ public class XQalg<QState> extends BasicSearch {
 		var state = agentState() ;
 		QState qstate =  getQstate.apply(trace,state) ;
 		
-		wipeoutMemory.apply(agent) ;
-		solveGoal("Exploration", exploredG.apply(null), explorationBudget);
-		var startingEntities = wom().elements.values().stream()
-				.filter(e -> isInteractable.test(e))
-				.collect(Collectors.toList());
-		Map<String,ActionInfo> firstActions = new HashMap<>() ;
-		for (var e : startingEntities) {
-			 var info = new ActionInfo() ;
-			 info.maxReward = 0 ;
-			 firstActions.put(e.id, info) ;
+		if (exploredG != null) {
+			wipeoutMemory.apply(agent) ;
+			solveGoal("Exploration", exploredG.apply(null), explorationBudget);			
 		}
-		qtable.put(qstate,firstActions) ;
+		
+		registerQstate(qstate) ;
 		
 		float episodeReward = clampedValueOfCurrentGameState() ;
 		
@@ -142,7 +180,7 @@ public class XQalg<QState> extends BasicSearch {
 			}
 			else {
 				float bestVal = Float.NEGATIVE_INFINITY ;
-				//System.out.println(">>> cadidates : " + candidateActions.size()) ;
+				//System.out.println(">>> candidates : " + candidateActions.size()) ;
 				
 				for (var a : candidateActions.entrySet()) {
 					//System.out.println(">>> " + a.getKey()  + ", " + a.getValue().maxReward) ;
@@ -170,6 +208,8 @@ public class XQalg<QState> extends BasicSearch {
 			// the state after the interaction:
 			var newState = agentState() ;
 			var newQstate =  getQstate.apply(trace,newState) ;
+			// calculate the value of the state after the interaction:
+			var value1 = clampedValueOfCurrentGameState() ;
 
 			 // break the episode if the interaction failed:
 			if (status.failed()) {
@@ -182,7 +222,7 @@ public class XQalg<QState> extends BasicSearch {
 			if (topGoalPredicate.test(newState)) {
 				markThatGoalIsAchieved(trace) ;
 				info.maxReward = this.maxReward ;
-				episodeReward = this.maxReward ;
+				episodeReward = info.maxReward ;
 				log("*** Goal is ACHIEVED");
 				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break ;
@@ -197,28 +237,37 @@ public class XQalg<QState> extends BasicSearch {
 			// else then the top-goal has not been achieved, and the agent is alive. 
 			// The newQstate is thus non-terminal.
 			
-			// We need to explore to assess the value of the state after the interaction:
-			wipeoutMemory.apply(agent) ;
-			solveGoal("Exploration", exploredG.apply(null), explorationBudget);	
-			var value1 = clampedValueOfCurrentGameState() ;
-			
-			// the case when the state after exploration is terminal:
-			if (topGoalPredicate.test(agentState())) {
-				markThatGoalIsAchieved(trace) ;
-				info.maxReward = this.maxReward ;
-				episodeReward = this.maxReward ;
-				log("*** Goal is ACHIEVED");
-				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
-				break ;
+			// If exploreG is defined, we use it to explore before we assess the value of the state 
+			// after the interaction:
+			if (exploredG != null) {
+				wipeoutMemory.apply(agent) ;
+				System.out.println(">>> exploring...") ;
+				solveGoal("Exploration", exploredG.apply(null), explorationBudget);					
+				// sample the state again:
+				newState = agentState() ;
+				newQstate =  getQstate.apply(trace,newState) ;	
+				value1 = clampedValueOfCurrentGameState() ;
+				
+				// the case when the state after exploration is terminal:
+				if (topGoalPredicate.test(agentState())) {
+					markThatGoalIsAchieved(trace) ;
+					info.maxReward = this.maxReward ;
+					episodeReward = info.maxReward ;
+					log("*** Goal is ACHIEVED");
+					backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
+					break ;
+				}
+				else if (agentIsDead()) {
+					info.maxReward = value1 ; ;
+					log("*** The agent is DEAD.");
+					backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
+					break;
+				}
+
 			}
-			else if (agentIsDead()) {
-				info.maxReward = value1 ; ;
-				log("*** The agent is DEAD.");
-				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
-				break;
-			}
 			
-			// else the state after exploration is non-terminal.
+			// at this point we know that the new state is NOT terminal
+			registerQstate(newQstate) ;
 						 
 		    // obtain the direct reward of performing the chosen action. This is calculated either through
 			// actionDirectRewardFunction, if it is defined. And else the direct reward is defined to be
@@ -229,26 +278,15 @@ public class XQalg<QState> extends BasicSearch {
 			}
 			else 
 				reward = value1 - value0 ;
-			
-			// calculate the maximum rewards if we continue from that next state T:
-			// note that the trace is already extended with the last action taken
-			var nextnextActions = qtable.get(newQstate) ;
-			// first check if newQstate is already in the qtable. If not, add an entry to it.
-			if (nextnextActions == null) {
-				 var entities = wom().elements.values().stream()
-							.filter(e -> isInteractable.test(e))
-							.collect(Collectors.toList());
-				 nextnextActions = new HashMap<>() ;
-				 for (var e : entities) {
-					 var info2 = new ActionInfo() ;
-					 info2.maxReward = 0 ;
-					 nextnextActions.put(e.id, info2) ;
-				 }
-				 qtable.put(newQstate, nextnextActions) ;
-			}
-			
+									
 			// update the Qtable
 			updateQ(qstate,chosenAction, newQstate,reward) ;
+			
+			System.out.println(">> chosen action: " + chosenAction
+					+ ", v0=" + value0 + ", v1=" + value1 + ", direct-rw=" + reward
+					+ ", val=" + info.maxReward 
+					)  ;
+
 			backPropagation(newQstate,chosenAction,reward,stateActionRewardTrace) ;
 			// move the current state to the new state:
 			state = newState ;
@@ -272,13 +310,16 @@ public class XQalg<QState> extends BasicSearch {
 			var state1 = h.fst ;
 			var action = h.snd.fst ;
 			var directReward_of_state1_action = h.snd.snd ;
-			var current_value_of_state1_action = qtable.get(state1).get(directReward_of_state1_action).maxReward ;
+			var info = qtable.get(state1).get(action) ;
+			if (info == null)
+				break ;
+			var current_value_of_state1_action = info.maxReward ;
 			var new_value = updateQ(state1,action,state2,directReward_of_state1_action) ;
 			// if the new value is less than the current value, restore the current value,
 			// and stop the back-propagation as it won't change the values further down
 			// the propagation:
 			if (new_value < current_value_of_state1_action) {
-				 qtable.get(state1).get(action).maxReward = current_value_of_state1_action ;
+				 info.maxReward = current_value_of_state1_action ;
 				 break ;
 			}
 			state2 = state1 ;
@@ -294,17 +335,17 @@ public class XQalg<QState> extends BasicSearch {
 		var nextnextActions = qtable.get(nextQstate) ;
 		float S_maxNextReward = 0 ;
 		if (nextnextActions.isEmpty()) {
-			// then nextQstate is a terminal and not a winning state, we'll set its reward to be 0
+			// then nextQstate is a terminal and not a winning state, we'll consider its reward to be 0
 		}
 		else {
-			S_maxNextReward = Float.MIN_VALUE ;
+			S_maxNextReward = Float.NEGATIVE_INFINITY ;
 			for (var v : nextnextActions.values()) {
 				if (v.maxReward > S_maxNextReward) {
 					S_maxNextReward = v.maxReward ;
 				}
 			}
 		}
-		
+		//System.out.println(">>> S_maxNextReward = " + S_maxNextReward) ;
 		// update the value of Q(qstate,action):
 		var info = qtable.get(qstate).get(action) ;
 		info.maxReward = (1 - alpha) * info.maxReward

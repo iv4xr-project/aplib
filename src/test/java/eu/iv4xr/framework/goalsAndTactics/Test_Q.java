@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
@@ -72,20 +73,38 @@ public class Test_Q {
 	    }
 	}
 	
+	int getMazeId(WorldEntity e) {
+		var mId = e.properties.get("maze") ;
+		if (mId == null)
+			return -1 ;
+		return (Integer) mId ;
+	}
+	
+	int getFrodoMazeId(TestAgent agent) {
+		var st = (Iv4xrAgentState) agent.state() ;
+		var frodo = st.worldmodel.elements.get("Frodo") ;
+		return (Integer) frodo.properties.get("maze") ;
+	}
+	
 	TestAgent constructAgent() throws Exception {
 		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 4;
-		config.viewDistance = 4;
+		config.numberOfHealPots = 2 ;
+		config.numberOfRagePots = 2 ;
+		config.viewDistance = 40 ;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 2 ;
+		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
-		config.numberOfMonsters = 6 ;
+		config.numberOfMonsters = 2 ;
 		config.randomSeed = 79371;
+		config.worldSize = 20 ;
+		config.numberOfCorridors = 2 ;
 		System.out.println(">>> Configuration:\n" + config);
 		
 		// setting sound on/off, graphics on/off etc:
 		DungeonApp app = new DungeonApp(config);
 		app.soundOn = false;
+		//app.soundOn = true;
+		
 		app.headless = !withGraphics ;
 		if(withGraphics) DungeonApp.deploy(app);	
 		System.out.println(">>> LAUNCHING MD") ;
@@ -155,16 +174,22 @@ public class Test_Q {
 		
 		
 		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
-		alg.exploredG   = huristicLocation -> { 
-			var A = alg.getAgent() ; 
-			return goalLib.smartExploring(A,null,Integer.MAX_VALUE) ; } ;
-		//alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
+		
+		//alg.exploredG   = huristicLocation -> { 
+		//	var A = alg.getAgent() ; 
+		//	return goalLib.smartExploring(A,null,Integer.MAX_VALUE) ; } ;
+		
+			//alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
 		alg.reachedG    = e -> { 
 					var A = alg.getAgent() ; 
 					return goalLib.smartEntityInCloseRange(A,e) ;
 				} ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
-		alg.isInteractable   = e -> e.id.contains("S") ;
+		alg.isInteractable   = e ->  e.id.contains("S")  ;
+		//alg.isInteractable   = e -> 
+		//		e.id.contains("S")  
+		//		&& (getMazeId(e) == getFrodoMazeId(alg.agent))
+		//		;
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
 			//var targetShrine = state.worldmodel.elements.get("SM0") ;
@@ -205,7 +230,7 @@ public class Test_Q {
 		} ;
 		
 		
-		alg.maxDepth = 6 ;
+		alg.maxDepth = 12 ;
 		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 5 ;
 		alg.explorationBudget = 4000 ;

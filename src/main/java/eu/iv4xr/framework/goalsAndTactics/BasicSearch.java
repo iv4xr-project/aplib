@@ -367,9 +367,12 @@ public class BasicSearch {
 			turn++;
 			agent.update();
 		}
+		
 		// agent.printStatus();
 		log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus());
-
+		// adding a single update to force state update:
+		agent.setGoal(SUCCESS()) ;
+		agent.update() ;
 		return G.getStatus();
 	}
 
