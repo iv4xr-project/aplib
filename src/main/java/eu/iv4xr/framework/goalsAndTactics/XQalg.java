@@ -334,8 +334,13 @@ public class XQalg<QState> extends BasicSearch {
 		
 		var nextnextActions = qtable.get(nextQstate) ;
 		float S_maxNextReward = 0 ;
-		if (nextnextActions.isEmpty()) {
-			// then nextQstate is a terminal and not a winning state, we'll consider its reward to be 0
+		if (nextnextActions == null) {
+			// then qstate is a terminal state, then we take 0 as the value of doing an action
+			// on qstate; since no action is possible
+		}
+		else if (nextnextActions.isEmpty()) {
+			// then nextQstate is a terminal and not a winning state, also consider the value
+			// of doing an action there to be 0
 		}
 		else {
 			S_maxNextReward = Float.NEGATIVE_INFINITY ;

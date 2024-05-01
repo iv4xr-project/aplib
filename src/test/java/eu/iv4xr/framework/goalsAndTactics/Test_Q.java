@@ -90,6 +90,7 @@ public class Test_Q {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 2 ;
 		config.numberOfRagePots = 2 ;
+		// allowing a whole maze to be visible:
 		config.viewDistance = 40 ;
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 3 ;
@@ -175,6 +176,8 @@ public class Test_Q {
 		
 		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
 		
+		// not setting exploreG --> surpress exploration:
+		// 
 		//alg.exploredG   = huristicLocation -> { 
 		//	var A = alg.getAgent() ; 
 		//	return goalLib.smartExploring(A,null,Integer.MAX_VALUE) ; } ;
@@ -206,7 +209,7 @@ public class Test_Q {
 			if (alg.topGoalPredicate.test(state))
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
-				return -10f ;
+				return -100f ;
 			/*
 			var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
 				.filter(e -> e.type.equals("SCROLL"))
@@ -237,7 +240,7 @@ public class Test_Q {
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 800000 ;
 		//alg.exploreProbability = 0.15f ;
-		//alg.enableBackPropagationOfReward = 3 ; 
+		alg.enableBackPropagationOfReward = 5 ; 
 		
 				
 		//alg.runAlgorithmForOneEpisode();
