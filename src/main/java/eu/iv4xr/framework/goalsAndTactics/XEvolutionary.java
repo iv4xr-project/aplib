@@ -78,7 +78,7 @@ public class XEvolutionary extends BasicSearch {
 	public boolean onlyExtendWithNewGene = true ;
 	
 	/**
-	 * When true, then the extend-operation inserts a new gene at a random position, and else
+	 * When false, then the extend-operation inserts a new gene at a random position, and else
 	 * it is added at the end. Default is true.
 	 */
 	public boolean extendAtRandomInsertionPoint = true ;

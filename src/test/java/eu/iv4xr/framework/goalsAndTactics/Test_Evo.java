@@ -143,7 +143,7 @@ public class Test_Evo {
 			return null ;
 		} ;
 		
-		
+		// sensitive to hyper parameters...
 		alg.maxDepth = 7 ;
 		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
@@ -154,7 +154,7 @@ public class Test_Evo {
 		alg.numberOfElitesToKeepDuringSelection = 4 ;
 		alg.insertionProbability = 0.9f ;
 		alg.onlyExtendWithNewGene = false ;
-		alg.extendAtRandomInsertionPoint = false ;
+		//alg.extendAtRandomInsertionPoint = false ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
