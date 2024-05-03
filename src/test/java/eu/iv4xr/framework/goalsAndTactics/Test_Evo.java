@@ -31,11 +31,12 @@ public class Test_Evo {
 	TestAgent constructAgent() throws Exception {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
-		config.viewDistance = 4;
+		config.viewDistance = 40;
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 1 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 1 ;
+		config.worldSize = 20 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -110,7 +111,7 @@ public class Test_Evo {
 		} ;
 		
 		
-		alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
+		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
 		alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
 		alg.isInteractable   = e -> e.id.contains("S") ;
@@ -143,12 +144,17 @@ public class Test_Evo {
 		} ;
 		
 		
-		alg.maxDepth = 5 ;
+		alg.maxDepth = 7 ;
 		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 600000 ;
+		alg.maxPopulationSize = 8 ;
+		alg.numberOfElitesToKeepDuringSelection = 4 ;
+		alg.insertionProbability = 0.9f ;
+		alg.onlyExtendWithNewGene = false ;
+		alg.extendAtRandomInsertionPoint = false ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();

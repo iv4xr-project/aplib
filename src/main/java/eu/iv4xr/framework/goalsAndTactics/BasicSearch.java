@@ -347,13 +347,15 @@ public class BasicSearch {
 		agent.update();
 		Thread.sleep(delayBetweenAgentUpateCycles);
 		int i = 1;
+		// take budget-1 to account for the extra update that is always inserted at the end
+		int budget_ = budget - 1 ;
 		// WorldEntity lastInteractedButton = null ;
 		while (G.getStatus().inProgress() 
 				&& 
 				! topGoalPredicate.test(agentState())
 				&& 
 				(agentIsDead == null || ! agentIsDead.test(agentState()))) {
-			if (budget > 0 && i >= budget) {
+			if (budget > 0 && i >= budget_) {
 				log("*** Goal-level budget (" + budget + " turns) is EXHAUSTED.");
 				break;
 			}
@@ -370,7 +372,8 @@ public class BasicSearch {
 		
 		// agent.printStatus();
 		log("*** Goal " + goalDesc + " terminated. Consumed turns: " + i + ". Status: " + G.getStatus());
-		// adding a single update to force state update:
+		// adding a single extra update to force the agent state to be updated to the SUT
+		// state right after G completion.
 		agent.setGoal(SUCCESS()) ;
 		agent.update() ;
 		return G.getStatus();

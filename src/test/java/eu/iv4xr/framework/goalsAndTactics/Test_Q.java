@@ -93,7 +93,7 @@ public class Test_Q {
 		// allowing a whole maze to be visible:
 		config.viewDistance = 40 ;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 3 ;
+		config.numberOfScrolls = 5 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 2 ;
 		config.randomSeed = 79371;

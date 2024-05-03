@@ -78,6 +78,12 @@ public class XEvolutionary extends BasicSearch {
 	public boolean onlyExtendWithNewGene = true ;
 	
 	/**
+	 * When true, then the extend-operation inserts a new gene at a random position, and else
+	 * it is added at the end. Default is true.
+	 */
+	public boolean extendAtRandomInsertionPoint = true ;
+	
+	/**
 	 * Should be at least four. Default: 20.
 	 */
 	public int maxPopulationSize = 20 ;
@@ -244,7 +250,9 @@ public class XEvolutionary extends BasicSearch {
 
 		knownInteractables.clear();
 		initializeEpisode();
-		solveGoal("Exploration", exploredG.apply(null), explorationBudget);
+		if (exploredG != null) {
+			solveGoal("Exploration", exploredG.apply(null), explorationBudget);			
+		}
 		var interactables = wom().elements.values().stream()
 				.filter(e -> isInteractable.test(e))
 				.map(e -> e.id)
@@ -290,18 +298,7 @@ public class XEvolutionary extends BasicSearch {
 			var G = SEQ(reachedG.apply(e), interactedG.apply(e));
 			var status = solveGoal("Reached and interacted " + e, G, budget_per_task);
 			trace.add(e) ;
-			if (agentIsDead()) {
-				log("*** The agent is DEAD.");
-				break;
-			}
-			// also break if interacting with e failed:
-			if (status.failed())
-				break ;
 			
-			if (! topGoalPredicate.test(agentState())) {
-				wipeoutMemory.apply(agent) ;
-				solveGoal("Exploration", exploredG.apply(null), explorationBudget);
-			}
 			if (topGoalPredicate.test(agentState())) {
 				markThatGoalIsAchieved(trace) ;
 				log("*** Goal is ACHIEVED");
@@ -310,6 +307,24 @@ public class XEvolutionary extends BasicSearch {
 			if (agentIsDead()) {
 				log("*** The agent is DEAD.");
 				break;
+			}
+			// also break if interacting with e failed:
+			if (status.failed())
+				break ;
+			
+			// If explorationG is defined .... explore, then check again
+			if (exploredG != null) {
+				wipeoutMemory.apply(agent) ;
+				solveGoal("Exploration", exploredG.apply(null), explorationBudget);
+				if (topGoalPredicate.test(agentState())) {
+					markThatGoalIsAchieved(trace) ;
+					log("*** Goal is ACHIEVED");
+					break ;
+				}
+				if (agentIsDead()) {
+					log("*** The agent is DEAD.");
+					break;
+				}
 			}
 			k++ ;
 		}
@@ -363,6 +378,7 @@ public class XEvolutionary extends BasicSearch {
 		if (mutations.isEmpty()) return null ;
 		String M = mutations.get(rnd.nextInt(mutations.size())) ;
 		S.set(mutationPoint, M) ;
+				
 		return S ;
 	}
 	
@@ -375,7 +391,6 @@ public class XEvolutionary extends BasicSearch {
 		
 		var seq = copy(chromosome) ;
 				
-		int insertionPoint = rnd.nextInt(seq.size()) ;
 		
 		// insert an interacttion that is not already in the chromosome:
 		List<String> candidates = knownInteractables ;	
@@ -388,7 +403,13 @@ public class XEvolutionary extends BasicSearch {
 		
 		String E =  candidates.get(rnd.nextInt(candidates.size())) ;
 		
-		seq.add(insertionPoint,E) ;
+		if (this.extendAtRandomInsertionPoint) {
+			int insertionPoint = rnd.nextInt(seq.size()) ;
+			seq.add(insertionPoint,E) ;
+		}
+		else
+			seq.add(E) ;
+		
 		return seq ;	
 	}
 	
@@ -504,7 +525,10 @@ public class XEvolutionary extends BasicSearch {
 			}
 			var info = fitnessValue(tau) ;
 			totNumberOfEpisodes++ ;
-			myPopulation.add(info);
+			// evaluating fitness may shorten tau, or even throw away all its elements if the first
+			// gene is not even executable; only add it to the population if it is not empty:
+			if (! tau.isEmpty() && ! myPopulation.memberOf(tau))
+				myPopulation.add(info);
 			if (stopAfterGoalIsAchieved && goalHasBeenAchieved) break ;	
 		}
 		
