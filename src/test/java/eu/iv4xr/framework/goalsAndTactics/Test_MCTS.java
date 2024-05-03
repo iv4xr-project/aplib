@@ -32,9 +32,9 @@ public class Test_MCTS {
 	TestAgent constructAgent() throws Exception {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
-		config.viewDistance = 4;
+		config.viewDistance = 40 ;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 1 ;
+		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 1 ;
 		//config.numberOfMonsters = 30 ;
@@ -112,7 +112,7 @@ public class Test_MCTS {
 		} ;
 		
 		
-		alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
+		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
 		alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
 		alg.isInteractable   = e -> e.id.contains("S") ;
@@ -144,7 +144,7 @@ public class Test_MCTS {
 		} ;
 		
 		
-		alg.maxDepth = 5 ;
+		alg.maxDepth = 8 ;
 		//alg.maxNumberOfEpisodes = 100 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
 		alg.explorationBudget = 4000 ;

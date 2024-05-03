@@ -197,9 +197,11 @@ public class XMCTS extends BasicSearch{
 		
 		if (trace.isEmpty()) {
 			// special case when the trace is still empty:
-			solveGoal("Exploration", exploredG.apply(null), explorationBudget) ;
-			if (agentIsDead()) {
-				 success = false ;
+			if (exploredG != null) {
+				solveGoal("Exploration", exploredG.apply(null), explorationBudget) ;
+				if (agentIsDead()) {
+					 success = false ;			
+				}
 			}
 			return success ;
 		}
@@ -217,9 +219,12 @@ public class XMCTS extends BasicSearch{
 				 success = false ;
 				 break ;
 			 }
-			 // reset exploration, then do full explore:
-			 wipeoutMemory.apply(agent) ;
-			 solveGoal("Exploration", exploredG.apply(null), explorationBudget) ; 
+			 
+			 if (exploredG != null) {
+				// reset exploration, then do full explore:
+				 wipeoutMemory.apply(agent) ;
+				 solveGoal("Exploration", exploredG.apply(null), explorationBudget) ; 
+			 }			 
 		}
 		return success ;
 	}
@@ -272,9 +277,11 @@ public class XMCTS extends BasicSearch{
 			if (! status.success()) {
 				 break ;
 			}
-			// reset exploration, then do full explore:
-			wipeoutMemory.apply(agent) ;
-			solveGoal("Exploration", exploredG.apply(null), explorationBudget);
+			if (exploredG != null) {
+				// reset exploration, then do full explore:
+				wipeoutMemory.apply(agent) ;
+				solveGoal("Exploration", exploredG.apply(null), explorationBudget);				
+			}
 
 			if (topGoalPredicate.test(agentState())) {
 				markThatGoalIsAchieved(trace);
