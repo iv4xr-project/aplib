@@ -20,6 +20,11 @@ public class AQalg<QState> extends XQalg<QState> {
 	
 	public Map<String,Action>availableActions = new HashMap<>() ;
 	
+	public AQalg() {
+		super() ;
+		algName = "Q-basic" ;
+	}
+	
 	/**
 	 * Get the set of actions and their values of a given state from the Q-table.
 	 * If the state is not in the table yet, a new entry for that state will be
@@ -56,7 +61,9 @@ public class AQalg<QState> extends XQalg<QState> {
 		var currenState = agentState() ;
 		QState qstate =  getQstate.apply(trace,currenState) ;
 		var q_entry = getActionsInfoOnState(qstate) ;
-		float episodeReward = 0 ;
+		registerQstate(qstate) ;
+		
+		float episodeReward = clampedValueOfCurrentGameState() ;
 		
 		while (trace.size() < maxDepth) {
 				
@@ -71,6 +78,7 @@ public class AQalg<QState> extends XQalg<QState> {
 				// no further actions is possible, so we stop the episode
 				break ;
 			
+			//q_entry = getActionsInfoOnState(qstate) ;
 			String chosenAction = null ;
 			
 			if (rnd.nextFloat() <= exploreProbability) {
@@ -114,7 +122,7 @@ public class AQalg<QState> extends XQalg<QState> {
 			if (topGoalPredicate.test(newState)) {
 				markThatGoalIsAchieved(trace) ;
 				info.maxReward = this.maxReward ;
-				episodeReward = this.maxReward ;
+				episodeReward = info.maxReward;
 				log("*** Goal is ACHIEVED");
 				backPropagation(newQstate,chosenAction,info.maxReward,stateActionRewardTrace) ;
 				break ;
@@ -152,6 +160,8 @@ public class AQalg<QState> extends XQalg<QState> {
 			q_entry = q_entry_of_newQstate ;
 			// the value of the episode so far is defined simply as the value of the new current state:
 			episodeReward = value1 ;
+			
+			Thread.sleep(delayBetweenAgentUpateCycles);
 		}
 		closeEnv_() ;
 		return episodeReward ;

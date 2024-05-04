@@ -6,15 +6,27 @@ import static nl.uu.cs.aplib.AplibEDSL.goal;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import javax.swing.SwingUtilities;
+
 import org.junit.jupiter.api.Test;
 
+import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
+import eu.iv4xr.framework.goalsAndTactics.Test_Q.MDQstate;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import eu.iv4xr.framework.mainConcepts.WorldModel;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
+import nl.uu.cs.aplib.mainConcepts.Action;
+import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.utils.Pair;
 
 public class Test_ActionLevelQ {
 	
@@ -56,7 +68,6 @@ public class Test_ActionLevelQ {
 			int numOfScrollsInBag = (Integer) frodo.properties.get("scrollsInBag") ;
 			int numOfHealPotsInBag = (Integer) frodo.properties.get("healpotsInBag") ;
 			int numOfRagePotsInBag = (Integer) frodo.properties.get("ragepotsInBag") ;
-			// N__* N__ tiles
 			int numOfProperties = 7 ;
 			int arraySize = numOfProperties + W * W ;
 			state = new byte[arraySize] ;
@@ -75,7 +86,9 @@ public class Test_ActionLevelQ {
 					+ half_W) ;
 			
 			for (var e : wom.elements.values()) {
-				int e_mazeId = (Integer) e.properties.get("maze") ;
+				var U = e.properties.get("maze") ;
+				if (U == null) continue ;
+				int e_mazeId = (Integer) U ;
 				if (e_mazeId != agent_mazeId)
 					continue ;
 				int code = -1 ;
@@ -111,7 +124,9 @@ public class Test_ActionLevelQ {
 					int e_y = (int) e.position.z ;
 					if (windowBottomLeft_x <= e_x && e_x <= windowTopRight_x
 							&& windowBottomLeft_y <= e_y && e_y <= windowTopRight_y) {
-						int index = numOfProperties + (e_x - 1) + W * (e_y - 1) ;
+						int index = numOfProperties 
+								+ (e_x - windowBottomLeft_x) 
+								+ W * (e_y - windowBottomLeft_y) ;
 						state[index] = (byte) code ;
 					}
 				}
@@ -135,12 +150,14 @@ public class Test_ActionLevelQ {
 	
 	TestAgent constructAgent() throws Exception {
 		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 4;
-		config.viewDistance = 4;
+		config.numberOfHealPots = 2 ;
+		config.worldSize = 12 ;
+		config.numberOfCorridors = 2 ;
+		config.viewDistance = 40 ;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 2 ;
+		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
-		config.numberOfMonsters = 6 ;
+		config.numberOfMonsters = 2 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -157,9 +174,9 @@ public class Test_ActionLevelQ {
 		var agent = new TestAgent("Frodo", "tester");
 		agent.attachState(state).attachEnvironment(env) ;
 		
-		var G = goal("dummy").toSolve(S -> true)
-				.withTactic(action("dummy").do1(S -> true).lift())
-				.lift() ;
+		//var G = goal("dummy").toSolve(S -> true)
+		//		.withTactic(action("dummy").do1(S -> true).lift())
+		//		.lift() ;
 		//agent.setGoal(G) ;
 		
 		// should be after create the agent, else the constructor sets the visibility again
@@ -174,8 +191,158 @@ public class Test_ActionLevelQ {
 		
 		//System.out.println(">>> WOM: " + state.worldmodel) ;
 		
-		
 		return agent ;
+	}
+	
+	@SuppressWarnings("incomplete-switch")
+	Action move(Command cmd) {
+		var A = action("" + cmd)
+				.do1((MyAgentState S) ->  {
+					S.env().action(S.worldmodel.agentId, cmd) ;
+					return S ;
+				})
+				.on_((MyAgentState S) -> {
+					  var tile = Utils.toTile(S.worldmodel.position) ;
+					  Tile tile2 = null ;
+					  switch(cmd) {
+					    case MOVEUP   : tile2 = new Tile(tile.x,tile.y+1) ; break ;
+					    case MOVEDOWN : tile2 = new Tile(tile.x,tile.y-1) ; break ;
+					    case MOVERIGHT: tile2 = new Tile(tile.x+1,tile.y) ; break ;
+					    case MOVELEFT : tile2 = new Tile(tile.x-1,tile.y) ; break ;
+					  }
+					  return ! Utils.isWall(S,tile2) ;
+					}) ; 
+		return A ;
+	}
+	
+	@SuppressWarnings("incomplete-switch")
+	Action usePotion(Command cmd) {
+		var A = action("" + cmd)
+				.do1((MyAgentState S) ->  {
+					S.env().action(S.worldmodel.agentId, cmd) ;
+					return S ;
+				})
+				.on_((MyAgentState S) -> {	
+					  var frodo = S.worldmodel.elements.get("Frodo") ;
+					  switch(cmd) {
+					    case USEHEAL :
+					    	return (Integer) frodo.properties.get("healpotsInBag") > 0 ;
+					    case USERAGE :
+					    	return (Integer) frodo.properties.get("ragepotsInBag") > 0 ;
+					  }
+					  return false ;
+					}) ; 
+		return A ;
+	}
+	
+	@Test
+	public void test0() throws Exception {
+				
+		var alg = new AQalg<MDQstate2>() ;
+		BasicSearch.DEBUG = !supressLogging ; 
+
+		alg.agentConstructor = dummy -> {
+			try {
+				return constructAgent() ;
+			}
+			catch(Exception e) {
+				System.out.println(">>> FAIL to create a agent.") ;
+				return null ;
+			}
+		} ;
+		
+		alg.closeEnv = dummy -> {
+			var env = (MyAgentEnv) alg.agent.env() ;
+			var win = SwingUtilities.getWindowAncestor(env.app);
+			win.dispose();
+			System.out.println(">>> DISPOSING MD") ;
+			return null ;
+		} ;
+		
+		// just a dummy goal to initialize the agent, so that the worldmodel is loaded:
+		alg.initializedG = dummy -> {
+			GoalStructure dummyG = goal("dummy").toSolve(S -> true)
+			  .withTactic(action("dummy").do1(S -> true).lift())
+			  .lift() ;
+			return dummyG ;
+		} ;
+		
+		alg.availableActions.put("w", move(Command.MOVEUP)) ;
+		alg.availableActions.put("a", move(Command.MOVELEFT)) ;
+		alg.availableActions.put("s", move(Command.MOVEDOWN)) ;
+		alg.availableActions.put("d", move(Command.MOVERIGHT)) ;
+		alg.availableActions.put("e", usePotion(Command.USEHEAL)) ;
+		alg.availableActions.put("r", usePotion(Command.USERAGE)) ;
+	
+		alg.topGoalPredicate = state -> {
+			//System.out.println(">>> WOM = " + state.worldmodel) ;
+			var targetShrine = state.worldmodel.elements.get("SM0") ;
+			//var targetShrine = state.worldmodel.elements.get("SM1") ;
+			return targetShrine != null
+					&& (Boolean) targetShrine.properties.get("cleansed") ;
+		} ;
+		
+		alg.agentIsDead = state -> {
+			var frodo = state.worldmodel.elements.get("Frodo") ;
+			return frodo != null
+					&& ((Integer) frodo.properties.get("hp")) <= 0 ;
+		} ;
+		
+		// attach a function that converts the agent state to a Q-state:
+		alg.getQstate = (trace,currentState) -> {
+			var env = (MyAgentEnv) alg.agent.env() ;
+			return new MDQstate2(env.app.dungeon.config, 5, currentState) ;
+		} ;
+		
+		// defining state-value function, rather than action-reward. The direct
+		// reward of an action is then implicitly defined as the value of the
+		// next state minus the value of the previous state.
+		alg.stateValueFunction = state -> {
+			if (alg.topGoalPredicate.test(state))
+				return alg.maxReward ;
+			if (alg.agentIsDead.test(state))
+				return -100f ;
+			/*
+			var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
+				.filter(e -> e.type.equals("SCROLL"))
+				.count();
+			
+			var scrollsInBag = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("scrollsInBag") ;
+			*/
+			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("score") ;
+			
+			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
+			return (float) frodo_score ;
+		} ;
+		
+		
+		
+		alg.maxDepth = 300 ;
+		//alg.maxNumberOfEpisodes = 40 ;
+		alg.delayBetweenAgentUpateCycles = 20 ;
+		alg.totalSearchBudget = 300000 ;
+		alg.enableBackPropagationOfReward = 10 ; 
+		
+				
+		//alg.runAlgorithmForOneEpisode();
+		var R = alg.runAlgorithm(); 
+		
+		alg.log(">>> #states in qtable: " + alg.qtable.size());
+		int num_entries = 0 ;
+		for (var q : alg.qtable.values()) {
+			num_entries += q.values().size() ;
+		}
+		alg.log(">>> #entries in qtable: " + num_entries);
+		alg.log(">>> episode-values: " + R.episodesValues) ;
+		alg.log(">>> winningplay: " + R.winningplay) ;
+
+		
+		//System.out.println(">>>> hit RET") ;
+		//Scanner scanner = new Scanner(System.in);
+		//scanner.nextLine() ;
+		
 	}
 
 }
