@@ -159,7 +159,7 @@ public class Experiment4 {
 		) ;
 	}
 	
-	@Test
+	//@Test
 	void test_programmaticPlay() throws Exception {
 		runOneAlgorithm(AlgorithmType.PROGRAMMATIC,
 				smallDungeons,
@@ -169,6 +169,23 @@ public class Experiment4 {
 					algFactory.supressLogging = supressLogging ;
 					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
 					BasicSearch alg = algFactory.mkProgrammaticAlg(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
+					return alg ;
+				}
+		) ;
+	}
+	
+	@Test
+	void test_lowrandom() throws Exception {
+		runOneAlgorithm(AlgorithmType.RANDOM,
+				smallDungeons,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
+					BasicSearch alg = algFactory.mkActionLevelRandomAlg(config) ;
 					// hyper parameters:
 					alg.totalSearchBudget = 60000 ;
 					return alg ;

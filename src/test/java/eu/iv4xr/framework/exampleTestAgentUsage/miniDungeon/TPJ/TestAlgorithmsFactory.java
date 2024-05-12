@@ -215,14 +215,25 @@ public class TestAlgorithmsFactory {
 	}
 	
 	public ProgrammaticAlgorithm mkProgrammaticAlg(MiniDungeonConfig config) {
-		var alg = new ProgrammaticAlgorithm() ;
+		var alg = new ProgrammaticAlgorithm("play-to-win") ;
 		basicConfigure(config,alg) ;
 		return alg ;	
 	}
 	
+	public ProgrammaticAlgorithm mkActionLevelRandomAlg(MiniDungeonConfig config) {
+		var alg = new ProgrammaticAlgorithm("action-level-random") ;
+		basicConfigure(config,alg) ;
+		return alg ;	
+	}
 	
 	public static class ProgrammaticAlgorithm extends BasicSearch {
 		
+		String playtestType ;
+		
+		public ProgrammaticAlgorithm(String playtestType) {
+			super() ;
+			this.playtestType = playtestType ;
+		}
 	
 		@Override
 		public AlgorithmResult runAlgorithm() throws Exception {
@@ -230,7 +241,15 @@ public class TestAlgorithmsFactory {
 			XTestAgent agent = (XTestAgent) this.agentConstructor.apply(null) ;
 			var env_ = (MyAgentEnv) agent.env() ;
 			var config = env_.app.dungeon.config ;
-			var G = new ShrineCleanTester().cleanseAllShrines(agent, config.numberOfMaze) ;
+			GoalStructure G = null ;
+			if (playtestType.equals("action-level-random")) {
+				var RT = new RandomPlayTester() ;
+				RT.reallyRandom = true ;
+				G = RT.randomPlay(agent) ;
+			}
+			else {
+				G = new ShrineCleanTester().cleanseAllShrines(agent, config.numberOfMaze) ;
+			}		
 			agent.setGoal(G) ;
 			var state = (MyAgentState) agent.state() ;
 			turn = 0 ;
