@@ -37,7 +37,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 
 public class Test_Random {
 	
-	MDTestRunner MDTestRunner = new MDTestRunner() ;
+	MDTestAgentRunner MDTestRunner = new MDTestAgentRunner() ;
 	
 	@BeforeEach
 	public void testConfig() {

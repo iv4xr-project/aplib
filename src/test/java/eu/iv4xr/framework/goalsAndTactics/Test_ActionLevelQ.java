@@ -276,8 +276,8 @@ public class Test_ActionLevelQ {
 	
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
-			var targetShrine = state.worldmodel.elements.get("SM0") ;
-			//var targetShrine = state.worldmodel.elements.get("SM1") ;
+			//var targetShrine = state.worldmodel.elements.get("SM0") ;
+			var targetShrine = state.worldmodel.elements.get("SM1") ;
 			return targetShrine != null
 					&& (Boolean) targetShrine.properties.get("cleansed") ;
 		} ;
@@ -319,7 +319,7 @@ public class Test_ActionLevelQ {
 		
 		
 		
-		alg.maxDepth = 300 ;
+		alg.maxDepth = 600 ;
 		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 20 ;
 		alg.totalSearchBudget = 300000 ;

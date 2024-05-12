@@ -24,7 +24,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 
 public class Test_Walls {
 	
-	MDTestRunner MDTestRunner = new MDTestRunner() ;
+	MDTestAgentRunner MDTestRunner = new MDTestAgentRunner() ;
 	
 	@BeforeEach
 	public void testConfig() {

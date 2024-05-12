@@ -35,6 +35,62 @@ public class TPJconfigs {
 		return config ;
 	}
 	
+	public static MiniDungeonConfig MDSmallconfig0() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 2 ;
+		config.worldSize = 16 ;
+		config.numberOfCorridors = 3 ;
+		config.viewDistance = 40 ;
+		config.numberOfMaze = 1 ;
+		config.numberOfScrolls = 1 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 3 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
+	
+	public static MiniDungeonConfig MDSmallconfig1() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 2 ;
+		config.worldSize = 16 ;
+		config.numberOfCorridors = 3 ;
+		config.viewDistance = 40 ;
+		config.numberOfMaze = 2 ;
+		config.numberOfScrolls = 1 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 3 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
+	
+	public static MiniDungeonConfig MDSmallconfig2() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 2 ;
+		config.worldSize = 16 ;
+		config.numberOfCorridors = 3 ;
+		config.viewDistance = 40 ;
+		config.numberOfMaze = 1 ;
+		config.numberOfScrolls = 3 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 4 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
+	
+	public static MiniDungeonConfig MDSmallconfig3() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 2 ;
+		config.worldSize = 16 ;
+		config.numberOfCorridors = 3 ;
+		config.viewDistance = 40 ;
+		config.numberOfMaze = 2 ;
+		config.numberOfScrolls = 3 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 4 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
+	
 	// configs to test PvP 
 	public static MiniDungeonConfig PVPConfig1() {
 		MiniDungeonConfig config = new MiniDungeonConfig();

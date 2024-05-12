@@ -47,7 +47,7 @@ class Experiment2 {
 			boolean assertG1IsFinished,
 			boolean assertLTLs) throws Exception {
 		
-		var runner = new MDTestRunner() ;
+		var runner = new MDTestAgentRunner() ;
 		runner.runDataFolder = dataFolder ;
 		runner.withGraphics = withGraphics ;
 		runner.verbosePrint = verbosePrint ;

@@ -56,7 +56,7 @@ public class BasicSearch {
 	 * The test-agent. Don't set this manually. This class will use
 	 * {@link #agentConstructor} for creating an agent.
 	 */
-	TestAgent agent;
+	public TestAgent agent;
 
 	/**
 	 * Available total search-budget in ms. The default is 3-min.
@@ -89,7 +89,7 @@ public class BasicSearch {
 	/**
 	 * If true, the algorithm will print debug-messages to the console.
 	 */
-	static boolean DEBUG = false;
+	static public boolean DEBUG = false;
 
 	/**
 	 * The delay (in ms) added between the agent's update cycles when executing a

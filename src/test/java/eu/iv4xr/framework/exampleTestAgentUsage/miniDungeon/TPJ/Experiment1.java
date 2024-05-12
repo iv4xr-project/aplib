@@ -24,7 +24,7 @@ class Experiment1 {
 			
 		} ;
 	MiniDungeonConfig[] pvpTestConfigs = { TPJconfigs.PVPConfig1(),  TPJconfigs.PVPConfig2() } ;
-	MiniDungeonConfig[] walkTestConfigs = { TPJconfigs.MDconfig1() } ;
+	MiniDungeonConfig[] wallTestConfigs = { TPJconfigs.MDconfig1() } ;
 	MiniDungeonConfig[] monsterCombatTestConfigs = { TPJconfigs.MonstersCombatConfig1() } ;
 	
 	boolean saveRunData = false ;
@@ -55,7 +55,7 @@ class Experiment1 {
 			boolean assertG1IsFinished,
 			boolean assertLTLs) throws Exception {
 		
-		var runner = new MDTestRunner() ;
+		var runner = new MDTestAgentRunner() ;
 		runner.runDataFolder = dataFolder ;
 		runner.withGraphics = withGraphics ;
 		runner.verbosePrint = verbosePrint ;
@@ -82,13 +82,13 @@ class Experiment1 {
 		for(int k=0; k<randomTestConfigs.length; k++) {
 			MiniDungeonConfig config = randomTestConfigs[k] ;
 			var frodo = mkFrodo() ;
-			runTest("shrineTest_" + config.configname + "_"  + frodo.getId(),
+			runTest("randomTest_" + config.configname + "_"  + frodo.getId(),
 					frodo,null, 
 					config,
 					new RandomPlayTester().randomPlay(frodo), // using smart random by default
 					null,randomTestBudget,false,true) ;
 			var smeagol = mkSmeagol() ;
-			runTest("shrineTest_" + config.configname + "_"  + smeagol.getId(),
+			runTest("randomTest_" + config.configname + "_"  + smeagol.getId(),
 					smeagol,null, 
 					config,
 					new RandomPlayTester().randomPlay(smeagol),
@@ -103,7 +103,7 @@ class Experiment1 {
 			MiniDungeonConfig config = shrineTestConfigs[k] ;
 			config.enableSmeagol = false ;
 			var frodo = mkFrodo() ;
-			runTest("shrineTest_twoplayers" + config.configname + "_"  + frodo.getId(),
+			runTest("shrineTest_singleplayer_" + config.configname + "_"  + frodo.getId(),
 					frodo,null, 
 					config,
 					new ShrineCleanTester().cleanseAllShrines(frodo, config.numberOfMaze),
@@ -112,7 +112,7 @@ class Experiment1 {
 					true,true) ;
 			var smeagol = mkSmeagol() ;
 			config.enableSmeagol = true ;
-			runTest("randomTest_" + config.configname + "_"  + smeagol.getId(),
+			runTest("shrineTest_singleplayer_" + config.configname + "_"  + smeagol.getId(),
 					smeagol,null, 
 					config,
 					new ShrineCleanTester().cleanseAllShrines(frodo, config.numberOfMaze),
@@ -142,7 +142,7 @@ class Experiment1 {
 	@Test
 	void testWalls() throws Exception {
 		// run only one test for wall:
-		MiniDungeonConfig config = walkTestConfigs[0] ;
+		MiniDungeonConfig config = wallTestConfigs[0] ;
 		config.enableSmeagol = false ;
 		var frodo = mkFrodo() ;
 		runTest("wallTest_" + config.configname,
@@ -194,7 +194,7 @@ class Experiment1 {
 		config = pvpTestConfigs[1] ;
 		smeagol = mkSmeagol() ;
 		frodo = mkFrodo() ;
-		runTest("pvpCombatTest_" + config.configname + "_"  + smeagol.getId(),
+		runTest("pvpCombatTest_" + config.configname + "_"  + frodo.getId(),
 				frodo, smeagol,
 				config,
 				new PvPPlayTester().searchAndKill(frodo, smeagol.getId()),

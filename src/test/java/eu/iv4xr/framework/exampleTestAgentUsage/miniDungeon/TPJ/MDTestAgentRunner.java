@@ -21,7 +21,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 import nl.uu.cs.aplib.utils.Pair;
 
-public class MDTestRunner {
+/**
+ * A runner for an aplib test-agent to test MiniDungeon. 
+ */
+public class MDTestAgentRunner {
 
 	public boolean withGraphics = true ;
 	public boolean withSound = false ;
@@ -42,7 +45,7 @@ public class MDTestRunner {
 	/**
 	 * An instrumenter to collect data from a test run.
 	 */
-	Pair<String,Number>[] stateInstrumenter(MyAgentState S) {
+	static Pair<String,Number>[] stateInstrumenter(MyAgentState S) {
 		Pair<String,Number>[] dataPoint = new Pair[9] ;
 		Tile t = Utils.toTile(S.worldmodel.position) ;
 		int mazeNr = Utils.currentMazeNr(S) ;

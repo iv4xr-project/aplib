@@ -62,7 +62,7 @@ class Experiment3 {
 			GoalStructure G1, 
 			boolean enableWallBug) throws Exception {
 		
-		var runner = new MDTestRunner() ;
+		var runner = new MDTestAgentRunner() ;
 		runner.runDataFolder = dataFolder ;
 		runner.withGraphics = withGraphics ;
 		runner.verbosePrint = verbosePrint ;
