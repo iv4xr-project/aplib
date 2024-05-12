@@ -2,15 +2,9 @@ package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 
 import eu.iv4xr.framework.goalsAndTactics.BasicSearch;
 
-import static java.nio.file.StandardOpenOption.WRITE;
-import static java.nio.file.StandardOpenOption.CREATE;
 import static nl.uu.cs.aplib.AplibEDSL.action;
 import static nl.uu.cs.aplib.AplibEDSL.goal;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
@@ -27,9 +21,11 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 
 /**
- * Creating an instance {@link BasicSearch}, configured for MD.
+ * This contains functions for creating instances of test-algorithms (subclasses of
+ * {@link BasicSearch}) configured to target MD, and long with a deployed MD to
+ * run the instantiated algorithm on it.
  */
-public class BasicSearchAlgForMD {
+public class TestAlgorithmsFactory {
 
 	public boolean withGraphics = true ;
 	public boolean withSound = false ;
@@ -40,25 +36,9 @@ public class BasicSearchAlgForMD {
     public boolean stopWhenInvriantFlagABug = false ;
     //public boolean stopWhenGameOver = false ;
 	public boolean withInstrumenter = false ;
-	public boolean saveRunData = true ;
-    public String runDataFolder = "./tmp" ;
 	// not used  --> ?
 	boolean includeWallBug = false ;
-
-	String algName ;    	
-	BasicSearch alg ;
 	
-	/**
-	 * This only creates an instance of this class with an un-configured instance
-	 * of {@link BasicSearch}. Invoke {@link #basicConfigure(MiniDungeonConfig)}
-	 * to have the basic functions of the algorithm configured, e.g. how to
-	 * instantiate a test-agent, how to navigate, how to interact, etc.
-	 */
-	public BasicSearchAlgForMD() {
-		algName = "HIGH-RANDOM" ;
-		alg = new BasicSearch() ;
-	}
-
 	/**
 	 * Instantiate and deploy MD, and construct a TestAgent. Will only use Frodo.
 	 * This will also configure the test agent to have a data-collector and to
@@ -126,7 +106,7 @@ public class BasicSearchAlgForMD {
 	 * <p>We will also constrain the algorithm to only interact with scrolls
 	 * and shrines.
 	 */
-	public void basicConfigure(MiniDungeonConfig config) {
+	void basicConfigure(MiniDungeonConfig config, BasicSearch alg) {
 		
 		var goalLib = new GoalLib();
 		BasicSearch.DEBUG = !supressLogging ;
@@ -189,68 +169,25 @@ public class BasicSearchAlgForMD {
 		} ;
 	}
 	
-	
-	public static class Result1 {
-		public String algName ;
-		public String runId ;
-		public int runtime ;
-		public int usedTurn ;
-		public int numEpisodes ;
-		public Integer numOfVisitedStates = null ;
-		public boolean topGoalSolved ;
-		public boolean invViolationDetected ;
-		
-		@Override
-		public String toString() {
-			String z = "** Alg-name: " + algName ;
-			z += "\nRun " + runId ;
-			z += "\n#turn:" + usedTurn ;
-			z += "\n#episodes:" + numEpisodes ;
-			z += "\ntime:" + runtime ;
-			z += "\n#visisted abs-states:" + (numOfVisitedStates==null ? "not tracked" : "" + numOfVisitedStates) ;
-			z += "\ntop-goal solved:" + topGoalSolved ;
-			z += "\ninv-violation detected:" + invViolationDetected ;
-			return z ;
-		}
-	}
-	
 	/**
-	 * Run the algorithm, report the result at the end. Saving it to a file
-	 * if configured to do so.
+	 * Create an instance of {@link BasicSearch}, already configured to target MD.
+	 * 
+	 * <p>This also deploys an instance of MD, connected to the algorithm. So, running
+	 * the algorithm will run it on that instance of MD.
+	 * 
+	 * <p>The hyper paramaters of the algorithm are left unconfigured, so you need
+	 * to set them accordingly.
 	 */
-	public Result1 runAlgorithm(String runId) throws Exception {
-		System.out.println(">> Start of run " + this.algName) ;
-		alg.runAlgorithm()  ;
-		Result1 R = new Result1() ;
-		R.algName = this.algName ;
-		R.runId = runId ;
-		R.usedTurn = alg.turn ;
-		R.numEpisodes = alg.totNumberOfEpisodes ;
-		R.runtime = alg.totalSearchBudget - alg.getRemainingSearchBudget() ;
-		R.topGoalSolved = alg.goalHasBeenAchieved() ;
-		// TODO:
-		// R.invViolationDetected = ....
-		System.out.println(">> End of run") ;
-		System.out.println(R.toString()) ;
-		//System.out.println(">>> Game status:" + state.gameStatus()) ;
-		if (saveRunData) {
-			String timestamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date());
-			String reportFile = runId + "_" + timestamp + ".txt" ;
-			Files.writeString(
-			        Path.of(runDataFolder, reportFile),
-			        R.toString() + "\n",
-			        CREATE, WRITE
-			    );
-			// saving data traces:
-			if (withInstrumenter) {
-				String tracefile = runId + "_" + timestamp + ".csv" ;
-			    tracefile = Paths.get(runDataFolder,tracefile).toString() ;
-			    alg.agent.getTestDataCollector().saveTestAgentScalarsTraceAsCSV(alg.agent.getId(),tracefile) ;
-			}
-		}
+	public BasicSearch mkBasicSearch(MiniDungeonConfig config) {
+		var alg = new BasicSearch() ;
+		basicConfigure(config,alg) ;
+		return alg ;
 		
-		return R ;
 	}
+	
+	
+	
+	
 	
 	
 }

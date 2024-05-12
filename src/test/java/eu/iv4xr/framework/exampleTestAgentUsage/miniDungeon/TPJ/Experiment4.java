@@ -5,17 +5,20 @@ import nl.uu.cs.aplib.utils.Pair;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
+
+import java.io.IOException;
+
 import static java.nio.file.StandardOpenOption.APPEND;
 
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
-
-import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.BasicSearchAlgForMD.Result1; 
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch; 
 
 /**
  * Comparison of a number of automated testing algorithms and programatic
@@ -23,7 +26,11 @@ import eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.BasicSearchAlgFo
  */
 public class Experiment4 {
 	
-	Pair[] MDconfigs = {
+	enum AlgorithmType {
+		RANDOM, Q, HIGH_RANDOM, HIGH_Q, HIGH_MCTS, PROGRAMMATIC
+	}
+	
+	Pair[] SmallDungeons_MDconfigs = {
 		new Pair<>(TPJconfigs.MDSmallconfig0(),"mini-1"),
 		new Pair<>(TPJconfigs.MDSmallconfig1(),"mini-2"),
 		new Pair<>(TPJconfigs.MDSmallconfig2(),"small-1"),
@@ -36,7 +43,38 @@ public class Experiment4 {
 	boolean supressLogging = true ;
 	boolean saveRunData = true ;
     String runDataFolder = "./tmp" ;
+    
+        
+    /**
+     * For keeping the results of a single algorithm run.
+     */
+    public static class Result1 {
+		public String algName ;
+		public String runId ;
+		public int runtime ;
+		public int usedTurn ;
+		public int numEpisodes ;
+		public Integer numOfVisitedStates = null ;
+		public boolean topGoalSolved ;
+		public boolean invViolationDetected ;
+		
+		@Override
+		public String toString() {
+			String z = "** Alg-name: " + algName ;
+			z += "\nRun " + runId ;
+			z += "\n#turn:" + usedTurn ;
+			z += "\n#episodes:" + numEpisodes ;
+			z += "\ntime:" + runtime ;
+			z += "\n#visisted abs-states:" + (numOfVisitedStates==null ? "not tracked" : "" + numOfVisitedStates) ;
+			z += "\ntop-goal solved:" + topGoalSolved ;
+			z += "\ninv-violation detected:" + invViolationDetected ;
+			return z ;
+		}
+	}
 	
+    /**
+     * Averaged results of multiple algorithm runs.
+     */
 	public static class ResultMultiRuns {
 		public String algName ;
 		public String benchMarkName ;
@@ -100,31 +138,65 @@ public class Experiment4 {
 	
 	@Test
 	void test_highrandom() throws Exception {
+		runOneAlgorithm(AlgorithmType.HIGH_RANDOM,
+				SmallDungeons_MDconfigs,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					BasicSearch alg = algFactory.mkBasicSearch(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
+					alg.maxDepth = 9 ;
+					alg.maxNumberOfEpisodes = 10 ;
+					alg.delayBetweenAgentUpateCycles = 10 ;
+					return alg ;
+				}
+		) ;
+	}
+
+	@SuppressWarnings("rawtypes")
+	void runOneAlgorithm(AlgorithmType algTy,
+			Pair[] targetLevels, // pairs of MD-config, and a string-name for it
+			Function<MiniDungeonConfig,BasicSearch> algConstructor
+			) 	
+		throws Exception 
+	{
 		
 		String generalReportFile = "exper4_results.txt" ;
-		
-		for (int i=0; i < MDconfigs.length ; i++) {
-			var config = (MiniDungeonConfig) MDconfigs[i].fst ;
-			var bmName = (String) MDconfigs[i].snd ;
+		fileAppendWriteLn(runDataFolder, generalReportFile,"=======");
+		String algName = algTy.toString() ;
+		for (int i=0; i < targetLevels.length ; i++) {
+			var config = (MiniDungeonConfig) targetLevels[i].fst ;
+			var bmName = (String) targetLevels[i].snd ;
 			var R = new ResultMultiRuns() ;
+			R.algName = algName ;
 			R.benchMarkName = bmName ;
 			List<Result1> results = new LinkedList<>() ;
 			for (int runNr=0; runNr<numberOfRepeatedRuns; runNr++) {
-				var alg = new BasicSearchAlgForMD() ;
-				if (runNr==0) {
-					R.algName = alg.algName ;
-				}
-				alg.withGraphics = withGraphics ;
-				alg.supressLogging = supressLogging ;
-				alg.saveRunData = saveRunData ;
-				alg.saveRunData = false ;
-				alg.runDataFolder = runDataFolder ;
-				alg.basicConfigure(config);
-				alg.alg.totalSearchBudget = 60000 ;
-				alg.alg.maxDepth = 9 ;
-				alg.alg.maxNumberOfEpisodes = 10 ;
-				alg.alg.delayBetweenAgentUpateCycles = 10 ;
-				var result1 = alg.runAlgorithm("" + bmName + "_" + runNr) ;
+				var algFactory = new TestAlgorithmsFactory() ;
+				algFactory.withGraphics = withGraphics ;
+				algFactory.supressLogging = supressLogging ;
+				BasicSearch alg = algFactory.mkBasicSearch(config) ;
+				// hyper parameters:
+				alg.totalSearchBudget = 60000 ;
+				alg.maxDepth = 9 ;
+				alg.maxNumberOfEpisodes = 10 ;
+				alg.delayBetweenAgentUpateCycles = 10 ;
+				
+				System.out.println(">> START of run " + algName) ;
+				alg.runAlgorithm()  ;
+				System.out.println(">> END of run " + algName) ;
+				Result1 result1 = new Result1() ;
+				result1.algName = algName ;
+				result1.runId = "" + runNr ;
+				result1.usedTurn = alg.turn ;
+				result1.numEpisodes = alg.totNumberOfEpisodes ;
+				result1.runtime = alg.totalSearchBudget - alg.getRemainingSearchBudget() ;
+				result1.topGoalSolved = alg.goalHasBeenAchieved() ;
+				// TODO:
+				// R.invViolationDetected = ....
+				
 				results.add(result1) ;
 			}
 			R.caculate(results);
@@ -133,19 +205,19 @@ public class Experiment4 {
 			// saving reports to files:
 			String reportFileDetailed = "exper4_" + bmName + "_" + R.algName + ".txt";
 			for (var r : results) {
-				Files.writeString(
-				        Path.of(runDataFolder, reportFileDetailed),
-				        "\n" + r.toString(),
-				        CREATE, APPEND
-				    );
+				fileAppendWriteLn(runDataFolder,reportFileDetailed,r.toString());
 			}
-			Files.writeString(
-			        Path.of(runDataFolder, generalReportFile),
-			        "\n" + R.toString(),
-			        CREATE, APPEND
-			    );
+			fileAppendWriteLn(runDataFolder, generalReportFile,R.toString());
 		}
 			
+	}
+	
+	void fileAppendWriteLn(String dir, String fname, String str) throws IOException {
+		Files.writeString(
+		        Path.of(dir, fname),
+		        str + "\n",
+		        CREATE, APPEND
+		    );
 	}
 
 }
