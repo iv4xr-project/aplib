@@ -5,6 +5,7 @@ import eu.iv4xr.framework.goalsAndTactics.BasicSearch;
 import static nl.uu.cs.aplib.AplibEDSL.action;
 import static nl.uu.cs.aplib.AplibEDSL.goal;
 
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
@@ -13,10 +14,12 @@ import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.TestDataCollector;
 import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 
@@ -30,6 +33,8 @@ public class TestAlgorithmsFactory {
 	public boolean withGraphics = true ;
 	public boolean withSound = false ;
 	public boolean supressLogging = true ;
+	// in ms:
+	int delayBetweenAgentUpateCycles = 10 ;
 	//public boolean verbosePrint = false ;
 	//public boolean stopAfterAllAgentsDie = true ;
     //public boolean inTwoPlayersSetup_StopWhenAgent1GoalIsConcluded = true ;
@@ -39,12 +44,33 @@ public class TestAlgorithmsFactory {
 	// not used  --> ?
 	boolean includeWallBug = false ;
 	
+	
+	/**
+	 * An extension of TestAgent that holds few additional information. 
+	 * Among other thing, a reference to MD-invariants to facilitate faster
+	 * violation check.
+	 */
+	public static class XTestAgent extends TestAgent {
+		
+		public MD_invs MDinvs_ ;
+		boolean verbosePrint = false ;
+		
+		public  XTestAgent(String agentName, String role) {
+			super(agentName,role) ;
+ 		}
+		
+		boolean invViolationDetected() {
+			return MDinvs_.bugFlagged ;
+		}
+	}
+	
+	
 	/**
 	 * Instantiate and deploy MD, and construct a TestAgent. Will only use Frodo.
 	 * This will also configure the test agent to have a data-collector and to
 	 * attach MD-invariants for checking.
 	 */
-	TestAgent constructAgent(MiniDungeonConfig config) throws Exception {
+	XTestAgent constructAgent(MiniDungeonConfig config) throws Exception {
 		// setting sound on/off, graphics on/off etc:
 		DungeonApp app = new DungeonApp(config);
 		app.soundOn = withSound ;
@@ -56,7 +82,7 @@ public class TestAlgorithmsFactory {
 		MyAgentEnv env = new MyAgentEnv(app);
 		MyAgentState state = new MyAgentState();
 		
-		var agentFrodo = new TestAgent("Frodo", "tester");
+		var agentFrodo = new XTestAgent("Frodo", "tester");
 		agentFrodo.attachState(state).attachEnvironment(env) ;
 		
 		// should be after create the agent, else the constructor sets the visibility again
@@ -70,6 +96,7 @@ public class TestAlgorithmsFactory {
 				MDTestAgentRunner.stateInstrumenter((MyAgentState) S)) ;
 		}
 		MD_invs invs1 = new MD_invs() ;
+		agentFrodo.MDinvs_ = invs1 ;
 		agentFrodo . addInv(invs1.allInvs) 
 			       . resetLTLs() ;
 		
@@ -167,6 +194,8 @@ public class TestAlgorithmsFactory {
 			state.multiLayerNav.wipeOutMemory(); 
 			return null ;
 		} ;
+		
+		alg.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
 	}
 	
 	/**
@@ -185,8 +214,70 @@ public class TestAlgorithmsFactory {
 		
 	}
 	
+	public ProgrammaticAlgorithm mkProgrammaticAlg(MiniDungeonConfig config) {
+		var alg = new ProgrammaticAlgorithm() ;
+		basicConfigure(config,alg) ;
+		return alg ;	
+	}
 	
 	
+	public static class ProgrammaticAlgorithm extends BasicSearch {
+		
+	
+		@Override
+		public AlgorithmResult runAlgorithm() throws Exception {
+			
+			XTestAgent agent = (XTestAgent) this.agentConstructor.apply(null) ;
+			var env_ = (MyAgentEnv) agent.env() ;
+			var config = env_.app.dungeon.config ;
+			var G = new ShrineCleanTester().cleanseAllShrines(agent, config.numberOfMaze) ;
+			agent.setGoal(G) ;
+			var state = (MyAgentState) agent.state() ;
+			turn = 0 ;
+			long time0 = System.currentTimeMillis() ;
+			long timeUsed = 0 ;
+			while(G.getStatus().inProgress()) {
+				agent.update();
+				
+				if (agent.verbosePrint) {
+					System.out.println("** [" + turn + "/" + state.val("aux","turn") + "]") ;
+					System.out.print("   agent1 " + agent.getId() 
+						+ " @" + Utils.toTile(state.worldmodel.position) 
+					    + ", maze:" + state.val("maze")
+					    + ", hp:" + state.val("hp")
+					    + ", score:" + state.val("score")
+					    + ", goal-status:" + G.getStatus()) ;
+					if (state.env().getLastOperation() != null) {
+						System.out.println(", action:" + state.env().getLastOperation().command) ;
+					}
+					else System.out.println("") ;
+				}
+				// delay to slow it a bit for displaying:
+				Thread.sleep(this.delayBetweenAgentUpateCycles); 
+				if (!state.agentIsAlive()) {
+					break ;
+				}
+				timeUsed = System.currentTimeMillis() - time0 ;
+				if (timeUsed > this.totalSearchBudget)
+					break ;
+				turn++ ;
+			}	
+			totNumberOfEpisodes = 1 ;
+			remainingSearchBudget = totalSearchBudget - (int) timeUsed ;
+			if (topGoalPredicate.test(state)) {
+				markThatGoalIsAchieved(new LinkedList<String>()) ;
+			}
+			AlgorithmResult R = new AlgorithmResult() ;
+			R.algName = "Programmatic" ;
+			R.totEpisodes = totNumberOfEpisodes ;
+			R.usedTurns = turn ;
+			R.usedBudget = (int) timeUsed ;
+			R.goalAchieved = this.goalHasBeenAchieved() ;
+			
+			return R ;	
+		}
+	
+	}
 	
 	
 	

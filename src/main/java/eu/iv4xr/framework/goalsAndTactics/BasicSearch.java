@@ -66,7 +66,7 @@ public class BasicSearch {
 	/**
 	 * Remaining total-search budget in ms.
 	 */
-	int remainingSearchBudget;
+	protected int remainingSearchBudget;
 
 	/**
 	 * If the search has a concept of "depth", this variable specifies a maximum
@@ -157,7 +157,7 @@ public class BasicSearch {
 		return goalHasBeenAchieved ;
 	}
 	
-	void markThatGoalIsAchieved(List<String> trace) {
+	protected void markThatGoalIsAchieved(List<String> trace) {
 		goalHasBeenAchieved = true ;
 		if (winningplay == null || trace.size() < winningplay.size()) {
 			winningplay = trace ;
@@ -472,11 +472,11 @@ public class BasicSearch {
 	public static class AlgorithmResult {
 		public String algName ;
 		public boolean goalAchieved ;
-		int usedBudget ;
-		int usedTurns  ;
-		int totEpisodes ;
-		List<String> winningplay ;
-		List<Float> episodesValues ;
+		public int usedBudget ;
+		public int usedTurns  ;
+		public int totEpisodes ;
+		public List<String> winningplay ;
+		public List<Float> episodesValues ;
 		
 		public String showShort() {
 			String z = "" + algName 

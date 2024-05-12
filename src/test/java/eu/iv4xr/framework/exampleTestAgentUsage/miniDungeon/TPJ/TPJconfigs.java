@@ -35,8 +35,9 @@ public class TPJconfigs {
 		return config ;
 	}
 	
-	public static MiniDungeonConfig MDSmallconfig0() {
+	public static MiniDungeonConfig Mini1() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "Mini1" ;
 		config.numberOfHealPots = 2 ;
 		config.worldSize = 16 ;
 		config.numberOfCorridors = 3 ;
@@ -49,8 +50,9 @@ public class TPJconfigs {
 		return config ;
 	}
 	
-	public static MiniDungeonConfig MDSmallconfig1() {
+	public static MiniDungeonConfig Mini2() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "Mini2" ;
 		config.numberOfHealPots = 2 ;
 		config.worldSize = 16 ;
 		config.numberOfCorridors = 3 ;
@@ -63,8 +65,9 @@ public class TPJconfigs {
 		return config ;
 	}
 	
-	public static MiniDungeonConfig MDSmallconfig2() {
+	public static MiniDungeonConfig Small1() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "Small1" ;
 		config.numberOfHealPots = 2 ;
 		config.worldSize = 16 ;
 		config.numberOfCorridors = 3 ;
@@ -77,8 +80,9 @@ public class TPJconfigs {
 		return config ;
 	}
 	
-	public static MiniDungeonConfig MDSmallconfig3() {
+	public static MiniDungeonConfig Small2() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "Small2" ;
 		config.numberOfHealPots = 2 ;
 		config.worldSize = 16 ;
 		config.numberOfCorridors = 3 ;

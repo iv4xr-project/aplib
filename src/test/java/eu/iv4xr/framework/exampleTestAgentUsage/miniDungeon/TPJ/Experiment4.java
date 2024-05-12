@@ -1,6 +1,7 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
+import static eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.TPJconfigs.* ;
 import nl.uu.cs.aplib.utils.Pair;
 
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -18,7 +19,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
-import eu.iv4xr.framework.goalsAndTactics.BasicSearch; 
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch;
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch.AlgorithmResult; 
 
 /**
  * Comparison of a number of automated testing algorithms and programatic
@@ -30,17 +32,19 @@ public class Experiment4 {
 		RANDOM, Q, HIGH_RANDOM, HIGH_Q, HIGH_MCTS, PROGRAMMATIC
 	}
 	
-	Pair[] SmallDungeons_MDconfigs = {
-		new Pair<>(TPJconfigs.MDSmallconfig0(),"mini-1"),
-		new Pair<>(TPJconfigs.MDSmallconfig1(),"mini-2"),
-		new Pair<>(TPJconfigs.MDSmallconfig2(),"small-1"),
-		new Pair<>(TPJconfigs.MDSmallconfig3(),"small-2"),
+	MiniDungeonConfig[] smallDungeons = {
+		Mini1(),
+		Mini2(),
+		Small1(),
+		Small2()
 	} ;
 		
 	int numberOfRepeatedRuns = 3 ;
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = true ;
+	// in ms.
+	int delayBetweenAgentUpateCycles = 10 ;
 	boolean saveRunData = true ;
     String runDataFolder = "./tmp" ;
     
@@ -136,20 +140,37 @@ public class Experiment4 {
 		}
 	}
 	
-	@Test
+	//@Test
 	void test_highrandom() throws Exception {
 		runOneAlgorithm(AlgorithmType.HIGH_RANDOM,
-				SmallDungeons_MDconfigs,
+				smallDungeons,
 				config -> {
 					var algFactory = new TestAlgorithmsFactory() ;
 					algFactory.withGraphics = withGraphics ;
 					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
 					BasicSearch alg = algFactory.mkBasicSearch(config) ;
 					// hyper parameters:
 					alg.totalSearchBudget = 60000 ;
 					alg.maxDepth = 9 ;
 					alg.maxNumberOfEpisodes = 10 ;
-					alg.delayBetweenAgentUpateCycles = 10 ;
+					return alg ;
+				}
+		) ;
+	}
+	
+	@Test
+	void test_programmaticPlay() throws Exception {
+		runOneAlgorithm(AlgorithmType.PROGRAMMATIC,
+				smallDungeons,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
+					BasicSearch alg = algFactory.mkProgrammaticAlg(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
 					return alg ;
 				}
 		) ;
@@ -157,7 +178,7 @@ public class Experiment4 {
 
 	@SuppressWarnings("rawtypes")
 	void runOneAlgorithm(AlgorithmType algTy,
-			Pair[] targetLevels, // pairs of MD-config, and a string-name for it
+			MiniDungeonConfig[] targetDungeons, 
 			Function<MiniDungeonConfig,BasicSearch> algConstructor
 			) 	
 		throws Exception 
@@ -166,37 +187,27 @@ public class Experiment4 {
 		String generalReportFile = "exper4_results.txt" ;
 		fileAppendWriteLn(runDataFolder, generalReportFile,"=======");
 		String algName = algTy.toString() ;
-		for (int i=0; i < targetLevels.length ; i++) {
-			var config = (MiniDungeonConfig) targetLevels[i].fst ;
-			var bmName = (String) targetLevels[i].snd ;
+		for (int i=0; i < targetDungeons.length ; i++) {
+			var config = (MiniDungeonConfig) targetDungeons[i] ;
+			var bmName = config.configname ;
 			var R = new ResultMultiRuns() ;
 			R.algName = algName ;
 			R.benchMarkName = bmName ;
 			List<Result1> results = new LinkedList<>() ;
 			for (int runNr=0; runNr<numberOfRepeatedRuns; runNr++) {
-				var algFactory = new TestAlgorithmsFactory() ;
-				algFactory.withGraphics = withGraphics ;
-				algFactory.supressLogging = supressLogging ;
-				BasicSearch alg = algFactory.mkBasicSearch(config) ;
-				// hyper parameters:
-				alg.totalSearchBudget = 60000 ;
-				alg.maxDepth = 9 ;
-				alg.maxNumberOfEpisodes = 10 ;
-				alg.delayBetweenAgentUpateCycles = 10 ;
-				
+				BasicSearch alg = algConstructor.apply(config) ;
 				System.out.println(">> START of run " + algName) ;
-				alg.runAlgorithm()  ;
+				AlgorithmResult V = alg.runAlgorithm()  ;
 				System.out.println(">> END of run " + algName) ;
 				Result1 result1 = new Result1() ;
 				result1.algName = algName ;
 				result1.runId = "" + runNr ;
-				result1.usedTurn = alg.turn ;
-				result1.numEpisodes = alg.totNumberOfEpisodes ;
-				result1.runtime = alg.totalSearchBudget - alg.getRemainingSearchBudget() ;
-				result1.topGoalSolved = alg.goalHasBeenAchieved() ;
+				result1.usedTurn = V.usedTurns ;
+				result1.numEpisodes = V.totEpisodes ;
+				result1.runtime = V.usedBudget ;
+				result1.topGoalSolved = V.goalAchieved ;
 				// TODO:
 				// R.invViolationDetected = ....
-				
 				results.add(result1) ;
 			}
 			R.caculate(results);
