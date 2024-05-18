@@ -20,7 +20,12 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import eu.iv4xr.framework.goalsAndTactics.BasicSearch;
-import eu.iv4xr.framework.goalsAndTactics.BasicSearch.AlgorithmResult; 
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch.AlgorithmResult;
+import eu.iv4xr.framework.goalsAndTactics.XEvolutionary;
+import eu.iv4xr.framework.goalsAndTactics.XMCTS;
+import eu.iv4xr.framework.goalsAndTactics.XQalg; 
+import eu.iv4xr.framework.goalsAndTactics.AQalg; 
+
 
 /**
  * Comparison of a number of automated testing algorithms and programatic
@@ -29,7 +34,7 @@ import eu.iv4xr.framework.goalsAndTactics.BasicSearch.AlgorithmResult;
 public class Experiment4 {
 	
 	enum AlgorithmType {
-		RANDOM, Q, HIGH_RANDOM, HIGH_Q, HIGH_MCTS, PROGRAMMATIC
+		RANDOM, Q, HIGH_RANDOM, HIGH_Q, HIGH_MCTS, PROGRAMMATIC, HIGH_EVO
 	}
 	
 	MiniDungeonConfig[] smallDungeons = {
@@ -176,7 +181,7 @@ public class Experiment4 {
 		) ;
 	}
 	
-	@Test
+	//@Test
 	void test_lowrandom() throws Exception {
 		runOneAlgorithm(AlgorithmType.RANDOM,
 				smallDungeons,
@@ -192,7 +197,106 @@ public class Experiment4 {
 				}
 		) ;
 	}
+	
+	//@Test
+	void test_Evo() throws Exception {
+		runOneAlgorithm(AlgorithmType.HIGH_EVO,
+				smallDungeons,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
+					XEvolutionary alg = algFactory.mkEvoSearch(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
+					alg.maxDepth = 9 ;
+					//alg.maxNumberOfEpisodes = 40 ;
+					alg.explorationBudget = 4000 ;
+					alg.budget_per_task = 2000 ;
+					alg.maxPopulationSize = 8 ;
+					alg.numberOfElitesToKeepDuringSelection = 4 ;
+					alg.insertionProbability = 0.9f ;
+					alg.onlyExtendWithNewGene = false ;
+					//alg.extendAtRandomInsertionPoint = false ;
+					return alg ;
+				}
+		) ;
+	}
+	
+	//@Test
+	void test_MCTS() throws Exception {
+		runOneAlgorithm(AlgorithmType.HIGH_MCTS,
+				smallDungeons,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
+					XMCTS alg = algFactory.mkMCTS(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
+					alg.maxDepth = 9 ;
+					//alg.maxNumberOfEpisodes = 100 ;
+					alg.explorationBudget = 4000 ;
+					alg.budget_per_task = 2000 ;					
+					return alg ;
+				}
+		) ;
+	}
+	
+	//@Test
+	void test_highQ() throws Exception {
+		runOneAlgorithm(AlgorithmType.HIGH_Q,
+				smallDungeons,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
+					XQalg alg = algFactory.mkQ(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
+					//not setting exploreG --> surpress exploration:
+					alg.exploredG = null ;
+					alg.maxDepth = 12 ;
+					//alg.maxNumberOfEpisodes = 40 ;
+					alg.explorationBudget = 4000 ;
+					alg.budget_per_task = 2000 ;
+					//alg.exploreProbability = 0.15f ;
+					alg.enableBackPropagationOfReward = 5 ; 				
+					return alg ;
+				}
+		) ;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Test
+	void test_lowQ() throws Exception {
+	runOneAlgorithm(AlgorithmType.Q,
+				smallDungeons,
+				config -> {
+					var algFactory = new TestAlgorithmsFactory() ;
+					algFactory.withGraphics = withGraphics ;
+					algFactory.supressLogging = supressLogging ;
+					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
+					AQalg alg = algFactory.mkActionLevelQ(config) ;
+					// hyper parameters:
+					alg.totalSearchBudget = 60000 ;
+					alg.maxDepth = 600 ;
+					//alg.maxNumberOfEpisodes = 40 ;
+					alg.enableBackPropagationOfReward = 10 ; 				
+					return alg ;
+				}
+		) ;
+	}
 
+	/**
+	 * A runner to run an test algorithm (an instance of {@link BasicSearch}) to test MD.
+	 * @param algTy
+	 * @param targetDungeons A set of configs to create MD levels.
+	 * @param algConstructor A constructor of {@link BasicSearch}.
+	 */
 	@SuppressWarnings("rawtypes")
 	void runOneAlgorithm(AlgorithmType algTy,
 			MiniDungeonConfig[] targetDungeons, 
@@ -226,6 +330,12 @@ public class Experiment4 {
 				// TODO:
 				// R.invViolationDetected = ....
 				results.add(result1) ;
+				if (alg instanceof XQalg) {
+					result1.numOfVisitedStates = ((XQalg) alg).qtable.size() ;
+				}
+				if (alg instanceof AQalg) {
+					result1.numOfVisitedStates = ((AQalg) alg).qtable.size() ;
+				}
 			}
 			R.caculate(results);
 			System.out.println(R.toString()) ;

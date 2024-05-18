@@ -132,9 +132,10 @@ public class Test_Evo {
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
 				return -100f ;
-			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
-					.properties.get("score") ;
-			return (float) frodo_score ;
+			var frodo =state.worldmodel.elements.get("Frodo") ;
+			int mazeNr = Utils.mazeId(frodo) ;
+			var value = (Integer) frodo.properties.get("score") + 1000*mazeNr ;
+			return (float) value ;
 		} ;
 		
 		alg.wipeoutMemory = agent -> {
