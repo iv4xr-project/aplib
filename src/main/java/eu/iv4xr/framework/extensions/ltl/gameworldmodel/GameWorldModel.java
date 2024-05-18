@@ -18,6 +18,7 @@ import com.google.gson.JsonIOException;
 import eu.iv4xr.framework.extensions.ltl.IExplorableState;
 import eu.iv4xr.framework.extensions.ltl.ITargetModel;
 import eu.iv4xr.framework.extensions.ltl.ITransition;
+import eu.iv4xr.framework.extensions.ltl.BasicModelChecker.Path;
 import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GWTransition.GWTransitionType;
 import nl.uu.cs.aplib.utils.Pair;
 
@@ -66,7 +67,21 @@ public class GameWorldModel implements ITargetModel {
 	public GWState initialState ;
 	
 	public String name = "" ;
+	
+	/**
+	 * If set to true, then every target can only be interacted once during
+	 * any execution path.
+	 */
+	public boolean forbidInteractingWithTheSameTargetMultipleTimes = false ;
 
+	/**
+	 * When true, and the current-state indicates gameOver is true, then
+	 * no further transition is possible. See also {@link GWState#gameOver}.
+	 * 
+	 * <p>Default is false.
+	 */
+	public boolean surpressTransitionWhenGaveOver = false;
+	
 	/**
 	 * If true, then the model supports the transition type "USE". If false, then
 	 * the model does not support the transition type "USE".
@@ -89,6 +104,13 @@ public class GameWorldModel implements ITargetModel {
 	public Set<GWZone> zones = new HashSet<>() ;
 	public Map<String,Set<String>> objectlinks = new HashMap<>() ;	
 	public Set<String> blockers = new HashSet<>();
+	
+	/**
+	 * When set to true, {@link #execute(ITransition)} will not check if the transition
+	 * is actually allowed. Default is false. Only turn this on if we are sure
+	 * that the transition is possible.
+	 */
+	public boolean unsafelyIgnoreTransitionCondition = false ;
 	
 	GameWorldModel() { } 
 	
@@ -198,6 +220,8 @@ public class GameWorldModel implements ITargetModel {
 			// forbid travel to the current-position ... pointless
 			return false ;
 		}
+		if (surpressTransitionWhenGaveOver && state.gameOver)
+			return false ;
 		//System.out.println(">>> t=" + destinationId) ;
 		GWObject t = state.objects.get(destinationId) ;
 		if (t.destroyed) {
@@ -249,7 +273,7 @@ public class GameWorldModel implements ITargetModel {
 	}
 	
 	public void travelTo(String destinationId) {
-		if (canTravelTo(destinationId)) {
+		if (unsafelyIgnoreTransitionCondition || canTravelTo(destinationId)) {
 			// travel is possible:
 			GWState newState =(GWState) getCurrentState().clone() ;
 			newState.currentAgentLocation = destinationId ;
@@ -268,9 +292,11 @@ public class GameWorldModel implements ITargetModel {
 	 * state S to S', which would then yield the next state of the model.
 	 */
 	public BiFunction<String,Set<String>,Function<GWState,Void>> alpha ;
+	
+	public BiFunction<String,GWState,Boolean> additionalInteractionGuard ;
 
 	public Predicate<GWState> useCondition	 ;
-	public BiFunction<GWState, String,Void> use_alpha ;
+	public Function<GWState,Void> use_alpha ;
 	
 	public boolean StressingMode = false ;
 	
@@ -280,10 +306,27 @@ public class GameWorldModel implements ITargetModel {
 			// we can only interact with the object at the agent's current location:
 			return false ;
 		}
+		if (surpressTransitionWhenGaveOver && state.gameOver)
+			return false ;
 		//System.out.println(">>>>") ;
 		GWObject target = state.objects.get(targetId) ;
 		if (target.destroyed) 
 			return false ;
+		// if configure to do so, this disallows interacting with the same target twice:
+		if (forbidInteractingWithTheSameTargetMultipleTimes) {
+			for (var pastStep : history) {
+				GWTransition tr = pastStep.snd ;
+				if (tr != null && tr.type == GWTransitionType.INTERACT && tr.target.equals(targetId)) {
+					return false ;
+				}
+			}
+		}
+		if (additionalInteractionGuard != null && ! additionalInteractionGuard.apply(targetId,state)) {
+			// if we have an additional interaction guard and it is false, then interaction
+			// is not possible:
+			return false ;
+		}
+		//
 		GWTransition previousTransition = history.get(0).snd ;
 		if (previousTransition == null || previousTransition.type == GWTransitionType.TRAVEL)
 			return true ;
@@ -297,7 +340,7 @@ public class GameWorldModel implements ITargetModel {
 	}
 	
 	public void interact(String targetId) {
-		if (canInteract(targetId)) {
+		if (unsafelyIgnoreTransitionCondition || canInteract(targetId)) {
 			GWState newState = (GWState) getCurrentState().clone() ;
 			GWObject target = newState.objects.get(targetId) ;
 			alpha.apply(targetId, objectlinks.get(targetId)).apply(newState) ;
@@ -318,17 +361,21 @@ public class GameWorldModel implements ITargetModel {
 		throw new IllegalArgumentException("Interact with " +  targetId + " is not allowed.") ;
 	}
 
+	
 	public boolean canUse(String targetId) {
 		if (useCondition == null) {
 			return false ;
 		}
+		GWState state = getCurrentState() ;
+		if (surpressTransitionWhenGaveOver && state.gameOver)
+			return false ;
 		return useCondition.test(getCurrentState()) ;
 	}
 
 	public void use(String targetId) {
-		if(canUse(targetId)) {
+		if(unsafelyIgnoreTransitionCondition || canUse(targetId)) {
 			GWState newState = (GWState) getCurrentState().clone() ;
-			use_alpha.apply(newState,targetId) ;
+			use_alpha.apply(newState) ;
 			GWTransition tr = new GWTransition(GWTransitionType.USE, targetId) ;
 			history.add(0,new Pair<GWState,GWTransition>(newState,tr)) ;
 		}
@@ -422,6 +469,41 @@ public class GameWorldModel implements ITargetModel {
 		}
 		
 	}
+	
+	/**
+	 * Execute this sequence of transitions. The result is the
+	 * same sequence, but accompanied by the resulting states.
+	 */
+	public Path<IExplorableState> execute(List<GWTransition> transitions) {
+		this.reset() ;
+		Path<IExplorableState> sigma = new Path<>() ;
+		sigma.addInitialState(getCurrentState()) ;
+		for (GWTransition step : transitions) {
+			//System.out.println(">>>" + step) ;
+			execute(step);
+			sigma.addTransition(step,getCurrentState());
+		}
+		return sigma ;
+	}
+	
+	/**
+	 * Execute this sequence of transitions. However, this will not
+	 * check the transitions guards. Only use this when sure that
+	 * the transitions are valid/can be taken.
+	 * 
+	 * <p> The result is the
+	 * same sequence, but accompanied by the resulting states.
+	 */
+	public Path<IExplorableState> unsafeExecute(List<GWTransition> transitions) {
+		try {
+			unsafelyIgnoreTransitionCondition = true ;
+			return execute(transitions) ;
+		}
+		finally {
+			unsafelyIgnoreTransitionCondition = false ;
+		}
+	}
+	
 	
 	@Override
 	public String toString() {

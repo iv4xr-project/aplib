@@ -10,6 +10,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Provide a model learner for the MiniDungeon game to produce
+ * a model in the form of an instance of {@link GameWorldModel}.
+ * 
+ * This learner can be attached to a test-agent.
+ */
 public class ModelLearner {
 	
 	String SCROLL = "" + EntityType.SCROLL ;

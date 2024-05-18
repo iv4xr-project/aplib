@@ -18,7 +18,8 @@ import nl.uu.cs.aplib.utils.Pair;
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 
 /**
- * Provides the semantic-function (alpha) for interactions, to be used to construct a model
+ * Provides the semantic-function (alpha) for interactions, and 
+ * interaction-guard function, to be used to construct a model
  * for the MiniDungeon game using {@link GameWorldModel}.
  */
 public class MiniDungeonModel {
@@ -106,6 +107,9 @@ public class MiniDungeonModel {
 				if (isMoonShrine(interacted)) {
 					interacted.properties.put(GameWorldModel.IS_OPEN_NAME,true) ;
 				}
+				if (isImmortalShrine(interacted)) {
+					S.gameOver = true ;
+				}
 			}
 			else {
 				//System.out.println(">>> shrine " + i + " attempted! with scroll " + bag.size() + ", " + bag.get(0)) ;
@@ -114,23 +118,20 @@ public class MiniDungeonModel {
 		}
 	}
 	
-	
-	public static void alphaUseFunction(String mainplayer, String i, GWState S) {
+	public static boolean interactionGuard(String mainplayer, String i, GWState S) {
 		GWObject interacted = S.objects.get(i) ;
-		if (interacted.type.equals("HEALPOT") || interacted.type.equals("RAGEPOT")) {
+		if (! interacted.type.equals("SCROLL") &&  ! interacted.type.equals("SHRINE"))
+			return false ;
+		if (interacted.type.equals("SCROLL")) {
 			GWObject P = S.objects.get(mainplayer) ;
 			int N = bagContent(P).size() ;
-			//System.out.println(">>> alpla interact scroll " + i) ;
 			// conservatively reject if the player already has an item:
-			if (N>=1) return ;
-			// else the scroll will be picked:
-			interacted.destroyed = true ;
-			putInBag(P,interacted.id) ;
-			var bag = bagContent(P) ;
-			//System.out.println(">>> alpla interact scroll " + i) ;
-			//System.out.println(">>> frodo bag: " + P.properties.get("bagslot1") + ", # in bags:" + bag.size()) ;
-			return ;
+			return N==0 ;
 		}
+		if (isMoonShrine(interacted) || isImmortalShrine(interacted)) {
+			return (Boolean) interacted.properties.get("cleansed") == false ;
+		}
+		return true ;
 	}
 	
 	static boolean isShrineId(String id) {
@@ -166,7 +167,10 @@ public class MiniDungeonModel {
 			}
 			else {
 				// else it is a travel
-				
+				// ignore travel to dummy and start states:
+				if (tr.target.startsWith("SOMEWHERE") || tr.target.startsWith("START")) {
+					continue ;
+				}
 				// special case when the travel is a teleport-step:
 				if (previousState != null
 					&& isShrineId(tr.target)

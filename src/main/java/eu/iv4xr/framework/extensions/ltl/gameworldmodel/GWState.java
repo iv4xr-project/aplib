@@ -28,6 +28,12 @@ public class GWState implements IExplorableState {
 	 * object)
 	 */
 	public String currentAgentLocation ;
+	
+	/**
+	 * When true no further transitions may not be possible. See
+	 * {@link GameWorldModel#surpressTransitionWhenGaveOver}.
+	 */
+	public boolean gameOver = false ;
 
 	private Integer hash = null ;
 	
@@ -54,6 +60,8 @@ public class GWState implements IExplorableState {
 	public String showState() {
 		StringBuffer z =  new StringBuffer() ;
 		z.append("Cur.location = " + currentAgentLocation) ;
+		if (this.gameOver)
+			z.append(", the game has ended.") ;
 		z.append("\nObjects: ====") ;
 		for (var o : objects.values()) {
 			z.append("\n") ;
@@ -71,6 +79,7 @@ public class GWState implements IExplorableState {
 	public IExplorableState clone() {
 		GWState copy = new GWState() ;
 		copy.currentAgentLocation = this.currentAgentLocation ;
+		copy.gameOver = this.gameOver ;
 		for (var e : objects.values()) {
 			try {
 				copy.objects.put(e.id, (GWObject) e.clone()) ;
@@ -85,7 +94,7 @@ public class GWState implements IExplorableState {
 	@Override
     public int hashCode() {
 		if (hash == null) {
-			hash = Objects.hash(currentAgentLocation, objects);
+			hash = Objects.hash(currentAgentLocation, gameOver, objects);
 		}
 		return hash;
     }
@@ -95,6 +104,8 @@ public class GWState implements IExplorableState {
 		if (!(o instanceof GWState)) return false ;
 		GWState st2 = (GWState) o ;
 		if (! this.currentAgentLocation.equals(st2.currentAgentLocation))
+			return false ;
+		if (this.gameOver != st2.gameOver)
 			return false ;
 		if (this.objects.keySet().size() != st2.objects.keySet().size())
 			return false ;

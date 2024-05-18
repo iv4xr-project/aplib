@@ -85,6 +85,13 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      * been "seen", for the purpose of memory-based navigation.
      */
     public ArrayList<Boolean> seenVertices;
+    
+    /**
+     * If notFrontier.get(i) is true, it means that vertex i has been seen and is NOT
+     * a frontier vertex anymore.
+     * If it is false, then i could be a frontier.
+     */
+    public Boolean[] notFrontier ;
 
     /**
      * This maps the Faces to their corresponding center-points. The center-point is
@@ -120,6 +127,16 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
      * threshold will have a center-point added as an extra navigation node.
      */
     float faceAreaThresholdToAddCenterNode;
+    
+    /**
+     * A flag to indicate whether or not the world has "multi-floor". That is, there
+     * are reachable nodes that are at different altitudes. If this is NOT the case,
+     * turning this off might optimize certain parts of pathfinding, e.g. the exploration
+     * part.
+     * 
+     * <p>Default: true.
+     */
+    public boolean multifloor = true ;
 
     Pathfinder<Integer> pathfinder;
 
@@ -231,8 +248,11 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
     public void wipeOutMemory() {
         seenVertices.clear();
         int N = vertices.size();
+        if (notFrontier == null || notFrontier.length != N) 
+        	notFrontier = new Boolean[N] ;
         for (int k = 0; k < N; k++) {
             seenVertices.add(false);
+            notFrontier[k] = false ;
         }
     }
 
@@ -470,6 +490,9 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         // System.out.println("** goal-node: " + goalNode) ;
         return findPath(startNode, goalNode);
     }
+    
+    
+   
 
     /**
      * This returns the set of frontier-vertices. A vertex is a frontier vertex if
@@ -488,14 +511,25 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
         }
         int N = vertices.size();
         for (int v = 0; v < N; v++) {
-            Vec3 vloc = vertices.get(v);
+        	if (notFrontier[v]) // v is certainly not a frontier!
+        		continue ;
             if (seenVertices.get(v)) {
+                Vec3 vloc = vertices.get(v);
                 for (Integer z : edges.neighbours(v)) {
                     if (!seenVertices.get(z) && !isBlocked(vloc, vertices.get(z))) {
                         frontiers.add(new Pair<Integer, Integer>(v, z));
                         break;
+                    }       
+                }
+                // add a second check to identify that v definitely is not a frontier anymore:
+                boolean surelyNotFrontier = true ;
+                for (Integer z : edges.neighbours(v)) {
+                    if (!seenVertices.get(z)) {
+                    	surelyNotFrontier = false ;
+                        break;
                     }
                 }
+                notFrontier[v] = surelyNotFrontier ;
             }
         }
         return frontiers;
@@ -561,15 +595,40 @@ public class SurfaceNavGraph extends SimpleNavGraph implements XPathfinder<Integ
     public List<Integer> explore(Integer startVertex, Integer heuristicVertex) {
 
         var frontiers = getFrontierVertices();
-        
+                
         if (frontiers.isEmpty())
             return null;
         // sort the frontiers ascendingly, by their geometric distance to the
         // start-vertex:
-        Vec3 startLocation = vertices.get(startVertex);
+        Vec3 startLocation     = vertices.get(startVertex);
         Vec3 heuristicLocation = vertices.get(heuristicVertex);
-        frontiers.sort((p1, p2) -> Float.compare(Vec3.distSq(vertices.get(p1.fst), startLocation),
-                Vec3.distSq(vertices.get(p2.fst), heuristicLocation)));
+        
+        List<Pair<Integer,Integer>> atTheSameHeight = new LinkedList<>() ;
+        List<Pair<Integer,Integer>> atOtherHeight = new LinkedList<>() ;
+        
+        for (var p : frontiers) {
+        	 Vec3 pLoc = vertices.get(p.fst);
+        	 float delta = Math.abs(pLoc.y - startLocation.y) ;
+        	 if (delta <= 0.25) {
+        		 atTheSameHeight.add(p) ;
+        	 }
+        	 else {
+        		 if (multifloor)
+        			 atOtherHeight.add(p) ;
+        	 }
+        }
+        
+        atTheSameHeight.sort((p1, p2) -> Float.compare(
+            		Vec3.distSq(vertices.get(p1.fst),heuristicLocation),
+            		Vec3.distSq(vertices.get(p2.fst),heuristicLocation))) ;
+        
+        atOtherHeight.sort((p1, p2) -> Float.compare(
+        		Vec3.distSq(vertices.get(p1.fst),heuristicLocation),
+        		Vec3.distSq(vertices.get(p2.fst),heuristicLocation))) ;
+        
+        frontiers.clear();
+        frontiers.addAll(atTheSameHeight) ;
+        frontiers.addAll(atOtherHeight) ;
 
         for (var front : frontiers) {
             var path = findPath(startVertex, front.fst);

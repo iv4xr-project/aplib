@@ -93,7 +93,9 @@ public class CSVUtility {
     	
     	List<String[]> data = new LinkedList<>() ;
     	for(var row : content) {
-    		String[] cells = StringUtils.split(row,separator) ;
+    		// Using StringUtils.split --> wrong, as adjacent separators are treated as one!
+    		//String[] cells = StringUtils.split(row,separator) ;
+    		String[] cells = row.split(separator.toString()) ;
     		//for(int k=0; k<cells.length; k++) {
     		//	System.out.print("  " + cells[k]) ;
     		//}

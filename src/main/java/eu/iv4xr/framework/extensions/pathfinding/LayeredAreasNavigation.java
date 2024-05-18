@@ -78,9 +78,7 @@ public class LayeredAreasNavigation<
 	 *  @param isOpen indicate whether the added portal is set to be open or close.
 	 */
 	public void addNextArea(Nav area, NodeId portalLow, NodeId portalHigh, boolean isOpen) {
-		System.out.println("area size before; " + areas.size()  );
 		areas.add(area) ;
-		System.out.println("area size after; " + areas.size() );
 		if (areas.size() == 1) {
 			// this is the first area, so we don't do portals yet:
 			return ;
@@ -245,9 +243,8 @@ public class LayeredAreasNavigation<
 	
 	@Override
 	public void markAsSeen(Pair<Integer, NodeId> ndx) {
-	//	System.out.println(">>> area size " + areas.size() + "ndx.fst" + ndx.fst);
 		areas.get(ndx.fst).markAsSeen(ndx.snd);
-	//	System.out.println(">>> registering maze " + ndx.fst + ", tile " + ndx.snd) ;
+		//System.out.println(">>> registering maze " + ndx.fst + ", tile " + ndx.snd) ;
 		
 		var areaId = ndx.fst ;
 		var nd = ndx.snd ;
@@ -264,7 +261,6 @@ public class LayeredAreasNavigation<
 			NodeId otherPortal = connectedLowPortal(areaId) ;		
 			area2.markAsSeen(otherPortal);
 		}
-		//System.out.println(">>> registering maze end" ) ;
 	}
 	
 	@Override

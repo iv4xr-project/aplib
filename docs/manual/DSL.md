@@ -88,43 +88,4 @@ A _function_ is a Java-function, which can be formed with a lambda expression. F
 # DSL for expressing LTL specifications/properties
 
 'LTL' stands for _Linear Temporal Logic_.
-
-An LTL formula is essentially a sequence predicate. It can be evaluated on a sequence of values to give a judgement whether or not the sequence satisfies the formula. Available LTL operators/constructs are listed below. They are defined in [LTL.java](../../src/main/java/eu/iv4xr/framework/extensions/ltl/LTL.java)
-
-_ltl_ ::=
-
-  * **now(** _state-predicate_ **)**
-  * **ltlAnd(** _ltl_ + **)**
-  * **ltlOr(** _ltl_ + **)**
-  * **ltlNot(** _ltl_ **)**
-  * **next(** _ltl_ **)**
-  * **eventually(** _ltl_ **)**
-  * _ltl_**.until(** _ltl_ **)**
-  * _ltl_**.weakUntil(** _ltl_ **)**
-  * **always(** _ltl_ **)**
-
-The syntax to check an LTL-formula on a sequence:
-
-_ltl_.**sat**(_sequence_)
-
-For example, the sequence could be a trace collected from the execution of a test-agent.
-
-It is also possible to check LTL formulas on-line on a running agent (the formulas will then be checked on the sequence of states that the execution induces). See the following methods of the class [TestAgent](../../src/main/java/eu/iv4xr/framework/mainConcepts/TestAgent.java):
-
-* _testagent_.`addLTL`(..)
-* _testagent_.`resetLTLs`()
-* _testagent_.`evaluateLTLs`()
-
-In addition to LTL, we also provide 'bounded'-LTL. A bounded-LTL formula F is essentially a tuple (p,q,phi,n) where p and q are state predicates and phi is an LTL formula. Given a sequence, F holds on the sequence if every pq-segment in the sequence satisfies the LTL phi. A pq-segment is a segment that starts with a value satisfying p and ends in a value satisfying q and is maximal in the sense that it does not contain another pq-segment inside it, and its length is at most n.
-
-_bounded-LTL_ ::=
-
-  **new BoundedLTL()**
-  **. when(** _state-predicate_ **)**
-  **. until(** _state-predicate_ **)
-  **. thereis(** _ltl_ **)**
-  **. withMaxLength(** _number_ **)**
-
-To check it on a sequence, the syntax is similar to LTL:
-
-_bounded-LTL_.**sat**(sequence)
+An LTL formula is essentially a sequence predicate. It can be evaluated on a sequence of values to give a judgement whether or not the sequence satisfies the formula. [LTL is explained here.](./LTL.md)

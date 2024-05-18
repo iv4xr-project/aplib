@@ -4,7 +4,9 @@ import static eu.iv4xr.framework.extensions.ltl.LTL.eventually;
 import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;

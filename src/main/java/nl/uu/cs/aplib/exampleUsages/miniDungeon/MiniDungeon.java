@@ -106,6 +106,7 @@ public class MiniDungeon {
 	public enum GameStatus { INPROGRESS, FRODOWIN, SMEAGOLWIN, MONSTERSWIN }
 	
 	public MiniDungeonConfig config ;
+
 	
 	public List<Maze> mazes = new LinkedList<>();
 	public List<Player> players = new LinkedList<>() ;
@@ -135,9 +136,6 @@ public class MiniDungeon {
 	public MiniDungeon(MiniDungeonConfig config) {
 		this.config = config ;
 		int size = config.worldSize ;
-		// add just for evosuite:
-	   //  this.config = new MiniDungeonConfig() ;
-		
 		if (size < 8) throw new IllegalArgumentException("size too small") ;
 		if (config.numberOfCorridors > size/3) 
 			throw new IllegalArgumentException("too many corridors") ;

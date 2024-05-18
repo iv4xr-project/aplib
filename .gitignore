@@ -6,19 +6,9 @@ tmp/*
 /.settings/
 /.idea/
 /mylog*.txt
-mylog.txt.*
-mylog*.txt.*
-logFile
-logMultiLayer
 .project
 .classpath
 .idea/
-pitresults/
-heat map/
-evosuite-report/
-evosuite-tests/
-evosuite-1.2.0.jar
-python
 *.iml
 **/.DS_Store
 __pycache__/

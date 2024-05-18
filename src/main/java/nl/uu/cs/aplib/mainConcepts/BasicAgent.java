@@ -416,6 +416,8 @@ public class BasicAgent {
     	var currentGoal = goalstack.currentPrimitiveGoal() ;
         if (currentGoal == null || currentGoal.isRootGoal())
             throw new IllegalArgumentException();
+        
+        G.makeInProgressAgain();
 
         var parent = currentGoal.parent;
         if (parent.combinator == GoalsCombinator.REPEAT) {
@@ -485,6 +487,8 @@ public class BasicAgent {
     	var currentGoal = goalstack.currentPrimitiveGoal() ;
         if (currentGoal == null || currentGoal.isRootGoal())
             throw new IllegalArgumentException();
+        
+        G.makeInProgressAgain() ;
 
         // currentGoal must therefore have a parent:
         var parent = currentGoal.parent;
@@ -568,6 +572,7 @@ public class BasicAgent {
      * <p>See also {@link #goalstack}.
      */
     public void pushGoal(GoalStructure G) {
+    	G.makeInProgressAgain();
     	goalstack.pendingPush(new StackItem(G)) ;
     }
 

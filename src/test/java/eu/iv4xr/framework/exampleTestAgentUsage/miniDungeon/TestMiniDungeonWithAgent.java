@@ -7,7 +7,6 @@ import java.util.Scanner;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,9 +14,7 @@ import nl.uu.cs.aplib.Logging;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver;
 import eu.iv4xr.framework.goalsAndTactics.Sa1Solver.Policy;
-import eu.iv4xr.framework.mainConcepts.ObservationEvent.ScalarTracingEvent;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
-import eu.iv4xr.framework.mainConcepts.TestDataCollector;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
@@ -25,12 +22,10 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentStateExtended;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.PrintUtils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
-import nl.uu.cs.aplib.utils.Pair;
 
 
 /**
@@ -42,7 +37,7 @@ import nl.uu.cs.aplib.utils.Pair;
  */
 public class TestMiniDungeonWithAgent {
 	
-	boolean withGraphics = true ;
+	boolean withGraphics = false ;
 	boolean supressLogging = true ;
 	//boolean withGraphics = true ;
 	//boolean supressLogging = false ;
@@ -234,25 +229,11 @@ public class TestMiniDungeonWithAgent {
 		}
 		
 		int lastTurn = state.auxState().getIntProperty("turn") ;
-		var dataCollector = new TestDataCollector();
-        agent . setTestDataCollector(dataCollector).setGoal(G) ;
-        int aterdieCount = 2 ;
-        boolean stopAfterAllAgentsDie = true ;
+		
 		while (G.getStatus().inProgress()) {
 			agent.update();
-			int turn = state.auxState().getIntProperty("turn") ;
-			//get heat map
-
-        	if (state.worldmodel.position != null) {
-        		dataCollector.registerEvent(agent.getId(), 
-	        			new ScalarTracingEvent(
-	        					new Pair("posx",state.worldmodel.position.x),
-	        					new Pair("posy",state.worldmodel.elements.get(state.worldmodel.agentId).getProperty("maze")), // number of mazes
-	        					new Pair("posz",state.worldmodel.position.z),
-	        					new Pair("turn",turn),
-	        					new Pair("tick",1)));
-        	}
 			
+			int turn = state.auxState().getIntProperty("turn") ;
 			
 			if (verbose) 
 				System.out.println("** [" + k + "/" + turn + "] agent @" + Utils.toTile(state.worldmodel.position));
@@ -283,17 +264,11 @@ public class TestMiniDungeonWithAgent {
 			if (delay>0) {
 				Thread.sleep(delay);
 			}
-			if (stopAfterAllAgentsDie && !state.agentIsAlive()) {
-				aterdieCount-- ;
-			}
-			if (aterdieCount<=0) break ;
 			if (k >= budget)
 				break;
 			k++;
 		}
-		if(state.agentIsAlive())
-			dataCollector.saveTestAgentScalarsTraceAsCSV(agent.getId(),"visits.csv");
-		 
+		
 		for (int s=0; s < phis.length; s++) {
 			
 			if (phis[s] instanceof Eventually) {
