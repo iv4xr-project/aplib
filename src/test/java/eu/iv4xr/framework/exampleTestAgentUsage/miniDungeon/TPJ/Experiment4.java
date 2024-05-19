@@ -1,4 +1,4 @@
-package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
+package _
 
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import static eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.TPJconfigs.* ;
