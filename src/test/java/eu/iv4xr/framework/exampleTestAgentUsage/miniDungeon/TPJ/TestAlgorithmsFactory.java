@@ -124,7 +124,7 @@ public class TestAlgorithmsFactory {
 		
 		var test2 = LTL.always((SimpleState S) -> false) ;
 		
-		agentFrodo . addLTL(test1) .resetLTLs() ;
+		//agentFrodo . addLTL(test1) .resetLTLs() ;
 		
 		Thread.sleep(1000);				
 		// add a single update:
