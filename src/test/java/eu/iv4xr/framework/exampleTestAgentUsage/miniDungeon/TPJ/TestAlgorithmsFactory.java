@@ -1,8 +1,10 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 
+import eu.iv4xr.framework.extensions.ltl.LTL;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
 import eu.iv4xr.framework.goalsAndTactics.AQalg;
 import eu.iv4xr.framework.goalsAndTactics.BasicSearch;
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch.AlgorithmResult;
 import eu.iv4xr.framework.goalsAndTactics.XEvolutionary;
 import eu.iv4xr.framework.goalsAndTactics.XMCTS;
 import eu.iv4xr.framework.goalsAndTactics.XQalg;
@@ -32,6 +34,7 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.Action;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import nl.uu.cs.aplib.mainConcepts.SimpleState;
 
 
 /**
@@ -63,6 +66,7 @@ public class TestAlgorithmsFactory {
 	 */
 	public static class XTestAgent extends TestAgent {
 		
+		
 		public MD_invs MDinvs_ ;
 		boolean verbosePrint = false ;
 		
@@ -81,7 +85,7 @@ public class TestAlgorithmsFactory {
 	 * This will also configure the test agent to have a data-collector and to
 	 * attach MD-invariants for checking.
 	 */
-	XTestAgent constructAgent(MiniDungeonConfig config) throws Exception {
+	public XTestAgent constructAgent(MiniDungeonConfig config) throws Exception {
 		// setting sound on/off, graphics on/off etc:
 		DungeonApp app = new DungeonApp(config);
 		app.soundOn = withSound ;
@@ -111,11 +115,101 @@ public class TestAlgorithmsFactory {
 		agentFrodo . addInv(invs1.allInvs) 
 			       . resetLTLs() ;
 		
+		var test1 = LTL.eventually((SimpleState S) -> {
+			MyAgentState S_ = (MyAgentState) S ;
+			var frodo = S_.worldmodel.elements.get("Frodo") ;
+			int mazeId = Utils.mazeId(frodo) ;
+			return mazeId == 1 ;
+		}) ;
+		
+		var test2 = LTL.always((SimpleState S) -> false) ;
+		
+		agentFrodo . addLTL(test1) .resetLTLs() ;
+		
 		Thread.sleep(1000);				
 		// add a single update:
 		//agent.update();
 		//System.out.println(">>> WOM: " + state.worldmodel) ;
 		return agentFrodo ;
+	}
+	
+	/**
+	 * A wrapper for a goal-based aplib test for MD as an instance of {@link BasicSearch}.
+	 * Currently it can either do action-level random testing, or run a play-test to
+	 * cleanse all shrines.
+	 */
+	public static class ProgrammaticAlgorithm extends BasicSearch {
+		
+		String playtestType ;
+		
+		public ProgrammaticAlgorithm(String playtestType) {
+			super() ;
+			this.playtestType = playtestType ;
+		}
+	
+		@Override
+		public AlgorithmResult runAlgorithm() throws Exception {
+			
+			XTestAgent agent = (XTestAgent) this.agentConstructor.apply(null) ;
+			var env_ = (MyAgentEnv) agent.env() ;
+			var config = env_.app.dungeon.config ;
+			GoalStructure G = null ;
+			if (playtestType.equals("action-level-random")) {
+				var RT = new RandomPlayTester() ;
+				RT.reallyRandom = true ;
+				G = RT.randomPlay(agent) ;
+			}
+			else {
+				G = new ShrineCleanTester().cleanseAllShrines(agent, config.numberOfMaze) ;
+			}		
+			agent.setGoal(G) ;
+			var state = (MyAgentState) agent.state() ;
+			turn = 0 ;
+			long time0 = System.currentTimeMillis() ;
+			long timeUsed = 0 ;
+			while(G.getStatus().inProgress()) {
+				agent.update();
+				
+				if (agent.verbosePrint) {
+					System.out.println("** [" + turn + "/" + state.val("aux","turn") + "]") ;
+					System.out.print("   agent1 " + agent.getId() 
+						+ " @" + Utils.toTile(state.worldmodel.position) 
+					    + ", maze:" + state.val("maze")
+					    + ", hp:" + state.val("hp")
+					    + ", score:" + state.val("score")
+					    + ", goal-status:" + G.getStatus()) ;
+					if (state.env().getLastOperation() != null) {
+						System.out.println(", action:" + state.env().getLastOperation().command) ;
+					}
+					else System.out.println("") ;
+				}
+				// delay to slow it a bit for displaying:
+				Thread.sleep(this.delayBetweenAgentUpateCycles); 
+				if (!state.agentIsAlive()) {
+					break ;
+				}
+				timeUsed = System.currentTimeMillis() - time0 ;
+				if (timeUsed > this.totalSearchBudget)
+					break ;
+				turn++ ;
+			}	
+			this.foundError = ! agent.evaluateLTLs() ;
+			totNumberOfEpisodes = 1 ;
+			remainingSearchBudget = totalSearchBudget - (int) timeUsed ;
+			if (topGoalPredicate.test(state)) {
+				markThatGoalIsAchieved(new LinkedList<String>()) ;
+			}
+			AlgorithmResult R = new AlgorithmResult() ;
+			R.algName = "Programmatic" ;
+			R.totEpisodes = totNumberOfEpisodes ;
+			R.usedTurns = turn ;
+			R.usedBudget = (int) timeUsed ;
+			R.goalAchieved = this.goalHasBeenAchieved() ;	
+			R.foundError = this.foundError ;
+			
+			return R ;	
+		}
+	
 	}
 	
 	/** 
@@ -149,6 +243,7 @@ public class TestAlgorithmsFactory {
 		var goalLib = new GoalLib();
 		BasicSearch.DEBUG = !supressLogging ;
 
+		alg.stopWhenErrorIsFound = this.stopWhenInvriantFlagABug ;
 		
 		alg.agentConstructor = dummy -> {
 			try {
@@ -299,97 +394,20 @@ public class TestAlgorithmsFactory {
 	}
 	
 	/**
-	 * A wrapper for a goal-based aplib test for MD as an instance of {@link BasicSearch}.
-	 * Currently it can either do action-level random testing, or run a play-test to
-	 * cleanse all shrines.
-	 */
-	public static class ProgrammaticAlgorithm extends BasicSearch {
-		
-		String playtestType ;
-		
-		public ProgrammaticAlgorithm(String playtestType) {
-			super() ;
-			this.playtestType = playtestType ;
-		}
-	
-		@Override
-		public AlgorithmResult runAlgorithm() throws Exception {
-			
-			XTestAgent agent = (XTestAgent) this.agentConstructor.apply(null) ;
-			var env_ = (MyAgentEnv) agent.env() ;
-			var config = env_.app.dungeon.config ;
-			GoalStructure G = null ;
-			if (playtestType.equals("action-level-random")) {
-				var RT = new RandomPlayTester() ;
-				RT.reallyRandom = true ;
-				G = RT.randomPlay(agent) ;
-			}
-			else {
-				G = new ShrineCleanTester().cleanseAllShrines(agent, config.numberOfMaze) ;
-			}		
-			agent.setGoal(G) ;
-			var state = (MyAgentState) agent.state() ;
-			turn = 0 ;
-			long time0 = System.currentTimeMillis() ;
-			long timeUsed = 0 ;
-			while(G.getStatus().inProgress()) {
-				agent.update();
-				
-				if (agent.verbosePrint) {
-					System.out.println("** [" + turn + "/" + state.val("aux","turn") + "]") ;
-					System.out.print("   agent1 " + agent.getId() 
-						+ " @" + Utils.toTile(state.worldmodel.position) 
-					    + ", maze:" + state.val("maze")
-					    + ", hp:" + state.val("hp")
-					    + ", score:" + state.val("score")
-					    + ", goal-status:" + G.getStatus()) ;
-					if (state.env().getLastOperation() != null) {
-						System.out.println(", action:" + state.env().getLastOperation().command) ;
-					}
-					else System.out.println("") ;
-				}
-				// delay to slow it a bit for displaying:
-				Thread.sleep(this.delayBetweenAgentUpateCycles); 
-				if (!state.agentIsAlive()) {
-					break ;
-				}
-				timeUsed = System.currentTimeMillis() - time0 ;
-				if (timeUsed > this.totalSearchBudget)
-					break ;
-				turn++ ;
-			}	
-			totNumberOfEpisodes = 1 ;
-			remainingSearchBudget = totalSearchBudget - (int) timeUsed ;
-			if (topGoalPredicate.test(state)) {
-				markThatGoalIsAchieved(new LinkedList<String>()) ;
-			}
-			AlgorithmResult R = new AlgorithmResult() ;
-			R.algName = "Programmatic" ;
-			R.totEpisodes = totNumberOfEpisodes ;
-			R.usedTurns = turn ;
-			R.usedBudget = (int) timeUsed ;
-			R.goalAchieved = this.goalHasBeenAchieved() ;
-			
-			return R ;	
-		}
-	
-	}
-	
-	/**
 	 * An (abstract) representation of MD state for Q-algorithm. This one is suitable
 	 * for the high-level Q, and less suitable for low level Q.
 	 */
-	static class MDQstate1 {
+	public static class MDQstate1 {
 		
-		List<String> scrolls = new LinkedList<>() ;
-		List<String> closedShrines = new LinkedList<>() ;
-		int numberOfScrollsInbag = 0 ;
-		boolean alive ;
+		public List<String> scrolls = new LinkedList<>() ;
+		public List<String> closedShrines = new LinkedList<>() ;
+		public int numberOfScrollsInbag = 0 ;
+		public boolean alive ;
 		
 		MDQstate1() { }
 		
 		@SuppressWarnings("rawtypes")
-		MDQstate1(Iv4xrAgentState state) {
+		public MDQstate1(Iv4xrAgentState state) {
 			var frodo = state.worldmodel.elements.get("Frodo") ;
 			alive = ((Integer) frodo.properties.get("hp")) > 0 ;
 			numberOfScrollsInbag = (Integer) frodo.properties.get("scrollsInBag") ;
@@ -431,9 +449,9 @@ public class TestAlgorithmsFactory {
 	 * An (abstract) representation of MD state for Q-algorithm. This one is suitable
 	 * for low-level Q. We use byte-array to keep its size small.
 	 */
-	static class MDQstate2 {
+	public static class MDQstate2 {
 		
-		byte[] state ;
+		public byte[] state ;
 			
 		/**
 		 * Construct a Q-state. 
@@ -443,7 +461,7 @@ public class TestAlgorithmsFactory {
 		 * and moreover visible to the agent (within its visibility range) will be included
 		 * in the constructed Q-state.
 		 */
-		MDQstate2(MiniDungeonConfig mdconfig, int windowSize, Iv4xrAgentState agentstate) {
+		public MDQstate2(MiniDungeonConfig mdconfig, int windowSize, Iv4xrAgentState agentstate) {
 			
 			if (windowSize % 2 != 1) 
 				throw new IllegalArgumentException("WindowSize should be an odd number.") ;

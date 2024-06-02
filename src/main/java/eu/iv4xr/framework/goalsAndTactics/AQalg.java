@@ -163,6 +163,8 @@ public class AQalg<QState> extends XQalg<QState> {
 			
 			Thread.sleep(delayBetweenAgentUpateCycles);
 		}
+		
+		foundError = foundError || ! agent.evaluateLTLs() ;
 		closeEnv_() ;
 		return episodeReward ;
 	}

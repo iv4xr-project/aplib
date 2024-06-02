@@ -250,6 +250,7 @@ public class XMCTS extends BasicSearch{
 			PlayResult R = new PlayResult() ;
 			R.trace = trace ;
 			R.reward = clampedValueOfCurrentGameState() ;
+			foundError = foundError || ! agent.evaluateLTLs() ;
 			closeEnv_() ;
 			return R ;
 		}
@@ -295,6 +296,7 @@ public class XMCTS extends BasicSearch{
 		PlayResult R = new PlayResult() ;
 		R.trace = trace ;
 		R.reward = clampedValueOfCurrentGameState() ;
+		foundError = foundError || ! agent.evaluateLTLs() ;
 		closeEnv_();
 		return R ;	
 	}
@@ -352,6 +354,7 @@ public class XMCTS extends BasicSearch{
 			leaf.fullyExplored = true ;
 			initializeEpisode();
 			runPath(leaf,true) ;
+			foundError = foundError || ! agent.evaluateLTLs() ;
 			closeEnv_() ;
 			var R = clampedValueOfCurrentGameState() ;
 			leaf.backPropagate(R);

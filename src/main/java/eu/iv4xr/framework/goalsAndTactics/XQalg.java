@@ -294,6 +294,7 @@ public class XQalg<QState> extends BasicSearch {
 			// the value of the episode so far is defined simply as the value of the new current state:
 			episodeReward = value1 ;
 		}
+		foundError = foundError || ! agent.evaluateLTLs() ;
 		closeEnv_() ;
 		return episodeReward ;
 	}

@@ -329,7 +329,9 @@ public class XEvolutionary extends BasicSearch {
 			k++ ;
 		}
 		closeEnv_() ;
-			
+
+		foundError = foundError || ! agent.evaluateLTLs() ;
+		
 		// drop the trailing part of the chromosome that were not used (e.g. because the goal is
 		// already reached:
 		int tobeRemoved = chromosome.size() - k  ;
@@ -537,10 +539,8 @@ public class XEvolutionary extends BasicSearch {
 	
 	@Override
 	boolean terminationCondition() {
-		return (this.stopAfterGoalIsAchieved && goalHasBeenAchieved) 
-				|| remainingSearchBudget <= 0
-				|| (maxNumberOfEpisodes != null && totNumberOfEpisodes > maxNumberOfEpisodes) 
-				|| (maxNumberOfGenerations != null && generationNr < maxNumberOfGenerations);
+		return super.terminationCondition()
+			   || (maxNumberOfEpisodes != null && totNumberOfEpisodes > maxNumberOfEpisodes) ;
 	}
 
 	/**
@@ -580,6 +580,7 @@ public class XEvolutionary extends BasicSearch {
 		R.usedBudget = totalSearchBudget - remainingSearchBudget ;
 		R.usedTurns = turn ;
 		R.winningplay = this.winningplay ;
+		R.foundError = this.foundError ;
 		R.episodesValues = episodesValues ;
 		log("*** END " + R.showShort());
 			

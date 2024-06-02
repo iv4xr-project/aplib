@@ -1,4 +1,4 @@
-package _
+package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import static eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ.TPJconfigs.* ;
@@ -33,7 +33,7 @@ import eu.iv4xr.framework.goalsAndTactics.AQalg;
  */
 public class Experiment4 {
 	
-	enum AlgorithmType {
+	public enum AlgorithmType {
 		RANDOM, Q, HIGH_RANDOM, HIGH_Q, HIGH_MCTS, PROGRAMMATIC, HIGH_EVO
 	}
 	
@@ -271,7 +271,7 @@ public class Experiment4 {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
+	//@Test
 	void test_lowQ() throws Exception {
 	runOneAlgorithm(AlgorithmType.Q,
 				smallDungeons,
@@ -298,7 +298,7 @@ public class Experiment4 {
 	 * @param algConstructor A constructor of {@link BasicSearch}.
 	 */
 	@SuppressWarnings("rawtypes")
-	void runOneAlgorithm(AlgorithmType algTy,
+	public void runOneAlgorithm(AlgorithmType algTy,
 			MiniDungeonConfig[] targetDungeons, 
 			Function<MiniDungeonConfig,BasicSearch> algConstructor
 			) 	
@@ -327,15 +327,14 @@ public class Experiment4 {
 				result1.numEpisodes = V.totEpisodes ;
 				result1.runtime = V.usedBudget ;
 				result1.topGoalSolved = V.goalAchieved ;
-				// TODO:
-				// R.invViolationDetected = ....
-				results.add(result1) ;
+				result1.invViolationDetected = V.foundError ;
 				if (alg instanceof XQalg) {
 					result1.numOfVisitedStates = ((XQalg) alg).qtable.size() ;
 				}
 				if (alg instanceof AQalg) {
 					result1.numOfVisitedStates = ((AQalg) alg).qtable.size() ;
 				}
+				results.add(result1) ;
 			}
 			R.caculate(results);
 			System.out.println(R.toString()) ;

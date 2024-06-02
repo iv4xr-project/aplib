@@ -143,6 +143,13 @@ public class BasicSearch {
 	public boolean stopAfterGoalIsAchieved = true ;
 	
 	/**
+	 * If set to true, the algorithm will stop if an error in the game-under test is found.
+	 * "Error" is checked via LTL-violation (so, you need LTL specifications to detect it).
+	 * <br>Default: false.
+	 */
+	public boolean stopWhenErrorIsFound = false ;
+	
+	/**
 	 * This will be set to true when {@link #topGoalPredicate} becomes
 	 * true; and will remain true to indicate that the goal has ever been achieved.
 	 */
@@ -152,6 +159,13 @@ public class BasicSearch {
 	 * Sequence of interactions that was found to lead to a state satisfying {@link #topGoalPredicate}.
 	 */
 	public List<String> winningplay = null ;
+	
+	/**
+	 * If the algorithm detect an error in the SUT, this will be set to false. Currently this is
+	 * checked via LTL (so, you need to specify some LTL properties that specify correct agent
+	 * execution).
+	 */
+	public boolean foundError = false ;
 	
 	public boolean goalHasBeenAchieved() {
 		return goalHasBeenAchieved ;
@@ -455,6 +469,7 @@ public class BasicSearch {
 			}
 
 		}
+		foundError = foundError || ! agent.evaluateLTLs() ;
 		
 		closeEnv_();
 		return clampedValueOfCurrentGameState() ;
@@ -466,7 +481,8 @@ public class BasicSearch {
 	boolean terminationCondition() {
 		return (this.stopAfterGoalIsAchieved && goalHasBeenAchieved) 
 				|| remainingSearchBudget <= 0
-				|| (maxNumberOfEpisodes != null && totNumberOfEpisodes > maxNumberOfEpisodes) ;
+				|| (maxNumberOfEpisodes != null && totNumberOfEpisodes > maxNumberOfEpisodes
+				|| (stopWhenErrorIsFound && foundError)) ;
 	}
 	
 	public static class AlgorithmResult {
@@ -477,6 +493,7 @@ public class BasicSearch {
 		public int totEpisodes ;
 		public List<String> winningplay ;
 		public List<Float> episodesValues ;
+		public boolean foundError ;
 		
 		public String showShort() {
 			String z = "" + algName 
@@ -485,11 +502,14 @@ public class BasicSearch {
 				+ ", used-budget: " + usedBudget 
 				+ ", used-turns:" + usedTurns ;
 			
+			if (foundError) 
+				z += ". Found an ERROR" ;
+				
 			if (goalAchieved)
-				z += ", #winningplay:" + winningplay.size() ;
+				z += ". #winningplay:" + winningplay.size() ;
 			else {
 				var maxVal = episodesValues.stream().max((v1,v2) -> Float.compare(v1,v2)) ;				
-				z += ", episode-val:" + maxVal.get() ;
+				z += ". Episode-val:" + maxVal.get() ;
 			}
 			return z ;		
 		}
@@ -525,6 +545,7 @@ public class BasicSearch {
 		R.usedTurns = turn ;
 		R.winningplay = this.winningplay ;
 		R.episodesValues = episodesValues ;
+		R.foundError = this.foundError ;
 		log("*** END " + R.showShort());
 			
 		log(">>> remaining budget:" + remainingSearchBudget) ;
