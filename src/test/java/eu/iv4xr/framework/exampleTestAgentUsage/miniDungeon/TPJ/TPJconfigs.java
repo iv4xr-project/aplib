@@ -95,6 +95,22 @@ public class TPJconfigs {
 		return config ;
 	}
 	
+	public static MiniDungeonConfig SamiraLevel2() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "SamiraLevel2- 79371" ;
+		config.numberOfHealPots = 4 ;
+		config.worldSize = 20 ;		
+		config.viewDistance = 4 ;
+		//config.viewDistance = 40 ;
+		//config.numberOfMaze = 2 ;
+		config.numberOfMaze = 4 ;
+		config.numberOfScrolls = 3 ;
+		config.enableSmeagol = false ;
+		config.numberOfMonsters = 6 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
+	
 	// configs to test PvP 
 	public static MiniDungeonConfig PVPConfig1() {
 		MiniDungeonConfig config = new MiniDungeonConfig();

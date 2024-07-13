@@ -372,10 +372,12 @@ public class XMCTS extends BasicSearch{
 			System.out.println(">>> ROLLOUT") ;
 			var R = rollout(leaf) ;
 			leaf.backPropagate(R.reward) ;
+			/* // BUG! We should not do this!! -->
 			if (R.reward >= maxReward) {
-				// should not be needed, but just to make sure:
-				markThatGoalIsAchieved(leaf.getTraceLeadingToThisNode());
+				// should not be needed, but just to make sure: <- xxx
+				// markThatGoalIsAchieved(leaf.getTraceLeadingToThisNode());	
 			}
+			*/
 			return R.reward ;
 		}
 		

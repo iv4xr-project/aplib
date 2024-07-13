@@ -38,10 +38,11 @@ public class Experiment4 {
 	}
 	
 	MiniDungeonConfig[] smallDungeons = {
-		Mini1(),
-		Mini2(),
-		Small1(),
-		Small2()
+		SamiraLevel2()
+		//Mini1(),
+		//Mini2(),
+		//Small1(),
+		//Small2()
 	} ;
 		
 	int numberOfRepeatedRuns = 3 ;
@@ -224,7 +225,7 @@ public class Experiment4 {
 		) ;
 	}
 	
-	//@Test
+	@Test
 	void test_MCTS() throws Exception {
 		runOneAlgorithm(AlgorithmType.HIGH_MCTS,
 				smallDungeons,
@@ -235,8 +236,10 @@ public class Experiment4 {
 					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
 					XMCTS alg = algFactory.mkMCTS(config) ;
 					// hyper parameters:
-					alg.totalSearchBudget = 60000 ;
-					alg.maxDepth = 9 ;
+					//alg.totalSearchBudget = 60000 ;
+					//alg.maxDepth = 9 ;
+					alg.totalSearchBudget = 600000 ;
+					alg.maxDepth = 18 ;
 					//alg.maxNumberOfEpisodes = 100 ;
 					alg.explorationBudget = 4000 ;
 					alg.budget_per_task = 2000 ;					

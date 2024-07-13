@@ -288,9 +288,6 @@ public class XEvolutionary extends BasicSearch {
 		
 		log(">>> evaluating chromosome: " + chromosome);
 		
-		boolean goalPredicateSolved = false ;
-		boolean agentIsAlive = true ;
-		
 		List<String> trace = new LinkedList<>() ;
 		
 		int k = 0 ;

@@ -120,8 +120,9 @@ public class Test_MCTS {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
 			//var targetShrine = state.worldmodel.elements.get("SM0") ;
 			var targetShrine = state.worldmodel.elements.get("SM1") ;
-			return targetShrine != null
-					&& (Boolean) targetShrine.properties.get("cleansed") ;
+			var ok = targetShrine != null
+				 	&& (Boolean) targetShrine.properties.get("cleansed") ;
+			return ok ;	
 		} ;
 		alg.agentIsDead = state -> {
 			var frodo = state.worldmodel.elements.get("Frodo") ;
@@ -158,6 +159,13 @@ public class Test_MCTS {
 		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
 		
 		//System.out.println(alg.mctree) ;
+		
+		if (R.winningplay != null) {
+			var replay = alg.runWinningPlay() ;
+			System.out.println(">>> Replayed the found winning play.");
+			System.out.println(">>> " + replay);
+		}
+		
 		System.out.println(">>> winningplay: " + R.winningplay) ;
 		
 		

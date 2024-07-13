@@ -33,7 +33,7 @@ public class Test_Evo {
 		config.numberOfHealPots = 4;
 		config.viewDistance = 40;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 1 ;
+		config.numberOfScrolls = 2 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 1 ;
 		config.worldSize = 20 ;
@@ -155,11 +155,18 @@ public class Test_Evo {
 		alg.numberOfElitesToKeepDuringSelection = 4 ;
 		alg.insertionProbability = 0.9f ;
 		alg.onlyExtendWithNewGene = false ;
+		
 		//alg.extendAtRandomInsertionPoint = false ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm();
+		
+		if (R.winningplay != null) {
+			var replay = alg.runWinningPlay() ;
+			System.out.println(">>> Replayed the found winning play.");
+			System.out.println(">>> " + replay);
+		}
 		
 		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
 		

@@ -31,7 +31,7 @@ public class Test_Q {
 	static class MDQstate {
 		
 		List<String> scrolls = new LinkedList<>() ;
-		List<String> closedShrines = new LinkedList<>() ;
+		List<String> openShrines = new LinkedList<>() ;
 		int numberOfScrollsInbag = 0 ;
 		boolean alive ;
 		
@@ -46,12 +46,12 @@ public class Test_Q {
 					.map(e -> e.id) 
 					.collect(Collectors.toList()) ;
 			scrolls.sort((s1,s2) -> s1.compareTo(s2)) ;
-			closedShrines = state.worldmodel.elements.values().stream()
+			openShrines = state.worldmodel.elements.values().stream()
 					.filter(e -> Utils.isShrine(e))
-					.filter(e -> ! (Boolean) e.properties.get("cleansed"))
+					.filter(e -> (Boolean) e.properties.get("cleansed"))
 					.map(e -> e.id) 
 					.collect(Collectors.toList()) ;
-			closedShrines.sort((s1,s2) -> s1.compareTo(s2)) ;
+			openShrines.sort((s1,s2) -> s1.compareTo(s2)) ;
 		}
 		
 		@Override
@@ -59,7 +59,7 @@ public class Test_Q {
 			if (! (o instanceof MDQstate)) return false ;
 			MDQstate o_ = (MDQstate) o ;
 			return this.scrolls.equals(o_.scrolls)
-					&& this.closedShrines.equals(o_.closedShrines)
+					&& this.openShrines.equals(o_.openShrines)
 					&& this.numberOfScrollsInbag == o_.numberOfScrollsInbag 
 					&& this.alive == o_.alive ;
 		}
@@ -67,7 +67,7 @@ public class Test_Q {
 		@Override
 	    public int hashCode() {
 	        return scrolls.hashCode() 
-	        		+ closedShrines.hashCode() 
+	        		+ 3*openShrines.hashCode() 
 	        		+ 31*numberOfScrollsInbag 
 	        		+ (alive?1:0) ;
 	    }
@@ -92,12 +92,13 @@ public class Test_Q {
 		config.numberOfRagePots = 2 ;
 		// allowing a whole maze to be visible:
 		config.viewDistance = 40 ;
-		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 5 ;
+		config.numberOfMaze = 5 ;
+		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 2 ;
-		config.randomSeed = 79371;
-		config.worldSize = 20 ;
+		//config.randomSeed = 79371;
+		config.randomSeed = 9371;
+		config.worldSize = 16 ;
 		config.numberOfCorridors = 2 ;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -196,7 +197,9 @@ public class Test_Q {
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
 			//var targetShrine = state.worldmodel.elements.get("SM0") ;
-			var targetShrine = state.worldmodel.elements.get("SM1") ;
+			//var targetShrine = state.worldmodel.elements.get("SM1") ;
+			var targetShrine = state.worldmodel.elements.get("SM3") ;
+			
 			return targetShrine != null
 					&& (Boolean) targetShrine.properties.get("cleansed") ;
 		} ;
@@ -206,8 +209,10 @@ public class Test_Q {
 					&& ((Integer) frodo.properties.get("hp")) <= 0 ;
 		} ;
 		alg.stateValueFunction = state -> {
-			if (alg.topGoalPredicate.test(state))
+			
+			if (alg.topGoalPredicate.test(state)) {
 				return alg.maxReward ;
+			}
 			if (alg.agentIsDead.test(state))
 				return -100f ;
 			/*
@@ -217,13 +222,26 @@ public class Test_Q {
 			
 			var scrollsInBag = (Integer) state.worldmodel.elements.get("Frodo")
 					.properties.get("scrollsInBag") ;
+			
+			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
 			*/
+			
+			// using score does not work well, for deeper dungeons
+			/*
 			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
 					.properties.get("score") ;
 			
-			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
 			return (float) frodo_score ;
+			*/
+			
+			float numberOfCleansedShrine = (float) state.worldmodel.elements.values()
+				.stream()
+				.filter(e -> Utils.isShrine(e) && e.getBooleanProperty("cleansed"))
+				.count();
+			
+			return 100f * numberOfCleansedShrine ;
 		} ;
+		
 		alg.getQstate = (trace,state) -> new MDQstate(state) ;
 		
 		alg.wipeoutMemory = agent -> {
@@ -233,14 +251,15 @@ public class Test_Q {
 		} ;
 		
 		
-		alg.maxDepth = 12 ;
+		alg.maxDepth = 18 ;
 		//alg.maxNumberOfEpisodes = 40 ;
 		alg.delayBetweenAgentUpateCycles = 5 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 800000 ;
-		//alg.exploreProbability = 0.15f ;
-		alg.enableBackPropagationOfReward = 5 ; 
+		alg.exploreProbability = 0.08f ;
+		alg.gamma = 0.8f ;
+		//alg.enableBackPropagationOfReward = 3 ; 
 		
 				
 		//alg.runAlgorithmForOneEpisode();
@@ -251,8 +270,17 @@ public class Test_Q {
 		for (var q : alg.qtable.values()) {
 			num_entries += q.values().size() ;
 		}
+		
+		if (R.winningplay != null) {
+			var replay = alg.runWinningPlay() ;
+			System.out.println(">>> Replayed the found winning play.");
+			System.out.println(">>> " + replay);
+		}
+		
 		alg.log(">>> #entries in qtable: " + num_entries);
+		alg.log(">>> #episodes: " + R.episodesValues.size()) ;
 		alg.log(">>> episode-values: " + R.episodesValues) ;
+		
 		alg.log(">>> winningplay: " + R.winningplay) ;
 
 		

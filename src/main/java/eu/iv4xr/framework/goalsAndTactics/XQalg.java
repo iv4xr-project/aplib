@@ -46,7 +46,7 @@ public class XQalg<QState> extends BasicSearch {
 	public static class ActionInfo {
 		// public float avrgReward ;
 		// let's only use max reward:
-		public float maxReward ; 
+		public float maxReward = 0 ; 
 	}
 	
 	
@@ -280,10 +280,14 @@ public class XQalg<QState> extends BasicSearch {
 				reward = value1 - value0 ;
 									
 			// update the Qtable
+			var oldVal = info.maxReward ;
+			
 			updateQ(qstate,chosenAction, newQstate,reward) ;
 			
 			System.out.println(">> chosen action: " + chosenAction
-					+ ", v0=" + value0 + ", v1=" + value1 + ", direct-rw=" + reward
+					+ ", v0=" + value0 + ", v1=" + value1 
+					+ (reward > 0 ? ", DIRECT-rw=" : ", direct-rw=") + reward
+					+ ", oldval=" + oldVal 
 					+ ", val=" + info.maxReward 
 					)  ;
 

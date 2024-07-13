@@ -485,6 +485,81 @@ public class BasicSearch {
 				|| (stopWhenErrorIsFound && foundError)) ;
 	}
 	
+	
+	/**
+	 * Execute the given trace of interactions. The method will report whether the trace
+	 * manages to solve {@link #topGoalPredicate}. It also reports if the re-execution found 
+	 * any violation. Currently only LTL violation is checked. 
+	 * 
+	 * <p>Each string e in the trace is interpreted as specifying an interaction on
+	 * a game-object identified by e. "Executing" e is done by instructing the test agent
+	 * to first get close to it, and then to interact with it. This is done by executing
+	 * {@link #reachedG} and {@link #interactedG}.
+	 * 
+	 * <p>No full exploration will be forced after every step in the trace (the 
+	 * goal-structure reachedG is assumed to invoke exploration if the target e
+	 * is not known in the agent's belief).
+	 */
+	public RerunWinningPlayResult runTrace(List<String> trace) throws Exception {
+		
+		initializeEpisode();
+		
+		log(">>> executing a trace: " + trace);
+		
+		var result = new RerunWinningPlayResult() ;
+		result.indexOfLastExecutedStep = 0 ;
+		result.traceLength = trace.size() ;
+		for (var e : trace) {
+			var G = SEQ(reachedG.apply(e), interactedG.apply(e));
+			var status = solveGoal("Reached and interacted " + e, G, budget_per_task);
+			
+			if (topGoalPredicate.test(agentState())) {
+				result.topPredicateSolved = true ;
+				log("*** Goal is ACHIEVED");
+				break ;
+			}
+			if (agentIsDead()) {
+				result.agentIsDead = true ;
+				result.aborted = true ;
+				log("*** The agent is DEAD.");
+				break;
+			}
+			// also break if interacting with e failed:
+			if (status.failed()) {
+				result.aborted = true ;
+				break ;
+			}
+			result.indexOfLastExecutedStep++ ;
+		}
+		closeEnv_() ;
+
+		result.violationDetected = ! agent.evaluateLTLs() ;
+		
+		return result ;
+	}
+	
+	/**
+	 * Execute the trace of interactions stored in {@link #winningplay}. If not empty, this 
+	 * field should content the traces of interactions that leads to solving {@link #topGoalPredicate}. 
+	 * The method re-executes the trace, and at the end will report whether this indeed solves
+	 * {@link #topGoalPredicate}. Note that this is not guaranteed if the SUT is non-deterministic.
+	 * 
+	 * <p> The method {@link #runTrace(List)} is used to execute the play. Each string e in 
+	 * {@link #winningplay} is interpreted as specifying an interaction on
+	 * a game-object identified by e. "Executing" e is done by instructing the test agent
+	 * to first get close to it, and then to interact with it. This is done by executing
+	 * {@link #reachedG} and {@link #interactedG}.
+	 * 
+	 * <p>The method also reports if the re-execution found any violation. Currently only LTL violation
+	 * is checked. 
+	 */
+	public RerunWinningPlayResult runWinningPlay() throws Exception {
+		return runTrace(winningplay) ;
+	}
+	
+	
+	
+	
 	public static class AlgorithmResult {
 		public String algName ;
 		public boolean goalAchieved ;
@@ -513,6 +588,30 @@ public class BasicSearch {
 			}
 			return z ;		
 		}
+	}
+	
+	public static class RerunWinningPlayResult {
+		public boolean topPredicateSolved = false ;
+		public boolean agentIsDead = false ;
+		public boolean aborted = false ;
+		public int indexOfLastExecutedStep = -1 ;
+		public int traceLength = -1 ;
+		public boolean violationDetected = false ;
+		
+		@Override
+		public String toString() {
+			String z = "" ;
+			z += "Top-goal " + (topPredicateSolved ? "is SOLVED" : "is NOT solved.") ;
+			if (agentIsDead)
+			   z += "\nExecution aborted because the agent is DEAD." ;
+			if (aborted)
+				z += "\nExecution ABORTED." ;
+			z += "\nLast executed step-index: " + indexOfLastExecutedStep 
+					+ ", trace-length=" + traceLength ;
+			z += "\n" + (violationDetected ? "VIOLATED detected" : "NO violation was detected") ;
+			return z ;
+		}
+		
 	}
 
 	/**

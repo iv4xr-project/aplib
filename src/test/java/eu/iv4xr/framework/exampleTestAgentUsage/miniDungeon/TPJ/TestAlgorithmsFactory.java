@@ -277,7 +277,7 @@ public class TestAlgorithmsFactory {
 		alg.reachedG    = e -> goalLib.smartEntityInCloseRange(alg.agent,e) ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
 		// constrain to only interact with scrolls and shrines:
-		alg.isInteractable   = e -> e.id.contains("S") ;
+		alg.isInteractable   = e -> e.id.contains("S") && !e.id.contains("SS");
 		
 		// we'll fix the goal at winning the game, so cleaning the immortal shrine:
 		alg.topGoalPredicate = state -> {
