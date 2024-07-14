@@ -11,19 +11,25 @@ import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
+import nl.uu.cs.aplib.utils.Pair;
 
 /**
- * Implementation of Monte Carlo Search Tree (MCTS). In this implementation we
- * assume a deterministic target game. That is, playing the same sequence of
- * actions always give the same reward/value.
+ * Implementation of Monte Carlo Search Tree (MCTS). In this implementation, the
+ * target game is a black box that does not show its moves, though we can inspect
+ * the state that results from a move. In particular, the game does not behave
+ * like a chess game, where the algorithm can see the oponnent's moves/actions. The algorithm
+ * interacts with the target game by sending it one action at a time. The game has
+ * its own logic, which we can think of as "the opponent" of the algorithm. This logic
+ * will respond to the action sent by the algorithm, resulting in a new game state.
+ * The algorithm can inspect the resulting state. 
+ * 
+ * <p>In particular, the resulting Search Tree will consist of only the algorithm's actions. 
+ * We won't record the opponent's moves, since we have no access to them. In this 
+ * implementation, we assume a <i>deterministic</i> target game. That is, playing the 
+ * same sequence of actions always give the same reward/value.
  * 
  * <p>The algorithm constructs a tree, encoding a winning strategy to play a game.
  * The game is assumed to be adversarial (e.g. like chess). 
- * 
- * However, rather than playing moves in alteration (player move, then opponent move),
- * a step in the tree represents the player's move, and the corresponding game's
- * respond to that (e.g. a monster hits the player). Since the game is assumed to
- * be deterministic, the game's respond is deterministic as well.
  * 
  * <p>A winning state is a state satisfying the goal set in BaseSearch's topGoalPredicate.
  * The first time a rollout finds a winning state, the sequences of steps that reach it
@@ -48,12 +54,31 @@ import eu.iv4xr.framework.mainConcepts.TestAgent;
  * <p>Use the field maxDepth to control the depth of the search.  Also, giving value/reward to a rollout
  * where the agent survives, but not necessarily reaches a winning state helps in directing
  * the search towards closing to a winning state.
+ * 
+ * <p><b>Notes:</b> In a non-deterministic game, the same action (sent by the algorithm) can result
+ * in multiple possible states. We can handle this by representing the resulting state as an 'action'
+ * by the opponent (of the algorithm). Such actions can be representing with the current tree data
+ * structure used to represent the Search Tree. Well... with a bit of extension. But the algorithm
+ * needs to be extended, as now we basically have an alternative-moves game a la Chess. This should
+ * not be a very complicated extension. But.... TODO :D
  */
 public class XMCTS extends BasicSearch{
 	
 	static class Node {
+		/**
+		 * The total rewards obtained by this node, over all plays played
+		 * in building the Search Tree. The number of plays is kept track
+		 * in {@link #numberOfPlays}.
+		 */
 		float totalReward ;
+		
+		/**
+		 * The average reward obtained by this node, over all plays played
+		 * in building the Search Tree. The number of plays is kept track
+		 * in {@link #numberOfPlays}.
+		 */
 		float averageReward ;
+		
 		int numberOfPlays = 0 ;
 		int depth ;
 		
@@ -76,6 +101,21 @@ public class XMCTS extends BasicSearch{
 		Node parent ;
 		
 		List<Node> children ;
+		
+		/**
+		 * Child with the best average-reward. Null if there is no child.
+		 */
+		Node bestChild() {
+			if (children == null || children.isEmpty())
+				return null ;
+			Node best = children.get(0) ;
+			for (var ch : children) {
+				if (ch.averageReward > best.averageReward) {
+					best = ch ;
+				}
+			}
+			return best ;
+		}
 		
 		/** 
 		 * Get the UCB-value of this node.
@@ -404,6 +444,31 @@ public class XMCTS extends BasicSearch{
 			ch.depth = leaf.depth+1 ;
 		}
 		return evaluateLeaf(leaf.children.get(rnd.nextInt(leaf.children.size()))) ;
+	}
+	
+	/**
+	 * Return the sequence of actions that leads to be best reward known so far. This
+	 * assumes a non-alternating game, and furthermore a deterministic game. It obtains
+	 * the sequence by simply looking into the Search Tree {@link #mctree}, without
+	 * exdecuting the game.
+	 * 
+	 * <p>If the game is non-deterministic, the obtained sequence might not give the 
+	 * best reward.
+	 */
+	public Pair<List<String>,Float> obtainBestPlay() {
+		
+		Node nd = mctree ;
+		Node bestChild = mctree.bestChild() ;
+		if (bestChild == null)
+			return null ;	
+		float bestreward = bestChild.averageReward ;
+		List<String> bestSequence = new LinkedList<>() ;
+		
+		while (bestChild != null) {
+			bestSequence.add(bestChild.action) ;
+			bestChild = bestChild.bestChild() ;
+		}
+		return new Pair<>(bestSequence,bestreward) ;
 	}
 	
 	/**

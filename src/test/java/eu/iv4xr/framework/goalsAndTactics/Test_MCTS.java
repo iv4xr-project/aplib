@@ -146,11 +146,12 @@ public class Test_MCTS {
 		
 		
 		alg.maxDepth = 8 ;
-		//alg.maxNumberOfEpisodes = 100 ;
+		alg.maxNumberOfEpisodes = 60 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 2400000 ;
+		alg.stopAfterGoalIsAchieved = false ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
@@ -167,6 +168,7 @@ public class Test_MCTS {
 		}
 		
 		System.out.println(">>> winningplay: " + R.winningplay) ;
+		System.out.println(">>> best play according to the model: " + alg.obtainBestPlay()) ;
 		
 		
 		//System.out.println(">>>> hit RET") ;
