@@ -168,5 +168,88 @@ public class AQalg<QState> extends XQalg<QState> {
 		closeEnv_() ;
 		return episodeReward ;
 	}
+	
+	/**
+	 * Use the model to play the target game. This will always choose the next action which
+	 * gives the best future reward, according to the model. The method returns the sequence
+	 * af action
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Pair<List<String>,Float> play(int maxPlayLength) throws Exception {
+		
+		initializeEpisode() ;
+		List<String> bestSequece = new LinkedList<>() ;
+		var state = agentState() ;
+		QState qstate =  getQstate.apply(bestSequece,state) ;
+
+		float totalReward = clampedValueOfCurrentGameState() ;
+		
+		while (bestSequece.size() < maxPlayLength) {
+			
+			var possibleActions = qtable.get(qstate) ;
+			if (possibleActions==null || possibleActions.isEmpty()) {
+				break ;
+			}
+			// NOTE: the lowest min-valid is not Float.MIN_VALUE (which is in fact a positive value). We use
+			// negative infinity:
+			float bestValue = Float.NEGATIVE_INFINITY ;
+			String bestAction = null ;
+			//System.out.println(">>> step " + bestSequece.size() + ", #actions-possible:" + possibleActions.entrySet().size()) ;
+			for (var option : possibleActions.entrySet()) {
+				String a = option.getKey() ;
+				float val = option.getValue().maxReward ;
+				//System.out.println("    action: " + a + ", reward: " + val) ; 
+				if (val > bestValue) {
+					bestValue = val ;
+					bestAction = a ;
+				}
+			}
+			//System.out.println(">>> bestAction: " + bestAction + ", bestValue: " + bestValue) ; 
+			
+			var value0 = clampedValueOfCurrentGameState() ;
+			bestSequece.add(bestAction) ;
+			
+			// execute the action:
+		    Action action = availableActions.get(bestAction) ;
+		    action.exec1(state) ;
+		    var newObs = ((Iv4xrEnvironment) agent.env()).observe(agent.getId()) ;
+		    // set the observation as the new agent-state:
+		    ((Iv4xrAgentState) agent.state()).worldmodel = newObs ;
+			// the state after the interaction:
+
+		    var newState = agentState() ;
+			var value1 = clampedValueOfCurrentGameState() ;
+
+			// calculate direct-reward of executing bestAction:
+			float reward = 0 ;
+			if (actionDirectRewardFunction != null) {
+				reward = actionDirectRewardFunction.apply(new Pair<>(state,bestAction), newState) ;
+			}
+			else 
+				reward = value1 - value0 ;
+						
+			totalReward += reward ;
+			
+			if (topGoalPredicate.test(newState)) {
+				System.out.println(">>> Goal is ACHIEVED") ;
+				log("*** Goal is ACHIEVED");
+				break ;
+			}
+			else if (agentIsDead()) {
+				System.out.println(">>> DEAD") ;
+				log("*** The agent is DEAD.");
+				break;
+			}
+			
+			//System.out.println(">>> NEXT ITER") ;
+			
+			// advance state and qstate to newState, and then we iterate:
+		    state = newState ;
+			qstate =  getQstate.apply(bestSequece,newState) ;
+		}
+		
+		return new Pair<>(bestSequece,totalReward) ;
+		
+	}
 
 }

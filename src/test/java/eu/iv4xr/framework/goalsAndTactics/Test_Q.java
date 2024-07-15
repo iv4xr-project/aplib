@@ -197,8 +197,8 @@ public class Test_Q {
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
 			//var targetShrine = state.worldmodel.elements.get("SM0") ;
-			//var targetShrine = state.worldmodel.elements.get("SM1") ;
-			var targetShrine = state.worldmodel.elements.get("SM3") ;
+			var targetShrine = state.worldmodel.elements.get("SM1") ;
+			//var targetShrine = state.worldmodel.elements.get("SM3") ;
 			
 			return targetShrine != null
 					&& (Boolean) targetShrine.properties.get("cleansed") ;
@@ -252,7 +252,7 @@ public class Test_Q {
 		
 		
 		alg.maxDepth = 18 ;
-		//alg.maxNumberOfEpisodes = 40 ;
+		alg.maxNumberOfEpisodes = 30 ;
 		alg.delayBetweenAgentUpateCycles = 5 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
@@ -260,6 +260,7 @@ public class Test_Q {
 		alg.exploreProbability = 0.08f ;
 		alg.gamma = 0.8f ;
 		//alg.enableBackPropagationOfReward = 3 ; 
+		alg.stopAfterGoalIsAchieved = false ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
@@ -277,16 +278,22 @@ public class Test_Q {
 			System.out.println(">>> " + replay);
 		}
 		
+		
+		var bestSequence = alg.play(alg.maxDepth) ;
+		
 		alg.log(">>> #entries in qtable: " + num_entries);
 		alg.log(">>> #episodes: " + R.episodesValues.size()) ;
 		alg.log(">>> episode-values: " + R.episodesValues) ;
 		
 		alg.log(">>> winningplay: " + R.winningplay) ;
+		alg.log(">>> best sequence: " + bestSequence) ;
 
 		
 		//System.out.println(">>>> hit RET") ;
 		//Scanner scanner = new Scanner(System.in);
 		//scanner.nextLine() ;
+		
+		
 		
 	}
 

@@ -465,6 +465,8 @@ public class XMCTS extends BasicSearch{
 		List<String> bestSequence = new LinkedList<>() ;
 		
 		while (bestChild != null) {
+			if (bestChild.averageReward > bestreward)
+				bestreward = bestChild.averageReward ;
 			bestSequence.add(bestChild.action) ;
 			bestChild = bestChild.bestChild() ;
 		}
