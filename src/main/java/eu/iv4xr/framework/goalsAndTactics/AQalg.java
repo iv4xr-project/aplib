@@ -5,6 +5,7 @@ import static nl.uu.cs.aplib.AplibEDSL.SEQ;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch.RerunWinningPlayResult;
 import eu.iv4xr.framework.goalsAndTactics.XQalg.ActionInfo;
 import nl.uu.cs.aplib.mainConcepts.Action;
 import nl.uu.cs.aplib.utils.Pair;
@@ -169,6 +170,47 @@ public class AQalg<QState> extends XQalg<QState> {
 		return episodeReward ;
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public RerunWinningPlayResult runTrace(List<String> trace) throws Exception {
+		initializeEpisode();
+		
+		log(">>> executing a trace: " + trace);
+		
+		var result = new RerunWinningPlayResult() ;
+		result.indexOfLastExecutedStep = 0 ;
+		result.traceLength = trace.size() ;
+		for (var a : trace) {
+			// execute the action:
+			Action action = availableActions.get(a) ;
+		    action.exec1(agentState()) ;
+		    var newObs = ((Iv4xrEnvironment) agent.env()).observe(agent.getId()) ;
+		    // set the observation as the new agent-state:
+		    ((Iv4xrAgentState) agent.state()).worldmodel = newObs ;
+			// the state after the interaction:
+
+			if (topGoalPredicate.test(agentState())) {
+				result.topPredicateSolved = true ;
+				log("*** Goal is ACHIEVED");
+				break ;
+			}
+			if (agentIsDead()) {
+				result.agentIsDead = true ;
+				result.aborted = true ;
+				log("*** The agent is DEAD.");
+				break;
+			}
+			result.indexOfLastExecutedStep++ ;
+		}
+		closeEnv_() ;
+
+		// cannot check LTL with this mode:
+		// result.violationDetected = ! agent.evaluateLTLs() ;
+		
+		return result ;
+	}
+
+	
 	/**
 	 * Use the model to play the target game. This will always choose the next action which
 	 * gives the best future reward, according to the model. The method returns the sequence
@@ -179,8 +221,10 @@ public class AQalg<QState> extends XQalg<QState> {
 		
 		initializeEpisode() ;
 		List<String> bestSequece = new LinkedList<>() ;
+		List<QState> sequenceSoFar = new LinkedList<>() ;
 		var state = agentState() ;
 		QState qstate =  getQstate.apply(bestSequece,state) ;
+		sequenceSoFar.add(qstate) ; 
 
 		float totalReward = clampedValueOfCurrentGameState() ;
 		
@@ -193,18 +237,25 @@ public class AQalg<QState> extends XQalg<QState> {
 			// NOTE: the lowest min-valid is not Float.MIN_VALUE (which is in fact a positive value). We use
 			// negative infinity:
 			float bestValue = Float.NEGATIVE_INFINITY ;
-			String bestAction = null ;
 			//System.out.println(">>> step " + bestSequece.size() + ", #actions-possible:" + possibleActions.entrySet().size()) ;
 			for (var option : possibleActions.entrySet()) {
-				String a = option.getKey() ;
 				float val = option.getValue().maxReward ;
 				//System.out.println("    action: " + a + ", reward: " + val) ; 
 				if (val > bestValue) {
 					bestValue = val ;
-					bestAction = a ;
 				}
 			}
-			//System.out.println(">>> bestAction: " + bestAction + ", bestValue: " + bestValue) ; 
+			
+			float bestValue_ = bestValue ;
+			var candidates = possibleActions.entrySet().stream().filter(z -> z.getValue().maxReward >= bestValue_ )
+				.map(z -> z.getKey())
+				.collect(Collectors.toList()) ;
+			
+			String bestAction = candidates.get(rnd.nextInt(candidates.size())) ;
+			
+			
+			
+			System.out.println(">>> bestAction: " + bestAction + ", bestValue: " + bestValue) ; 
 			
 			var value0 = clampedValueOfCurrentGameState() ;
 			bestSequece.add(bestAction) ;
@@ -229,6 +280,7 @@ public class AQalg<QState> extends XQalg<QState> {
 				reward = value1 - value0 ;
 						
 			totalReward += reward ;
+			System.out.println(">>> reward:" + reward + ", tot:"+ totalReward) ;
 			
 			if (topGoalPredicate.test(newState)) {
 				System.out.println(">>> Goal is ACHIEVED") ;

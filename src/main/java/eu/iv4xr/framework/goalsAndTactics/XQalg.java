@@ -57,6 +57,12 @@ public class XQalg<QState> extends BasicSearch {
 	 * If specified, this calculates the direct reward of executing an action a on a state S1,
 	 * and transitioning to a state S2. If the function is unspecified, the difference of the
 	 * values of S2 and S1 is used, where the values are calculated through {@link BasicSearch#stateValueFunction}.
+	 * 
+	 * <p>This function is not easy to implement, as it needs access to the current as well as
+	 * previous states of the agent, which in turns will require state-cloning, which is hard
+	 * to implement. Also notice that the algorithm access the agent state through the method
+	 * {@link #agentState()}, which actually just return a reference to the agent's state. In
+	 * particular, {@link #agentState()} does NOT apply cloning.
 	 */
 	public BiFunction<Pair<Iv4xrAgentState,String>,Iv4xrAgentState,Float> actionDirectRewardFunction ;
 	
@@ -308,28 +314,54 @@ public class XQalg<QState> extends BasicSearch {
 			List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace) {
 		if (enableBackPropagationOfReward <= 1) 
 			return ;
-		var state2 = newState ;
-		for(int k = stateActionRewardTrace.size()-1 ; k>=0; k--) {
-			var h = stateActionRewardTrace.get(k) ;
-			var state1 = h.fst ;
-			var action = h.snd.fst ;
-			var directReward_of_state1_action = h.snd.snd ;
-			var info = qtable.get(state1).get(action) ;
-			if (info == null)
+		
+		// We will drop the prefix of stateActionRewardTrace up to the position j, where
+		// the state is the same as newState. This is to prevent the backward propagation
+		// from introducing a cycle of high reward, resulting in a model that drives the
+		// agent to move in a cycle, because the model believes it can keep collecting
+		// rewards.
+		int k = 0 ;
+		boolean removePrefix = false ;
+		while (k < stateActionRewardTrace.size()) {
+			if (stateActionRewardTrace.get(k).fst.equals(newState)) {
+				removePrefix = true ;
 				break ;
-			var current_value_of_state1_action = info.maxReward ;
-			var new_value = updateQ(state1,action,state2,directReward_of_state1_action) ;
-			// if the new value is less than the current value, restore the current value,
-			// and stop the back-propagation as it won't change the values further down
-			// the propagation:
-			if (new_value < current_value_of_state1_action) {
-				 info.maxReward = current_value_of_state1_action ;
-				 break ;
 			}
-			state2 = state1 ;
+			k++ ;
 		}
-		stateActionRewardTrace.add(new Pair<>(newState, new Pair<>(chosenAction,directReward))) ;
-		if (stateActionRewardTrace.size() > enableBackPropagationOfReward - 1)
+		if (removePrefix) {
+			int numberOfRemoved = 0 ;
+			int toBeRemoved = k+1 ;
+			while (numberOfRemoved < toBeRemoved) {
+				stateActionRewardTrace.remove(0) ;
+				numberOfRemoved++ ;
+			}
+		}
+		
+		var action_to_state2 = chosenAction ;
+		for(k = stateActionRewardTrace.size()-1 ; k>0; k--) {
+			var prev = stateActionRewardTrace.get(k-1) ;
+			var head = stateActionRewardTrace.get(k) ;
+			var state0 = prev.fst ;
+			var state1 = head.fst ;
+			var action_to_state1 = head.snd.fst ;
+			var directReward_of_action_to_state1 = head.snd.snd ;
+			var info0 = qtable.get(state0).get(action_to_state1) ;
+			var info1 = qtable.get(state1).get(action_to_state2) ;
+						
+			// back propagating reward WITHOUT gamma (discount factor for future reward)
+			var yy = (1 - alpha) * info0.maxReward
+			         + alpha * (directReward_of_action_to_state1 + info1.maxReward) ; // <-- instead of gamma * info1.maxReward
+			
+			if (yy > info0.maxReward) {
+				 info0.maxReward = yy ;
+			}
+			else break ;
+			action_to_state2 = action_to_state1 ;
+		}
+		
+		stateActionRewardTrace.add(new Pair<>(newState, new Pair<>(chosenAction,directReward))) ;		
+		if (stateActionRewardTrace.size() > enableBackPropagationOfReward)
 			stateActionRewardTrace.remove(0) ;
 		
 	}

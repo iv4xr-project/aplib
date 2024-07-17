@@ -284,7 +284,10 @@ public class BasicSearch {
 	}
 
 	/**
-	 * Return the agent's state.
+	 * Return the agent's state. NOTE that this does NOT apply cloning. Instead, the
+	 * method simply returns a reference/pointer to the agent's state. So, if the agent
+	 * does an update and chenges its state, the state returned by this method changes
+	 * as well. 	 
 	 */
 	@SuppressWarnings("rawtypes")
 	public Iv4xrAgentState agentState() {

@@ -157,7 +157,7 @@ public class Test_ActionLevelQ {
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
-		config.numberOfMonsters = 2 ;
+		config.numberOfMonsters = 0 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -276,8 +276,8 @@ public class Test_ActionLevelQ {
 	
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
-			//var targetShrine = state.worldmodel.elements.get("SM0") ;
-			var targetShrine = state.worldmodel.elements.get("SM1") ;
+			var targetShrine = state.worldmodel.elements.get("SM0") ;
+			//var targetShrine = state.worldmodel.elements.get("SM1") ;
 			return targetShrine != null
 					&& (Boolean) targetShrine.properties.get("cleansed") ;
 		} ;
@@ -302,32 +302,95 @@ public class Test_ActionLevelQ {
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
 				return -100f ;
-			/*
-			var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
-				.filter(e -> e.type.equals("SCROLL"))
-				.count();
 			
-			var scrollsInBag = (Integer) state.worldmodel.elements.get("Frodo")
-					.properties.get("scrollsInBag") ;
-			*/
-			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
-					.properties.get("score") ;
+			//var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
+			//	.filter(e -> e.type.equals("SCROLL"))
+			//	.count();
+			
+			var frodo = state.worldmodel.elements.get("Frodo") ;
+			
+			var scrollsInBag = (Integer) frodo.properties.get("scrollsInBag") ;
+			
+			var healpotsInBag = (Integer) frodo.properties.get("healpotsInBag") ;
+			
+			var score = (Integer) frodo.properties.get("score") ;
+			
+			var hp = (Integer) frodo.properties.get("hp") ;
 			
 			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
-			return (float) frodo_score ;
+			var r = (float) 10*(5*score 
+					+ hp 
+					+ (scrollsInBag ==1 ? 3 : 0)
+					+ (healpotsInBag==1 ? 5 : 0))	
+					;
+			//System.out.println(">>>> reward = " + r ) ;
+			return r ;
 		} ;
 		
 		
+		/*
+		 This DOES NOT WORK because prev and current states are the same reference to the
+		 same state object! 
+		 
+		alg.actionDirectRewardFunction = (z0, nextState) -> {
+			var state  = z0.fst ;
+			var action = z0.snd ;
+			if (alg.topGoalPredicate.test(nextState))
+				return alg.maxReward ;
+			if (alg.agentIsDead.test(nextState))
+				return -100f ;
+			var score0 = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("score") ;
+			
+			var scrollsInBag0 = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("scrollsInBag") ;
+			
+			var healPotsInBag0 = (Integer) state.worldmodel.elements.get("Frodo")
+					.properties.get("healpotsInBag") ;
+			
+			//var hp0 = (Integer) state.worldmodel.elements.get("Frodo")
+			//		.properties.get("hp") ;
+			
+			var score1 = (Integer) nextState.worldmodel.elements.get("Frodo")
+					.properties.get("score") ;
+			
+			var scrollsInBag1 = (Integer) nextState.worldmodel.elements.get("Frodo")
+					.properties.get("scrollsInBag") ;
+			
+			var healPotsInBag1 = (Integer) nextState.worldmodel.elements.get("Frodo")
+					.properties.get("healpotsInBag") ;
+			
+			//var hp1 = (Integer) nextState.worldmodel.elements.get("Frodo")
+			//		.properties.get("hp") ;
+			
+			return (float)(50*(score1 - score0)
+					+ 50*Math.abs(scrollsInBag1 - scrollsInBag0)
+					+ 50*Math.abs(healPotsInBag1 - healPotsInBag0)
+					) ;
+		} ;
+		*/
+		
 		
 		alg.maxDepth = 600 ;
-		//alg.maxNumberOfEpisodes = 40 ;
-		alg.delayBetweenAgentUpateCycles = 20 ;
-		alg.totalSearchBudget = 300000 ;
+		alg.maxNumberOfEpisodes = 100 ;
+		alg.delayBetweenAgentUpateCycles = 5 ;
+		alg.totalSearchBudget = 1200000 ;
+		alg.gamma = 0.95f ;
+		alg.exploreProbability = 0.08f ;
 		alg.enableBackPropagationOfReward = 10 ; 
+		alg.stopAfterGoalIsAchieved = false ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm(); 
+		
+		if (R.winningplay != null) {
+			var replay = alg.runWinningPlay() ;
+			System.out.println(">>> Replayed the found winning play.");
+			System.out.println(">>> " + replay);
+		}
+		
+		var bestSequence = alg.play(alg.maxDepth) ;
 		
 		alg.log(">>> #states in qtable: " + alg.qtable.size());
 		int num_entries = 0 ;
@@ -337,6 +400,9 @@ public class Test_ActionLevelQ {
 		alg.log(">>> #entries in qtable: " + num_entries);
 		alg.log(">>> episode-values: " + R.episodesValues) ;
 		alg.log(">>> winningplay: " + R.winningplay) ;
+		alg.log(">>> best sequence: " + bestSequence) ;
+		
+		
 
 		
 		//System.out.println(">>>> hit RET") ;

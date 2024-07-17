@@ -281,7 +281,7 @@ public class Test_Q {
 		
 		var bestSequence = alg.play(alg.maxDepth) ;
 		
-		alg.log(">>> #entries in qtable: " + num_entries);
+		alg.log(">>> #states in qtable: " + alg.qtable.size() + ", #entries in qtable: " + num_entries);
 		alg.log(">>> #episodes: " + R.episodesValues.size()) ;
 		alg.log(">>> episode-values: " + R.episodesValues) ;
 		
