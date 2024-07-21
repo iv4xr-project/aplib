@@ -1,10 +1,8 @@
 package eu.iv4xr.framework.goalsAndTactics;
 
 import java.awt.Window;
-import java.util.Scanner;
 import java.util.logging.Level;
 
-import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.junit.jupiter.api.Test;
@@ -16,13 +14,16 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
+import static nl.uu.cs.aplib.utils.ConsoleUtils.* ; 
+
 import static nl.uu.cs.aplib.AplibEDSL.* ;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
+/**
+ * Testing {@link BasicSearch}.
+ */
 public class Test_BasicSearch {
 	
 	boolean withGraphics = true ;
@@ -34,6 +35,10 @@ public class Test_BasicSearch {
 		config.viewDistance = 4;
 		config.numberOfMaze = 3 ;
 		//config.numberOfMonsters = 30 ;
+		config.worldSize = 16 ;
+		config.numberOfCorridors = 2 ;
+		config.numberOfScrolls = 2 ;
+		config.numberOfMonsters = 2 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -66,44 +71,15 @@ public class Test_BasicSearch {
 		//agent.update();
 		
 		//System.out.println(">>> WOM: " + state.worldmodel) ;
-		
-		
+			
 		return agent ;
 	}
 	
-	//@Test
-	public void test_closingMiniDungeon() throws Exception {
-		DungeonApp app = new DungeonApp(new MiniDungeonConfig());
-		app.soundOn = false;
-		DungeonApp.deploy(app);		
-		
-		System.out.println(">>>> hit RET 1") ;
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine() ;
-		
-		Window win = SwingUtilities.getWindowAncestor(app);
-		win.dispose();
-		
-		System.out.println(">>>> hit RET 2") ;
-		scanner.nextLine() ;
-		
-		app = new DungeonApp(new MiniDungeonConfig());
-		app.soundOn = false;
-		DungeonApp.deploy(app);		
-		
-		System.out.println(">>>> hit RET 3") ;
-		scanner.nextLine() ;
-		
-		win = SwingUtilities.getWindowAncestor(app);
-		win.dispose();
-		
-		System.out.println(">>>> hit RET 4") ;
-		//scanner = new Scanner(System.in);
-		scanner.nextLine() ;
-	}
-	
 	@Test
-	public void test0() throws Exception {
+	/**
+	 * A simple scenario to test that BasicSearch works.
+	 */
+	public void testBasicSearch() throws Exception {
 		
 		var goalLib = new GoalLib();
 		
@@ -157,18 +133,24 @@ public class Test_BasicSearch {
 		alg.maxDepth = 3 ;
 		alg.maxNumberOfEpisodes = 10 ;
 		alg.delayBetweenAgentUpateCycles = 10 ;
-		
-
-		
+			
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm();
 		
-		System.out.println(">>> winningplay: " + R.winningplay) ;
-
+		// the setup is simple, should be solvable:
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.topGoalPredicate.test(alg.agentState())) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
 		
-		//System.out.println(">>>> hit RET") ;
-		//Scanner scanner = new Scanner(System.in);
-		//scanner.nextLine() ;
+		// rerun the found winning-play:	
+		var RR = alg.runWinningPlay() ;
+		assertTrue(RR.topPredicateSolved);
+		
+		System.out.println(">>> winningplay: " + R.winningplay) ;
+		System.out.println(">>> " + RR) ;
 		
 	}
 

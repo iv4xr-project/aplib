@@ -119,6 +119,13 @@ public class Test_ActionLevelQ {
 					else
 						code = 7 ;
 				}
+				else if (e.id.startsWith("M")){
+					int e_x = (int) e.position.x ;
+					int e_y = (int) e.position.z ;
+					if (Math.abs(e_x - agent_x) == 1 || Math.abs(e_y - agent_y) == 1) {
+						code = 9 ;
+					}
+				}
 				if (code >0) {
 					int e_x = (int) e.position.x ;
 					int e_y = (int) e.position.z ;
@@ -157,7 +164,7 @@ public class Test_ActionLevelQ {
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
-		config.numberOfMonsters = 0 ;
+		config.numberOfMonsters = 1 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -291,7 +298,7 @@ public class Test_ActionLevelQ {
 		// attach a function that converts the agent state to a Q-state:
 		alg.getQstate = (trace,currentState) -> {
 			var env = (MyAgentEnv) alg.agent.env() ;
-			return new MDQstate2(env.app.dungeon.config, 5, currentState) ;
+			return new MDQstate2(env.app.dungeon.config, 7, currentState) ;
 		} ;
 		
 		// defining state-value function, rather than action-reward. The direct
@@ -318,10 +325,9 @@ public class Test_ActionLevelQ {
 			var hp = (Integer) frodo.properties.get("hp") ;
 			
 			//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
-			var r = (float) 10*(5*score 
-					+ hp 
-					+ (scrollsInBag ==1 ? 3 : 0)
-					+ (healpotsInBag==1 ? 5 : 0))	
+			var r = (float) 10*(hp 
+					+ (scrollsInBag ==1 ? 100 : (scrollsInBag ==2 ? -50 : 0))
+					+ (healpotsInBag==1 ? 20 : 0))	
 					;
 			//System.out.println(">>>> reward = " + r ) ;
 			return r ;
@@ -371,14 +377,15 @@ public class Test_ActionLevelQ {
 		*/
 		
 		
-		alg.maxDepth = 600 ;
-		alg.maxNumberOfEpisodes = 100 ;
+		alg.maxDepth = 800 ;
+		alg.maxNumberOfEpisodes = 400 ;
 		alg.delayBetweenAgentUpateCycles = 5 ;
-		alg.totalSearchBudget = 1200000 ;
+		alg.totalSearchBudget = 1600000 ;
 		alg.gamma = 0.95f ;
 		alg.exploreProbability = 0.08f ;
-		alg.enableBackPropagationOfReward = 10 ; 
+		alg.enableBackPropagationOfReward = 20 ; 
 		alg.stopAfterGoalIsAchieved = false ;
+		alg.maxReward = 1000000 ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
