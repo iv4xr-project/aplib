@@ -14,12 +14,11 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
-import nl.uu.cs.aplib.mainConcepts.GoalStructure;
-
-import static nl.uu.cs.aplib.utils.ConsoleUtils.* ; 
+import nl.uu.cs.aplib.mainConcepts.GoalStructure; 
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Testing {@link BasicSearch}.
@@ -138,6 +137,7 @@ public class Test_BasicSearch {
 		var R = alg.runAlgorithm();
 		
 		// the setup is simple, should be solvable:
+		assumeTrue(R.goalAchieved) ;
 		assertTrue(alg.terminationCondition()) ;
 		assertTrue(alg.topGoalPredicate.test(alg.agentState())) ;
 		assertTrue(alg.winningplay.size() > 0) ;

@@ -21,8 +21,13 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 
+/**
+ * Test the evolutionary search-algorithm implemented in {@link XEvolutionary}.
+ */
 public class Test_Evo {
 	
 	boolean withGraphics = true ;
@@ -34,9 +39,11 @@ public class Test_Evo {
 		config.viewDistance = 40;
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 2 ;
+		config.numberOfRagePots = 0 ;
 		config.enableSmeagol = false ;
-		config.numberOfMonsters = 1 ;
-		config.worldSize = 20 ;
+		config.numberOfMonsters = 3 ;
+		config.worldSize = 10 ;
+		config.numberOfCorridors = 2 ;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
 		
@@ -76,13 +83,12 @@ public class Test_Evo {
 	
 	
 	@Test
-	public void test0() throws Exception {
+	public void testXEvolutionary() throws Exception {
 		
 		var goalLib = new GoalLib();
 		
 		var alg = new XEvolutionary() ;
 		BasicSearch.DEBUG = !supressLogging ;
-
 		
 		alg.agentConstructor = dummy -> {
 			try {
@@ -114,11 +120,12 @@ public class Test_Evo {
 		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
 		alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
-		alg.isInteractable   = e -> e.id.contains("S") ;
+		alg.isInteractable   = e -> e.id.contains("S") && ! e.id.startsWith("SS") ;
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
-			//var targetShrine = state.worldmodel.elements.get("SM0") ;
-			var targetShrine = state.worldmodel.elements.get("SM1") ;
+			var targetShrine = state.worldmodel.elements.get("SM0") ;
+			//var targetShrine = state.worldmodel.elements.get("SS1") ;
+			//var targetShrine = state.worldmodel.elements.get("SM1") ;
 			return targetShrine != null
 					&& (Boolean) targetShrine.properties.get("cleansed") ;
 		} ;
@@ -145,15 +152,15 @@ public class Test_Evo {
 		} ;
 		
 		// sensitive to hyper parameters...
-		alg.maxDepth = 7 ;
+		alg.maxDepth = 8 ;
 		//alg.maxNumberOfEpisodes = 40 ;
-		alg.delayBetweenAgentUpateCycles = 10 ;
+		alg.delayBetweenAgentUpateCycles = 2 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 600000 ;
 		alg.maxPopulationSize = 8 ;
 		alg.numberOfElitesToKeepDuringSelection = 4 ;
-		alg.insertionProbability = 0.9f ;
+		alg.insertionProbability = 0.5f ;
 		alg.onlyExtendWithNewGene = false ;
 		
 		//alg.extendAtRandomInsertionPoint = false ;
@@ -162,22 +169,24 @@ public class Test_Evo {
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm();
 		
-		if (R.winningplay != null) {
-			var replay = alg.runWinningPlay() ;
-			System.out.println(">>> Replayed the found winning play.");
-			System.out.println(">>> " + replay);
-		}
+		// the setup is simple... should be solvable
+		assumeTrue(R.goalAchieved) ;
+		
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.topGoalPredicate.test(alg.agentState())) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
+		
+		var RR = alg.runWinningPlay() ;
+		assertTrue(RR.topPredicateSolved);
 		
 		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
 		
 		System.out.println(">>> winningplay: " + R.winningplay) ;
-		
 		System.out.println(">>> episodes-values: " + R.episodesValues) ;
-		
-		
-		//System.out.println(">>>> hit RET") ;
-		//Scanner scanner = new Scanner(System.in);
-		//scanner.nextLine() ;
+		System.out.println(">>> " + RR) ;
 		
 	}
 
