@@ -22,8 +22,14 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 
+/**
+ * Test the Monte Carlo Tree Search algorithm (MCST) as implemented 
+ * in {@link XMCTS}.
+ */
 public class Test_MCTS {
 	
 	boolean withGraphics = true ;
@@ -33,6 +39,7 @@ public class Test_MCTS {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 40 ;
+		config.worldSize = 20 ;
 		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
@@ -83,8 +90,7 @@ public class Test_MCTS {
 		
 		var alg = new XMCTS() ;
 		BasicSearch.DEBUG = !supressLogging ;
-
-		
+	
 		alg.agentConstructor = dummy -> {
 			try {
 				return constructAgent() ;
@@ -110,12 +116,11 @@ public class Test_MCTS {
 			  .lift() ;
 			return dummyG ;
 		} ;
-		
-		
+				
 		//alg.exploredG   = huristicLocation -> goalLib.exploring(null,Integer.MAX_VALUE) ;
 		alg.reachedG    = e -> goalLib.entityInCloseRange(e) ;
 		alg.interactedG = e -> goalLib.entityInteracted(e) ;
-		alg.isInteractable   = e -> e.id.contains("S") ;
+		alg.isInteractable   = e -> e.id.contains("S") && ! e.id.startsWith("SS");
 		alg.topGoalPredicate = state -> {
 			//System.out.println(">>> WOM = " + state.worldmodel) ;
 			//var targetShrine = state.worldmodel.elements.get("SM0") ;
@@ -145,36 +150,39 @@ public class Test_MCTS {
 		} ;
 		
 		
-		alg.maxDepth = 8 ;
+		alg.maxDepth = 10 ;
 		alg.maxNumberOfEpisodes = 60 ;
-		alg.delayBetweenAgentUpateCycles = 10 ;
+		alg.delayBetweenAgentUpateCycles = 2 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 2400000 ;
-		alg.stopAfterGoalIsAchieved = false ;
+		alg.stopAfterGoalIsAchieved = true ;
 		
 				
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm();
 		
-		//alg.log(">>> tree fully explored: " + alg.mctree.fullyExplored);
+		// for this setup, the goal should be solvable
+		assumeTrue(R.goalAchieved) ;
 		
-		//System.out.println(alg.mctree) ;
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.topGoalPredicate.test(alg.agentState())) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
 		
-		if (R.winningplay != null) {
-			var replay = alg.runWinningPlay() ;
-			System.out.println(">>> Replayed the found winning play.");
-			System.out.println(">>> " + replay);
-		}
+		// rerun the found winning-play:	
+		var RR = alg.runWinningPlay() ;
+		assertTrue(RR.topPredicateSolved);
 		
 		System.out.println(">>> winningplay: " + R.winningplay) ;
-		System.out.println(">>> best play according to the model: " + alg.obtainBestPlay()) ;
+		System.out.println(">>> " + RR) ;
 		
+		//System.out.println(">>> tree fully explored: " + alg.mctree.fullyExplored);
+		//System.out.println(alg.mctree) ;
 		
-		//System.out.println(">>>> hit RET") ;
-		//Scanner scanner = new Scanner(System.in);
-		//scanner.nextLine() ;
-		
+		//System.out.println(">>> best play according to the model: " + alg.obtainBestPlay()) ;		
 	}
 
 }

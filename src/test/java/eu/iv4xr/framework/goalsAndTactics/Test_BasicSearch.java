@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Testing {@link BasicSearch}.
+ * Test the basic search algorithm implemented in {@link BasicSearch}.
  */
 public class Test_BasicSearch {
 	
