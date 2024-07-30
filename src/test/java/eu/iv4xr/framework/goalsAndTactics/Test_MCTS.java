@@ -39,9 +39,10 @@ public class Test_MCTS {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
 		config.viewDistance = 40 ;
-		config.worldSize = 20 ;
+		config.worldSize = 12 ;
 		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 3 ;
+		config.numberOfScrolls = 2 ;
+		config.numberOfCorridors = 3 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 1 ;
 		//config.numberOfMonsters = 30 ;
@@ -82,10 +83,8 @@ public class Test_MCTS {
 		return agent ;
 	}
 	
-	
-	@Test
-	public void test0() throws Exception {
-		
+	// construct and configure an instance of MCT
+	XMCTS contructAlgorithm() {
 		var goalLib = new GoalLib();
 		
 		var alg = new XMCTS() ;
@@ -139,9 +138,15 @@ public class Test_MCTS {
 				return alg.maxReward ;
 			if (alg.agentIsDead.test(state))
 				return -10f ;
-			var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
-					.properties.get("score") ;
-			return (float) frodo_score ;
+			
+			//var frodo_score = (Integer) state.worldmodel.elements.get("Frodo")
+			//		.properties.get("score") ;
+			
+			var cleansed = (int) state.worldmodel.elements.values().stream()
+					.filter(e -> Utils.isMoonShrine(e) && e.getBooleanProperty("cleansed")) 
+					.count();
+			var mazeNr = Utils.currentMazeNr((MyAgentState) state) ;
+			return (float) 100*(cleansed + mazeNr) ;
 		} ;
 		alg.wipeoutMemory = agent -> {
 			var state = (MyAgentState) agent.state() ;
@@ -158,8 +163,21 @@ public class Test_MCTS {
 		alg.totalSearchBudget = 2400000 ;
 		alg.stopAfterGoalIsAchieved = true ;
 		
-				
-		//alg.runAlgorithmForOneEpisode();
+		return alg ;
+	}
+	
+	/**
+	 * Test that the algorithm can work to find a solution, and that
+	 * the solution can be replayed. In this test, the search is stopped
+	 * as soon as the goal state is reached. The trace to this state
+	 * is then extracted, and we check if replaying it loads to the
+	 * goal state.
+	 */
+	@Test
+	public void testMCTS() throws Exception {
+		
+		var alg = contructAlgorithm() ;
+		
 		var R = alg.runAlgorithm();
 		
 		// for this setup, the goal should be solvable
@@ -183,6 +201,51 @@ public class Test_MCTS {
 		//System.out.println(alg.mctree) ;
 		
 		//System.out.println(">>> best play according to the model: " + alg.obtainBestPlay()) ;		
+	}
+	
+	
+	/**
+	 * Test that a winning play can be extracted from the model learned
+	 * by MCTS.
+	 */
+	@Test
+	public void test_model_MCTS() throws Exception {
+		
+		var alg = contructAlgorithm() ;
+		alg.stopAfterGoalIsAchieved = false ;
+
+		var R = alg.runAlgorithm();
+		
+		// for this setup, the goal should be solvable
+		assumeTrue(R.goalAchieved) ;
+		
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
+		
+		System.out.println(">>> winningplay: " + R.winningplay) ;
+		
+		//System.out.println(">>> tree fully explored: " + alg.mctree.fullyExplored);
+		//System.out.println(alg.mctree) ;
+		
+		// obtain the best play from the moddel ;
+		var bestPlay_ = alg.obtainBestPlay() ;
+		var bestPlay = bestPlay_.fst ;
+		var rewardOfBestPlay = bestPlay_.snd ;
+		
+		System.out.println(">>> best play according to the model: " + bestPlay_) ;		
+		assumeTrue(rewardOfBestPlay >= alg.maxReward) ;
+				
+		var RR = alg.runTrace(bestPlay) ;
+		assertTrue (RR.topPredicateSolved) ;
+		
+		System.out.println(">>> #episodes  =" + alg.totNumberOfEpisodes) ;
+		System.out.println(">>> #used turns=" + alg.turn) ;
+		System.out.println(">>> best play according to the model: " + bestPlay_) ;		
+		System.out.println(">>> best play according to the model replay result: " + RR) ;	
+		
 	}
 
 }
