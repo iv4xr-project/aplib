@@ -21,6 +21,8 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 import static nl.uu.cs.aplib.AplibEDSL.* ;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 
 public class Test_Q {
@@ -92,7 +94,7 @@ public class Test_Q {
 		config.numberOfRagePots = 2 ;
 		// allowing a whole maze to be visible:
 		config.viewDistance = 40 ;
-		config.numberOfMaze = 5 ;
+		config.numberOfMaze = 3 ;
 		config.numberOfScrolls = 3 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 2 ;
@@ -139,8 +141,8 @@ public class Test_Q {
 	}
 	
 	
-	@Test
-	public void test0() throws Exception {
+	
+	public XQalg<MDQstate> constructAlgorithm() throws Exception {
 		
 		var goalLib = new GoalLib();
 		
@@ -233,13 +235,14 @@ public class Test_Q {
 			
 			return (float) frodo_score ;
 			*/
+			var mazeNr = Utils.currentMazeNr((MyAgentState) state) ;
 			
 			float numberOfCleansedShrine = (float) state.worldmodel.elements.values()
 				.stream()
 				.filter(e -> Utils.isShrine(e) && e.getBooleanProperty("cleansed"))
 				.count();
 			
-			return 100f * numberOfCleansedShrine ;
+			return 100f * (mazeNr + numberOfCleansedShrine) ;
 		} ;
 		
 		alg.getQstate = (trace,state) -> new MDQstate(state) ;
@@ -252,48 +255,113 @@ public class Test_Q {
 		
 		
 		alg.maxDepth = 18 ;
-		alg.maxNumberOfEpisodes = 30 ;
-		alg.delayBetweenAgentUpateCycles = 5 ;
+		alg.maxNumberOfEpisodes = 60 ;
+		alg.delayBetweenAgentUpateCycles = 2 ;
 		alg.explorationBudget = 4000 ;
 		alg.budget_per_task = 2000 ;
 		alg.totalSearchBudget = 800000 ;
 		alg.exploreProbability = 0.08f ;
 		alg.gamma = 0.8f ;
 		//alg.enableBackPropagationOfReward = 3 ; 
-		alg.stopAfterGoalIsAchieved = false ;
+		alg.stopAfterGoalIsAchieved = true ;
 		
-				
+			
+		return alg ;
+		
+	}
+	
+	/**
+	 * Test that the algorithm can work to find a solution, and that
+	 * the solution can be replayed. In this test, the search is stopped
+	 * as soon as the goal state is reached. The trace to this state
+	 * is then extracted, and we check if replaying it loads to the
+	 * goal state.
+	 */
+	@Test
+	void testXQalg() throws Exception {
+		
+		var alg = constructAlgorithm() ;
+		
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm(); 
 		
-		alg.log(">>> #states in qtable: " + alg.qtable.size());
+		assumeTrue(R.winningplay != null) ;
+		
+		assumeTrue(R.goalAchieved) ;
+		
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.topGoalPredicate.test(alg.agentState())) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
+		
 		int num_entries = 0 ;
 		for (var q : alg.qtable.values()) {
 			num_entries += q.values().size() ;
 		}
 		
-		if (R.winningplay != null) {
-			var replay = alg.runWinningPlay() ;
-			System.out.println(">>> Replayed the found winning play.");
-			System.out.println(">>> " + replay);
-		}
+		var bestPlay_ = alg.play(alg.maxDepth) ;
 		
-		
-		var bestSequence = alg.play(alg.maxDepth) ;
+			
+		var RR = alg.runWinningPlay() ;
+		assertTrue (RR.topPredicateSolved) ;
 		
 		alg.log(">>> #states in qtable: " + alg.qtable.size() + ", #entries in qtable: " + num_entries);
-		alg.log(">>> #episodes: " + R.episodesValues.size()) ;
+		alg.log(">>> #episodes        : " + R.episodesValues.size()) ;
+		alg.log(">>> #used turns      : " + alg.turn) ;	
 		alg.log(">>> episode-values: " + R.episodesValues) ;
 		
-		alg.log(">>> winningplay: " + R.winningplay) ;
-		alg.log(">>> best sequence: " + bestSequence) ;
+		alg.log(">>> winningplay : " + R.winningplay) ;
+		alg.log(">>> best sequence (expected to be bad): " + bestPlay_) ;
+	}
+	
+	/**
+	 * Test that a winning play can be extracted from the model learned
+	 * by Qalg.
+	 */
+	@Test
+	public void test_model_Q() throws Exception {
+		
+		var alg = constructAlgorithm() ;
+		alg.stopAfterGoalIsAchieved = false ;
 
+		var R = alg.runAlgorithm();
 		
-		//System.out.println(">>>> hit RET") ;
-		//Scanner scanner = new Scanner(System.in);
-		//scanner.nextLine() ;
+		// for this setup, the goal should be solvable
+		assumeTrue(R.goalAchieved) ;
 		
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
 		
+		// obtain the best play from the moddel ;
+		var bestPlay_ = alg.play(alg.maxDepth) ;
+		var bestPlay = bestPlay_.fst ;
+		var rewardOfBestPlay = bestPlay_.snd ;
+		
+		//System.out.println(">>> tree fully explored: " + alg.mctree.fullyExplored);
+		//System.out.println(alg.mctree) ;
+		
+		System.out.println(">>> best play according to the model: " + bestPlay_) ;		
+		assumeTrue(rewardOfBestPlay >= alg.maxReward) ;
+				
+		var RR = alg.runTrace(bestPlay) ;
+		assertTrue (RR.topPredicateSolved) ;
+		
+		int num_entries = 0 ;
+		for (var q : alg.qtable.values()) {
+			num_entries += q.values().size() ;
+		}
+		alg.log(">>> #states in qtable: " + alg.qtable.size() + ", #entries in qtable: " + num_entries);
+		alg.log(">>> #episodes        : " + R.episodesValues.size()) ;
+		System.out.println(">>> #episodes  =" + alg.totNumberOfEpisodes) ;
+		System.out.println(">>> #used turns=" + alg.turn) ;
+		System.out.println(">>> recorded winning play: " + R.winningplay) ;		
+		System.out.println(">>> best play according to the model: " + bestPlay_) ;		
+		System.out.println(">>> best play according to the model replay result: " + RR) ;	
 		
 	}
 
