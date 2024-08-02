@@ -2,8 +2,9 @@ package eu.iv4xr.framework.goalsAndTactics;
 
 import static nl.uu.cs.aplib.AplibEDSL.action;
 import static nl.uu.cs.aplib.AplibEDSL.goal;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import java.util.Arrays;
 import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
@@ -11,7 +12,6 @@ import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
 
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph.Tile;
-import eu.iv4xr.framework.goalsAndTactics.Test_Q.MDQstate;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldModel;
@@ -32,137 +32,15 @@ public class Test_ActionLevelQ {
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = false ;
-	
-	/**
-	 * A Q-state representation of MD-state. We use byte-array to keep its size small.
-	 */
-	static class MDQstate2 {
-		byte[] state ;
 		
-		
-		/**
-		 * Construct a Q-state. 
-		 * 
-		 * <p> "windowSize" defines a rectangle area around the agent,
-		 * where observation will be obtained. That is, only things within this rectangle,
-		 * and moreover visible to the agent (within its visibility range) will be included
-		 * in the constructed Q-state.
-		 */
-		MDQstate2(MiniDungeonConfig mdconfig, int windowSize, Iv4xrAgentState agentstate) {
-			
-			if (windowSize % 2 != 1) 
-				throw new IllegalArgumentException("WindowSize should be an odd number.") ;
-			
-			int N = mdconfig.worldSize ;
-			int N__ = N-2 ;
-			int W = Math.min(N-2,windowSize) ;
-			int half_W = (W-1)/2 ;
-			var wom = agentstate.worldmodel ;
-			// for now, using only Frodo:
-			var frodo = wom.elements.get("Frodo") ;
-			// 7 properties
-			int agent_x = (int) frodo.position.x ;
-			int agent_y = (int) frodo.position.z ;
-			int agent_mazeId = (Integer) frodo.properties.get("maze") ;
-			int hp = (Integer) frodo.properties.get("hp") ;
-			int numOfScrollsInBag = (Integer) frodo.properties.get("scrollsInBag") ;
-			int numOfHealPotsInBag = (Integer) frodo.properties.get("healpotsInBag") ;
-			int numOfRagePotsInBag = (Integer) frodo.properties.get("ragepotsInBag") ;
-			int numOfProperties = 7 ;
-			int arraySize = numOfProperties + W * W ;
-			state = new byte[arraySize] ;
-			Arrays.fill(state, (byte) 0) ;
-			state[0] = (byte) agent_x ;
-			state[1] = (byte) agent_y ;
-			state[2] = (byte) agent_mazeId ;
-			state[3] = (byte) hp ;
-			state[4] = (byte) numOfScrollsInBag ;
-			state[5] = (byte) numOfHealPotsInBag ;
-			state[6] = (byte) numOfRagePotsInBag ;
-			int windowBottomLeft_x = Math.max(1, agent_x - half_W) ;
-			int windowBottomLeft_y = Math.max(1, agent_y - half_W) ;
-			int windowTopRight_x = Math.min(N__, agent_x + half_W) ;
-			int windowTopRight_y = Math.min(N__, agent_y
-					+ half_W) ;
-			
-			for (var e : wom.elements.values()) {
-				var U = e.properties.get("maze") ;
-				if (U == null) continue ;
-				int e_mazeId = (Integer) U ;
-				if (e_mazeId != agent_mazeId)
-					continue ;
-				int code = -1 ;
-				if (e.id.startsWith("W")) {
-					// wall
-					code = 1 ;
-				}
-				else if (e.id.startsWith("H")) {
-					code = 2 ;
-				}
-				else if (e.id.startsWith("R")) {
-					code = 3 ;
-				}
-				else if (e.id.startsWith("S_")) {
-					code = 4 ;
-				}
-				else if (e.id.startsWith("SS")) {
-					code = 5 ;
-				}
-				else if (e.id.startsWith("SI")) {
-					code = 6 ;
-				}
-				else if (e.id.startsWith("SM")) {
-					// moonshrine
-					var cleansed = (Boolean) e.properties.get("cleansed") ;
-					if (cleansed)
-						code = 5 ;
-					else
-						code = 7 ;
-				}
-				else if (e.id.startsWith("M")){
-					int e_x = (int) e.position.x ;
-					int e_y = (int) e.position.z ;
-					if (Math.abs(e_x - agent_x) == 1 || Math.abs(e_y - agent_y) == 1) {
-						code = 9 ;
-					}
-				}
-				if (code >0) {
-					int e_x = (int) e.position.x ;
-					int e_y = (int) e.position.z ;
-					if (windowBottomLeft_x <= e_x && e_x <= windowTopRight_x
-							&& windowBottomLeft_y <= e_y && e_y <= windowTopRight_y) {
-						int index = numOfProperties 
-								+ (e_x - windowBottomLeft_x) 
-								+ W * (e_y - windowBottomLeft_y) ;
-						state[index] = (byte) code ;
-					}
-				}
-			}		
-		}
-		
-		
-		@Override
-		public boolean equals(Object o) {
-			if (! (o instanceof MDQstate2)) return false ;
-			var o_ = (MDQstate2) o ;
-			
-			return Arrays.equals(this.state, o_.state) ;
-		}
-		
-		@Override
-		public int hashCode() {
-			return Arrays.hashCode(state) ;
-		}
-	}
-	
 	TestAgent constructAgent() throws Exception {
 		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 2 ;
-		config.worldSize = 12 ;
+		config.numberOfHealPots = 1 ;
+		config.worldSize = 10 ;
 		config.numberOfCorridors = 2 ;
 		config.viewDistance = 40 ;
-		config.numberOfMaze = 3 ;
-		config.numberOfScrolls = 3 ;
+		config.numberOfMaze = 2 ;
+		config.numberOfScrolls = 1 ;
 		config.enableSmeagol = false ;
 		config.numberOfMonsters = 1 ;
 		config.randomSeed = 79371;
@@ -242,9 +120,9 @@ public class Test_ActionLevelQ {
 		return A ;
 	}
 	
-	@Test
-	public void test0() throws Exception {
-				
+	
+	AQalg<MDQstate2> constructAlgorithm() throws Exception {
+		
 		var alg = new AQalg<MDQstate2>() ;
 		BasicSearch.DEBUG = !supressLogging ; 
 
@@ -378,44 +256,110 @@ public class Test_ActionLevelQ {
 		
 		
 		alg.maxDepth = 800 ;
-		alg.maxNumberOfEpisodes = 400 ;
-		alg.delayBetweenAgentUpateCycles = 5 ;
+		alg.maxNumberOfEpisodes = 60 ;
+		alg.delayBetweenAgentUpateCycles = 2 ;
 		alg.totalSearchBudget = 1600000 ;
 		alg.gamma = 0.95f ;
 		alg.exploreProbability = 0.08f ;
 		alg.enableBackPropagationOfReward = 20 ; 
-		alg.stopAfterGoalIsAchieved = false ;
+		alg.stopAfterGoalIsAchieved = true ;
 		alg.maxReward = 1000000 ;
 		
+		return alg ;	
+	}
+
+	/**
+	 * Test that the algorithm can work to find a solution, and that
+	 * the solution can be replayed. In this test, the search is stopped
+	 * as soon as the goal state is reached. The trace to this state
+	 * is then extracted, and we check if replaying it loads to the
+	 * goal state.
+	 */
+	//@Test
+	public void testAQalg() throws Exception {
 				
+		var alg = constructAlgorithm() ;
 		//alg.runAlgorithmForOneEpisode();
 		var R = alg.runAlgorithm(); 
 		
-		if (R.winningplay != null) {
-			var replay = alg.runWinningPlay() ;
-			System.out.println(">>> Replayed the found winning play.");
-			System.out.println(">>> " + replay);
-		}
+		assumeTrue(R.winningplay != null) ;
+		
+		assumeTrue(R.goalAchieved) ;
+		
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.topGoalPredicate.test(alg.agentState())) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
+		
+		var RR = alg.runWinningPlay() ;
+		assertTrue(RR.topPredicateSolved) ;
 		
 		var bestSequence = alg.play(alg.maxDepth) ;
 		
-		alg.log(">>> #states in qtable: " + alg.qtable.size());
+		System.out.println(">>> Replayed the found winning play.");
+		System.out.println(">>> " + RR);
+			
 		int num_entries = 0 ;
 		for (var q : alg.qtable.values()) {
 			num_entries += q.values().size() ;
 		}
-		alg.log(">>> #entries in qtable: " + num_entries);
+		alg.log(">>> #states in qtable: " + alg.qtable.size() 
+				+ ", #entries in qtable: " + num_entries);
 		alg.log(">>> episode-values: " + R.episodesValues) ;
 		alg.log(">>> winningplay: " + R.winningplay) ;
-		alg.log(">>> best sequence: " + bestSequence) ;
-		
-		
-
-		
-		//System.out.println(">>>> hit RET") ;
-		//Scanner scanner = new Scanner(System.in);
-		//scanner.nextLine() ;
-		
+		alg.log(">>> best sequence: " + bestSequence) ;		
 	}
+
+	/**
+	 * Test that a winning play can be extracted from the model learned
+	 * by Q-alg.
+	 */
+	@Test
+	public void test_model_Q() throws Exception {
+	
+		var alg = constructAlgorithm();
+		alg.stopAfterGoalIsAchieved = false ;
+
+		var R = alg.runAlgorithm();
+		
+		// for this setup, the goal should be solvable
+		assumeTrue(R.goalAchieved) ;
+		
+		assertTrue(alg.terminationCondition()) ;
+		assertTrue(alg.winningplay.size() > 0) ;
+		assertTrue(R.goalAchieved) ;
+		assertTrue(R.winningplay.size() > 0) ;
+		assertTrue(R.totEpisodes > 0) ;
+		
+		// obtain the best play from the moddel ;
+		var bestPlay_ = alg.play(alg.maxDepth) ;
+		var bestPlay = bestPlay_.fst ;
+		var rewardOfBestPlay = bestPlay_.snd ;
+		
+		//System.out.println(">>> tree fully explored: " + alg.mctree.fullyExplored);
+		//System.out.println(alg.mctree) ;
+		
+		System.out.println(">>> best play according to the model: " + bestPlay_) ;		
+		assumeTrue(rewardOfBestPlay >= alg.maxReward) ;
+				
+		var RR = alg.runTrace(bestPlay) ;
+		assertTrue (RR.topPredicateSolved) ;
+		
+		int num_entries = 0 ;
+		for (var q : alg.qtable.values()) {
+			num_entries += q.values().size() ;
+		}
+		alg.log(">>> #states in qtable: " + alg.qtable.size() + ", #entries in qtable: " + num_entries);
+		alg.log(">>> #episodes        : " + R.episodesValues.size()) ;
+		System.out.println(">>> #episodes  =" + alg.totNumberOfEpisodes) ;
+		System.out.println(">>> #used turns=" + alg.turn) ;
+		System.out.println(">>> recorded winning play: " + R.winningplay) ;		
+		System.out.println(">>> best play according to the model: " + bestPlay_) ;		
+		System.out.println(">>> best play according to the model replay result: " + RR) ;	
+
+	}
+	
 
 }
