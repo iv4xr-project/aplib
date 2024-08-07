@@ -322,30 +322,75 @@ public class TestAlgorithmsFactory {
 	}
 	
 	/**
-	 * A function that specifies the value of a given MD agent-state.
+	 * A function that specifies the value of a given MD agent-state. Suitable for
+	 * high-level algorithms.
 	 */
-	static float valueFunctionOfMDState(BasicSearch alg, Iv4xrAgentState state) {
+	static float valueFunctionOfMDState1(BasicSearch alg, Iv4xrAgentState state) {
 		if (alg.topGoalPredicate.test(state))
 			return alg.maxReward ;
 		if (alg.agentIsDead.test(state))
 			return -100f ;
+		var cleansed = (int) state.worldmodel.elements.values().stream()
+				.filter(e -> Utils.isMoonShrine(e) && e.getBooleanProperty("cleansed")) 
+				.count();
 		var frodo =state.worldmodel.elements.get("Frodo") ;
 		int mazeNr = Utils.mazeId(frodo) ;
-		var value = (Integer) frodo.properties.get("score") + 1000*mazeNr ;
+		float value = (float) 1000*(cleansed + mazeNr) ;
+		//var value = (Integer) frodo.properties.get("score") + 1000*mazeNr ;
 		return (float) value ;
+	}
+	
+	/**
+	 * A function that specifies the value of a given MD agent-state. Suitable for
+	 * low-level algorithms that operate at primitive action level.
+	 */
+	static float valueFunctionOfMDState2(BasicSearch alg, Iv4xrAgentState state) {
+		if (alg.topGoalPredicate.test(state))
+			return alg.maxReward ;
+		if (alg.agentIsDead.test(state))
+			return -100f ;
+		//var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
+		//	.filter(e -> e.type.equals("SCROLL"))
+		//	.count();
+		
+		var frodo = state.worldmodel.elements.get("Frodo") ;
+		
+		var scrollsInBag = (Integer) frodo.properties.get("scrollsInBag") ;
+		
+		var healpotsInBag = (Integer) frodo.properties.get("healpotsInBag") ;
+		
+		var score = (Integer) frodo.properties.get("score") ;
+		
+		var hp = (Integer) frodo.properties.get("hp") ;
+		
+		//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
+		var r1 = (float) 10*(hp 
+				//+ (scrollsInBag ==1 ? 100 : (scrollsInBag ==2 ? -50 : 0))
+				+ 1000*scrollsInBag 
+				+ (healpotsInBag==1 ? 20 : 0))	
+				;
+		var cleansed = (int) state.worldmodel.elements.values().stream()
+				.filter(e -> Utils.isMoonShrine(e) && e.getBooleanProperty("cleansed")) 
+				.count();
+		
+		int mazeNr = Utils.mazeId(frodo) ;
+		float r2 = (float) 1000*(cleansed + mazeNr) ;
+		
+		//System.out.println(">>>> reward = " + r ) ;
+		return r1 + r2 ;
 	}
 	
 	public XEvolutionary mkEvoSearch(MiniDungeonConfig config) {
 		var alg = new XEvolutionary() ;
 		basicConfigure(config,alg) ;
-		alg.stateValueFunction = state -> valueFunctionOfMDState(alg,state) ;
+		alg.stateValueFunction = state -> valueFunctionOfMDState1(alg,state) ;
 		return alg ;	
 	}
 	
 	public XMCTS mkMCTS(MiniDungeonConfig config) {
 		XMCTS alg = new XMCTS() ;
 		basicConfigure(config,alg) ;
-		alg.stateValueFunction = state -> valueFunctionOfMDState(alg,state) ;
+		alg.stateValueFunction = state -> valueFunctionOfMDState1(alg,state) ;
 		return alg ;	
 	}
 	
@@ -353,7 +398,7 @@ public class TestAlgorithmsFactory {
 	public XQalg mkQ(MiniDungeonConfig config) {
 		XQalg alg = new XQalg() ;
 		basicConfigure(config,alg) ;
-		alg.stateValueFunction = state -> valueFunctionOfMDState(alg,state) ;
+		alg.stateValueFunction = state -> valueFunctionOfMDState1(alg,state) ;
 		alg.getQstate = (trace,state) -> new MDQstate1((Iv4xrAgentState) state) ;
 		return alg ;	
 	}
@@ -370,13 +415,13 @@ public class TestAlgorithmsFactory {
 		alg.availableActions.put("r", usePotion(Command.USERAGE)) ;
 		
 		// attach a function that converts the agent state to a Q-state:
-		int observeWindowSize = 5 ;
+		int observeWindowSize = 9 ;
 		alg.getQstate = (trace,currentState) -> {
 					var env = (MyAgentEnv) alg.agent.env() ;
 					return new MDQstate2(env.app.dungeon.config, observeWindowSize, (Iv4xrAgentState) currentState) ;
 		} ;
 				
-		alg.stateValueFunction = state -> valueFunctionOfMDState(alg,state) ;
+		alg.stateValueFunction = state -> valueFunctionOfMDState2(alg,state) ;
 
 		return alg ;	
 	}
@@ -531,6 +576,13 @@ public class TestAlgorithmsFactory {
 						code = 5 ;
 					else
 						code = 7 ;
+				}
+				else if (e.id.startsWith("M")){
+					int e_x = (int) e.position.x ;
+					int e_y = (int) e.position.z ;
+					if (Math.abs(e_x - agent_x) == 1 || Math.abs(e_y - agent_y) == 1) {
+						code = 9 ;
+					}
 				}
 				if (code >0) {
 					int e_x = (int) e.position.x ;

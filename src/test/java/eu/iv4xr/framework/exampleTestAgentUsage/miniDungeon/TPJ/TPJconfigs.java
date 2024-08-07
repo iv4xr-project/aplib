@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.TPJ;
 
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 
 public class TPJconfigs {
@@ -211,6 +212,83 @@ public class TPJconfigs {
 		config.numberOfMonsters = 6 ;
 		config.randomSeed = 79371;
 		return config ;
+	}
+	
+	// configs for evaluating reinforcement leanring
+	public static MiniDungeonConfig MDQ1Config() {
+		// just one maze, with no monster 
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "MDQ1Config" ;
+		config.numberOfMaze = 1 ;
+		config.worldSize = 14 ;
+		config.numberOfHealPots = 8;
+		config.numberOfScrolls = 2 ;
+		config.numberOfMonsters = 0 ;
+		config.numberOfCorridors = 3 ;
+		config.viewDistance = 40;
+		//config.randomSeed = 783; // two scrolls, with the far one being holy
+		//config.randomSeed = 781; // 
+		config.randomSeed = 791;
+		
+		config.enableSmeagol = false ;
+		return config ;
+	}
+	
+	// like MDQ1Config, with monsters
+	public static MiniDungeonConfig MDQ2Config() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "MDQ2Config" ;
+		config.numberOfMaze = 1 ;
+		config.worldSize = 16 ;
+		config.numberOfHealPots = 8;
+		config.numberOfScrolls = 2 ;
+		config.numberOfMonsters = 4 ;
+		config.numberOfCorridors = 4 ;
+		config.viewDistance = 40;
+		config.randomSeed = 783; // two scrolls, with the far one being holy
+		config.enableSmeagol = false ;
+		return config ;
+	}
+	
+	// like MDQ1Config, but larger (and no monsters)
+	public static MiniDungeonConfig MDQ3Config() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "MDQ3Config" ;
+		config.numberOfMaze = 1 ;
+		config.worldSize = 24 ;
+		config.numberOfHealPots = 8;
+		config.numberOfScrolls = 2 ;
+		config.numberOfMonsters = 0 ;
+		config.numberOfCorridors = 4 ;
+		config.viewDistance = 40;
+		config.randomSeed = 793; // two scrolls, with the far one being holy
+		config.enableSmeagol = false ;
+		return config ;
+	}
+	
+	// like MDQ1Config, but two mazes (and no monsters)
+	public static MiniDungeonConfig MDQ4Config() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "MDQ4Config" ;
+		config.numberOfMaze = 2 ;
+		config.worldSize = 16 ;
+		config.numberOfHealPots = 8;
+		config.numberOfScrolls = 2 ;
+		config.numberOfMonsters = 0 ;
+		config.numberOfCorridors = 4 ;
+		config.viewDistance = 40;
+		config.randomSeed = 783; // two scrolls, with the far one being holy
+		config.enableSmeagol = false ;
+		return config ;
+	}
+	
+	// just for trying out different configs:
+	public static void main(String[] args) throws Exception {		
+		MiniDungeonConfig config = MDQ1Config() ;
+		System.out.println(">>> Configuration:\n" + config) ;
+		var app = new DungeonApp(config) ;
+		//app.dungeon.showConsoleIO = false ;
+		DungeonApp.deploy(app);
 	}
 
 }

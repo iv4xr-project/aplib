@@ -111,6 +111,7 @@ public class AQalg<QState> extends XQalg<QState> {
 		    var value0 = clampedValueOfCurrentGameState() ;
 		    Action action = availableActions.get(chosenAction) ;
 		    action.exec1(currenState) ;
+		    this.turn++ ;
 		    var newObs = ((Iv4xrEnvironment) agent.env()).observe(agent.getId()) ;
 		    ((Iv4xrAgentState) agent.state()).worldmodel = newObs ;
 		    trace.add(chosenAction) ;

@@ -103,6 +103,17 @@ public class XMCTS extends BasicSearch{
 		List<Node> children ;
 		
 		/**
+		 * The number of nodes in this tree.
+		 */
+		public int size() {
+			int n = 1 ;
+			for (var ch : children) {
+				n += ch.size() ;
+			}
+			return n ;
+		}
+		
+		/**
 		 * Child with the best average-reward. Null if there is no child.
 		 */
 		Node bestChild() {
@@ -471,6 +482,13 @@ public class XMCTS extends BasicSearch{
 			bestChild = bestChild.bestChild() ;
 		}
 		return new Pair<>(bestSequence,bestreward) ;
+	}
+	
+	/**
+	 * The number of nodes in the MCTS-tree.
+	 */
+	public int size() {
+		return mctree.size() ;
 	}
 	
 	/**

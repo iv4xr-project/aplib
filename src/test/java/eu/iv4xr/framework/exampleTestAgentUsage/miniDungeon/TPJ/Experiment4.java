@@ -44,15 +44,22 @@ public class Experiment4 {
 		//Small1(),
 		//Small2()
 	} ;
+	
+	MiniDungeonConfig[] QevalDungeons = {
+		MDQ1Config()
+		//, MDQ2Config()
+		//, MDQ3Config()
+		//, MDQ4Config()
+	} ;
 		
-	int numberOfRepeatedRuns = 3 ;
+	int numberOfRepeatedRuns = 1 ;
 	
 	boolean withGraphics = true ;
 	boolean supressLogging = true ;
 	// in ms.
-	int delayBetweenAgentUpateCycles = 10 ;
+	int delayBetweenAgentUpateCycles = 2 ;
 	boolean saveRunData = true ;
-    String runDataFolder = "./tmp" ;
+    String runDataFolder = "./tmp/TPJ/experiment4" ;
     
         
     /**
@@ -66,6 +73,7 @@ public class Experiment4 {
 		public int numEpisodes ;
 		public Integer numOfVisitedStates = null ;
 		public boolean topGoalSolved ;
+		public Double rewardOfExtractedSolution = null ;
 		public boolean invViolationDetected ;
 		
 		@Override
@@ -75,8 +83,10 @@ public class Experiment4 {
 			z += "\n#turn:" + usedTurn ;
 			z += "\n#episodes:" + numEpisodes ;
 			z += "\ntime:" + runtime ;
-			z += "\n#visisted abs-states:" + (numOfVisitedStates==null ? "not tracked" : "" + numOfVisitedStates) ;
+			z += "\n#visisted abs-states:" + (numOfVisitedStates==null ? " not tracked" : "" + numOfVisitedStates) ;
 			z += "\ntop-goal solved:" + topGoalSolved ;
+			z += "\nreward of extracted solution:" +
+					(rewardOfExtractedSolution==null ? " not tracked" : rewardOfExtractedSolution);
 			z += "\ninv-violation detected:" + invViolationDetected ;
 			return z ;
 		}
@@ -99,15 +109,25 @@ public class Experiment4 {
 		public Double stddevNumOfVisitedStates = null ;
 		public int topGoalSolved ;
 		public int invViolationDetected ;
+		public Double avrgReward = null ;
+		public Double stddevReward = null ;
 		
 		double avrg(List<Integer> data) {
-			return data.stream().collect(Collectors.averagingDouble(i -> (double) i)) ;
+			return avrgDouble(data.stream().map(i -> (double) i).collect(Collectors.toList())) ;
+		}
+		
+		double avrgDouble(List<Double> data) {
+			return data.stream().collect(Collectors.averagingDouble(i -> i)) ;
 		}
 		
 		double stdDev(List<Integer> data) {
-			var m = avrg(data) ;
+			return stdDevDouble(data.stream().map(i -> (double) i).collect(Collectors.toList())) ;
+		}
+		
+		double stdDevDouble(List<Double> data) {
+			var m = avrgDouble(data) ;
 			var z = data.stream().map(i -> {
-						double d = (double) i - m ;
+						double d = i - m ;
 						return d*d ; })
 						.collect(Collectors.averagingDouble(i -> i)) ;
 			return Math.sqrt(z) ;
@@ -125,6 +145,10 @@ public class Experiment4 {
 				avrgNumOfVisitedStates = avrg(results.stream().map(R -> R.numOfVisitedStates).collect(Collectors.toList())) ;				
 				stddevNumOfVisitedStates = stdDev(results.stream().map(R -> R.numOfVisitedStates).collect(Collectors.toList())) ;				
 			}
+			if (results.get(0).rewardOfExtractedSolution != null) {
+				avrgReward = avrgDouble(results.stream().map(R -> R.rewardOfExtractedSolution).collect(Collectors.toList())) ;				
+				stddevNumOfVisitedStates = stdDevDouble(results.stream().map(R -> R.rewardOfExtractedSolution).collect(Collectors.toList())) ;				
+			}
 			topGoalSolved = (int) results.stream().filter(r -> r.topGoalSolved).count() ;
 			invViolationDetected = (int) results.stream().filter(r -> r.invViolationDetected).count() ;
 		}
@@ -138,9 +162,13 @@ public class Experiment4 {
 			z += "\ntime:" + avrgRuntime + " (" + stddevRuntime + ")" ;
 			z += "\n#visisted abs-states:" 
 					+ (avrgNumOfVisitedStates==null ? 
-							"not tracked" : 
+							" not tracked" : 
 							"" + avrgNumOfVisitedStates + " (" + stddevNumOfVisitedStates + ")") ;
 			z += "\ntop-goal solved:" + topGoalSolved ;
+			z += "\nreward:"   
+					+ (avrgReward==null ? 
+							" not tracked" : 
+							"" + avrgReward + " (" + stddevReward + ")") ;
 			z += "\ninv-violation detected:" + invViolationDetected ;
 			return z ;
 		}
@@ -225,7 +253,7 @@ public class Experiment4 {
 		) ;
 	}
 	
-	@Test
+	//@Test
 	void test_MCTS() throws Exception {
 		runOneAlgorithm(AlgorithmType.HIGH_MCTS,
 				smallDungeons,
@@ -274,21 +302,26 @@ public class Experiment4 {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	//@Test
+	@Test
 	void test_lowQ() throws Exception {
 	runOneAlgorithm(AlgorithmType.Q,
-				smallDungeons,
+			QevalDungeons,
 				config -> {
 					var algFactory = new TestAlgorithmsFactory() ;
 					algFactory.withGraphics = withGraphics ;
 					algFactory.supressLogging = supressLogging ;
 					algFactory.delayBetweenAgentUpateCycles = this.delayBetweenAgentUpateCycles ;
 					AQalg alg = algFactory.mkActionLevelQ(config) ;
+					
 					// hyper parameters:
-					alg.totalSearchBudget = 60000 ;
-					alg.maxDepth = 600 ;
-					//alg.maxNumberOfEpisodes = 40 ;
-					alg.enableBackPropagationOfReward = 10 ; 				
+					alg.exploredG   = null ;
+					alg.gamma = 0.98f ;
+					alg.exploreProbability = 0.08f ;
+					alg.enableBackPropagationOfReward = 10 ; 
+					alg.totalSearchBudget = 1000000 ;
+					alg.maxNumberOfEpisodes = 600 ;
+					alg.maxDepth = 800 ;
+					alg.stopAfterGoalIsAchieved = false ;					
 					return alg ;
 				}
 		) ;
@@ -331,11 +364,32 @@ public class Experiment4 {
 				result1.runtime = V.usedBudget ;
 				result1.topGoalSolved = V.goalAchieved ;
 				result1.invViolationDetected = V.foundError ;
-				if (alg instanceof XQalg) {
-					result1.numOfVisitedStates = ((XQalg) alg).qtable.size() ;
+				if (algTy == AlgorithmType.HIGH_MCTS) {
+					XMCTS alg_ = (XMCTS) alg ;
+					var bestSequence = alg_.obtainBestPlay() ;
+					result1.numOfVisitedStates = alg_.size() ;
+					result1.rewardOfExtractedSolution = (double) ((float) bestSequence.snd) ;
+					System.out.println(">>> episode-values: " + V.episodesValues) ;
+					System.out.println(">>> winningplay : " + V.winningplay) ;
+					System.out.println(">>> best sequence: " + bestSequence) ;
 				}
-				if (alg instanceof AQalg) {
-					result1.numOfVisitedStates = ((AQalg) alg).qtable.size() ;
+				if (algTy == AlgorithmType.HIGH_Q) {
+					XQalg alg_ = (XQalg) alg ;
+					var bestSequence = alg_.play(alg_.maxDepth) ;
+					result1.numOfVisitedStates = alg_.qtable.size() ;
+					result1.rewardOfExtractedSolution =  (double) ((float) bestSequence.snd);
+					System.out.println(">>> episode-values: " + V.episodesValues) ;
+					System.out.println(">>> winningplay : " + V.winningplay) ;
+					System.out.println(">>> best sequence): " + bestSequence) ;
+				}
+				if (algTy == AlgorithmType.Q) {
+					AQalg alg_ = (AQalg) alg ;
+					var bestSequence = alg_.play(alg_.maxDepth) ;
+					result1.numOfVisitedStates = alg_.qtable.size() ;
+					result1.rewardOfExtractedSolution = (double) ((float) bestSequence.snd) ;
+					System.out.println(">>> episode-values: " + V.episodesValues) ;
+					System.out.println(">>> winningplay : " + V.winningplay) ;
+					System.out.println(">>> best sequence: " + bestSequence) ;
 				}
 				results.add(result1) ;
 			}

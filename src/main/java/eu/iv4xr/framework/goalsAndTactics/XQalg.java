@@ -48,7 +48,11 @@ public class XQalg<QState> extends BasicSearch {
 		// let's only use max reward:
 		public float maxReward = 0 ; 
 	}
-		
+	
+	/**
+	 * The Q-table. The table is dynamically built. That is, a state is not included in the table
+	 * until it is "seen". The table is initially just empty.
+	 */
 	public Map<QState,Map<String,ActionInfo>> qtable = new HashMap<>() ;
 		
 	public float exploreProbability = 0.2f ;
@@ -134,6 +138,18 @@ public class XQalg<QState> extends BasicSearch {
 			qtable.put(qstate,q_entry) ;
 		}
 		return q_entry ;
+	}
+	
+	/**
+	 * Return the number of cells in the Q-table. That is, the number of tuple ((state,action),value)
+	 * kept in the Q-table.
+	 */
+	public int size() {
+		int num_entries = 0 ;
+		for (var q : qtable.values()) {
+			num_entries += q.values().size() ;
+		}
+		return num_entries ;
 	}
 	
 	/**
