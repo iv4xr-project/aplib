@@ -163,6 +163,18 @@ public class TPJconfigs {
 		return config ;
 	}
 	
+	public static MiniDungeonConfig M3Config() {
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.configname = "M2Config" ;
+		config.numberOfMaze = 3 ;
+		config.numberOfHealPots = 8;
+		config.numberOfRagePots = 4;
+		config.viewDistance = 4;
+		config.numberOfMonsters = 6 ;
+		config.randomSeed = 79371;
+		return config ;
+	}
+	
 	public static MiniDungeonConfig M4Config() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.configname = "M4Config" ;
@@ -214,9 +226,9 @@ public class TPJconfigs {
 		return config ;
 	}
 	
-	// configs for evaluating reinforcement leanring
+	// configs for evaluating reinforcement learning
 	public static MiniDungeonConfig MDQ1Config() {
-		// just one maze, with no monster 
+		// just one maze, not so big, with no monster 
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.configname = "MDQ1Config" ;
 		config.numberOfMaze = 1 ;
@@ -226,10 +238,10 @@ public class TPJconfigs {
 		config.numberOfMonsters = 0 ;
 		config.numberOfCorridors = 3 ;
 		config.viewDistance = 40;
-		//config.randomSeed = 783; // two scrolls, with the far one being holy
-		//config.randomSeed = 781; // 
-		config.randomSeed = 791;
-		
+		config.randomSeed = 791; // two scrolls, with the far one being holy
+		//config.randomSeed = 781 ; 
+		//config.randomSeed = 784; 
+		//config.randomSeed = 119 ;
 		config.enableSmeagol = false ;
 		return config ;
 	}
@@ -239,29 +251,29 @@ public class TPJconfigs {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.configname = "MDQ2Config" ;
 		config.numberOfMaze = 1 ;
-		config.worldSize = 16 ;
+		config.worldSize = 14 ;
 		config.numberOfHealPots = 8;
 		config.numberOfScrolls = 2 ;
 		config.numberOfMonsters = 4 ;
-		config.numberOfCorridors = 4 ;
+		config.numberOfCorridors = 3 ;
 		config.viewDistance = 40;
-		config.randomSeed = 783; // two scrolls, with the far one being holy
+		config.randomSeed = 791; // two scrolls, with the far one being holy
 		config.enableSmeagol = false ;
 		return config ;
 	}
 	
-	// like MDQ1Config, but larger (and no monsters)
+	// like MDQ1Config, but a bit larger
 	public static MiniDungeonConfig MDQ3Config() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.configname = "MDQ3Config" ;
 		config.numberOfMaze = 1 ;
-		config.worldSize = 24 ;
+		config.worldSize = 20 ;
 		config.numberOfHealPots = 8;
 		config.numberOfScrolls = 2 ;
 		config.numberOfMonsters = 0 ;
-		config.numberOfCorridors = 4 ;
+		config.numberOfCorridors = 3 ;
 		config.viewDistance = 40;
-		config.randomSeed = 793; // two scrolls, with the far one being holy
+		config.randomSeed = 787; // two scrolls, with the far one being holy
 		config.enableSmeagol = false ;
 		return config ;
 	}
@@ -284,7 +296,7 @@ public class TPJconfigs {
 	
 	// just for trying out different configs:
 	public static void main(String[] args) throws Exception {		
-		MiniDungeonConfig config = MDQ1Config() ;
+		MiniDungeonConfig config = M4Config() ;
 		System.out.println(">>> Configuration:\n" + config) ;
 		var app = new DungeonApp(config) ;
 		//app.dungeon.showConsoleIO = false ;

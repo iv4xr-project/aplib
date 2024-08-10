@@ -9,6 +9,7 @@ import java.util.Scanner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import eu.iv4xr.framework.goalsAndTactics.BasicSearch.AlgorithmResult;
 import eu.iv4xr.framework.mainConcepts.Iv4xrAgentState;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.utils.Pair;
@@ -107,6 +108,8 @@ public class XMCTS extends BasicSearch{
 		 */
 		public int size() {
 			int n = 1 ;
+			if (children == null)
+				return n ;
 			for (var ch : children) {
 				n += ch.size() ;
 			}
@@ -126,6 +129,24 @@ public class XMCTS extends BasicSearch{
 				}
 			}
 			return best ;
+		}
+		
+		List<Node> getAllLeaves() {
+			List<Node> leaves = new LinkedList<>() ;
+			getAllLeavesWorker(leaves) ;
+			return leaves ;
+		}
+		
+		private void getAllLeavesWorker(List<Node> accumulator) {
+			if (terminal) {
+				accumulator.add(this) ;
+				return ;
+			}
+			if (children == null)
+				return ;
+			for (var ch : children) {
+				ch.getAllLeavesWorker(accumulator) ;
+			}
 		}
 		
 		/** 
@@ -227,6 +248,23 @@ public class XMCTS extends BasicSearch{
 	 */
 	public Node mctree ;
 	
+	/**
+	 * This keep track the value/reward of the best solution according to the model,
+	 * as the algorithm progress. This is sampled every {@link #progressSamplingInterval}
+	 * episodes, if this interval is positive. And else no sampling will be done.
+	 * 
+	 * <p>Note that this is not the same as the stats provided in {@link AlgorithmResult#episodesValues}.
+	 * The latter shows the reward of every episode during the algorithm's run.
+	 */
+	public List<Float> progress = new LinkedList<>() ;
+	
+	/**
+	 * Sampling rate to collect statistics about best solution. See {@link #progress}.
+	 * When 0 or negative, no sampling will be done. Default: -1.
+	 */
+	public int progressSamplingInterval = -1 ;
+	
+	
 	public XMCTS() { 
 		super() ;
 		algName = "MCTS" ;
@@ -238,7 +276,7 @@ public class XMCTS extends BasicSearch{
 	 * Execute all the actions in the path towards and until the given node. The method
 	 * returns true if the whole sequence can be executed, and else false.
 	 */
-	boolean runPath(Node node, boolean closeEnvAtTheEnd) throws Exception {
+	boolean runPath(Node node) throws Exception {
 		
 		var trace = node.getTraceLeadingToThisNode() ;
 
@@ -294,7 +332,7 @@ public class XMCTS extends BasicSearch{
 		
 		List<String> trace = node.getTraceLeadingToThisNode() ;
 		
-		var success = runPath(node,false) ;
+		var success = runPath(node) ;
 
 		if (!success) {
 			// if the trace replay is not successful, we don't continue:
@@ -305,6 +343,24 @@ public class XMCTS extends BasicSearch{
 			closeEnv_() ;
 			return R ;
 		}
+		
+		// case-1, the state that results at the node is a win/lose state:
+		
+		if (agentIsDead() || topGoalPredicate.test(agentState())) {
+			PlayResult R = new PlayResult() ;
+			R.trace = trace ;
+			R.reward = clampedValueOfCurrentGameState() ;
+			foundError = foundError || ! agent.evaluateLTLs() ;
+			closeEnv_() ;
+			if (topGoalPredicate.test(agentState())) {
+			   markThatGoalIsAchieved(trace);
+			}
+			return R ;
+		}
+		
+		// case-2, the state at the node is not a win/lose state. We 
+		// then do the regular roll out, we play out the game from
+		// the node:
 		
 		int depth = trace.size() ;
 
@@ -355,7 +411,7 @@ public class XMCTS extends BasicSearch{
 	List<Node> generateChildren(Node node) throws Exception {
 		List<Node> children = new LinkedList<>() ;
 		initializeEpisode();
-		var success = runPath(node,true) ;
+		var success = runPath(node) ;
 		closeEnv_();
 		if (success) {
 			var interactables = wom().elements.values().stream()
@@ -404,7 +460,7 @@ public class XMCTS extends BasicSearch{
 			leaf.terminal = true ;
 			leaf.fullyExplored = true ;
 			initializeEpisode();
-			runPath(leaf,true) ;
+			runPath(leaf) ;
 			foundError = foundError || ! agent.evaluateLTLs() ;
 			closeEnv_() ;
 			var R = clampedValueOfCurrentGameState() ;
@@ -422,6 +478,13 @@ public class XMCTS extends BasicSearch{
 		if (leaf.numberOfPlays == 0) {
 			System.out.println(">>> ROLLOUT") ;
 			var R = rollout(leaf) ;
+			// case when rollout says that the state at the node is actually
+			// a win/lose state:
+			if ((R.reward <= agentDeadValue || R.reward >= maxReward)
+					&& R.trace.size() == leaf.getTraceLeadingToThisNode().size()) {
+				leaf.terminal = true ;
+				leaf.fullyExplored = true ;
+			}
 			leaf.backPropagate(R.reward) ;
 			/* // BUG! We should not do this!! -->
 			if (R.reward >= maxReward) {
@@ -458,30 +521,60 @@ public class XMCTS extends BasicSearch{
 	}
 	
 	/**
-	 * Return the sequence of actions that leads to be best reward known so far. This
+	 * Return the sequence of actions that leads to be "best" reward known so far. 
+	 * If there is a terminal leaf in the model, with a winning state, this method
+	 * will return a shortest play/sequence to such a winning leaf. Else, we recursively
+	 * obtain a path that follows the child with the best average reward.
+	 * The method also replay the obtained sequence, and returns the actual
+	 * reward obtained at the end-state of the sequence.
+	 * 
+	 * <p>This method
 	 * assumes a non-alternating game, and furthermore a deterministic game. It obtains
 	 * the sequence by simply looking into the Search Tree {@link #mctree}, without
-	 * exdecuting the game.
+	 * executing the game. (though at the end we do replay the obtained sequence, to
+	 * get its actual reward).
 	 * 
 	 * <p>If the game is non-deterministic, the obtained sequence might not give the 
 	 * best reward.
+	 * @throws Exception 
 	 */
-	public Pair<List<String>,Float> obtainBestPlay() {
+	public Pair<List<String>,Float> obtainBestPlay() throws Exception {
 		
-		Node nd = mctree ;
-		Node bestChild = mctree.bestChild() ;
-		if (bestChild == null)
-			return null ;	
-		float bestreward = bestChild.averageReward ;
 		List<String> bestSequence = new LinkedList<>() ;
 		
-		while (bestChild != null) {
-			if (bestChild.averageReward > bestreward)
-				bestreward = bestChild.averageReward ;
-			bestSequence.add(bestChild.action) ;
-			bestChild = bestChild.bestChild() ;
+		List<Node> leaves = mctree.getAllLeaves() ;
+		List<Node> winningLeaves = leaves.stream()
+				.filter(nd -> nd.terminal && nd.averageReward >= maxReward)
+				.collect(Collectors.toList()) ;
+		
+		if (! winningLeaves.isEmpty()) {
+			// if there is a winning terminal leaf, get the shortest
+			// sequence to such a leaf:
+			var winningNd0 = winningLeaves.remove(0) ;
+			bestSequence = winningNd0.getTraceLeadingToThisNode() ;
+			for (var winningNd : winningLeaves) {
+				var seq = winningNd.getTraceLeadingToThisNode() ;
+				if (seq.size() < bestSequence.size()) {
+					bestSequence = seq ;
+				}
+			}
 		}
-		return new Pair<>(bestSequence,bestreward) ;
+		else {
+			// else we get a play/sequence that follows the best average:
+			Node nd = mctree ;
+			Node bestChild = mctree.bestChild() ;
+			if (bestChild == null)
+				return null ;	
+			while (bestChild != null) {
+				bestSequence.add(bestChild.action) ;
+				bestChild = bestChild.bestChild() ;
+			}
+		}
+		
+		// replay the best sequence to get the actual state reward
+		// at its end state:
+		runTrace(bestSequence) ;
+		return new Pair<>(bestSequence, clampedValueOfCurrentGameState()) ;
 	}
 	
 	/**
@@ -506,6 +599,14 @@ public class XMCTS extends BasicSearch{
 	@Override
 	float runAlgorithmForOneEpisode() throws Exception {
 		Node leaf = chooseLeaf(mctree) ;
+		
+		// register stats of best reward, if asked:
+		if(progressSamplingInterval > 0 && totNumberOfEpisodes % progressSamplingInterval == 0) {
+			var best = obtainBestPlay() ;
+			System.out.println(">>> best value: " + best) ;
+			progress.add(best.snd) ;
+		}		
+				
 		return evaluateLeaf(leaf) ;
 	}
 	

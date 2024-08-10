@@ -484,7 +484,7 @@ public class BasicSearch {
 	boolean terminationCondition() {
 		return (this.stopAfterGoalIsAchieved && goalHasBeenAchieved) 
 				|| remainingSearchBudget <= 0
-				|| (maxNumberOfEpisodes != null && totNumberOfEpisodes > maxNumberOfEpisodes
+				|| (maxNumberOfEpisodes != null && totNumberOfEpisodes >= maxNumberOfEpisodes
 				|| (stopWhenErrorIsFound && foundError)) ;
 	}
 	
@@ -633,6 +633,7 @@ public class BasicSearch {
 			totNumberOfEpisodes++;
 			long t0 = System.currentTimeMillis();
 			log("*** === starting episode " + totNumberOfEpisodes);
+			System.out.println(">>> " + algName + " starting episode " + totNumberOfEpisodes);		
 			var value = runAlgorithmForOneEpisode();
 			remainingSearchBudget = remainingSearchBudget - (int) (System.currentTimeMillis() - t0);
 			episodesValues.add(value) ;

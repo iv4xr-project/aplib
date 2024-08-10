@@ -58,6 +58,23 @@ public class XQalg<QState> extends BasicSearch {
 	public float exploreProbability = 0.2f ;
 	
 	/**
+	 * This keep track the value/reward of the best solution according to the model,
+	 * as the algorithm progress. This is sampled every {@link #progressSamplingInterval}
+	 * episodes, if this interval is positive. And else no sampling will be done.
+	 * 
+	 * <p>Note that this is not the same as the stats provided in {@link AlgorithmResult#episodesValues}.
+	 * The latter shows the reward of every episode during the algorithm's run.
+	 */
+	public List<Float> progress = new LinkedList<>() ;
+	
+	/**
+	 * Sampling rate to collect statistics about best solution. See {@link #progress}.
+	 * When 0 or negative, no sampling will be done. Default: -1.
+	 */
+	public int progressSamplingInterval = -1 ;
+	
+	
+	/**
 	 * If specified, this calculates the direct reward of executing an action a on a state S1,
 	 * and transitioning to a state S2. If the function is unspecified, the difference of the
 	 * values of S2 and S1 is used, where the values are calculated through {@link BasicSearch#stateValueFunction}.
@@ -220,7 +237,7 @@ public class XQalg<QState> extends BasicSearch {
 			}
 			var entityToInteract = chosenAction ;
 			var info = candidateActions.get(entityToInteract) ;
-		    System.out.println(">>> chosen-action : " + chosenAction + ", info:" + info.maxReward) ;
+		    // System.out.println(">>> chosen-action : " + chosenAction + ", info:" + info.maxReward) ;
 		    // now, execute the action:
 		    var value0 = clampedValueOfCurrentGameState() ;
 		    var G = SEQ(reachedG.apply(entityToInteract), interactedG.apply(entityToInteract));
@@ -305,12 +322,12 @@ public class XQalg<QState> extends BasicSearch {
 			
 			updateQ(qstate,chosenAction, newQstate,reward) ;
 			
-			System.out.println(">> chosen action: " + chosenAction
-					+ ", v0=" + value0 + ", v1=" + value1 
-					+ (reward > 0 ? ", DIRECT-rw=" : ", direct-rw=") + reward
-					+ ", oldval=" + oldVal 
-					+ ", val=" + info.maxReward 
-					)  ;
+			//System.out.println(">> chosen action: " + chosenAction
+			//		+ ", v0=" + value0 + ", v1=" + value1 
+			//		+ (reward > 0 ? ", DIRECT-rw=" : ", direct-rw=") + reward
+			//		+ ", oldval=" + oldVal 
+			//		+ ", val=" + info.maxReward 
+			//		)  ;
 
 			backPropagation(newQstate,chosenAction,reward,stateActionRewardTrace) ;
 			// move the current state to the new state:
@@ -321,6 +338,14 @@ public class XQalg<QState> extends BasicSearch {
 		}
 		foundError = foundError || ! agent.evaluateLTLs() ;
 		closeEnv_() ;
+		
+		// register stats of best reward, if asked:
+		if(progressSamplingInterval > 0 && totNumberOfEpisodes % progressSamplingInterval == 0) {
+			var best = play(maxDepth) ;
+			System.out.println(">>> best value: " + best) ;
+			progress.add(best.snd) ;
+		}
+		
 		return episodeReward ;
 	}
 	
@@ -496,7 +521,7 @@ public class XQalg<QState> extends BasicSearch {
 			// advance qstate to newState, and then we iterate:
 			qstate =  getQstate.apply(bestSequece,newState) ;
 		}
-		
+		closeEnv_() ;
 		return new Pair<>(bestSequece,totalReward) ;
 		
 	}

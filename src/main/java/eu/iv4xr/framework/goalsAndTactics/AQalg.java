@@ -162,12 +162,20 @@ public class AQalg<QState> extends XQalg<QState> {
 			q_entry = q_entry_of_newQstate ;
 			// the value of the episode so far is defined simply as the value of the new current state:
 			episodeReward = value1 ;
-			
+	
 			Thread.sleep(delayBetweenAgentUpateCycles);
 		}
 		
 		foundError = foundError || ! agent.evaluateLTLs() ;
 		closeEnv_() ;
+		
+		// register stats of best reward, if asked:
+		if(progressSamplingInterval > 0 && totNumberOfEpisodes % progressSamplingInterval == 0) {
+			var best = play(maxDepth) ;
+			System.out.println(">>> best value: " + best) ;
+			progress.add(best.snd) ;
+		}
+				
 		return episodeReward ;
 	}
 	
@@ -256,7 +264,7 @@ public class AQalg<QState> extends XQalg<QState> {
 			
 			
 			
-			System.out.println(">>> bestAction: " + bestAction + ", bestValue: " + bestValue) ; 
+			//System.out.println(">>> bestAction: " + bestAction + ", bestValue: " + bestValue) ; 
 			
 			var value0 = clampedValueOfCurrentGameState() ;
 			bestSequece.add(bestAction) ;
@@ -281,7 +289,7 @@ public class AQalg<QState> extends XQalg<QState> {
 				reward = value1 - value0 ;
 						
 			totalReward += reward ;
-			System.out.println(">>> reward:" + reward + ", tot:"+ totalReward) ;
+			//System.out.println(">>> reward:" + reward + ", tot:"+ totalReward) ;
 			
 			if (topGoalPredicate.test(newState)) {
 				System.out.println(">>> Goal is ACHIEVED") ;
@@ -300,6 +308,8 @@ public class AQalg<QState> extends XQalg<QState> {
 		    state = newState ;
 			qstate =  getQstate.apply(bestSequece,newState) ;
 		}
+		
+		closeEnv_() ;
 		
 		return new Pair<>(bestSequece,totalReward) ;
 		

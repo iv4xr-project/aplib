@@ -210,7 +210,7 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 					if (path == null) {
 						//System.out.println("### calculating new path") ;
 						path = adjustedFindPath(S, Utils.mazeId(a), agentPos.x, agentPos.y, Utils.mazeId(e),target.x, target.y) ;
-						if (path == null || path.isEmpty()) {
+						if (path == null || path.size()<=1) {
 							return null ;
 						}
 						path.remove(0) ;
@@ -484,9 +484,9 @@ public class TacticLib implements IInteractiveWorldTacticLib<Pair<Integer,Tile>>
 						}
 						path.remove(0) ;
 						memorized[0] = path ;
-						System.out.println("### calculated new path-> " 
-								+ path.get(0)
-								+ ", destination " + path.get(path.size()-1)) ;
+						//System.out.println("### calculated new path-> " 
+						//		+ path.get(0)
+						//		+ ", destination " + path.get(path.size()-1)) ;
 					}
 					
 					try {

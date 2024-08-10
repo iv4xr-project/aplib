@@ -81,20 +81,40 @@ public class TestAlgorithmsFactory {
 	
 	
 	/**
+	 * For the experiment we will maintain a single instance of MD. This avoids multi-episode
+	 * runs to keep creating instances of MD. Since the MD-app is an awt-component, creating
+	 * one seems create a new thread as well. So, keep creating MD-instances also trigger creations
+	 * of threads, and this runs into a problem as there is a cap in the maximum number of 
+	 * threads.
+	 */
+	public static DungeonApp miniDungeonInstance = null ;
+	
+	
+	/**
 	 * Instantiate and deploy MD, and construct a TestAgent. Will only use Frodo.
 	 * This will also configure the test agent to have a data-collector and to
 	 * attach MD-invariants for checking.
 	 */
 	public XTestAgent constructAgent(MiniDungeonConfig config) throws Exception {
-		// setting sound on/off, graphics on/off etc:
-		DungeonApp app = new DungeonApp(config);
-		app.soundOn = withSound ;
-		app.headless = ! withGraphics ;
-		if(withGraphics) 
-			DungeonApp.deploy(app);	
-		System.out.println(">>> LAUNCHING MD") ;
+		if (miniDungeonInstance==null ||! miniDungeonInstance.dungeon.config.toString().equals(config.toString())) {
+			// there is no MD-instance yet, or if the config is different than the config of the
+			// running MD-instance, then we create a fresh MD instance:
+			DungeonApp app = new DungeonApp(config);
+			// setting sound on/off, graphics on/off etc:
+			app.soundOn = withSound ;
+			app.headless = ! withGraphics ;
+			if(withGraphics) 
+				DungeonApp.deploy(app);	
+			System.out.println(">>> LAUNCHING a new instance of MD") ;
+			miniDungeonInstance = app ;
+		}
+		else {
+			// if the config is the same, we just reset the state of the running MD:
+			miniDungeonInstance.keyPressedWorker('z');
+			System.out.println(">>> RESETING MD") ;
+		}
 		
-		MyAgentEnv env = new MyAgentEnv(app);
+		MyAgentEnv env = new MyAgentEnv(miniDungeonInstance);
 		MyAgentState state = new MyAgentState();
 		
 		var agentFrodo = new XTestAgent("Frodo", "tester");
@@ -256,10 +276,11 @@ public class TestAlgorithmsFactory {
 		} ;
 		
 		alg.closeEnv = dummy -> {
-			var env = (MyAgentEnv) alg.agent.env() ;
-			var win = SwingUtilities.getWindowAncestor(env.app);
-			win.dispose();
-			System.out.println(">>> DISPOSING MD") ;
+			// don't need to do anything special for closing:
+			//var env = (MyAgentEnv) alg.agent.env() ;
+			//var win = SwingUtilities.getWindowAncestor(env.app);
+			//win.dispose();
+			//System.out.println(">>> DISPOSING MD") ;
 			return null ;
 		} ;
 		
@@ -349,9 +370,9 @@ public class TestAlgorithmsFactory {
 			return alg.maxReward ;
 		if (alg.agentIsDead.test(state))
 			return -100f ;
-		//var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
-		//	.filter(e -> e.type.equals("SCROLL"))
-		//	.count();
+		var numOfScrollsInArea = (int) state.worldmodel.elements.values().stream()
+			.filter(e -> e.type.equals("SCROLL"))
+			.count();
 		
 		var frodo = state.worldmodel.elements.get("Frodo") ;
 		
@@ -364,10 +385,12 @@ public class TestAlgorithmsFactory {
 		var hp = (Integer) frodo.properties.get("hp") ;
 		
 		//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
-		var r1 = (float) 10*(hp 
+		var r1 = (float) (hp 
 				//+ (scrollsInBag ==1 ? 100 : (scrollsInBag ==2 ? -50 : 0))
-				+ 1000*scrollsInBag 
-				+ (healpotsInBag==1 ? 20 : 0))	
+				//+ (scrollsInBag ==1 ? 100 : 0)
+				//+ 100*scrollsInBag 
+				+ 1000*(8 - (2*numOfScrollsInArea + scrollsInBag))
+				+ (healpotsInBag==1 ? 20  : 0))	
 				;
 		var cleansed = (int) state.worldmodel.elements.values().stream()
 				.filter(e -> Utils.isMoonShrine(e) && e.getBooleanProperty("cleansed")) 
