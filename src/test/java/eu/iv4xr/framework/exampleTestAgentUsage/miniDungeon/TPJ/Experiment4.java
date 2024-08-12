@@ -56,6 +56,7 @@ public class Experiment4 {
 	MiniDungeonConfig[] HighQevalDungeons() {
 			MiniDungeonConfig[] configs = { 
 					//M2Config()
+					//M3Config()
 					M4Config()
 					//,M6Config()
 					//,M8Config()
@@ -63,6 +64,7 @@ public class Experiment4 {
 			// adjust the visibility to see-all:
 			for (int k=0; k<configs.length; k++) {
 				configs[k].viewDistance = 40 ;
+				//configs[k].numberOfMonsters = 3 ; 
 				configs[k].enableSmeagol = false ;
 				
 			}
@@ -293,7 +295,7 @@ public class Experiment4 {
 		) ;
 	}
 	
-	@Test
+	//@Test
 	void test_MCTS() throws Exception {
 		runOneAlgorithm(AlgorithmType.HIGH_MCTS,
 				HighQevalDungeons(),
@@ -310,18 +312,23 @@ public class Experiment4 {
 					alg.exploredG = null ;
 					alg.totalSearchBudget = 10000000 ;
 					alg.maxDepth = 25 ;
-					alg.maxNumberOfEpisodes = 200 ;
+					switch (config.numberOfMaze) 
+					{
+						case 2 : alg.maxNumberOfEpisodes = 150  ; break ;
+						case 3 : alg.maxNumberOfEpisodes = 200 ; break ;
+						case 4 : alg.maxNumberOfEpisodes = 300 ; break ;						
+					}
 					alg.explorationBudget = 4000 ;
 					alg.budget_per_task = 2000 ;	
 					alg.stopAfterGoalIsAchieved = false ;	
-					alg.progressSamplingInterval = 5 ;
+					alg.progressSamplingInterval = 10 ;
 					return alg ;
 				}
 		) ;
 	}
 	
 	@SuppressWarnings("unchecked")
-	//@Test
+	@Test
 	void test_highQ() throws Exception {
 		
 		runOneAlgorithm(AlgorithmType.HIGH_Q,
@@ -340,6 +347,8 @@ public class Experiment4 {
 					alg.maxNumberOfEpisodes = 200 ;
 					alg.explorationBudget = 4000 ;
 					alg.budget_per_task = 2000 ;
+					alg.gamma = 0.999f ;
+					//alg.alpha = 0.95f ;
 					//alg.exploreProbability = 0.15f ;
 					alg.enableBackPropagationOfReward = 5 ; 	
 					alg.stopAfterGoalIsAchieved = false ;	
@@ -366,7 +375,7 @@ public class Experiment4 {
 					// https://www.reddit.com/r/reinforcementlearning/comments/qiz8mv/rl_model_getting_good_and_then_bad/
 					//
 					alg.exploredG   = null ;
-					alg.gamma = 0.95f ;
+					alg.gamma = 0.993f ;
 					alg.exploreProbability = 0.15f ;
 			        alg.enableBackPropagationOfReward = 10 ; 
 					alg.totalSearchBudget = 10000000 ;

@@ -165,7 +165,7 @@ public class TPJconfigs {
 	
 	public static MiniDungeonConfig M3Config() {
 		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.configname = "M2Config" ;
+		config.configname = "M3Config" ;
 		config.numberOfMaze = 3 ;
 		config.numberOfHealPots = 8;
 		config.numberOfRagePots = 4;
@@ -296,7 +296,7 @@ public class TPJconfigs {
 	
 	// just for trying out different configs:
 	public static void main(String[] args) throws Exception {		
-		MiniDungeonConfig config = M4Config() ;
+		MiniDungeonConfig config = M2Config() ;
 		System.out.println(">>> Configuration:\n" + config) ;
 		var app = new DungeonApp(config) ;
 		//app.dungeon.showConsoleIO = false ;

@@ -9,8 +9,7 @@ import eu.iv4xr.framework.goalsAndTactics.XEvolutionary;
 import eu.iv4xr.framework.goalsAndTactics.XMCTS;
 import eu.iv4xr.framework.goalsAndTactics.XQalg;
 
-import static nl.uu.cs.aplib.AplibEDSL.action;
-import static nl.uu.cs.aplib.AplibEDSL.goal;
+import static nl.uu.cs.aplib.AplibEDSL.*;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -295,8 +294,8 @@ public class TestAlgorithmsFactory {
 		alg.maxReward = 1000000 ;
 		
 		alg.exploredG   = huristicLocation -> smartExplore(alg.agent) ;
-		alg.reachedG    = e -> goalLib.smartEntityInCloseRange(alg.agent,e) ;
-		alg.interactedG = e -> goalLib.entityInteracted(e) ;
+		alg.reachedG    = e -> SEQ(goalLib.smartEntityInCloseRange(alg.agent,e), SUCCESS()) ;
+		alg.interactedG = e -> SEQ(goalLib.entityInteracted(e), SUCCESS()) ;
 		// constrain to only interact with scrolls and shrines:
 		alg.isInteractable   = e -> e.id.contains("S") && !e.id.contains("SS");
 		

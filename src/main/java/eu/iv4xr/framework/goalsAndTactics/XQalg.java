@@ -355,7 +355,7 @@ public class XQalg<QState> extends BasicSearch {
 			List<Pair<QState,Pair<String,Float>>> stateActionRewardTrace) {
 		if (enableBackPropagationOfReward <= 1) 
 			return ;
-		
+				
 		// We will drop the prefix of stateActionRewardTrace up to the position j, where
 		// the state is the same as newState. This is to prevent the backward propagation
 		// from introducing a cycle of high reward, resulting in a model that drives the
@@ -379,26 +379,29 @@ public class XQalg<QState> extends BasicSearch {
 			}
 		}
 		
-		var action_to_state2 = chosenAction ;
-		for(k = stateActionRewardTrace.size()-1 ; k>0; k--) {
-			var prev = stateActionRewardTrace.get(k-1) ;
-			var head = stateActionRewardTrace.get(k) ;
-			var state0 = prev.fst ;
-			var state1 = head.fst ;
-			var action_to_state1 = head.snd.fst ;
-			var directReward_of_action_to_state1 = head.snd.snd ;
-			var info0 = qtable.get(state0).get(action_to_state1) ;
-			var info1 = qtable.get(state1).get(action_to_state2) ;
-						
-			// back propagating reward WITHOUT gamma (discount factor for future reward)
-			var yy = (1 - alpha) * info0.maxReward
-			         + alpha * (directReward_of_action_to_state1 + info1.maxReward) ; // <-- instead of gamma * info1.maxReward
-			
-			if (yy > info0.maxReward) {
-				 info0.maxReward = yy ;
+		// let's only back-propagate positive reward:
+		if (directReward > 0 && directReward > this.agentDeadValue) {
+			var action_to_state2 = chosenAction ;
+			for(k = stateActionRewardTrace.size()-1 ; k>0; k--) {
+				var prev = stateActionRewardTrace.get(k-1) ;
+				var head = stateActionRewardTrace.get(k) ;
+				var state0 = prev.fst ;
+				var state1 = head.fst ;
+				var action_to_state1 = head.snd.fst ;
+				var directReward_of_action_to_state1 = head.snd.snd ;
+				var info0 = qtable.get(state0).get(action_to_state1) ;
+				var info1 = qtable.get(state1).get(action_to_state2) ;
+
+				// back propagating reward WITHOUT gamma (discount factor for future reward)
+				var yy = (1 - alpha) * info0.maxReward
+						+ alpha * (directReward_of_action_to_state1 + info1.maxReward) ; 
+
+				if (yy > info0.maxReward) {
+					info0.maxReward = yy ;
+				}
+				else break ;
+				action_to_state2 = action_to_state1 ;
 			}
-			else break ;
-			action_to_state2 = action_to_state1 ;
 		}
 		
 		stateActionRewardTrace.add(new Pair<>(newState, new Pair<>(chosenAction,directReward))) ;		
