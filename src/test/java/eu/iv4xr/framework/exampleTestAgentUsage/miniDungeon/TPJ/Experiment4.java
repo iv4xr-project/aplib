@@ -235,10 +235,10 @@ public class Experiment4 {
 		) ;
 	}
 	
-	//@Test
+	@Test
 	void test_programmaticPlay() throws Exception {
 		runOneAlgorithm(AlgorithmType.PROGRAMMATIC,
-				smallDungeons,
+				HighQevalDungeons(),
 				config -> {
 					var algFactory = new TestAlgorithmsFactory() ;
 					algFactory.withGraphics = withGraphics ;
@@ -328,7 +328,7 @@ public class Experiment4 {
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Test
+	//@Test
 	void test_highQ() throws Exception {
 		
 		runOneAlgorithm(AlgorithmType.HIGH_Q,
