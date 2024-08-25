@@ -360,6 +360,10 @@ public class BasicSearch {
 	 */
 	ProgressStatus solveGoal(String goalDesc, GoalStructure G, int budget) throws Exception {
 		log("*** Deploying a goal: " + goalDesc);
+		
+		// we should probably apply this first to clean the goal-stack:
+		agent.dropAll();
+		
 		agent.setGoal(G);
 		agent.update();
 		Thread.sleep(delayBetweenAgentUpateCycles);
