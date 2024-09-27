@@ -20,6 +20,16 @@ public class AStar<NodeId> implements Pathfinder<NodeId> {
     public SearchMode searchMode = SearchMode.HEURISTIC ;
     
     /**
+     * If specified, this put a maximum in the number of iterations that the
+     * method findPath can take. When this maximum is reached, the method
+     * considers that there is no path to the specified destination (and returns
+     * a null).
+     * 
+     * <p>Default: null.
+     */
+    public Integer maximumNumberOfIterations = null ;
+    
+    /**
      * When this is set, this function will be use to calculate the heuristic distance between
      * two nodes, rather than using the default heuristic-method supplied by underlying navigation
      * graph.
@@ -57,11 +67,22 @@ public class AStar<NodeId> implements Pathfinder<NodeId> {
         if(searchMode == SearchMode.DIJKSTRA) fDistance_ofStart = 0 ;
         open.add(new Priotisable<NodeId>(start,fDistance_ofStart));
         closed.put(start, 0f);
+        
+        // keeping track the total number of iterations of the loop below
+        int numberOfIterations = 0 ;
 
         while (open.size() > 0) {
+        	
+        	if (maximumNumberOfIterations!=null && numberOfIterations >= maximumNumberOfIterations)
+        		
+        		return null ;
+        	
+        	numberOfIterations++ ;
+
             // remove the node with the lowest "priority" from the open-list. 
             NodeId current = open.remove().item ;
-
+            
+            
             // Check if goal is reached, the search stops, and the path to it is returned.
             // In particular note that we don't search further e.g. to find a better path.
             if (current.equals(goal)) {
