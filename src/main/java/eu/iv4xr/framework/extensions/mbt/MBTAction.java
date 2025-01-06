@@ -26,7 +26,7 @@ public class MBTAction<S extends State> {
 	public MBTAction(String name) { this.name = name ; }
 	
 	@SuppressWarnings("unchecked")
-	MBTAction<S> addGuards(Predicate<S> ... ps) {
+	public MBTAction<S> addGuards(Predicate<S> ... ps) {
 		for (Predicate<S>  g : ps) {
 			guards.add(g) ;
 		}
@@ -34,7 +34,7 @@ public class MBTAction<S extends State> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	MBTAction<S> addPostConds(MBTPostCondition<S> ... ps) {
+	public MBTAction<S> addPostConds(MBTPostCondition<S> ... ps) {
 		for (MBTPostCondition<S>  g : ps) {
 			postConditions.add(g) ;
 		}
