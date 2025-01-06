@@ -40,4 +40,9 @@ public class MBTTransition {
 		return false ;
 	}
 	
+	@Override
+	public String toString() {
+		return "" + src.states + " --(" + action + ")--> " + dest.states ;
+	}
+	
 }

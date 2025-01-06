@@ -1,0 +1,69 @@
+{
+  "trans": [
+    {
+      "src": {
+        "states": [
+          "win"
+        ]
+      },
+      "dest": {
+        "states": [
+          "win"
+        ]
+      },
+      "action": "turn-left"
+    },
+    {
+      "src": {
+        "states": [
+          "win"
+        ]
+      },
+      "dest": {
+        "states": [
+          "win"
+        ]
+      },
+      "action": "move-forward"
+    },
+    {
+      "src": {
+        "states": [
+          "in-progress"
+        ]
+      },
+      "dest": {
+        "states": [
+          "in-progress"
+        ]
+      },
+      "action": "move-forward"
+    },
+    {
+      "src": {
+        "states": [
+          "in-progress"
+        ]
+      },
+      "dest": {
+        "states": [
+          "in-progress"
+        ]
+      },
+      "action": "turn-right"
+    },
+    {
+      "src": {
+        "states": [
+          "in-progress"
+        ]
+      },
+      "dest": {
+        "states": [
+          "win"
+        ]
+      },
+      "action": "move-forward"
+    }
+  ]
+}

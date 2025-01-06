@@ -11,22 +11,29 @@ public class MBTRunner<S extends State> {
 	
 	public MBTModel<S> model ;
 	
+	/**
+	 * If true, then executed transitions will be added to the model, if
+	 * it is not already there. Default: false.
+	 */
 	public boolean inferTransitions = false ;
 	
 	public Random rnd = new Random(3731) ;
 	
 	public boolean DEBUG = true ;
 	
-	public enum ACTION_SELECTION { RANDOM , VALUE }
-	
-	public ACTION_SELECTION actionSelectionPolicy = ACTION_SELECTION.RANDOM ;
-	
 	/**
-	 * If true, suite/sequence generation will stop at the first failed
+	 * If true, sequence generation will stop at the first failed
 	 * action, or first violation of post-conditions.
 	 * Default: true.
 	 */
-	public boolean stopOnFailedOrViolation = true ;
+	public boolean stopSeqGenerationOnFailedOrViolation = true ;
+	
+	/**
+	 * If true, suite generation will stop after a sequence detects
+	 * a failed action, or violation of post-conditions.
+	 * Default: true.
+	 */
+	public boolean stopSuiteGenerationOnFailedOrViolation = true ;
 	
 	// We won't do this. It makes the runner quite complicated
 	// e.g. for coverage counting. Instead, you should have a
@@ -34,12 +41,23 @@ public class MBTRunner<S extends State> {
 	//
 	// public boolean alsoTryUnenabledActions = false ;
 	
-	public Function<Void,TestAgent> resetSUT ;
+	public enum ACTION_SELECTION { RANDOM , Q }
+	
+	public ACTION_SELECTION actionSelectionPolicy = ACTION_SELECTION.RANDOM ;
+	
+	// Qalg related hyper params:
+	public float QexploreProbability = 0.5f ;
+	public float Qalpha = 0.5f ;
+	public float Qgamma = 0.6f ;
 	
 	public Map<String,Integer> coveredStates = new HashMap<>() ;
 	public Map<MBTTransition,Integer> coveredTransitions = new HashMap<>() ;
 	public TransitionValueTable vtable = new TransitionValueTable() ;
 	
+	public MBTRunner() { }
+	public MBTRunner(MBTModel<S> model) {
+		this.model = model ;
+	}
 	
 	public void DEBUGPrint(String str) {
 		if (! DEBUG) return ;
@@ -49,6 +67,10 @@ public class MBTRunner<S extends State> {
 	public void DEBUGPrintln(String str) {
 		if (! DEBUG) return ;
 		System.out.println(str);
+	}
+	
+	public void log(String str) {
+		System.out.println(str) ;
 	}
 	
 	public void clearCoverageData() {
@@ -105,10 +127,84 @@ public class MBTRunner<S extends State> {
 		}
 	}
 	
+	
+	
+	/**
+	 * Implement action selection heuristics. The method select one of the
+	 * given set of actions. The set is assumed to be non-empty, and consists
+	 * of actions that are enabled in the current SUT state.
+	 */
+	public MBTAction<S> selectAction(
+			MBTStateConfiguration st,
+			List<MBTAction<S>> enabledActions) {
+		
+		int N = enabledActions.size() ;
+		
+		switch(actionSelectionPolicy) {
+			
+		case RANDOM: return enabledActions.get(rnd.nextInt(N)) ;
+			
+		case Q : 
+			if (rnd.nextFloat() <= QexploreProbability) {
+				DEBUGPrintln(">>> Q-explore!") ;
+				return enabledActions.get(rnd.nextInt(N)) ;
+			}
+			DEBUGPrintln(">>> Q-exploit") ;
+			// else choose the action with the highest q-value:
+			var actions_ = enabledActions.stream().map(a -> a.name).collect(Collectors.toList()) ;
+			var candidates1 = vtable.getActionsWithMaxAverageValue(st, actions_) ;
+			if (candidates1 == null) {
+				// fall back to random:
+				 return enabledActions.get(rnd.nextInt(N)) ;
+			}
+			
+			// if there are enabled actions that are untried, we will
+			// assume a value of 1 for them.
+			// We then get actions with the max average according to the
+			// vtable. If they have better value than 1, we choose one of
+			// them. And else we choose one of the untried actions.
+			//
+			var knownOutGoingActions = vtable.getOutgoingActions(st) ;
+			var untriedActions = actions_.stream()
+						.filter(a -> !knownOutGoingActions.contains(a))
+						.collect(Collectors.toList()) ;
+			
+			String selected = null ;
+			
+			if (candidates1.snd > 1 || untriedActions.isEmpty()) {
+				var candidates1x = candidates1.fst ;
+				selected = candidates1x.get(rnd.nextInt(candidates1x.size())) ;
+			}
+			else {
+				selected = untriedActions.get(rnd.nextInt(untriedActions.size())) ;
+			}
+			
+			final String selected_ = selected ;
+			
+			var A = enabledActions.stream()
+					.filter(a -> a.name.equals(selected_))
+					.collect(Collectors.toList())
+					.get(0) ;
+			return A ;
+		}
+		// should not come here
+		return null ;
+	}
+	
+	/**
+	 * Generate the next test-step (transition).
+	 * 
+	 * 
+	 * @param previousTrasition null, if there is no previous transition (or if we don't care).
+	 * @param agent
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public ActionExecutionResult executeNext(MBTTransition previousTrasition, TestAgent agent) {
 		
 		S stateBeforeAction = (S) agent.state() ;
+		var configBeforeAction = agentState2Configuration(stateBeforeAction) ;
+		DEBUGPrintln(">> active states: " + configBeforeAction.states) ;
 		
 		List<MBTAction<S>> actions = model.enabledActions(stateBeforeAction) ;
 		//List<MBTAction<S>> actions = null ;
@@ -122,28 +218,14 @@ public class MBTRunner<S extends State> {
 			// update the value of the previous transition to -inf:
 			if (previousTrasition != null)
 				vtable.updateTransitionValue(previousTrasition, Float.NEGATIVE_INFINITY);
+			DEBUGPrintln("-- NO enabled action is available.") ;
 			return null ;	
 		}
 		
-		var configBeforeAction = agentState2Configuration(stateBeforeAction) ;
+		// select an action to do:
+		var selected = selectAction(configBeforeAction,actions) ;
 		
-		// for now we will just choose actions randomly:
-		var selected = actions.get(rnd.nextInt(actions.size())) ;
-		
-		
-		
-		
-		
-		DEBUGPrint(">> active states: ") ;
-		var activeModelStates = agentState2Configuration(stateBeforeAction) ;
-		int k = 0 ;
-		for (var st : activeModelStates.states) {
-			if (k>0) DEBUGPrint(", ") ;
-			DEBUGPrint(st) ;
-			k++ ;
-		}
-		DEBUGPrintln("") ;
-		DEBUGPrint("-- executing " + selected.name) ;
+		DEBUGPrintln("-- executing " + selected.name) ;
 		
 		var R = new ActionExecutionResult() ;
 		R.statesBefore = configBeforeAction ;
@@ -194,8 +276,6 @@ public class MBTRunner<S extends State> {
 			
 			Float directReward =  1f / (float) coveredTransitions.get(tr) ;
 			
-			float alpha = 0.5f ;
-			float gamma = 0.55f ;
 			var nextOutgoingsV = vtable.transValues.get(tr.dest) ;
 			float bestNextNextValue = 0 ;
 			if (nextOutgoingsV != null) {
@@ -204,8 +284,13 @@ public class MBTRunner<S extends State> {
 						bestNextNextValue = nextnextVal ;
 				}
 			}
-			float newValue = (1 - alpha) * oldValue 
-					+ alpha * (directReward + gamma*bestNextNextValue) ;
+			float newValue = 
+					  (1 - Qalpha) * oldValue 
+					+ Qalpha * (directReward + Qgamma * bestNextNextValue) ;
+			
+			DEBUGPrintln(">>> tr " + tr) ;
+			DEBUGPrintln(">>> old-qval " + oldValue) ;
+			DEBUGPrintln(">>> new-qval " + newValue) ;
 			
 			vtable.updateTransitionValue(tr, newValue) ;
 			
@@ -245,7 +330,7 @@ public class MBTRunner<S extends State> {
 			}
 			previousTransition = R.getTransition() ;
 			sequence.add(R) ;
-			if (stopOnFailedOrViolation && (! R.executionSuccessful || R.postConditionViolationFound)) {
+			if (stopSeqGenerationOnFailedOrViolation && (! R.executionSuccessful || R.postConditionViolationFound)) {
 				break ;
 			}
 		}
@@ -266,6 +351,9 @@ public class MBTRunner<S extends State> {
 			int numOfTestSequences,
 			int maxDepth) {
 		
+		// load transitions in the model, if any is kept there, into the vtable
+		vtable.initializeFromModel(model,1);
+		
 		List<List<ActionExecutionResult>> suite = new LinkedList<>() ;
 		for (int n=0; n<numOfTestSequences; n++) {
 			// run the initializer to set the SUT state to a state suitable
@@ -282,12 +370,41 @@ public class MBTRunner<S extends State> {
 			boolean seqOk = seq.stream()
 							.allMatch(R -> R.executionSuccessful && ! R.postConditionViolationFound) ;
 			
-			if (stopOnFailedOrViolation && !seqOk) 
+			int numOfCoveredStates = (int) coveredStates.values().stream()
+							.filter(cnt -> cnt > 0)
+							.count() ;
+			int numOfCoveredTransitions = (int) coveredTransitions.values().stream()
+					.filter(cnt -> cnt > 0)
+					.count() ;
+			
+			log("** #suite " + suite.size() + ", #covered-states="
+					+ numOfCoveredStates
+					+ ", #covered-transitions:" + numOfCoveredTransitions) ;
+			if (!seqOk) {
+				log("   seq-" + n + " failed or violating its post-cond") ;
+			}
+			
+			
+			if (stopSuiteGenerationOnFailedOrViolation && !seqOk) 
 				break ;
 		}
+		log("** suite generated. #suite:" + suite.size()) ;
 		return suite ;
 	}
 	
+	
+	public String showCoverage() {
+		var z = new StringBuffer() ;
+		z.append("** State coverage:\n") ;
+		for (var SC : coveredStates.entrySet()) {
+			z.append("   " + SC.getKey() + " (" + SC.getValue() + ")\n") ;
+		}
+		z.append("** Transition coverage:\n") ;
+		for (var TC : coveredTransitions.entrySet()) {
+			z.append("   " + TC.getKey() + " (" + TC.getValue() + ")\n") ;
+		}
+		return z.toString() ;
+	}
 	
 
 }

@@ -10,18 +10,15 @@ public class MBTStateConfiguration {
 	 */
 	public List<String> states ;
 	
-	Integer hash ;
-	
 	public MBTStateConfiguration(List<String> states) {
 		this.states = new LinkedList<>() ;
 		this.states.addAll(states) ;
 		this.states.sort((s1,s2) -> s1.compareTo(s2));
-		this.hash = states.hashCode() ;
 	}
 	
 	@Override
 	public int hashCode() {
-		return hash ;
+		return states.hashCode() ; 
 	}
 	
 	@Override

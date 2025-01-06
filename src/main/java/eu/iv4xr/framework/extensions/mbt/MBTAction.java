@@ -41,8 +41,13 @@ public class MBTAction<S extends State> {
 		return this ;
 	}
 	
+	public MBTAction<S>  withAction(Function<TestAgent,Boolean> a) {
+		this.theAction = a ;
+		return this ;
+	}
+	
 	public boolean enabled(S state) {
-		return guards.stream().anyMatch(g -> g.test(state)) ;
+		return guards.stream().allMatch(g -> g.test(state)) ;
 	}
 	
 

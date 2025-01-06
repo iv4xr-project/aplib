@@ -1,7 +1,16 @@
 package eu.iv4xr.framework.extensions.mbt;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import eu.iv4xr.framework.extensions.ltl.gameworldmodel.GameWorldModel;
 import nl.uu.cs.aplib.agents.State;
 
 /**
@@ -24,6 +33,9 @@ public class MBTModel<S extends State> {
 	
 	public Map<MBTStateConfiguration,List<MBTTransition>> transitions = new HashMap<>() ;
 	
+	
+	MBTModel() { }
+	
 	public MBTModel(String name) { this.name = name ; }
 	
 	
@@ -45,6 +57,76 @@ public class MBTModel<S extends State> {
 		 return enabled ;
 	}
 	
+	public List<MBTTransition> getAllTransitions() {
+		List<MBTTransition>  trs = new LinkedList<>() ;
+		for (var trgroup : transitions.values()) {
+			trs.addAll(trgroup) ;
+		}
+	    return trs ;
+	}
+	
+	@Override
+	public String toString() {
+		var z = new StringBuffer() ;
+		z.append("** Model: " + name + "\n") ;
+		z.append("   States (" + states.size() + "): " + states.keySet() + "\n") ;
+		z.append("   Actions (" + actions.size() + "): " + actions.keySet() + "\n") ;
+		z.append("   Transitions (" + getAllTransitions().size() + "):\n") ;
+		int k=1 ;
+		var trs = getAllTransitions() ;
+		for (var tr : trs) {
+			z.append("     [" + k + "] " + tr + "\n") ;
+			k++ ;
+		}
+		return z.toString() ;
+		
+	}
+	
+	static class Wrapper {
+		public List<MBTTransition> trans ;
+		public Wrapper() {} 
+	}
+	
+	/**
+	 * Save the transitions to a file.
+	 * @param fname
+	 * @throws IOException 
+	 */
+	public void saveTransitions(String filename) throws IOException {
+		FileWriter fwriter = new FileWriter(filename) ;
+		
+		var wrapper = new Wrapper() ;
+		wrapper.trans = getAllTransitions() ;
+		
+		Gson gson = new GsonBuilder()
+			    . setPrettyPrinting()
+			    . serializeNulls()
+			    . create(); 
+		//System.out.println(">>>> " + gson.toJson(base)) ;
+		gson.toJson(wrapper, fwriter);
+		
+		fwriter.flush();
+		fwriter.close();
+	}
+	
+	
+	public void loadTransitionsFromFile(String filename) throws IOException {
+		Gson gson = new Gson();
+		Reader reader = Files.newBufferedReader(Paths.get(filename));
+		Wrapper loaded = gson.fromJson(reader,Wrapper.class);
+		transitions.clear(); 
+		for (var tr : loaded.trans) {
+			var src = tr.src ;
+			var outgoings = transitions.get(src) ;
+			if (outgoings == null) {
+				outgoings = new LinkedList<MBTTransition>() ;
+				transitions.put(src,outgoings) ;
+			}
+			if (! outgoings.contains(tr)) {
+				outgoings.add(tr) ;
+			}
+		}
+	}
 	
 
 	
