@@ -110,11 +110,18 @@ public class MBTModel<S extends State> {
 	}
 	
 	
-	public void loadTransitionsFromFile(String filename) throws IOException {
+	/**
+	 * Load the transitions saved in the given json-file. If 
+	 *
+	 * @param writeOver If true, the transitions already in this model will be first wiped.
+	 * 					Else, transitions form the file will be added into this model.
+	 */
+	public void loadTransitionsFromFile(String filename, Boolean writeOver) throws IOException {
 		Gson gson = new Gson();
 		Reader reader = Files.newBufferedReader(Paths.get(filename));
 		Wrapper loaded = gson.fromJson(reader,Wrapper.class);
-		transitions.clear(); 
+		if (writeOver)
+			transitions.clear(); 
 		for (var tr : loaded.trans) {
 			var src = tr.src ;
 			var outgoings = transitions.get(src) ;

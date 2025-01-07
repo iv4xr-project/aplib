@@ -22,14 +22,14 @@ public class MBTState<S extends State> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	MBTState<S> addPredicates(Predicate<S> ... ps) {
+	public MBTState<S> addPredicates(Predicate<S> ... ps) {
 		for (Predicate<S>  g : ps) {
 			preds.add(g) ;
 		}
 		return this ;
 	}
 	
-	boolean inState(S state) {
+	public boolean inState(S state) {
 		return preds.stream().allMatch(P -> P.test(state)) ;
 	}
 
