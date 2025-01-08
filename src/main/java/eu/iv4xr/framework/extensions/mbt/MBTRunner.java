@@ -424,13 +424,17 @@ public class MBTRunner<S extends State> {
 	public String showCoverage() {
 		var z = new StringBuffer() ;
 		z.append("** State coverage:\n") ;
-		for (var SC : coveredStates.entrySet()) {
+		var Z = coveredStates.entrySet() ;
+		for (var SC : Z) {
 			z.append("   " + SC.getKey() + " (" + SC.getValue() + ")\n") ;
 		}
+		z.append("   #states covered: " + Z.size() + "\n") ;
 		z.append("** Transition coverage:\n") ;
-		for (var TC : coveredTransitions.entrySet()) {
+		var TRS = coveredTransitions.entrySet() ;
+		for (var TC : TRS) {
 			z.append("   " + TC.getKey() + " (" + TC.getValue() + ")\n") ;
 		}
+		z.append("   #transitions covered: " + TRS.size() + "\n") ;
 		return z.toString() ;
 	}
 	
