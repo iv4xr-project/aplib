@@ -38,7 +38,7 @@ public class Test_ModelSaveAndModelTransitions {
 		
 		var mymodel2 = (new Test_MBT()).mkModel1() ;
 		assertTrue(mymodel2.getAllTransitions().size() == 0) ;
-		mymodel2.loadTransitionsFromFile(saveFile);
+		mymodel2.loadTransitionsFromFile(saveFile,true);
 		assertTrue(mymodel2.getAllTransitions().size() == 5) ;
 		System.out.println(mymodel2) ;	
 		
