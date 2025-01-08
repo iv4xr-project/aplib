@@ -13,6 +13,7 @@ import eu.iv4xr.framework.extensions.mbt.MBTPostCondition;
 import eu.iv4xr.framework.extensions.mbt.MBTRunner;
 import eu.iv4xr.framework.extensions.mbt.MBTState;
 import eu.iv4xr.framework.extensions.mbt.SimpleGame;
+import eu.iv4xr.framework.extensions.mbt.MBTRunner.ACTION_SELECTION;
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import nl.uu.cs.aplib.Logging;
@@ -30,7 +31,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 public class MBT_MD_Model {
 	
-	public static int DELAY_BETWEEN_UPDATE = 100 ;
+	public static int DELAY_BETWEEN_UPDATE = 10 ;
 	
 	public static void WAIT() {
 		try {
@@ -69,26 +70,6 @@ public class MBT_MD_Model {
 		return (Integer) val ;
 	}
 	
-	@SuppressWarnings("unchecked")
-	static MBTAction<MyAgentState> doNothing() {
-		return new MBTAction<MyAgentState>("do-nothing")
-				.withAction(agent -> {
-					var S = (MyAgentState) agent.state() ;
-					S.env().action(S.worldmodel.agentId, Command.DONOTHING) ;
-					S.updateState(agent.getId()) ;
-					WAIT() ;
-					return true ;
-				}) 
-				.addGuards(S -> S.agentIsAlive())
-				.addPostConds(new MBTPostCondition<MyAgentState>("state-the-same",
-					S -> 
-					S.val("hp").equals(S.before("hp"))
-					&& S.val("score").equals(S.before("score"))
-					&& S.val("itemsInBag").equals(S.before("itemsInBag"))
-					&& S.val("rageTimer").equals(S.before("rageTimer")))
-					)
-				;
-	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTAction<MyAgentState> usepot(EntityType ty) {
@@ -315,9 +296,77 @@ public class MBT_MD_Model {
 		return model  ;
 	}
 	
+	// most complete model
+	@SuppressWarnings("unchecked")
+	static MBTModel<MyAgentState> MD_model1(int travelBudget, boolean withSurvival) {
+		var model = MD_model0(travelBudget,withSurvival) ;
+		model.name = "MD-model1" ;
+		
+		model.addActions(
+				travelToObject(EntityType.HEALPOT,null,travelBudget,withSurvival),
+				travelToObject(EntityType.SCROLL,null,travelBudget,withSurvival),
+				pickUpItem(EntityType.HEALPOT),
+				pickUpItem(EntityType.SCROLL),
+				pickUpItem_neg(),
+				usepot(EntityType.HEALPOT),
+				usepot_neg(EntityType.RAGEPOT),
+				usepot_neg(EntityType.HEALPOT)
+// missing combat
+				// shrine related actions
+				// bumping wall
+				
+				
+				) ;
+		
+		return model ;
+		
+	}
+	
+	// singleton to hold an instance of MD
+	static DungeonApp miniDungeonInstance = null ;
+	
+	public static TestAgent agentRestart(String agentId, 
+			MiniDungeonConfig config,
+			boolean withSound,
+			boolean withGraphics 
+			)  {
+		
+		if (miniDungeonInstance==null ||! miniDungeonInstance.dungeon.config.toString().equals(config.toString())) {
+			// there is no MD-instance yet, or if the config is different than the config of the
+			// running MD-instance, then we create a fresh MD instance:
+			DungeonApp app = null ;
+			try {
+				app = new DungeonApp(config);
+			}
+			catch(Exception e) {
+				miniDungeonInstance = null ;
+				return null ;
+			}
+			// setting sound on/off, graphics on/off etc:
+			app.soundOn = withSound ;
+			app.headless = ! withGraphics ;
+			if(withGraphics) 
+				DungeonApp.deploy(app);	
+			System.out.println(">>> LAUNCHING a new instance of MD") ;
+			miniDungeonInstance = app ;
+		}
+		else {
+			// if the config is the same, we just reset the state of the running MD:
+			miniDungeonInstance.keyPressedWorker('z');
+			System.out.println(">>> RESETING MD") ;
+		}
+		
+		var agent = new TestAgent(agentId, "tester"); 	
+		agent.attachState(new MyAgentState())
+			 .attachEnvironment(new MyAgentEnv(miniDungeonInstance)) ;
+		
+		// give initial state update to set it up
+		agent.state().updateState(agent.getId()) ;
+		return agent ;
+	}
 	
 	// just a simple test to try out
-	@Test
+	//@Test
 	public void test0() throws Exception {
 		
 		MiniDungeonConfig config = new MiniDungeonConfig();
@@ -325,27 +374,18 @@ public class MBT_MD_Model {
 		config.viewDistance = 40;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
-		DungeonApp app = new DungeonApp(config);
-		app.soundOn = false;
-		// graphics on/off:
-		app.headless = false ;
-		if(! app.headless) DungeonApp.deploy(app);
-	
-		var agent = new TestAgent("Frodo", "tester"); // "Smeagol"		
-		agent.attachState( new MyAgentState())
-			 .attachEnvironment( new MyAgentEnv(app)) ;
+		var agent = agentRestart("Frodo",config,false,true)  ; // "Smeagol"	
 		
 		//if (supressLogging) {
 		//	Logging.getAPLIBlogger().setLevel(Level.OFF);
 		//}
 
-		
 		var mymodel = MD_model0(200,false) ;
 		var runner = new MBTRunner<MyAgentState>(mymodel) ;
 		//runner.rnd = new Random() ;
 		
 		// give initial state update, to setup the agent's initial state
-		agent.state().updateState(agent.getId()) ;
+		//agent.state().updateState(agent.getId()) ;
 		
 		var results = runner.generateTestSequence(agent,50) ;
 		
@@ -354,5 +394,30 @@ public class MBT_MD_Model {
 		System.out.println(">>> postcond violations:" + MBTRunner.getViolatedPostCondsFromSeqResult(results)) ;
 	}
 	
+	
+	
+	
+	// just a simple test to try out
+	@Test
+	public void test1() throws Exception {
+		
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 4;
+		config.viewDistance = 40;
+		config.randomSeed = 79371;
+		System.out.println(">>> Configuration:\n" + config);
+		
+		var mymodel = MD_model1(200,false) ;
+		var runner = new MBTRunner<MyAgentState>(mymodel) ;
+		//runner.rnd = new Random() ;
+		
+		runner.actionSelectionPolicy = ACTION_SELECTION.Q ;
+		
+		var results = runner.generate(dummy -> agentRestart("Frodo",config,false,true),20,30) ;
+		
+		System.out.println(runner.showCoverage()) ;
+		System.out.println(">>> failed actions:" + MBTRunner.getFailedActionsFromSuiteResults(results)) ;
+		System.out.println(">>> postcond violations:" + MBTRunner.getViolatedPostCondsFromSuiteResults(results)) ;
+	}
 	
 }
