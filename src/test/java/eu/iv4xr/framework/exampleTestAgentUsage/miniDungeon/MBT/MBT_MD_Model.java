@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.extensions.mbt.MBTAction;
+import eu.iv4xr.framework.extensions.mbt.MBTModel;
 import eu.iv4xr.framework.extensions.mbt.MBTPostCondition;
 import eu.iv4xr.framework.extensions.mbt.MBTState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
@@ -31,45 +32,52 @@ public class MBT_MD_Model {
 		return ! S.adajcentMonsters().isEmpty() ;
 	}
 	
-	public static WorldEntity adjacentHealPot(MyAgentState S) {
-		var z = TacticLib.nearItems(S,EntityType.HEALPOT,1) ;
-		return z == null ? null : z.get(0) ;
+	public static WorldEntity adjacentEntity(MyAgentState S, EntityType ty) {
+		var z = TacticLib.nearItems(S,ty,1) ;
+		return z.isEmpty() ? null : z.get(0) ;
 	}
 	
-	public static WorldEntity adjacentRagePot(MyAgentState S) {
-		var z = TacticLib.nearItems(S,EntityType.RAGEPOT,1) ;
-		return z == null ? null : z.get(0) ;
+	public static WorldEntity adjacentShrine(MyAgentState S, ShrineType sty) {
+		var e = adjacentEntity(S,EntityType.SHRINE) ;
+		if (e == null) 
+			return null ;
+		return (ShrineType) e.properties.get("shrinetype") == sty ? e : null ;
 	}
 	
-	public static WorldEntity adjacentScroll(MyAgentState S) {
-		var z = TacticLib.nearItems(S,EntityType.SCROLL,1) ;
-		return z == null ? null : z.get(0) ;
-	}
-	
+
 	public static WorldEntity adjacentItem(MyAgentState S) {
-		WorldEntity e = adjacentScroll(S) ;
+		WorldEntity e = adjacentEntity(S, EntityType.SCROLL) ;
 		if (e != null) return e ; 
-		e = adjacentRagePot(S) ;
+		e = adjacentEntity(S, EntityType.RAGEPOT) ;
 		if (e != null) return e ;
-		return adjacentHealPot(S) ;
+		return adjacentEntity(S, EntityType.HEALPOT) ;
 	}
 	
-	public static WorldEntity adjacentShrine(MyAgentState S) {
-		var z = TacticLib.nearItems(S,EntityType.SHRINE,1) ;
-		if (z.isEmpty()) return null ;
-		return z.get(0) ;
-	}
-	
-	public static WorldEntity adjacentWall(MyAgentState S) {
-		var z = TacticLib.nearItems(S,EntityType.WALL,1) ;
-		if (z.isEmpty()) return null ;
-		return z.get(0) ;
-	}
 	
 	public static int int_(Serializable val) {
 		return (Integer) val ;
 	}
 	
+	@SuppressWarnings("unchecked")
+	static MBTAction<MyAgentState> doNothing() {
+		return new MBTAction<MyAgentState>("do-nothing")
+				.withAction(agent -> {
+					var S = (MyAgentState) agent.state() ;
+					S.env().action(S.worldmodel.agentId, Command.DONOTHING) ;
+					agent.update() ;
+					WAIT() ;
+					return true ;
+				}) 
+				.addGuards(S -> S.agentIsAlive())
+				.addPostConds(new MBTPostCondition<MyAgentState>("state-the-same",
+					S -> 
+					S.val("hp").equals(S.before("hp"))
+					&& S.val("score").equals(S.before("score"))
+					&& S.val("itemsInBag").equals(S.before("itemsInBag"))
+					&& S.val("rageTimer").equals(S.before("rageTimer")))
+					)
+				;
+	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTAction<MyAgentState> usepot(EntityType ty) {
@@ -85,6 +93,7 @@ public class MBT_MD_Model {
 					return true ;
 				}) 
 				.addGuards(S -> 
+				    S.agentIsAlive() &&
 					ty == EntityType.HEALPOT ?
 						int_(S.val("healpotsInBag")) > 0 
 					: 
@@ -92,8 +101,14 @@ public class MBT_MD_Model {
 				.addPostConds(new MBTPostCondition<MyAgentState>("" + ty + " used", 
 					S -> ty == EntityType.HEALPOT ?
 							int_(S.val("healpotsInBag")) == int_(S.before("healpotsInBag")) - 1
+							&& (int_(S.val("hp")) > int_(S.before("hp"))
+							    || int_(S.before("hp")) == int_(S.val("hpmax")))
 						 :
-							int_(S.val("ragepotsInBag")) == int_(S.before("ragepotsInBag")) - 1  ))
+							int_(S.val("ragepotsInBag")) == int_(S.before("ragepotsInBag")) - 1  
+							&& int_(S.val("rageTimer")) == 10
+						))
+				
+				
 				;
 	}
 	
@@ -126,16 +141,15 @@ public class MBT_MD_Model {
 					WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> {
-					if (int_(S.val("bagUsed")) >= int_(S.val("maxBagSize"))) return false ;
-					switch(ty) {
-					case HEALPOT: return adjacentHealPot(S) != null ;
-					case RAGEPOT: return adjacentRagePot(S) != null ;
-					case SCROLL: return adjacentScroll(S) != null ;
-					}
-					return false ;
-				})
-				.addPostConds(new MBTPostCondition<MyAgentState>("" + ty + " added to bag", 
+				.addGuards(S -> 
+					S.agentIsAlive() &&
+					int_(S.val("bagUsed")) < int_(S.val("maxBagSize")) && adjacentEntity(S,ty) != null )
+				
+				.addPostConds(
+						new MBTPostCondition<MyAgentState>("bag-cap-respected",
+						S -> int_(S.val("bagUsed")) <= int_(S.val("maxBagSize"))),
+						
+						new MBTPostCondition<MyAgentState>("" + ty + " added to bag", 
 						S -> {
 							switch(ty) {
 							case HEALPOT: return int_(S.val("healpotsInBag")) == int_(S.before("healpotsInBag")) + 1 ;
@@ -199,16 +213,95 @@ public class MBT_MD_Model {
 					   
 					   Z = Z.filter(e -> ((ShrineType) e.properties.get("shrinetype")) == sty) ;
 						   
-				   return Z.count() > 0 ;
+				   return S.agentIsAlive() && Z.count() > 0 ;
 				})
 				// no post-cond for travel
 				; 
 	}
 	
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> alive() {
+		var Z = new  MBTState<MyAgentState> ("alive") ;
+		Z.addPredicates(S -> S.agentIsAlive()) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> inCombat() {
 		var Z = new  MBTState<MyAgentState> ("in-combat") ;
 		Z.addPredicates(S -> inCombat(S)) ;
 		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> adjacentTo(EntityType ty) {
+		var Z = new  MBTState<MyAgentState> ("adjacent-to-" + ty) ;
+		Z.addPredicates(S -> adjacentEntity(S,ty) != null) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> inBag(EntityType ty) {
+		var Z = new  MBTState<MyAgentState> ("in-bag-" + ty) ;
+		Z.addPredicates(S -> {
+			switch(ty) {
+			case HEALPOT: return int_(S.val("healpotsInBag")) > 0 ;
+			case RAGEPOT: return int_(S.val("ragepotsInBag")) > 0 ;
+			case SCROLL : return int_(S.val("scrollsInBag")) > 0 ;
+			}
+			return false ;
+		}) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> bagfull() {
+		var Z = new  MBTState<MyAgentState> ("bag-full") ;
+		Z.addPredicates(S -> int_(S.val("bagUsed")) >= int_(S.val("maxBagSize"))  ) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> enraged() {
+		var Z = new  MBTState<MyAgentState> ("enraged") ;
+		Z.addPredicates(S -> int_(S.val("rageTimer")) > 0 ) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> healed() {
+		var Z = new  MBTState<MyAgentState> ("healed") ;
+		Z.addPredicates(S -> 
+		   S.before("hp") != null
+		   && int_(S.val("hp")) > int_(S.before("hp"))) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTModel<MyAgentState> model0(int travelBudget, boolean withSurvival) {
+		var model = new MBTModel<MyAgentState>("MD-model0") ;
+		model.addStates(
+				alive(),
+				inCombat(),
+				adjacentTo(EntityType.HEALPOT),
+				adjacentTo(EntityType.RAGEPOT),
+				adjacentTo(EntityType.SCROLL),
+				inBag(EntityType.HEALPOT),
+				inBag(EntityType.RAGEPOT),
+				inBag(EntityType.SCROLL),
+				bagfull(),
+				healed(), 
+				enraged()
+				) ;
+		
+		model.addActions(
+				travelToObject(EntityType.RAGEPOT,null,travelBudget,withSurvival),
+				pickUpItem(EntityType.RAGEPOT),
+				usepot(EntityType.RAGEPOT)
+				) ;
+		
+		return model  ;
 	}
 	
 	
