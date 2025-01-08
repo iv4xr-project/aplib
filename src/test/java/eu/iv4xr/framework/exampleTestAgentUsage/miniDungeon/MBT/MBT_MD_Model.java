@@ -350,6 +350,8 @@ public class MBT_MD_Model {
 		var results = runner.generateTestSequence(agent,50) ;
 		
 		System.out.println(runner.showCoverage()) ;
+		System.out.println(">>> failed actions:" + MBTRunner.getFailedActionsFromSeqResult(results)) ;
+		System.out.println(">>> postcond violations:" + MBTRunner.getViolatedPostCondsFromSeqResult(results)) ;
 	}
 	
 	
