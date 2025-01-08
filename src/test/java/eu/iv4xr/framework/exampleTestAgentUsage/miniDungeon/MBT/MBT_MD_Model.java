@@ -1,17 +1,28 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.MBT;
 
 import java.io.Serializable;
+import java.util.Random;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.Test;
 
 import eu.iv4xr.framework.extensions.mbt.MBTAction;
 import eu.iv4xr.framework.extensions.mbt.MBTModel;
 import eu.iv4xr.framework.extensions.mbt.MBTPostCondition;
+import eu.iv4xr.framework.extensions.mbt.MBTRunner;
 import eu.iv4xr.framework.extensions.mbt.MBTState;
+import eu.iv4xr.framework.extensions.mbt.SimpleGame;
+import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
+import nl.uu.cs.aplib.Logging;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.ShrineType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
+import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
@@ -19,7 +30,7 @@ import nl.uu.cs.aplib.mainConcepts.GoalStructure;
 
 public class MBT_MD_Model {
 	
-	public static int DELAY_BETWEEN_UPDATE = 10 ;
+	public static int DELAY_BETWEEN_UPDATE = 100 ;
 	
 	public static void WAIT() {
 		try {
@@ -64,7 +75,7 @@ public class MBT_MD_Model {
 				.withAction(agent -> {
 					var S = (MyAgentState) agent.state() ;
 					S.env().action(S.worldmodel.agentId, Command.DONOTHING) ;
-					agent.update() ;
+					S.updateState(agent.getId()) ;
 					WAIT() ;
 					return true ;
 				}) 
@@ -88,7 +99,7 @@ public class MBT_MD_Model {
 						S.env().action(S.worldmodel.agentId, Command.USEHEAL) ;
 					else 
 						S.env().action(S.worldmodel.agentId, Command.USERAGE) ;
-					agent.update() ;
+					S.updateState(agent.getId()) ;
 					WAIT() ;
 					return true ;
 				}) 
@@ -105,7 +116,7 @@ public class MBT_MD_Model {
 							    || int_(S.before("hp")) == int_(S.val("hpmax")))
 						 :
 							int_(S.val("ragepotsInBag")) == int_(S.before("ragepotsInBag")) - 1  
-							&& int_(S.val("rageTimer")) == 10
+							&& int_(S.val("rageTimer")) == 9
 						))
 				
 				
@@ -137,7 +148,7 @@ public class MBT_MD_Model {
 					var S = (MyAgentState) agent.state() ;
 					var e = TacticLib.nearItems(S,ty,1).get(0) ;
 					new TacticLib() . moveTo(S, Utils.toTile(e.position)) ;
-					agent.update() ;
+					S.updateState(agent.getId()) ;
 					WAIT() ;
 					return true ;
 				}) 
@@ -169,7 +180,7 @@ public class MBT_MD_Model {
 					var S = (MyAgentState) agent.state() ;
 					var e = adjacentItem(S) ;
 					new TacticLib() . moveTo(S, Utils.toTile(e.position)) ;
-					agent.update() ;
+					S.updateState(agent.getId()) ;
 					WAIT() ;
 					return true ;
 				}) 
@@ -201,7 +212,7 @@ public class MBT_MD_Model {
 						WAIT() ;
 						k ++ ;
 					}
-					agent.update() ;
+					S.updateState(agent.getId()) ;
 					// return true, even if it fails to reach the target:
 					return true ;
 				}) 
@@ -279,7 +290,7 @@ public class MBT_MD_Model {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static MBTModel<MyAgentState> model0(int travelBudget, boolean withSurvival) {
+	static MBTModel<MyAgentState> MD_model0(int travelBudget, boolean withSurvival) {
 		var model = new MBTModel<MyAgentState>("MD-model0") ;
 		model.addStates(
 				alive(),
@@ -304,6 +315,42 @@ public class MBT_MD_Model {
 		return model  ;
 	}
 	
+	
+	// just a simple test to try out
+	@Test
+	public void test0() throws Exception {
+		
+		MiniDungeonConfig config = new MiniDungeonConfig();
+		config.numberOfHealPots = 4;
+		config.viewDistance = 40;
+		config.randomSeed = 79371;
+		System.out.println(">>> Configuration:\n" + config);
+		DungeonApp app = new DungeonApp(config);
+		app.soundOn = false;
+		// graphics on/off:
+		app.headless = false ;
+		if(! app.headless) DungeonApp.deploy(app);
+	
+		var agent = new TestAgent("Frodo", "tester"); // "Smeagol"		
+		agent.attachState( new MyAgentState())
+			 .attachEnvironment( new MyAgentEnv(app)) ;
+		
+		//if (supressLogging) {
+		//	Logging.getAPLIBlogger().setLevel(Level.OFF);
+		//}
+
+		
+		var mymodel = MD_model0(200,false) ;
+		var runner = new MBTRunner<MyAgentState>(mymodel) ;
+		//runner.rnd = new Random() ;
+		
+		// give initial state update, to setup the agent's initial state
+		agent.state().updateState(agent.getId()) ;
+		
+		var results = runner.generateTestSequence(agent,50) ;
+		
+		System.out.println(runner.showCoverage()) ;
+	}
 	
 	
 }
