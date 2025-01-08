@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.agents.State;
+import nl.uu.cs.aplib.utils.Pair;
 
 public class MBTRunner<S extends State> {
 	
@@ -127,6 +128,33 @@ public class MBTRunner<S extends State> {
 		}
 	}
 	
+	
+	public static Set<String> getFailedActionsFromSeqResult(List<ActionExecutionResult> Rs) {
+		return Rs.stream()
+			.filter(R -> ! R.executionSuccessful)
+			.map(R -> R.executedAction)
+			.collect(Collectors.toSet()) ;
+	}
+	
+	public static Set<String> getFailedActionsFromSuiteResults(List<List<ActionExecutionResult>> RS) {
+		Set<String> failed = new HashSet<>() ;
+		for (var Z : RS) failed.addAll(getFailedActionsFromSeqResult(Z)) ;
+		return failed ;
+	}
+	
+	public static Set<Pair<String,List<String>>> getViolatedPostCondsFromSeqResult(List<ActionExecutionResult> Rs) {
+		return Rs.stream()
+			.filter(R -> ! R.postConditionViolationFound)
+			.map(R -> new Pair<>(R.executedAction, R.violatedPostConditions))
+			.collect(Collectors.toSet()) ;
+	}
+	
+	public static Set<Pair<String,List<String>>> getViolatedPostCondsFromSuiteResults(List<List<ActionExecutionResult>> RS) {
+		Set<Pair<String,List<String>>> violations = new HashSet<>() ;
+		for (var Z : RS)
+			violations.addAll(getViolatedPostCondsFromSeqResult(Z)) ;
+		return violations ;
+	}
 	
 	
 	/**
