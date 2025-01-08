@@ -429,12 +429,18 @@ public class MBTRunner<S extends State> {
 			z.append("   " + SC.getKey() + " (" + SC.getValue() + ")\n") ;
 		}
 		z.append("   #states covered: " + Z.size() + "\n") ;
-		z.append("** Transition coverage:\n") ;
 		var TRS = coveredTransitions.entrySet() ;
+		Set<MBTStateConfiguration> coveredConfigurations = new HashSet<>() ;
+		for (var TC : TRS) {
+			coveredConfigurations.add(TC.getKey().src) ;
+			coveredConfigurations.add(TC.getKey().dest) ;
+		}
+		z.append("** Transition coverage:\n") ;
 		for (var TC : TRS) {
 			z.append("   " + TC.getKey() + " (" + TC.getValue() + ")\n") ;
 		}
 		z.append("   #transitions covered: " + TRS.size() + "\n") ;
+		z.append("   #configurations covered: " + coveredConfigurations.size() + "\n") ;
 		return z.toString() ;
 	}
 	
