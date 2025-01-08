@@ -144,7 +144,7 @@ public class MBTRunner<S extends State> {
 	
 	public static Set<Pair<String,List<String>>> getViolatedPostCondsFromSeqResult(List<ActionExecutionResult> Rs) {
 		return Rs.stream()
-			.filter(R -> ! R.postConditionViolationFound)
+			.filter(R -> R.postConditionViolationFound)
 			.map(R -> new Pair<>(R.executedAction, R.violatedPostConditions))
 			.collect(Collectors.toSet()) ;
 	}
