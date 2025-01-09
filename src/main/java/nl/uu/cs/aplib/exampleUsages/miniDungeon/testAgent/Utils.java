@@ -147,12 +147,13 @@ public class Utils {
 	}
 
 	public static int currentMazeNr(MyAgentState S) {
-		return (int) S.worldmodel.position.y ;
+		return (Integer) S.val("maze") ;
 	}
 
 	public static int currentMazeNr(WorldModel wom) {
-		return (int) wom.position.y ;
-	}
+		var A = wom.elements.get(wom.agentId) ;
+		return (Integer) A.properties.get("maze") ;
+ 	}
 
 	public static boolean isFreeTile(MyAgentState S, Tile q) {
 		int mazeNr = currentMazeNr(S) ;
