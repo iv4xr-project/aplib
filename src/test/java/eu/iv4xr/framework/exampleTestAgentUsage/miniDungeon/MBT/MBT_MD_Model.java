@@ -401,15 +401,16 @@ public class MBT_MD_Model {
 					WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> S.agentIsAlive() && closedShrineInSameMaze(S) == null)
+				.addGuards(S -> S.agentIsAlive() 
+						    && ! entitiesInSameMaze(S, EntityType.SHRINE,sty).isEmpty()
+							&& closedShrineInSameMaze(S) == null)
 				.addPostConds(
 						new MBTPostCondition<MyAgentState>("could be teleported to the next maze",
 						S -> { 
-							System.out.println("------- pos: " + S.worldmodel.position) ;
-							System.out.println("------- maze: " + S.val("maze")) ;
-							System.out.println("------- pos-before: " + S.positionBefore()) ;
-							System.out.println("------- maze-before: " + S.before("maze")) ;
-							
+							//System.out.println("------- pos: " + S.worldmodel.position) ;
+							//System.out.println("------- maze: " + S.val("maze")) ;
+							//System.out.println("------- pos-before: " + S.positionBefore()) ;
+							//System.out.println("------- maze-before: " + S.before("maze")) ;
 							
 							return S.worldmodel.position.equals(S.positionBefore())  
 						     || (int_(S.val("maze")) == int_(S.before("maze")) 
@@ -432,10 +433,10 @@ public class MBT_MD_Model {
 				.withAction(agent -> {
 					var S = (MyAgentState) agent.state() ;
 					var candidates = entitiesInSameMaze(S,ty,sty);
-					System.out.println("------- agent: " + S.worldmodel.position);
-					System.out.println("------- maze: " + S.val("maze")) ;
+					//System.out.println("------- agent: " + S.worldmodel.position);
+					//System.out.println("------- maze: " + S.val("maze")) ;
 					WorldEntity e = candidates.get(rndx.nextInt(candidates.size())) ;
-					System.out.println("------- travel-to target : " + e.id + ", maze:" + S.val(e.id,"maze")) ;
+					//System.out.println("------- travel-to target : " + e.id + ", maze:" + S.val(e.id,"maze")) ;
 					GoalStructure G = withSurvival ?
 						  (new GoalLib()).smartEntityInCloseRange(agent,e.id) 
 						: (new GoalLib()).entityInCloseRange(e.id) ;
@@ -656,7 +657,6 @@ public class MBT_MD_Model {
 		
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.numberOfHealPots = 4;
-		config.numberOfMaze = 2 ;
 		config.viewDistance = 40;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
@@ -691,15 +691,16 @@ public class MBT_MD_Model {
 		config.numberOfHealPots = 4;
 		config.viewDistance = 40;
 		config.randomSeed = 79371;
+		config.numberOfMaze = 2 ;
 		System.out.println(">>> Configuration:\n" + config);
 		
-		var mymodel = MD_model1(200,false) ;
+		var mymodel = MD_model1(200,true) ;
 		var runner = new MBTRunner<MyAgentState>(mymodel) ;
 		//runner.rnd = new Random() ;
 		
 		//runner.actionSelectionPolicy = ACTION_SELECTION.Q ;
 		
-		var results = runner.generate(dummy -> agentRestart("Frodo",config,false,true),20,30) ;
+		var results = runner.generate(dummy -> agentRestart("Frodo",config,false,true),20,60) ;
 		
 		System.out.println(runner.showCoverage()) ;
 		System.out.println(">>> failed actions:" + MBTRunner.getFailedActionsFromSuiteResults(results)) ;
