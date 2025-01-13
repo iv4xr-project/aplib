@@ -40,6 +40,7 @@ public class Test_ModelSaveAndModelTransitions {
 		assertTrue(mymodel2.getAllTransitions().size() == 0) ;
 		mymodel2.loadTransitionsFromFile(saveFile,true);
 		assertTrue(mymodel2.getAllTransitions().size() == 5) ;
+		//mymodel2.saveDot("tmp/model1.dot");
 		System.out.println(mymodel2) ;	
 		
 	}

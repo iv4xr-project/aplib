@@ -1,5 +1,6 @@
 package eu.iv4xr.framework.extensions.mbt;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
@@ -44,6 +45,13 @@ public class MBTModel<S extends State> {
 		return this ;
 	}
 	
+	/**
+	 * The same as {@link #addStates(MBTState...)}.
+	 */
+	public MBTModel<S> addStatePreds(MBTState<S> ... Z) {
+		return addStates(Z) ;
+	}
+	
 	public MBTModel<S> addActions(MBTAction<S> ... A) {
 		for (MBTAction<S> a : A) actions.put(a.name, a) ;
 		return this ;
@@ -57,12 +65,28 @@ public class MBTModel<S extends State> {
 		 return enabled ;
 	}
 	
+	/**
+	 * Get all transitions stored in {@link #transitions}.
+	 */
 	public List<MBTTransition> getAllTransitions() {
 		List<MBTTransition>  trs = new LinkedList<>() ;
 		for (var trgroup : transitions.values()) {
 			trs.addAll(trgroup) ;
 		}
 	    return trs ;
+	}
+	
+	/**
+	 * Get all state-configurations stored in {@link #transitions}.
+	 */
+	public Set<MBTStateConfiguration> getAllConfigurations() {
+		var trs = getAllTransitions() ;
+		Set<MBTStateConfiguration> Z = new HashSet<>() ;
+		for (var T : trs) {
+			Z.add(T.src) ;
+			Z.add(T.dest) ;
+		}
+		return Z ;
 	}
 	
 	@Override
@@ -89,8 +113,6 @@ public class MBTModel<S extends State> {
 	
 	/**
 	 * Save the transitions to a file.
-	 * @param fname
-	 * @throws IOException 
 	 */
 	public void saveTransitions(String filename) throws IOException {
 		FileWriter fwriter = new FileWriter(filename) ;
@@ -107,6 +129,36 @@ public class MBTModel<S extends State> {
 		
 		fwriter.flush();
 		fwriter.close();
+	}
+	
+	public void saveDot(String filename) throws IOException {
+		
+		StringBuffer buf = new StringBuffer();
+		
+		buf.append("digraph " + (name.equals("") ? "M" : name) + " {\n\n") ;
+		
+		var trans = getAllTransitions() ;
+		var configs = getAllConfigurations() ;
+		Map<MBTStateConfiguration,Integer> configNr = new HashMap<>() ;
+		int nr = 0 ;
+		for (var C : configs) {
+			buf.append("   C" + nr + "[label=\"" + C.states.toString() + "\"];\n") ;
+			configNr.put(C,nr) ;
+			nr++ ;
+		}
+		buf.append("\n") ;
+		
+		for(var T : trans) {
+			String src = "C" + configNr.get(T.src) ;
+			String dest = "C" + configNr.get(T.dest) ;
+			buf.append("   " + src + " -> " + dest + " [label=\"" + T.action + "\"] ;\n") ;
+		}
+		
+		buf.append("\n}") ;
+
+		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+        writer.write(buf.toString());
+        writer.close();
 	}
 	
 	
