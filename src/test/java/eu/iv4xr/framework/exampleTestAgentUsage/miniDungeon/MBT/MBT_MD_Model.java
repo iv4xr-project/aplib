@@ -16,17 +16,14 @@ import eu.iv4xr.framework.extensions.mbt.MBTState;
 import eu.iv4xr.framework.extensions.mbt.SimpleGame;
 import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph;
 import eu.iv4xr.framework.extensions.mbt.MBTRunner.ACTION_SELECTION;
-import eu.iv4xr.framework.mainConcepts.TestAgent;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import nl.uu.cs.aplib.Logging;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.ShrineType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
@@ -608,49 +605,6 @@ public class MBT_MD_Model {
 		
 	}
 	
-	// singleton to hold an instance of MD
-	static DungeonApp miniDungeonInstance = null ;
-	
-	public static TestAgent agentRestart(String agentId, 
-			MiniDungeonConfig config,
-			boolean withSound,
-			boolean withGraphics 
-			)  {
-		
-		if (miniDungeonInstance==null ||! miniDungeonInstance.dungeon.config.toString().equals(config.toString())) {
-			// there is no MD-instance yet, or if the config is different than the config of the
-			// running MD-instance, then we create a fresh MD instance:
-			DungeonApp app = null ;
-			try {
-				app = new DungeonApp(config);
-			}
-			catch(Exception e) {
-				miniDungeonInstance = null ;
-				return null ;
-			}
-			// setting sound on/off, graphics on/off etc:
-			app.soundOn = withSound ;
-			app.headless = ! withGraphics ;
-			if(withGraphics) 
-				DungeonApp.deploy(app);	
-			System.out.println(">>> LAUNCHING a new instance of MD") ;
-			miniDungeonInstance = app ;
-		}
-		else {
-			// if the config is the same, we just reset the state of the running MD:
-			miniDungeonInstance.keyPressedWorker('z');
-			System.out.println(">>> RESETING MD") ;
-		}
-		
-		var agent = new TestAgent(agentId, "tester"); 	
-		agent.attachState(new MyAgentState())
-			 .attachEnvironment(new MyAgentEnv(miniDungeonInstance)) ;
-		
-		// give initial state update to set it up
-		agent.state().updateState(agent.getId()) ;
-		return agent ;
-	}
-	
 	// just a simple test to try out
 	//@Test
 	public void test0() throws Exception {
@@ -660,7 +614,7 @@ public class MBT_MD_Model {
 		config.viewDistance = 40;
 		config.randomSeed = 79371;
 		System.out.println(">>> Configuration:\n" + config);
-		var agent = agentRestart("Frodo",config,false,true)  ; // "Smeagol"	
+		var agent = MDRelauncher.agentRestart("Frodo",config,false,true)  ; // "Smeagol"	
 		
 		//if (supressLogging) {
 		//	Logging.getAPLIBlogger().setLevel(Level.OFF);
@@ -696,15 +650,18 @@ public class MBT_MD_Model {
 		
 		var mymodel = MD_model1(200,true) ;
 		var runner = new MBTRunner<MyAgentState>(mymodel) ;
+		runner.inferTransitions = true ;
 		//runner.rnd = new Random() ;
 		
 		//runner.actionSelectionPolicy = ACTION_SELECTION.Q ;
 		
-		var results = runner.generate(dummy -> agentRestart("Frodo",config,false,true),20,60) ;
+		var results = runner.generate(dummy -> MDRelauncher.agentRestart("Frodo",config,false,true),20,60) ;
 		
 		System.out.println(runner.showCoverage()) ;
 		System.out.println(">>> failed actions:" + MBTRunner.getFailedActionsFromSuiteResults(results)) ;
 		System.out.println(">>> postcond violations:" + MBTRunner.getViolatedPostCondsFromSuiteResults(results)) ;
+		
+		mymodel.saveDot("./tmp/myMDmodel.dot");
 	}
 	
 }
