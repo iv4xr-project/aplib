@@ -36,6 +36,7 @@ public class MDRelauncher {
 				app = new DungeonApp(config);
 			}
 			catch(Exception e) {
+				System.out.println(">>>> failed to launch MD!\n") ;
 				miniDungeonInstance = null ;
 				return null ;
 			}
@@ -50,9 +51,9 @@ public class MDRelauncher {
 		else {
 			// if the config is the same, we just reset the state of the running MD:
 			miniDungeonInstance.keyPressedWorker('z');
-			System.out.println(">>> RESETING MD") ;
+			System.out.println(">>> RESETING MD ---- ") ;
 		}
-		
+		System.out.println(">>> creating fresh test-agent ") ;
 		var agent = new TestAgent(agentId, "tester"); 	
 		agent.attachState(new MyAgentState())
 			 .attachEnvironment(new MyAgentEnv(miniDungeonInstance)) ;

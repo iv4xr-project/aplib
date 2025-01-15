@@ -1,10 +1,7 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.MBT;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,11 +10,7 @@ import eu.iv4xr.framework.extensions.mbt.MBTModel;
 import eu.iv4xr.framework.extensions.mbt.MBTPostCondition;
 import eu.iv4xr.framework.extensions.mbt.MBTRunner;
 import eu.iv4xr.framework.extensions.mbt.MBTState;
-import eu.iv4xr.framework.extensions.mbt.SimpleGame;
-import eu.iv4xr.framework.extensions.pathfinding.Sparse2DTiledSurface_NavGraph;
-import eu.iv4xr.framework.extensions.mbt.MBTRunner.ACTION_SELECTION;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
-import nl.uu.cs.aplib.Logging;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.ShrineType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
@@ -28,139 +21,12 @@ import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.Utils;
 import nl.uu.cs.aplib.mainConcepts.GoalStructure;
+import static nl.uu.cs.aplib.AplibEDSL.* ;
+import static eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.MBT.MDAbstraction.* ;
 
 public class MBT_MD_Model {
 	
-	public static int DELAY_BETWEEN_UPDATE = 10 ;
-	
 	public static Random rndx = new Random(373) ;
-	
-	public static void WAIT() {
-		try {
-			Thread.sleep(DELAY_BETWEEN_UPDATE);
-		}
-		catch(Exception e) { }
-	}
-	
-	public static boolean inCombat(MyAgentState S) {
-		return ! S.adajcentMonsters().isEmpty() ;
-	}
-	
-	public static boolean justKilledAMonster(MyAgentState S) {
-		var recentlyRemoved = (String[]) S.auxState().properties.get("recentlyRemoved") ;
-		for (var e : recentlyRemoved) {
-			if (e.startsWith("M")) return true ;
-		}
-		return false ;
-	}
-	
-	public static int totAdjacentMonstersHp(MyAgentState S) {
-		return S.adajcentMonsters().stream()
-				.map(e -> int_(e.properties.get("hp")))
-				.collect(Collectors.summingInt(x -> x)) ;
-	}
-	
-	public static WorldEntity adjacentNonWallEntity(MyAgentState S, EntityType ty) {
-		var z = TacticLib.nearItems(S,ty,1) ;
-		return z.isEmpty() ? null : z.get(rndx.nextInt(z.size())) ;
-	}
-	
-	
-	public static boolean isAdjacentToNonWallObject(MyAgentState S) {
-		var maze = Utils.currentMazeNr(S) ;
-		var agentTile = Utils.toTile(S.worldmodel.position) ;
-		for (var e : S.worldmodel.elements.values()) {
-			if (e.type != null
-					&& (Utils.isHealPot(e) || Utils.isRagePot(e) || Utils.isShrine(e) || Utils.isMonster(e) 
-					|| e.type.equals(EntityType.FRODO.toString())
-					|| e.type.equals(EntityType.SMEAGOL.toString())
-					)
-					&& Utils.mazeId(e) == maze 
-					&& Utils.adjacent(Utils.toTile(e.position), agentTile)) {
-				return true ;
-			}
-		}
-		return false ;
-	}
-	
-	public static WorldEntity adjacentWall(MyAgentState S) {
-		var maze = Utils.currentMazeNr(S) ;
-		var agentTile = Utils.toTile(S.worldmodel.position) ;
-		for (var e : S.worldmodel.elements.values()) {
-			if (Utils.isWall(e)
-					&& Utils.mazeId(e) == maze 
-					&& Utils.adjacent(Utils.toTile(e.position), agentTile)) {
-				return e ;
-			}
-		}
-		return null ;
-	}
-	
-	public static WorldEntity adjacentShrine(MyAgentState S, ShrineType sty) {
-		var e = adjacentNonWallEntity(S,EntityType.SHRINE) ;
-		if (e == null) 
-			return null ;
-		return (ShrineType) e.properties.get("shrinetype") == sty ? e : null ;
-	}
-	
-
-	public static WorldEntity adjacentPickableItem(MyAgentState S) {
-		WorldEntity e = adjacentNonWallEntity(S, EntityType.SCROLL) ;
-		if (e != null) return e ; 
-		e = adjacentNonWallEntity(S, EntityType.RAGEPOT) ;
-		if (e != null) return e ;
-		return adjacentNonWallEntity(S, EntityType.HEALPOT) ;
-	}
-	
-	/**
-	 * Return the walls that have a neighboring free tile, so they can be 'touched'.
-	 */
-	public static List<WorldEntity> touchableWalls(MyAgentState S) {
-		List<WorldEntity> WS = new LinkedList<>() ;
-		for (var e : S.worldmodel.elements.values()) {
-			if (Utils.isWall(e) && 
-				Utils.mazeId(e) == Utils.currentMazeNr(S)) {
-				var ntiles = Utils.adjacentTiles(S, Utils.toTile(e.position)) ;
-				for (var t : ntiles) {
-					if (Utils.isFreeTile(S, t)) {
-						WS.add(e) ;
-						break ;
-					}
-				}
-			}
-		}
-		return WS ;	
-	}
-	
-	public static List<WorldEntity> entitiesInSameMaze(MyAgentState S, EntityType ty, ShrineType sty) {
-		int mazeNr = Utils.currentMazeNr(S) ;
-		var Z = S.worldmodel.elements.values().stream()
-					   .filter(e -> e.type != null && e.type.equals("" + ty) && Utils.mazeId(e) == mazeNr) ;
-		if (sty != null)	   
-			Z = Z.filter(e -> e.properties.get("shrinetype") != null
-							  && ((ShrineType) e.properties.get("shrinetype")) == sty) ;
-		
-		return Z.collect(Collectors.toList()) ;
-	}
-	
-	public static WorldEntity closedShrineInSameMaze(MyAgentState S) {
-		int mazeNr = Utils.currentMazeNr(S) ;
-		var Z = S.worldmodel.elements.values().stream()
-					   .filter(e -> Utils.isShrine(e)
-					      && Utils.mazeId(e) == mazeNr
-					      && ! bool_(e.properties.get("cleansed"))) 
-					   .collect(Collectors.toList()) ;
-		return Z.isEmpty() ? null : Z.get(0) ;
-	}
-	
-	public static int int_(Serializable val) {
-		return (Integer) val ;
-	}
-	
-	public static boolean bool_(Serializable val) {
-		return (Boolean) val ;
-	}
-	
 	
 	@SuppressWarnings("unchecked")
 	static MBTAction<MyAgentState> usepot(EntityType ty) {
@@ -172,29 +38,20 @@ public class MBT_MD_Model {
 					else 
 						S.env().action(S.worldmodel.agentId, Command.USERAGE) ;
 					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				})
 				
-				.addGuards(S -> 
-					S.agentIsAlive() &&
-					(ty == EntityType.HEALPOT ?
-						int_(S.val("healpotsInBag")) > 0 
-					  : 
-					 	int_(S.val("ragepotsInBag")) > 0)) 
+				.addGuards(S ->  S.agentIsAlive() && ! MDAbstraction.gameover(S) && itemInBag(S,ty) > 0) 
 				
 				.addPostConds(new MBTPostCondition<MyAgentState>("" + ty + " used", 
-					S -> ty == EntityType.HEALPOT ?
-						    int_(S.val("healpotsInBag")) == int_(S.before("healpotsInBag")) - 1 
-							&& (int_(S.val("hp")) > int_(S.before("hp"))
-							    || int_(S.before("hp")) >= int_(S.val("hpmax")) - 4 ) 
-							:
-							int_(S.val("ragepotsInBag")) == int_(S.before("ragepotsInBag")) - 1  
-							&& int_(S.val("rageTimer")) == 9 
-						))
-				
-				
-				;
+					S -> itemInBag(S,ty) == oldItemInBag(S,ty) - 1
+				         && (ty == EntityType.HEALPOT ?
+				                 (hp(S) > oldHp(S) || oldHp(S) >= hpmax(S) - 4) 
+							     :
+							     rageTimer(S) == 9 
+						    )))
+				; 
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -203,15 +60,9 @@ public class MBT_MD_Model {
 		A.name = "use-but-dont-have-" + ty ;
 		A.guards.clear();
 		A.postConditions.clear();
-		A.addGuards(S -> 
-		            ty == EntityType.HEALPOT ?
-						int_(S.val("healpotsInBag")) == 0 
-						: 
-						int_(S.val("ragepotsInBag")) == 0) ;
-		A.addPostConds(new MBTPostCondition<MyAgentState>("no item used", 
-				 S -> int_(S.val("bagUsed")) == int_(S.before("bagUsed")))) ;
+		A.addGuards(S -> itemInBag(S,ty) == 0) ;
+		A.addPostConds(new MBTPostCondition<MyAgentState>("no item used",  S -> bagUsed(S) == oldBagUsed(S))) ;
 		return A ;
-		
 	}
 	
 	
@@ -223,27 +74,15 @@ public class MBT_MD_Model {
 					var e = TacticLib.nearItems(S,ty,1).get(0) ;
 					new TacticLib() . moveTo(S, Utils.toTile(e.position)) ;
 					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				}) 
 				.addGuards(S -> 
-					S.agentIsAlive() &&
-					int_(S.val("bagUsed")) < int_(S.val("maxBagSize")) && adjacentNonWallEntity(S,ty) != null )
+					S.agentIsAlive() && ! MDAbstraction.gameover(S) && bagUsed(S) < maxBagSize(S) && adjacentNonWallEntity(S,ty) != null )
 				
 				.addPostConds(
-						new MBTPostCondition<MyAgentState>("bag-cap-respected",
-						S -> int_(S.val("bagUsed")) <= int_(S.val("maxBagSize"))),
-						
-						new MBTPostCondition<MyAgentState>("" + ty + " added to bag", 
-						S -> {
-							switch(ty) {
-							case HEALPOT: return int_(S.val("healpotsInBag")) == int_(S.before("healpotsInBag")) + 1 ;
-							case RAGEPOT: return int_(S.val("ragepotsInBag")) == int_(S.before("ragepotsInBag")) + 1 ;
-							case SCROLL : return int_(S.val("scrollsInBag")) == int_(S.before("scrollsInBag")) + 1 ;
-							}
-							return true ;
-						}
-				)) ; 
+					new MBTPostCondition<MyAgentState>("bag-cap-respected", S -> bagUsed(S) <= maxBagSize(S)),
+					new MBTPostCondition<MyAgentState>("" + ty + " added to bag", S -> itemInBag(S,ty) == oldItemInBag(S,ty) + 1 )) ; 
 	}
 	
 	
@@ -255,12 +94,11 @@ public class MBT_MD_Model {
 					var e = adjacentPickableItem(S) ;
 					new TacticLib() . moveTo(S, Utils.toTile(e.position)) ;
 					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> adjacentPickableItem(S) != null && int_(S.val("bagUsed")) >= int_(S.val("maxBagSize")))
-				.addPostConds(new MBTPostCondition<MyAgentState>("no item added", 
-						S -> int_(S.val("bagUsed")) == int_(S.before("bagUsed")))) ; 
+				.addGuards(S -> adjacentPickableItem(S) != null && bagUsed(S) >= maxBagSize(S))
+				.addPostConds(new MBTPostCondition<MyAgentState>("no item added", S -> bagUsed(S) == oldBagUsed(S))) ; 
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -272,20 +110,15 @@ public class MBT_MD_Model {
 					var m = S.adajcentMonsters().get(0) ;
 					new TacticLib() . moveTo(S, Utils.toTile(m.position)) ;
 					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> S.agentIsAlive() && inCombat(S))
+				.addGuards(S -> S.agentIsAlive() && ! MDAbstraction.gameover(S) && MDAbstraction.inCombat(S))
 				.addPostConds(
-						new MBTPostCondition<MyAgentState>("hp-decrease",
-						S -> justKilledAMonster(S) || int_(S.val("hp")) < int_(S.before("hp"))),
+					new MBTPostCondition<MyAgentState>("hp-decrease", S -> justKilledAMonster(S) || hp(S) < oldHp(S)),
 						
-						new MBTPostCondition<MyAgentState>("monster-killed-or-hp-decrease", 
-						S -> justKilledAMonster(S)
-							|| totAdjacentMonstersHp(S)  < 
-									S.adajcentMonsters().stream()
-										.map(e -> int_(S.before(e.id,"hp")))
-										.collect(Collectors.summingInt(x -> x)))) 
+					new MBTPostCondition<MyAgentState>("monster-killed-or-hp-decrease", 
+						S -> justKilledAMonster(S) || hpAdjacentMonsters(S)  < oldHpAdjacentMonsters(S))) 
 				 ; 
 	}
 	
@@ -296,15 +129,9 @@ public class MBT_MD_Model {
 					var S = (MyAgentState) agent.state() ;
 					var walls = touchableWalls(S) ;
 					var W = walls.get(rndx.nextInt(walls.size())) ;
-					GoalStructure G = ExtraGoalLib.nextToWall(S,W) ;
-					agent.dropAll() ;
-					agent.setGoal(G) ;
-					int k = 0 ;
-					while (k < budget && G.getStatus().inProgress()) {
-						agent.update() ;
-						WAIT() ;
-						k ++ ;
-					}
+					
+					ExtraGoalLib.executeGoal(agent, ExtraGoalLib.nextToWall(agent,W,withSurvival), budget) ;
+					
 					S.updateState(agent.getId()) ;
 					S = (MyAgentState) agent.state() ;
 					W = adjacentWall(S) ;
@@ -317,10 +144,10 @@ public class MBT_MD_Model {
 					// bump:
 					new TacticLib() . moveTo(S, Utils.toTile(W.position)) ;
 					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> S.agentIsAlive() && ! isAdjacentToNonWallObject(S))
+				.addGuards(S -> S.agentIsAlive() && ! MDAbstraction.gameover(S) && ! isAdjacentToNonWallObject(S))
 				.addPostConds(
 						new MBTPostCondition<MyAgentState>("remain-in-same-position",
 						S -> S.worldmodel.position.equals(S.positionBefore()))
@@ -330,75 +157,47 @@ public class MBT_MD_Model {
 	
 	@SuppressWarnings("unchecked")
 	static MBTAction<MyAgentState> tryToCleanseShrine(int budget,boolean withSurvival) {
+		
+		var goallib = new GoalLib() ;
+		
 		return new MBTAction<MyAgentState>("cleanse-shrine")
 				.withAction(agent -> {
 					var S = (MyAgentState) agent.state() ;
 					var shrine = closedShrineInSameMaze(S) ;
-					GoalStructure G = withSurvival ?
-							  (new GoalLib()).smartEntityInCloseRange(agent,shrine.id) 
-							: (new GoalLib()).entityInCloseRange(shrine.id) ;
-						agent.dropAll() ;
-						agent.setGoal(G) ;
-						int k = 0 ;
-						while (k < budget && G.getStatus().inProgress()) {
-							agent.update() ;
-							WAIT() ;
-							k ++ ;
-						}
+					GoalStructure G = SEQ(
+						ExtraGoalLib.nextToEntity(agent, shrine.id, withSurvival),
+						goallib.entityInteracted(shrine.id)) ;
+					ExtraGoalLib.executeGoal(agent,G,budget) ;
 					S.updateState(agent.getId()) ;
-					S = (MyAgentState) agent.state() ;
-					if (! Utils.adjacent(Utils.toTile(shrine.position), Utils.toTile(S.worldmodel.position))) {
-						// G is not reached ... maybe too short budget, in this case
-						// we obviously can't use the shrine. Just return true, so as not to signal that this
-						// action fails:
-						return true ;
-					}
-					// bump:
-					new TacticLib() . moveTo(S, Utils.toTile(shrine.position)) ;
-					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> S.agentIsAlive() && closedShrineInSameMaze(S) != null)
+				.addGuards(S -> S.agentIsAlive() && ! MDAbstraction.gameover(S) && closedShrineInSameMaze(S) != null)
 				.addPostConds(
 						new MBTPostCondition<MyAgentState>("shrine could be cleansed",
 						S -> closedShrineInSameMaze(S) != null 
-						     || int_(S.val("scrollsInBag")) == int_(S.before("scrollsInBag")) - 1  )
+						     || itemInBag(S,EntityType.SCROLL) == oldItemInBag(S,EntityType.SCROLL) - 1  )
 				 ); 
 	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTAction<MyAgentState> teleport(ShrineType sty, int budget,boolean withSurvival) {
+		
+		var goallib = new GoalLib() ;
+		
 		return new MBTAction<MyAgentState>("teleport-" + sty)
 				.withAction(agent -> {
 					var S = (MyAgentState) agent.state() ;
 					var shrine = entitiesInSameMaze(S, EntityType.SHRINE,sty).get(0) ;
-					GoalStructure G = withSurvival ?
-							  (new GoalLib()).smartEntityInCloseRange(agent,shrine.id) 
-							: (new GoalLib()).entityInCloseRange(shrine.id) ;
-						agent.dropAll() ;
-						agent.setGoal(G) ;
-						int k = 0 ;
-						while (k < budget && G.getStatus().inProgress()) {
-							agent.update() ;
-							WAIT() ;
-							k ++ ;
-						}
+					GoalStructure G = SEQ(
+						ExtraGoalLib.nextToEntity(agent, shrine.id, withSurvival),
+						goallib.entityInteracted(shrine.id)) ;
+					ExtraGoalLib.executeGoal(agent,G,budget) ;		
 					S.updateState(agent.getId()) ;
-					S = (MyAgentState) agent.state() ;
-					if (! Utils.adjacent(Utils.toTile(shrine.position), Utils.toTile(S.worldmodel.position))) {
-						// G is not reached ... maybe too short budget, in this case
-						// we obviously can't use the shrine. Just return true, so as not to signal that this
-						// action fails:
-						return true ;
-					}
-					// bump:
-					new TacticLib() . moveTo(S, Utils.toTile(shrine.position)) ;
-					S.updateState(agent.getId()) ;
-					WAIT() ;
+					ExtraGoalLib.WAIT() ;
 					return true ;
 				}) 
-				.addGuards(S -> S.agentIsAlive() 
+				.addGuards(S -> S.agentIsAlive() && ! MDAbstraction.gameover(S)
 						    && ! entitiesInSameMaze(S, EntityType.SHRINE,sty).isEmpty()
 							&& closedShrineInSameMaze(S) == null)
 				.addPostConds(
@@ -410,12 +209,27 @@ public class MBT_MD_Model {
 							//System.out.println("------- maze-before: " + S.before("maze")) ;
 							
 							return S.worldmodel.position.equals(S.positionBefore())  
-						     || (int_(S.val("maze")) == int_(S.before("maze")) 
-						                + (sty == ShrineType.MoonShrine ? 1 : -1)) ; 
+						     || maze(S) == oldMaze(S) + (sty == ShrineType.MoonShrine ? 1 : -1) ; 
 							}
 						)
 						    
 				 ); 
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTAction<MyAgentState> smartGoToNextMaze(int budget,boolean withSurvival) {
+		
+		return new MBTAction<MyAgentState>("smart-goto-next-maze")
+				.withAction(agent -> {
+					ExtraGoalLib.goToNextMaze(agent, budget, withSurvival) ;
+					var S = (MyAgentState) agent.state() ;
+					S.updateState(agent.getId()) ;
+					ExtraGoalLib.WAIT() ;
+					return true ;
+				}) 
+				.addGuards(S -> S.agentIsAlive() && ! MDAbstraction.gameover(S) 
+							    && maze(S) < S.env().app.dungeon.config.numberOfMaze - 1)
+				;  
 	}
 	
 	
@@ -434,27 +248,18 @@ public class MBT_MD_Model {
 					//System.out.println("------- maze: " + S.val("maze")) ;
 					WorldEntity e = candidates.get(rndx.nextInt(candidates.size())) ;
 					//System.out.println("------- travel-to target : " + e.id + ", maze:" + S.val(e.id,"maze")) ;
-					GoalStructure G = withSurvival ?
-						  (new GoalLib()).smartEntityInCloseRange(agent,e.id) 
-						: (new GoalLib()).entityInCloseRange(e.id) ;
-					agent.dropAll() ;
-					agent.setGoal(G) ;
-					int k = 0 ;
-					while (k < budget && G.getStatus().inProgress()) {
-						agent.update() ;
-						WAIT() ;
-						k ++ ;
-					}
+					GoalStructure G = ExtraGoalLib.nextToEntity(agent, e.id, withSurvival) ;
+					ExtraGoalLib.executeGoal(agent,G,budget) ;				
 					S.updateState(agent.getId()) ;
+					ExtraGoalLib.WAIT() ;
 					// return true, even if it fails to reach the target:
 					return true ;
 				}) 
 				.addGuards(S -> {
-					if (! S.agentIsAlive()) return false ;
-					
+				   if (! S.agentIsAlive() || MDAbstraction.gameover(S)) return false ;
+			
 				   // not enabled if the agent is already next to an entity ty
-				   if (adjacentNonWallEntity(S,ty) != null)
-					   return false ;
+				   if (adjacentNonWallEntity(S,ty) != null) return false ;
 				   	   
 				   return ! entitiesInSameMaze(S,ty,sty).isEmpty() ;
 				})
@@ -473,14 +278,14 @@ public class MBT_MD_Model {
 	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> gameover() {
 		var Z = new  MBTState<MyAgentState> ("gameover") ;
-		Z.addPredicates(S -> S.gameStatus() != GameStatus.INPROGRESS) ;
+		Z.addPredicates(S -> MDAbstraction.gameover(S)) ;
 		return Z ;
 	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> inCombat() {
 		var Z = new  MBTState<MyAgentState> ("in-combat") ;
-		Z.addPredicates(S -> inCombat(S)) ;
+		Z.addPredicates(S -> MDAbstraction.inCombat(S)) ;
 		return Z ;
 	}
 	
@@ -501,37 +306,28 @@ public class MBT_MD_Model {
 	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> inBag(EntityType ty) {
 		var Z = new  MBTState<MyAgentState> ("in-bag-" + ty) ;
-		Z.addPredicates(S -> {
-			switch(ty) {
-			case HEALPOT: return int_(S.val("healpotsInBag")) > 0 ;
-			case RAGEPOT: return int_(S.val("ragepotsInBag")) > 0 ;
-			case SCROLL : return int_(S.val("scrollsInBag")) > 0 ;
-			}
-			return false ;
-		}) ;
+		Z.addPredicates(S -> itemInBag(S,ty) > 0) ;
 		return Z ;
 	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> bagfull() {
 		var Z = new  MBTState<MyAgentState> ("bag-full") ;
-		Z.addPredicates(S -> int_(S.val("bagUsed")) >= int_(S.val("maxBagSize"))  ) ;
+		Z.addPredicates(S -> bagUsed(S) >= maxBagSize(S)) ;
 		return Z ;
 	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> enraged() {
 		var Z = new  MBTState<MyAgentState> ("enraged") ;
-		Z.addPredicates(S -> int_(S.val("rageTimer")) > 0 ) ;
+		Z.addPredicates(S -> rageTimer(S) > 0 ) ;
 		return Z ;
 	}
 	
 	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> healed() {
 		var Z = new  MBTState<MyAgentState> ("healed") ;
-		Z.addPredicates(S -> 
-		   S.before("hp") != null
-		   && int_(S.val("hp")) > int_(S.before("hp"))) ;
+		Z.addPredicates(S -> S.before("hp") != null && hp(S) > oldHp(S)) ;
 		return Z ;
 	}
 	
@@ -543,9 +339,15 @@ public class MBT_MD_Model {
 			var imm = entitiesInSameMaze(S,EntityType.SHRINE,ShrineType.ShrineOfImmortals) ;
 			moon.addAll(imm) ;
 			var sh = moon.get(0) ;
-			return S.before(sh.id,"cleansed") != null
-					&& bool_(S.val(sh.id,"cleansed")) != bool_(S.before(sh.id,"cleansed")) ;
+			return S.before(sh.id,"cleansed") != null && (cleansed(S,sh.id) != oldCleansed(S,sh.id)) ;
 		}) ;
+		return Z ;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> atLastMaze() {
+		var Z = new  MBTState<MyAgentState> ("at-last-maze") ;
+		Z.addPredicates(S -> maze(S) == S.env().app.dungeon.config.numberOfMaze - 1) ;
 		return Z ;
 	}
 	
@@ -567,7 +369,8 @@ public class MBT_MD_Model {
 				bagfull(),
 				healed(), 
 				shrineCleaned(),
-				enraged()
+				enraged(),
+				atLastMaze()
 				) ;
 		
 		model.addActions(
@@ -598,7 +401,8 @@ public class MBT_MD_Model {
 				attackMonster(),
 				bumpWall(travelBudget,withSurvival),
 				tryToCleanseShrine(travelBudget,withSurvival),
-				teleport(ShrineType.MoonShrine, travelBudget,withSurvival)				
+				teleport(ShrineType.MoonShrine, travelBudget,withSurvival)
+				, smartGoToNextMaze(travelBudget,withSurvival)
 				) ;
 		
 		return model ;
