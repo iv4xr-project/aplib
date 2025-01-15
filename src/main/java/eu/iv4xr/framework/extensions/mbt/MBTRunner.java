@@ -421,7 +421,7 @@ public class MBTRunner<S extends State> {
 	}
 	
 	
-	public String showCoverage() {
+	public String showCoverage(boolean showTransitions) {
 		var z = new StringBuffer() ;
 		z.append("** State coverage:\n") ;
 		var Z = coveredStates.entrySet() ;
@@ -435,13 +435,22 @@ public class MBTRunner<S extends State> {
 			coveredConfigurations.add(TC.getKey().src) ;
 			coveredConfigurations.add(TC.getKey().dest) ;
 		}
-		z.append("** Transition coverage:\n") ;
-		for (var TC : TRS) {
-			z.append("   " + TC.getKey() + " (" + TC.getValue() + ")\n") ;
+		if (showTransitions) {
+			z.append("** Transition coverage:\n") ;
+			for (var TC : TRS) {
+				z.append("   " + TC.getKey() + " (" + TC.getValue() + ")\n") ;
+			}
 		}
 		z.append("   #transitions covered: " + TRS.size() + "\n") ;
 		z.append("   #configurations covered: " + coveredConfigurations.size() + "\n") ;
 		return z.toString() ;
+	}
+	
+	/**
+	 * As {@link #showCoverage()}, with the covered transitions always shown.
+	 */
+	public String showCoverage() {
+		return showCoverage(true) ;
 	}
 	
 
