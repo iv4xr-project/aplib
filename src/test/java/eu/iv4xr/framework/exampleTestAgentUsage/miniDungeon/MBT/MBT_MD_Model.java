@@ -3,19 +3,14 @@ package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.MBT;
 import java.util.*;
 import java.util.Random;
 
-import org.junit.jupiter.api.Test;
-
 import eu.iv4xr.framework.extensions.mbt.MBTAction;
 import eu.iv4xr.framework.extensions.mbt.MBTModel;
 import eu.iv4xr.framework.extensions.mbt.MBTPostCondition;
-import eu.iv4xr.framework.extensions.mbt.MBTRunner;
 import eu.iv4xr.framework.extensions.mbt.MBTState;
 import eu.iv4xr.framework.mainConcepts.WorldEntity;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.EntityType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.Entity.ShrineType;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.Command;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.GameStatus;
-import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.GoalLib;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.TacticLib;
@@ -384,7 +379,9 @@ public class MBT_MD_Model {
 	
 	// most complete model
 	@SuppressWarnings("unchecked")
-	static MBTModel<MyAgentState> MD_model1(int travelBudget, boolean withSurvival) {
+	static MBTModel<MyAgentState> MD_model1(int travelBudget, 
+			boolean useSmartGoToNextMaze,
+			boolean withSurvival) {
 		var model = MD_model0(travelBudget,withSurvival) ;
 		model.name = "MD-model1" ;
 		
@@ -402,70 +399,15 @@ public class MBT_MD_Model {
 				bumpWall(travelBudget,withSurvival),
 				tryToCleanseShrine(travelBudget,withSurvival),
 				teleport(ShrineType.MoonShrine, travelBudget,withSurvival)
-				, smartGoToNextMaze(travelBudget,withSurvival)
 				) ;
+		
+		if (useSmartGoToNextMaze) {
+			model.name = "MD-model1B" ;
+			model.addActions(smartGoToNextMaze(travelBudget,withSurvival)) ;
+		}
 		
 		return model ;
 		
-	}
-	
-	// just a simple test to try out
-	//@Test
-	public void test0() throws Exception {
-		
-		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 4;
-		config.viewDistance = 40;
-		config.randomSeed = 79371;
-		System.out.println(">>> Configuration:\n" + config);
-		var agent = MDRelauncher.agentRestart("Frodo",config,false,true)  ; // "Smeagol"	
-		
-		//if (supressLogging) {
-		//	Logging.getAPLIBlogger().setLevel(Level.OFF);
-		//}
-
-		var mymodel = MD_model0(200,false) ;
-		var runner = new MBTRunner<MyAgentState>(mymodel) ;
-		//runner.rnd = new Random() ;
-		
-		// give initial state update, to setup the agent's initial state
-		//agent.state().updateState(agent.getId()) ;
-		
-		var results = runner.generateTestSequence(agent,50) ;
-		
-		System.out.println(runner.showCoverage()) ;
-		System.out.println(">>> failed actions:" + MBTRunner.getFailedActionsFromSeqResult(results)) ;
-		System.out.println(">>> postcond violations:" + MBTRunner.getViolatedPostCondsFromSeqResult(results)) ;
-	}
-	
-	
-	
-	
-	// just a simple test to try out
-	@Test
-	public void test1() throws Exception {
-		
-		MiniDungeonConfig config = new MiniDungeonConfig();
-		config.numberOfHealPots = 4;
-		config.viewDistance = 40;
-		config.randomSeed = 79371;
-		config.numberOfMaze = 2 ;
-		System.out.println(">>> Configuration:\n" + config);
-		
-		var mymodel = MD_model1(200,true) ;
-		var runner = new MBTRunner<MyAgentState>(mymodel) ;
-		runner.inferTransitions = true ;
-		//runner.rnd = new Random() ;
-		
-		//runner.actionSelectionPolicy = ACTION_SELECTION.Q ;
-		
-		var results = runner.generate(dummy -> MDRelauncher.agentRestart("Frodo",config,false,true),20,60) ;
-		
-		System.out.println(runner.showCoverage()) ;
-		System.out.println(">>> failed actions:" + MBTRunner.getFailedActionsFromSuiteResults(results)) ;
-		System.out.println(">>> postcond violations:" + MBTRunner.getViolatedPostCondsFromSuiteResults(results)) ;
-		
-		mymodel.saveDot("./tmp/myMDmodel.dot");
 	}
 	
 }
