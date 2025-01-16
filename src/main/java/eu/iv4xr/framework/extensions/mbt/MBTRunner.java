@@ -2,6 +2,7 @@ package eu.iv4xr.framework.extensions.mbt;
 
 import java.util.* ;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import eu.iv4xr.framework.mainConcepts.TestAgent;
@@ -35,6 +36,20 @@ public class MBTRunner<S extends State> {
 	 * Default: true.
 	 */
 	public boolean stopSuiteGenerationOnFailedOrViolation = true ;
+	
+	/**
+	 * If non-null, sequence generation will stops right after, or few steps
+	 * after, this predicates becomes true.
+	 * The field {@link #additionalStepsAfterGameOver} specifies how many steps
+	 * after.
+	 */
+	public Predicate<S> isGameOver = null ;
+	
+	/**
+	 * See {@link #isGameOver}. Default is 0.
+	 */
+	public int additionalStepsAfterGameOver = 0 ;
+	
 	
 	// We won't do this. It makes the runner quite complicated
 	// e.g. for coverage counting. Instead, you should have a
@@ -350,6 +365,9 @@ public class MBTRunner<S extends State> {
 		// now we generate the test
 		List<ActionExecutionResult> sequence = new LinkedList<>() ;
 		MBTTransition previousTransition = null ;
+		S state = (S) agent.state() ;
+		int afterDeathStepCount = 0 ;
+		
 		for (int k=0; k<maxDepth; k++) {
 			ActionExecutionResult R = executeNext(previousTransition,agent) ;
 			if (R == null) {
@@ -361,6 +379,12 @@ public class MBTRunner<S extends State> {
 			if (stopSeqGenerationOnFailedOrViolation && (! R.executionSuccessful || R.postConditionViolationFound)) {
 				break ;
 			}
+			// check if gameover is true, and if the seq needs to be terminated::
+			if (isGameOver != null && isGameOver.test(state)) {
+				if (afterDeathStepCount >= additionalStepsAfterGameOver) break ;
+				afterDeathStepCount++ ;
+			}
+			
 		}
 		return sequence ;	
 	}
