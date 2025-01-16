@@ -65,7 +65,7 @@ public class MBTRunner<S extends State> {
 	public float QexploreProbability = 0.5f ;
 	public float Qalpha = 0.5f ;
 	public float Qgamma = 0.6f ;
-	
+		
 	public Map<String,Integer> coveredStates = new HashMap<>() ;
 	public Map<MBTTransition,Integer> coveredTransitions = new HashMap<>() ;
 	public TransitionValueTable vtable = new TransitionValueTable() ;
@@ -348,6 +348,14 @@ public class MBTRunner<S extends State> {
 	}
 	
 	/**
+	 * The same as {@link #generateTestSequence(TestAgent, int, Integer)},
+	 * but with null/infinite time budget.
+	 */
+	public List<ActionExecutionResult> generateTestSequence(TestAgent agent, int maxDepth) {
+		return generateTestSequence(agent,maxDepth,null) ;
+	}
+	
+	/**
 	 * Use the model to generate and execute a test-sequence. It returns
 	 * action-execution-results that failed or violated the actions'
 	 * post-conditions.
@@ -356,9 +364,12 @@ public class MBTRunner<S extends State> {
 	 * from every executed action in the sequence. The transitions can
 	 * be reconstructed from this sequence of results. The results also
 	 * include information on failed action/s and violated post-conditions.
+	 * 
+	 * <p>Time-budget can be specified (in ms). If null, then this is ignored (so,
+	 * infinite budget).
 	 */
 	@SuppressWarnings("unchecked")
-	public List<ActionExecutionResult> generateTestSequence(TestAgent agent, int maxDepth) {
+	public List<ActionExecutionResult> generateTestSequence(TestAgent agent, int maxDepth, Integer timeBudget) {
 		// register the coverage on the initial-state:
 		registerStateCover(agent) ;
         
@@ -366,9 +377,15 @@ public class MBTRunner<S extends State> {
 		List<ActionExecutionResult> sequence = new LinkedList<>() ;
 		MBTTransition previousTransition = null ;
 		S state = (S) agent.state() ;
+		// clone budget:
+		Integer budget_ = null ;
+		if (timeBudget != null) {
+			budget_ = timeBudget.intValue() ;
+		}
 		int afterDeathStepCount = 0 ;
 		
-		for (int k=0; k<maxDepth; k++) {
+		for (int k=0; k<maxDepth && budget_ != null && budget_ > 0 ; k++) {
+			var t0 = System.currentTimeMillis() ;
 			ActionExecutionResult R = executeNext(previousTransition,agent) ;
 			if (R == null) {
 				// there are no next-action possible
@@ -384,9 +401,21 @@ public class MBTRunner<S extends State> {
 				if (afterDeathStepCount >= additionalStepsAfterGameOver) break ;
 				afterDeathStepCount++ ;
 			}
-			
+			if (budget_ != null)
+				budget_ = budget_ - (int)((System.currentTimeMillis() - t0)) ;			
 		}
 		return sequence ;	
+	}
+	
+	
+	/**
+	 * The same as {@link #generate(Function, int, int, Integer), but with null 
+	 * time-budget (so, infinite time budget).
+	 */
+	public List<List<ActionExecutionResult>> generate(Function<Void,TestAgent> initializer, 
+			int numOfTestSequences,
+			int maxDepth) {
+		return generate(initializer,numOfTestSequences,maxDepth,null) ;
 	}
 	
 	/**
@@ -398,16 +427,29 @@ public class MBTRunner<S extends State> {
 	 * from every executed action in the sequence. The transitions can
 	 * be reconstructed from this sequence of results. The results also
 	 * include information on failed action/s and violated post-conditions.
+	 * 
+	 * <p>Time-budget can be specified (in ms). If null, then this is ignored (so,
+	 * infinite budget).
 	 */
 	public List<List<ActionExecutionResult>> generate(Function<Void,TestAgent> initializer, 
 			int numOfTestSequences,
-			int maxDepth) {
+			int maxDepth,
+			Integer timeBudget) {
 		
 		// load transitions in the model, if any is kept there, into the vtable
 		vtable.initializeFromModel(model,1);
 		
+		// clone budget:
+		Integer budget_ = null ;
+		if (timeBudget != null) {
+			budget_ = timeBudget.intValue() ;
+		}
+		
 		List<List<ActionExecutionResult>> suite = new LinkedList<>() ;
-		for (int n=0; n<numOfTestSequences; n++) {
+		for (int n=0; n<numOfTestSequences && budget_ != null && budget_>0 ; n++) {
+			
+			var t0 = System.currentTimeMillis() ;
+			
 			// run the initializer to set the SUT state to a state suitable
 			// for running the model. This can potentially re-launch the
 			// SUT, or simply doing some execution on it to move it to a
@@ -415,7 +457,7 @@ public class MBTRunner<S extends State> {
 			var agent = initializer.apply(null) ;
 			if (agent == null)
 				break ;
-			var seq = generateTestSequence(agent,maxDepth) ;
+			var seq = generateTestSequence(agent,maxDepth,budget_) ;
 			if (!seq.isEmpty())
 				suite.add(seq) ;
 			
@@ -439,6 +481,9 @@ public class MBTRunner<S extends State> {
 			
 			if (stopSuiteGenerationOnFailedOrViolation && !seqOk) 
 				break ;
+			
+			if (budget_ != null)
+				budget_ = budget_ - (int)((System.currentTimeMillis() - t0)) ;	
 		}
 		log("** suite generated. #suite:" + suite.size()) ;
 		return suite ;
