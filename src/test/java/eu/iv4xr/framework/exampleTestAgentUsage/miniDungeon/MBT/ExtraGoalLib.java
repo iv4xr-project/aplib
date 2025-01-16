@@ -109,10 +109,11 @@ public class ExtraGoalLib {
 		return G.lift() ;		
 	}
 	
-	public static int DELAY_BETWEEN_UPDATE = 10 ;
+	public static int DELAY_BETWEEN_UPDATE = 0 ;
 
 
 	public static void WAIT() {
+		if (DELAY_BETWEEN_UPDATE <= 0) return ;
 		try {
 			Thread.sleep(DELAY_BETWEEN_UPDATE);
 		}
@@ -125,7 +126,8 @@ public class ExtraGoalLib {
 	static int executeGoal(TestAgent agent, GoalStructure G, int budget) {
 		agent.dropAll() ;
 		agent.setGoal(G) ;
-		while (budget > 0 && G.getStatus().inProgress()) {
+		var S = (MyAgentState) agent.state() ;
+		while (budget > 0 && S.agentIsAlive() && G.getStatus().inProgress()) {
 			agent.update() ;
 			WAIT() ;
 			budget -- ;

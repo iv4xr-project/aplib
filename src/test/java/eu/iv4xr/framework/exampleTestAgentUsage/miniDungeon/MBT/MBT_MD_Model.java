@@ -278,6 +278,14 @@ public class MBT_MD_Model {
 	}
 	
 	@SuppressWarnings("unchecked")
+	static MBTState<MyAgentState> playerwin() {
+		var Z = new  MBTState<MyAgentState> ("playerwin") ;
+		Z.addPredicates(S -> MDAbstraction.playerWin(S)) ;
+		return Z ;
+	}
+	
+	
+	@SuppressWarnings("unchecked")
 	static MBTState<MyAgentState> inCombat() {
 		var Z = new  MBTState<MyAgentState> ("in-combat") ;
 		Z.addPredicates(S -> MDAbstraction.inCombat(S)) ;
@@ -352,6 +360,7 @@ public class MBT_MD_Model {
 		model.addStates(
 				alive(),
 				gameover(),
+				playerwin(),
 				inCombat(),
 				adjacentTo(EntityType.HEALPOT),
 				adjacentTo(EntityType.RAGEPOT),
