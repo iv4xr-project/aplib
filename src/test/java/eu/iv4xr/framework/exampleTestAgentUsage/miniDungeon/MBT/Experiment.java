@@ -102,6 +102,8 @@ public class Experiment {
 
 		runner.actionSelectionPolicy = heuristic ;
 		runner.stopSuiteGenerationOnFailedOrViolation = false ;
+		runner.isGameOver = S -> ! S.agentIsAlive() || MDAbstraction.gameover(S) ;
+		runner.additionalStepsAfterGameOver = 5 ;
 
 		var t0 = System.currentTimeMillis() ;
 		var results = runner.generate(dummy -> MDRelauncher.agentRestart("Frodo", config, sound, graphics), 
