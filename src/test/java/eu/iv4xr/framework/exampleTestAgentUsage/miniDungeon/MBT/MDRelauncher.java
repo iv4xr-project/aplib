@@ -1,10 +1,13 @@
 package eu.iv4xr.framework.exampleTestAgentUsage.miniDungeon.MBT;
 
+import java.util.Random;
+
 import eu.iv4xr.framework.mainConcepts.TestAgent;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.DungeonApp;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.MiniDungeon.MiniDungeonConfig;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentEnv;
 import nl.uu.cs.aplib.exampleUsages.miniDungeon.testAgent.MyAgentState;
+import nl.uu.cs.aplib.mainConcepts.Deliberation;
 
 /**
  * Provide a method to efficiently re-launch MD, and create an instance
@@ -17,6 +20,14 @@ public class MDRelauncher {
 	 */
 	static DungeonApp miniDungeonInstance = null ;
 
+	
+	static class RndDeliberaiton extends Deliberation {
+		
+		RndDeliberaiton() {
+			rnd = new Random() ;
+		}
+	}
+	
 	/**
 	 * Restart the instance of MiniDungeon in {@link miniDungeonInstance} (this can possibly
 	 * create a new instance of MiniDungeon, if the config is different than the current one).
@@ -57,6 +68,8 @@ public class MDRelauncher {
 		var agent = new TestAgent(agentId, "tester"); 	
 		agent.attachState(new MyAgentState())
 			 .attachEnvironment(new MyAgentEnv(miniDungeonInstance)) ;
+		
+		agent.useDeliberation(new RndDeliberaiton()) ;
 		
 		// give initial state update to set it up
 		agent.state().updateState(agent.getId()) ;

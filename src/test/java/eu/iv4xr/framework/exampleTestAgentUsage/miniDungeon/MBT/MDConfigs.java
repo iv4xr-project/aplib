@@ -14,7 +14,10 @@ public class MDConfigs {
 		config.numberOfMaze = 1 ;
 		config.numberOfMonsters = 2 ;
 		config.numberOfScrolls = 2 ;
+		config.numberOfHealPots = 2 ;
+		config.numberOfRagePots = 1 ;
 		config.worldSize = 15 ;
+		config.enableSmeagol = false ;
 		//config.numberOfHealPots = 4 ;
 		return config ;
 	}
@@ -26,6 +29,8 @@ public class MDConfigs {
 		config.viewDistance = 40;
 		config.numberOfMaze = 1 ;
 		config.numberOfHealPots = 4 ;
+		config.numberOfRagePots = 1 ;
+		config.enableSmeagol = false ;
 		return config ;
 	}
 	
@@ -33,50 +38,42 @@ public class MDConfigs {
 		MiniDungeonConfig config = new MiniDungeonConfig();
 		config.configname = "ML1" ;
 		config.randomSeed = 79371;		
-		config.viewDistance = 80;
+		config.viewDistance = 100;
 		config.numberOfMaze = 1 ;
 		config.worldSize = 40 ;
+		config.numberOfCorridors = 8 ;
+		config.numberOfMonsters = 8 ;
+		config.numberOfRagePots = 1 ;
 		config.numberOfHealPots = 4 ;
+		config.enableSmeagol = false ;
 		return config ;
 	}
 	
 	static MiniDungeonConfig ML2() {
-		MiniDungeonConfig config = new MiniDungeonConfig();
+		MiniDungeonConfig config = ML1() ;
 		config.configname = "ML2" ;
-		config.randomSeed = 79371;		
-		config.viewDistance = 80;
-		config.worldSize = 40 ;
-		//config.numberOfMaze = 1 ;
-		config.numberOfHealPots = 4 ;
+		config.numberOfMaze = 2 ;
 		return config ;
 	}
 	
 	static MiniDungeonConfig ML5() {
-		MiniDungeonConfig config = new MiniDungeonConfig();
+		MiniDungeonConfig config =  ML1() ;
 		config.configname = "ML5" ;
-		config.randomSeed = 79371;		
-		config.viewDistance = 80;
 		config.numberOfMaze = 5 ;
-		config.worldSize = 40 ;
-		config.numberOfHealPots = 4 ;
 		return config ;
 	}
 	
 	static MiniDungeonConfig ML10() {
-		MiniDungeonConfig config = new MiniDungeonConfig();
+		MiniDungeonConfig config =  ML1() ;
 		config.configname = "ML10" ;
-		config.randomSeed = 79371;		
-		config.viewDistance = 80;
 		config.numberOfMaze = 10 ;
-		config.worldSize = 40 ;
-		config.numberOfHealPots = 4 ;
 		return config ;
 	}
 	
 	
 	
 	static public void main(String[] args) {
-		MDRelauncher.agentRestart("Frodo",miniMD(),true,true) ;
+		MDRelauncher.agentRestart("Frodo", miniMD(),true,true) ;
 	}
 
 	

@@ -170,6 +170,7 @@ public class MyQAlg {
 		
 		//return 10f - (float) numOfScrollsInArea - 0.5f * (float) scrollsInBag ;
 		var r1 = (float) (hp 
+				+ score
 				//+ (scrollsInBag ==1 ? 100 : (scrollsInBag ==2 ? -50 : 0))
 				//+ (scrollsInBag ==1 ? 100 : 0)
 				//+ 100*scrollsInBag 

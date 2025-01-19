@@ -31,7 +31,7 @@ public class MyRandomAlg {
 			var G = randomAlg.randomPlay(agent) ;
 			agent.setGoal(G) ;
 			var S = (MyAgentState) agent.state() ;
-			while (System.currentTimeMillis() < timeOut && S.agentIsAlive()) {
+			while (System.currentTimeMillis() < timeOut && S.agentIsAlive() && ! MDAbstraction.gameover(S)  ) {
 				agent.update();
 				step++ ;
 				try {

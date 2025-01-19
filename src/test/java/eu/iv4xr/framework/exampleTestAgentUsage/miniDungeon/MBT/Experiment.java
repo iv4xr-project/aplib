@@ -20,19 +20,24 @@ public class Experiment {
 	// in ms
 	static int delayBetweenUpdates() { return ExtraGoalLib.DELAY_BETWEEN_UPDATE ; } 
 	
-	// in sec
-	static int randomTimeBudget = 180 ;
-	static int QTimeBudget = 180 ;
+	/**
+	 * Time budget; same for every algorithm, two minutes per number of maze.
+	 */
+	static int timeBudget(MiniDungeonConfig config) {
+		return 2 * config.numberOfMaze * 60 ;
+	}
 	
 	// in #turns
-	static int MD_taskBudget = 200 ;
+	static int MBT_taskBudget = 500 ;
 	
 	// ======================
 	// running the random alg:
 	// ======================
 	
 	public void runRandom(MiniDungeonConfig config) {
-		MyRandomAlg.run_Random("Frodo",config,sound,graphics,delayBetweenUpdates(),randomTimeBudget) ;
+		MyRandomAlg.run_Random("Frodo",config,sound,graphics,
+				timeBudget(config),
+				delayBetweenUpdates()) ;
 	}
 	
 	
@@ -41,9 +46,9 @@ public class Experiment {
 		// choose which one to run; uncomment:
 		//runRandom(MDConfigs.miniMD()) ;
 		//runRandom(MDConfigs.oneMazeStandardMD()) ;
-		runRandom(MDConfigs.ML1()) ;
+		//runRandom(MDConfigs.ML1()) ;
 		//runRandom(MDConfigs.ML2()) ;
-		//runRandom(MDConfigs.ML5()) ;
+		runRandom(MDConfigs.ML5()) ;
 		//runRandom(MDConfigs.ML10()) ;
 	}
 	
@@ -52,11 +57,11 @@ public class Experiment {
 	// ======================
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	void configureHyperParams(AQalg alg) {
+	void configureHyperParams(MiniDungeonConfig config, AQalg alg) {
 		alg.gamma = 0.993f ;
 		alg.exploreProbability = 0.15f ;
         alg.enableBackPropagationOfReward = 10 ; 
-		alg.totalSearchBudget = QTimeBudget * 1000 ;
+		alg.totalSearchBudget = timeBudget(config) * 1000 ;
 		alg.maxNumberOfEpisodes = 10000 ;
 		alg.maxDepth = 800 ;
 		alg.stopAfterGoalIsAchieved = false ;	
@@ -65,7 +70,7 @@ public class Experiment {
 	
 	public void runQ(MiniDungeonConfig config, int maxDepth) throws Exception {
 		var alg = MyQAlg.mkActionLevelQ(config, sound, graphics, delayBetweenUpdates()) ;
-		configureHyperParams(alg) ;
+		configureHyperParams(config,alg) ;
 		alg.maxDepth = maxDepth ;
 		var R = alg.runAlgorithm() ;
 		System.out.println("** Q-alg on " + config.configname) ;
@@ -75,11 +80,11 @@ public class Experiment {
 	//@Test
 	public void runQ() throws Exception {
 		// choose which one to run; uncomment:
-		//runQ(MDConfigs.miniMD(),100) ;
-		//runQ(MDConfigs.oneMazeStandardMD()) ;
-		//runQ(MDConfigs.ML1(),200) ;
-		runQ(MDConfigs.ML2(),300) ;
-		//runQ(MDConfigs.ML5()) ;
+		//runQ(MDConfigs.miniMD(),400) ;
+		//runQ(MDConfigs.oneMazeStandardMD(),400) ;
+		//runQ(MDConfigs.ML1(),800) ;
+		//runQ(MDConfigs.ML2(),1000) ;
+		runQ(MDConfigs.ML5(),2000) ;
 		//runQ(MDConfigs.ML10()) ;
 	}
 	
@@ -95,7 +100,7 @@ public class Experiment {
 			boolean withSurvival) {
 		
 		
-		var mymodel = MBT_MD_Model.MD_model1(MD_taskBudget, withSmartGotoNextMaze, withSurvival);
+		var mymodel = MBT_MD_Model.MD_model1(MBT_taskBudget, withSmartGotoNextMaze, withSurvival);
 		var runner = new MBTRunner<MyAgentState>(mymodel);
 		runner.inferTransitions = true;
 		// runner.rnd = new Random() ;
@@ -108,7 +113,9 @@ public class Experiment {
 		var t0 = System.currentTimeMillis() ;
 		var results = runner.generate(dummy -> MDRelauncher.agentRestart("Frodo", config, sound, graphics), 
 						suiteSize, 
-						testSequenceLength);
+						testSequenceLength,
+						timeBudget(config) * 1000
+						);
 		int runtime = (int) ((System.currentTimeMillis() - t0)/1000) ;
 		
 		String mbt_type = "MBT (" + heuristic ;
@@ -125,13 +132,25 @@ public class Experiment {
 		System.out.println("** postcond violations:" + MBTRunner.getViolatedPostCondsFromSuiteResults(results));
 	}
 	
-	@Test
+	//@Test
 	void runBaseMBT() {
-		//runMBT(MDConfigs.miniMD(),ACTION_SELECTION.RANDOM, 40, 60, false, true) ;
-		//runMBT(MDConfigs.oneMazeStandardMD(),ACTION_SELECTION.RANDOM, 20, 60, false, false) ;
-		//runMBT(MDConfigs.ML1(),ACTION_SELECTION.RANDOM,  30, 60, false, true) ;
-		//runMBT(MDConfigs.ML2(),ACTION_SELECTION.RANDOM,  30, 60, false, false) ;
-		//runMBT(MDConfigs.ML5(),ACTION_SELECTION.RANDOM,  60, 60, false, false) ;
-		runMBT(MDConfigs.ML10(),ACTION_SELECTION.RANDOM, 110, 60, true, true) ;
+		//runMBT(MDConfigs.miniMD(),ACTION_SELECTION.RANDOM, 200, 30, false, false) ;
+		//runMBT(MDConfigs.oneMazeStandardMD(),ACTION_SELECTION.RANDOM, 200, 30, false, false) ;
+		//runMBT(MDConfigs.ML1(),ACTION_SELECTION.RANDOM,  200, 30, false, false) ;
+		//runMBT(MDConfigs.ML2(),ACTION_SELECTION.RANDOM,  200, 40, false, false) ;
+		runMBT(MDConfigs.ML5(),ACTION_SELECTION.RANDOM,  200, 90, false, false) ;
+		//runMBT(MDConfigs.ML10(),ACTION_SELECTION.RANDOM, 200, 90, false, false) ;
 	}
+	
+	@Test
+	void runSmartMBT() {
+		//runMBT(MDConfigs.miniMD(),ACTION_SELECTION.RANDOM, 200, 30, true, true) ;
+		//runMBT(MDConfigs.oneMazeStandardMD(),ACTION_SELECTION.RANDOM, 200, 30, true, true) ;
+		//runMBT(MDConfigs.ML1(),ACTION_SELECTION.RANDOM,  200, 30, true, true) ;
+		//runMBT(MDConfigs.ML2(),ACTION_SELECTION.RANDOM,  200, 40, true, true) ;
+		runMBT(MDConfigs.ML5(),ACTION_SELECTION.RANDOM,  200, 70, true, true) ;
+		//runMBT(MDConfigs.ML10(),ACTION_SELECTION.RANDOM, 200, 90, true, true) ;
+	}
+	
+	
 }

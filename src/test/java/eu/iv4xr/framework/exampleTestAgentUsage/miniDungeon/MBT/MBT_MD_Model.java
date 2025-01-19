@@ -23,6 +23,10 @@ public class MBT_MD_Model {
 	
 	public static Random rndx = new Random(373) ;
 	
+	static boolean IMPLIES(boolean p, boolean q) {
+		return !p || q ;
+	}
+	
 	@SuppressWarnings("unchecked")
 	static MBTAction<MyAgentState> usepot(EntityType ty) {
 		return new MBTAction<MyAgentState>("use-" + ty)
@@ -37,7 +41,10 @@ public class MBT_MD_Model {
 					return true ;
 				})
 				
-				.addGuards(S ->  S.agentIsAlive() && ! MDAbstraction.gameover(S) && itemInBag(S,ty) > 0) 
+				.addGuards(S ->  S.agentIsAlive() && ! MDAbstraction.gameover(S) && itemInBag(S,ty) > 0
+						   && IMPLIES(ty == EntityType.HEALPOT , hp(S) < hpmax(S))
+						   && IMPLIES(ty == EntityType.RAGEPOT , MDAbstraction.inCombat(S))
+						) 
 				
 				.addPostConds(new MBTPostCondition<MyAgentState>("" + ty + " used", 
 					S -> itemInBag(S,ty) == oldItemInBag(S,ty) - 1
@@ -194,9 +201,11 @@ public class MBT_MD_Model {
 				}) 
 				.addGuards(S -> S.agentIsAlive() && ! MDAbstraction.gameover(S)
 						    && ! entitiesInSameMaze(S, EntityType.SHRINE,sty).isEmpty()
-							&& closedShrineInSameMaze(S) == null)
+							&& IMPLIES(sty == ShrineType.MoonShrine, closedShrineInSameMaze(S) == null)
+							&& IMPLIES(sty == ShrineType.SunShrine, 
+							           maze(S) == 1 && entitiesInSameMaze(S,EntityType.SCROLL,null).size() == S.env().app.dungeon.config.numberOfScrolls))
 				.addPostConds(
-						new MBTPostCondition<MyAgentState>("could be teleported to the next maze",
+						new MBTPostCondition<MyAgentState>("could be teleported",
 						S -> { 
 							//System.out.println("------- pos: " + S.worldmodel.position) ;
 							//System.out.println("------- maze: " + S.val("maze")) ;
@@ -407,7 +416,8 @@ public class MBT_MD_Model {
 				attackMonster(),
 				bumpWall(travelBudget,withSurvival),
 				tryToCleanseShrine(travelBudget,withSurvival),
-				teleport(ShrineType.MoonShrine, travelBudget,withSurvival)
+				teleport(ShrineType.MoonShrine, travelBudget,withSurvival),
+				teleport(ShrineType.SunShrine, travelBudget,withSurvival)
 				) ;
 		
 		if (useSmartGoToNextMaze) {

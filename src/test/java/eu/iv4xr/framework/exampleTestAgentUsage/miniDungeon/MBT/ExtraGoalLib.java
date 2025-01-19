@@ -127,7 +127,10 @@ public class ExtraGoalLib {
 		agent.dropAll() ;
 		agent.setGoal(G) ;
 		var S = (MyAgentState) agent.state() ;
-		while (budget > 0 && S.agentIsAlive() && G.getStatus().inProgress()) {
+		while (budget > 0 
+				&& S.agentIsAlive() 
+				&& ! MDAbstraction.gameover(S)
+				&& G.getStatus().inProgress()) {
 			agent.update() ;
 			WAIT() ;
 			budget -- ;
@@ -154,7 +157,9 @@ public class ExtraGoalLib {
 		
 		int trial = 0 ;
 		
-		while (trial < numberOfScrolls) {
+		while (trial < numberOfScrolls 
+				&& S.agentIsAlive()
+				&& ! MDAbstraction.gameover(S)) {
 			boolean cleansed = (Boolean) S.val(shrineId,"cleansed") ;
 			if (cleansed) {
 				if (distanceToAgent(S,shrine) > 1) {
@@ -193,6 +198,7 @@ public class ExtraGoalLib {
 						) ;	
 			}
 			executeGoal(agent,H,taskBudget) ;
+			trial++ ;
 		}
 		return false ;
 	}

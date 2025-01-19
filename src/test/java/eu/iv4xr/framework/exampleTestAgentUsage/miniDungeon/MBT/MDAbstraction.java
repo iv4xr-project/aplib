@@ -177,6 +177,6 @@ public class MDAbstraction {
 	public static boolean oldCleansed(MyAgentState S, String shrineId) { return bool_(S.before(shrineId,"cleansed")) ;}
 
 	public static boolean gameover(MyAgentState S) { return S.gameStatus() != GameStatus.INPROGRESS ; }
-	public static boolean playerWin(MyAgentState S) { return S.gameStatus() != GameStatus.FRODOWIN ; }
+	public static boolean playerWin(MyAgentState S) { return S.gameStatus() == GameStatus.FRODOWIN ; }
 
 }
