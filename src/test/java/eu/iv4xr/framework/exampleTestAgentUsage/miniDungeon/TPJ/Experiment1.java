@@ -96,7 +96,7 @@ class Experiment1 {
 		}
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testShrineWithSinglePlayer() throws Exception {
 		for(int k=0; k<shrineTestConfigs.length; k++) {
@@ -115,7 +115,7 @@ class Experiment1 {
 			runTest("shrineTest_singleplayer_" + config.configname + "_"  + smeagol.getId(),
 					smeagol,null, 
 					config,
-					new ShrineCleanTester().cleanseAllShrines(frodo, config.numberOfMaze),
+					new ShrineCleanTester().cleanseAllShrines(smeagol, config.numberOfMaze),
 					null,
 					shrineTestBudget,
 					true,true) ;		
