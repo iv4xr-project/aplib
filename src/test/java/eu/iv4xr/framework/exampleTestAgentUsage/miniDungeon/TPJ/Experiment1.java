@@ -96,7 +96,7 @@ class Experiment1 {
 		}
 	}
 	
-	@Disabled
+	//@Disabled
 	@Test
 	void testShrineWithSinglePlayer() throws Exception {
 		for(int k=0; k<shrineTestConfigs.length; k++) {
